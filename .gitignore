@@ -1,8 +1,6 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
+# ── 의존성 ────────────────────────────────────────────────────────────────────
+node_modules/
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -10,32 +8,78 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# ── 환경변수 / 시크릿 ────────────────────────────────────────────────────────
+# 모든 .env 파일 제외 (.env.example / .env.sample 은 커밋 가능)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
+# 개인 키 / 인증서
 *.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets/
+.secrets/
 
-# debug
+# ── Next.js ──────────────────────────────────────────────────────────────────
+.next/
+out/
+next-env.d.ts
+
+# ── 빌드 결과물 ───────────────────────────────────────────────────────────────
+build/
+dist/
+coverage/
+
+# ── Prisma 생성 파일 ──────────────────────────────────────────────────────────
+# (prisma/migrations 는 버전 관리 대상 — 제외하지 않음)
+lib/generated/
+*.db
+*.db-journal
+*.sqlite
+
+# ── 로그 ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
+# ── 캐시 ──────────────────────────────────────────────────────────────────────
+.cache/
+.turbo/
+.eslintcache
+.stylelintcache
 *.tsbuildinfo
-next-env.d.ts
+
+# ── Vercel ────────────────────────────────────────────────────────────────────
+.vercel/
+
+# ── IDE / 에디터 ─────────────────────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# ── OS 생성 파일 ─────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini

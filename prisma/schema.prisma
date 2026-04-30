@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ───────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  loaAccounts      LoaAccount[]
+  expeditionMember ExpeditionMember[]
+  leadingExpeditions Expedition[]     @relation("ExpeditionLeader")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── 로스트아크 계정 ──────────────────────────────────────────────────────────
+
+model LoaAccount {
+  id           String   @id @default(cuid())
+  userId       String
+  label        String   @default("본계정")  // 본계정 / 부계정1 등
+  apiKey       String   // AES-256 암호화 저장
+  lastSyncedAt DateTime?
+  createdAt    DateTime @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  characters Character[]
+}
+
+// ─── 캐릭터 ──────────────────────────────────────────────────────────────────
+
+model Character {
+  id           String   @id @default(cuid())
+  loaAccountId String
+  name         String
+  class        String
+  server       String
+  itemLevel    Float
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)  // 숙제 관리 목록에 포함 여부
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  loaAccount     LoaAccount      @relation(fields: [loaAccountId], references: [id], onDelete: Cascade)
+  characterRaids CharacterRaid[]
+}
+
+// ─── 숙제 ─────────────────────────────────────────────────────────────────────
+
+model CharacterRaid {
+  id          String   @id @default(cuid())
+  characterId String
+  raidId      String   // constants/raids.js 의 raid id
+  difficulty  String   // "normal" | "hard"
+  gateClears  Boolean[]        // 관문별 클리어 여부 배열
+  isGoldCheck Boolean  @default(true)  // 골드 획득 여부
+  resetAt     DateTime         // 다음 수요일 06:00 KST
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, raidId, difficulty])
+}
+
+// ─── 원정대 ──────────────────────────────────────────────────────────────────
+
+model Expedition {
+  id              String   @id @default(cuid())
+  name            String
+  leaderId        String
+  inviteCode      String   @unique @default(cuid())
+  inviteExpiresAt DateTime
+  maxMembers      Int      @default(8)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  leader  User               @relation("ExpeditionLeader", fields: [leaderId], references: [id])
+  members ExpeditionMember[]
+}
+
+model ExpeditionMember {
+  id           String   @id @default(cuid())
+  expeditionId String
+  userId       String
+  status       String   @default("pending") // "pending" | "active" | "rejected" | "left"
+  visibility   String   @default("all")     // "all" | "leader_only" | "none"
+  joinedAt     DateTime?
+  createdAt    DateTime @default(now())
+
+  expedition Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expeditionId, userId])
+}
