@@ -32,9 +32,7 @@
   font-family: 'NanumSquareR', 'Nanum Gothic', sans-serif;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   background-color: #f8fafc;
@@ -53,6 +51,82 @@ body {
 .dark ::-webkit-scrollbar-thumb { background: #30363d; }
 
 /* ── 나눔스퀘어 weight 헬퍼 ─────────────────────────────────── */
-.ns-light  { font-family: 'NanumSquareL',  sans-serif; }
-.ns-bold   { font-family: 'NanumSquareB',  sans-serif; }
+.ns-light     { font-family: 'NanumSquareL',  sans-serif; }
+.ns-bold      { font-family: 'NanumSquareB',  sans-serif; }
 .ns-extrabold { font-family: 'NanumSquareEB', sans-serif; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   핑크 테마  [data-theme="pink"]
+   ─ 노랑 → 파스텔 핑크
+   ─ 오렌지(귀속) → 로즈
+   ─ 블루/스카이(거래·완료) → 퍼플
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── body 배경 ── */
+[data-theme="pink"] body { background-color: #fdf6fb; }
+
+/* ── 액센트: 노랑 → 파스텔 핑크 ── */
+[data-theme="pink"] .bg-yellow-200         { background-color: #fbcfe8 !important; } /* pink-200 */
+[data-theme="pink"] .bg-yellow-400         { background-color: #f9a8d4 !important; } /* pink-300 */
+[data-theme="pink"] .bg-yellow-300         { background-color: #f9a8d4 !important; } /* pink-300 */
+[data-theme="pink"] .bg-yellow-50          { background-color: #fdf2f8 !important; }
+[data-theme="pink"] .bg-yellow-100         { background-color: #fce7f3 !important; }
+[data-theme="pink"] .bg-yellow-50\/50      { background-color: rgba(253,242,248,0.5) !important; }
+[data-theme="pink"] .bg-yellow-900\/10     { background-color: rgba(80,7,36,0.1)     !important; }
+
+[data-theme="pink"] .hover\:bg-yellow-400:hover  { background-color: #f9a8d4 !important; }
+[data-theme="pink"] .hover\:bg-yellow-300:hover  { background-color: #fbcfe8 !important; }
+[data-theme="pink"] .hover\:bg-yellow-100:hover  { background-color: #fce7f3 !important; }
+[data-theme="pink"] .hover\:bg-yellow-50:hover   { background-color: #fdf2f8 !important; }
+[data-theme="pink"] .focus\:border-yellow-400:focus { border-color: #f9a8d4 !important; }
+[data-theme="pink"] .hover\:text-yellow-600:hover { color: #db2777 !important; }
+
+[data-theme="pink"] .text-yellow-400  { color: #f472b6 !important; }
+[data-theme="pink"] .text-yellow-500  { color: #ec4899 !important; }
+[data-theme="pink"] .text-yellow-600  { color: #db2777 !important; }
+[data-theme="pink"] .text-yellow-700  { color: #be185d !important; }
+[data-theme="pink"] .text-yellow-900  { color: #831843 !important; }
+[data-theme="pink"] .bg-yellow-200    { background-color: #fbcfe8 !important; }
+[data-theme="pink"] .bg-yellow-400\/40 { background-color: rgba(244,114,182,0.3) !important; }
+
+[data-theme="pink"] .border-yellow-400     { border-color: #f9a8d4 !important; }
+[data-theme="pink"] .border-yellow-400\/60 { border-color: rgba(249,168,212,0.6) !important; }
+[data-theme="pink"] .ring-yellow-400       { --tw-ring-color: #f9a8d4 !important; }
+[data-theme="pink"] .accent-yellow-500     { accent-color: #ec4899 !important; }
+
+/* ── 귀속: 오렌지 → 로즈 ── */
+[data-theme="pink"] .bg-orange-100         { background-color: #ffe4e6 !important; } /* rose-100 */
+[data-theme="pink"] .bg-orange-50          { background-color: #fff1f2 !important; } /* rose-50  */
+[data-theme="pink"] .bg-orange-300         { background-color: #fda4af !important; } /* rose-300 */
+[data-theme="pink"] .hover\:bg-orange-100:hover { background-color: #ffe4e6 !important; }
+
+[data-theme="pink"] .border-orange-300     { border-color: #fda4af !important; }
+[data-theme="pink"] .border-orange-200     { border-color: #fecdd3 !important; }
+
+[data-theme="pink"] .text-orange-300       { color: #fda4af !important; }
+[data-theme="pink"] .text-orange-400       { color: #fb7185 !important; }
+[data-theme="pink"] .text-orange-500       { color: #f43f5e !important; }
+[data-theme="pink"] .text-orange-600       { color: #e11d48 !important; }
+
+/* ── 거래·완료: 블루 → 퍼플 ── */
+[data-theme="pink"] .bg-blue-400           { background-color: #c084fc !important; } /* purple-400 */
+[data-theme="pink"] .bg-blue-100           { background-color: #f3e8ff !important; } /* purple-100 */
+[data-theme="pink"] .bg-blue-50            { background-color: #faf5ff !important; } /* purple-50  */
+[data-theme="pink"] .hover\:bg-blue-100:hover { background-color: #f3e8ff !important; }
+
+[data-theme="pink"] .border-blue-400       { border-color: #c084fc !important; }
+[data-theme="pink"] .border-blue-300       { border-color: #d8b4fe !important; }
+[data-theme="pink"] .border-blue-200       { border-color: #e9d5ff !important; }
+
+[data-theme="pink"] .text-blue-300         { color: #d8b4fe !important; }
+[data-theme="pink"] .text-blue-400         { color: #c084fc !important; }
+[data-theme="pink"] .text-blue-500         { color: #a855f7 !important; }
+[data-theme="pink"] .text-blue-600         { color: #9333ea !important; }
+
+/* ── 거래 iOS 토글: 스카이 → 퍼플 ── */
+[data-theme="pink"] .bg-sky-300            { background-color: #d8b4fe !important; } /* purple-300 */
+[data-theme="pink"] .bg-sky-50             { background-color: #faf5ff !important; }
+[data-theme="pink"] .border-sky-200        { border-color: #e9d5ff !important; }
+[data-theme="pink"] .text-sky-300          { color: #d8b4fe !important; }
+[data-theme="pink"] .text-sky-600          { color: #9333ea !important; }

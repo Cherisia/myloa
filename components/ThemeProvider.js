@@ -2,30 +2,43 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-const ThemeContext = createContext({ theme: 'light', toggle: () => {} })
+// theme: 'yellow' | 'pink' | 'dark'
+const ThemeContext = createContext({ theme: 'yellow', setTheme: () => {} })
+
+function applyTheme(theme) {
+  const html = document.documentElement
+  // 기존 상태 초기화
+  html.classList.remove('dark')
+  html.removeAttribute('data-theme')
+
+  if (theme === 'dark') {
+    html.classList.add('dark')
+  } else {
+    html.setAttribute('data-theme', theme) // 'yellow' | 'pink'
+  }
+}
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('light')
+  const [theme, setThemeState] = useState('yellow')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme') || 'light'
-    setTheme(stored)
-    document.documentElement.classList.toggle('dark', stored === 'dark')
+    const stored = localStorage.getItem('theme') || 'yellow'
+    setThemeState(stored)
+    applyTheme(stored)
     setMounted(true)
   }, [])
 
-  const toggle = () => {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
+  const setTheme = (next) => {
+    setThemeState(next)
     localStorage.setItem('theme', next)
-    document.documentElement.classList.toggle('dark', next === 'dark')
+    applyTheme(next)
   }
 
   if (!mounted) return <div style={{ visibility: 'hidden' }}>{children}</div>
 
   return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
+    <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   )
