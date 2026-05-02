@@ -122,10 +122,10 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
   if (!chars.length) {
     return (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-        <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] shadow-xl px-5 py-10 text-center">
+        <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl px-5 py-10 text-center">
           <p className="text-sm text-gray-400 dark:text-gray-500 mb-1">등록된 캐릭터가 없습니다</p>
           <p className="text-xs text-gray-300 dark:text-gray-600">캐릭터를 먼저 추가해 주세요</p>
-          <button onClick={onClose} className="mt-6 px-4 py-2 rounded border border-gray-200 dark:border-[#30363d] text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
+          <button onClick={onClose} className="mt-6 px-4 py-2 rounded border border-gray-200 dark:border-[#383838] text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
             닫기
           </button>
         </div>
@@ -135,10 +135,10 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-      <div className="w-full max-w-2xl rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] shadow-xl flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-2xl rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90vh]">
 
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#30363d] flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
           <div>
             <span className="ns-bold text-gray-900 dark:text-white">레이드 설정</span>
             <span className="ml-2 text-xs text-gray-400">캐릭터별로 참여할 레이드를 선택하세요</span>
@@ -147,7 +147,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
         </div>
 
         {/* 캐릭터 탭 */}
-        <div className="flex gap-1.5 px-5 py-3 overflow-x-auto border-b border-gray-100 dark:border-[#30363d] flex-shrink-0 scrollbar-hide">
+        <div className="flex gap-1.5 px-5 py-3 overflow-x-auto border-b border-gray-100 dark:border-[#383838] flex-shrink-0 scrollbar-hide">
           {chars.map((char, i) => {
             const count = (raids[char.id] || []).length
             return (
@@ -157,7 +157,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
                 className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
                   i === selectedIdx
                     ? 'bg-yellow-200 text-yellow-900'
-                    : 'border border-gray-200 dark:border-[#30363d] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#21262d]'
+                    : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                 }`}
               >
                 {char.name}
@@ -165,7 +165,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full ns-bold ${
                     i === selectedIdx
                       ? 'bg-yellow-400/40 text-yellow-900'
-                      : 'bg-gray-100 dark:bg-[#21262d] text-gray-500 dark:text-gray-400'
+                      : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400'
                   }`}>
                     {count}
                   </span>
@@ -181,7 +181,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
           <div className="flex gap-1">
             {[0, 1, 2].map(i => (
               <div key={i} className={`h-1.5 w-5 rounded-full transition-colors ${
-                normalGoldCount > 3 ? 'bg-red-400' : i < normalGoldCount ? 'bg-yellow-400' : 'bg-gray-200 dark:bg-[#21262d]'
+                normalGoldCount > 3 ? 'bg-red-400' : i < normalGoldCount ? 'bg-yellow-400' : 'bg-gray-200 dark:bg-[#2a2a2a]'
               }`} />
             ))}
           </div>
@@ -204,8 +204,8 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
                 key={raid.id}
                 className={`rounded-lg border px-4 py-2.5 transition-colors ${
                   isLevelOk
-                    ? 'border-gray-200 dark:border-[#30363d]'
-                    : 'border-gray-100 dark:border-[#21262d] opacity-35'
+                    ? 'border-gray-200 dark:border-[#383838]'
+                    : 'border-gray-100 dark:border-[#2a2a2a] opacity-35'
                 }`}
               >
                 <div className="grid items-center gap-3" style={{ gridTemplateColumns: '140px 56px auto 1fr' }}>
@@ -233,8 +233,8 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
                         }`}>골드</span>
                         <span className={`relative inline-flex h-4 w-7 flex-shrink-0 items-center rounded-full transition-colors ${
                           isGold    ? 'bg-yellow-400'
-                          : hasActive ? 'bg-gray-200 dark:bg-[#30363d]'
-                          :             'bg-gray-100 dark:bg-[#21262d] opacity-40'
+                          : hasActive ? 'bg-gray-200 dark:bg-[#383838]'
+                          :             'bg-gray-100 dark:bg-[#2a2a2a] opacity-40'
                         }`}>
                           <span className={`inline-block h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${
                             isGold ? 'translate-x-3.5' : 'translate-x-0.5'
@@ -257,7 +257,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
                           : diff.key === 'hard'
                           ? 'border-red-300 bg-red-50 dark:bg-red-900/15 text-red-600 dark:text-red-400'
                           : 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700 dark:text-yellow-400'
-                        : 'border-gray-200 dark:border-[#30363d] text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-500'
+                        : 'border-gray-200 dark:border-[#383838] text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-500'
                       return (
                         <button
                           key={key}
@@ -280,7 +280,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
         </div>
 
         {/* 푸터 */}
-        <div className="px-5 py-4 border-t border-gray-100 dark:border-[#30363d] flex-shrink-0">
+        <div className="px-5 py-4 border-t border-gray-100 dark:border-[#383838] flex-shrink-0">
           <button
             onClick={handleConfirm}
             className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors"
@@ -293,7 +293,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
       {/* EX 레이드 계정 제한 에러 */}
       {exRaidError && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30">
-          <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] shadow-xl">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
             <div className="px-5 pt-6 pb-4">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/20 mx-auto mb-3">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-400">
@@ -322,7 +322,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
       {/* 골드 초과 에러 모달 */}
       {goldError && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30">
-          <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] shadow-xl">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
             <div className="px-5 pt-6 pb-4">
               {/* 아이콘 */}
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/20 mx-auto mb-3">
@@ -339,7 +339,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
               {/* 초과 캐릭터 목록 */}
               <div className="space-y-1.5">
                 {goldError.map(c => (
-                  <div key={c.name} className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-[#21262d] border border-gray-200 dark:border-[#30363d] px-3 py-2.5">
+                  <div key={c.name} className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#383838] px-3 py-2.5">
                     <span className="text-sm ns-bold text-gray-800 dark:text-gray-100">{c.name}</span>
                     <span className="text-xs ns-bold text-orange-500 dark:text-orange-400">{c.count} / 3</span>
                   </div>
@@ -369,8 +369,8 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
 function ApiKeyGuideModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-black/30">
-      <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] shadow-xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#30363d]">
+      <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">API 키 발급 가이드</span>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
         </div>
@@ -422,7 +422,7 @@ function ApiKeyGuideModal({ onClose }) {
 
         <div className="px-5 pb-5">
           <button onClick={onClose}
-            className="w-full rounded border border-gray-200 dark:border-[#30363d] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
+            className="w-full rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
             닫기
           </button>
         </div>
@@ -483,8 +483,8 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-      <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] shadow-xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#30363d]">
+      <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">캐릭터 추가</span>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
         </div>
@@ -493,7 +493,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
           <div>
             <label className="block text-xs ns-bold text-gray-500 dark:text-gray-400 mb-1.5">캐릭터명</label>
             <input
-              className="w-full rounded border border-gray-200 dark:border-[#30363d] px-3 py-2 text-sm bg-white dark:bg-[#0d1117] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
+              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
               value={charName} onChange={e => setCharName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && search()}
               placeholder="보유 캐릭터명 아무거나 입력" autoFocus
@@ -517,7 +517,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
             </div>
             <input
               type="text"
-              className="w-full rounded border border-gray-200 dark:border-[#30363d] px-3 py-2 text-sm font-mono bg-white dark:bg-[#0d1117] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
+              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm font-mono bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
               value={apiKey} onChange={e => { setApiKey(e.target.value); setKeySaved(false) }}
               onKeyDown={e => e.key === 'Enter' && search()}
             />
@@ -526,7 +526,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
           {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
 
           <button onClick={search} disabled={loading}
-            className="w-full rounded border border-gray-200 dark:border-[#30363d] py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#21262d] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+            className="w-full rounded border border-gray-200 dark:border-[#383838] py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
             {loading ? (
               <><svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>검색 중…</>
             ) : '원정대 캐릭터 검색'}
@@ -560,9 +560,9 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
                 return (
                   <label key={c.name}
                     className={`flex items-center gap-3 rounded border px-3 py-2 cursor-pointer transition-colors
-                      ${already ? 'border-gray-100 dark:border-[#21262d] opacity-40 cursor-not-allowed'
+                      ${already ? 'border-gray-100 dark:border-[#2a2a2a] opacity-40 cursor-not-allowed'
                         : checked ? 'border-yellow-400/60 bg-yellow-50/50 dark:bg-yellow-900/10'
-                        : 'border-gray-200 dark:border-[#30363d] hover:border-gray-300 dark:hover:border-gray-500'}`}>
+                        : 'border-gray-200 dark:border-[#383838] hover:border-gray-300 dark:hover:border-gray-500'}`}>
                     <input type="checkbox" checked={checked} disabled={already}
                       onChange={() => !already && toggleSelect(c.name)}
                       className="accent-yellow-500 w-3.5 h-3.5 flex-shrink-0"/>
@@ -585,9 +585,9 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
           </div>
         )}
 
-        <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#30363d] mt-3">
+        <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#383838] mt-3">
           <button onClick={onClose}
-            className="flex-1 rounded border border-gray-200 dark:border-[#30363d] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">취소</button>
+            className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">취소</button>
           <button onClick={handleAdd} disabled={newCount === 0}
             className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-yellow-900 transition-colors">
             {newCount > 0 ? `${newCount}개 추가` : '추가'}
@@ -649,7 +649,7 @@ function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
   const moreGold  = entry && diff ? calcGoldMore(diff, allGates) : 0
 
   if (!entry || !diff) {
-    return <div className="w-full min-h-[52px] bg-gray-50/50 dark:bg-[#0d1117]/30 rounded" />
+    return <div className="w-full min-h-[52px] bg-gray-50/50 dark:bg-[#181818]/30 rounded" />
   }
 
   const diffBadge =
@@ -665,7 +665,7 @@ function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
           ? 'bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20'
           : allDone
           ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
-          : 'hover:bg-gray-50 dark:hover:bg-[#21262d]'
+          : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
         }`}
     >
       {/* 왼쪽: 체크박스 */}
@@ -674,7 +674,7 @@ function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
           ? 'bg-blue-400 border-blue-400 text-white shadow-sm'
           : allDone
           ? 'bg-yellow-400 border-yellow-400 text-yellow-900 shadow-sm'
-          : 'border-gray-200 dark:border-[#30363d]'}`}>
+          : 'border-gray-200 dark:border-[#383838]'}`}>
         {allDone && <IconCheck />}
       </div>
 
@@ -687,18 +687,20 @@ function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
             className="active:scale-95 transition-transform block"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <div className={`flex items-center rounded-full transition-colors duration-300 ${
-              moreFrom === 'bound' ? 'bg-orange-300 dark:bg-orange-400/70' : 'bg-sky-300 dark:bg-sky-400/70'
+            <div className={`flex items-center rounded-full border transition-colors duration-300 ${
+              moreFrom === 'bound'
+                ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800/40'
+                : 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800/40'
             }`} style={{ height: 14, padding: 1.5, gap: 2 }}>
               {moreFrom === 'bound' ? (
                 <>
-                  <span className="text-[7px] ns-bold select-none leading-none pl-1.5 text-orange-900/80 dark:text-white/80 whitespace-nowrap">귀속</span>
-                  <div className="flex-shrink-0 rounded-full bg-white/90 shadow" style={{ width: 11, height: 11 }} />
+                  <span className="text-[7px] ns-bold select-none leading-none pl-1.5 text-orange-500 dark:text-orange-400 whitespace-nowrap">귀속</span>
+                  <div className="flex-shrink-0 rounded-full bg-orange-400 dark:bg-orange-500 shadow" style={{ width: 11, height: 11 }} />
                 </>
               ) : (
                 <>
-                  <div className="flex-shrink-0 rounded-full bg-white/90 shadow" style={{ width: 11, height: 11 }} />
-                  <span className="text-[7px] ns-bold select-none leading-none pr-1.5 text-sky-900/80 dark:text-white/80 whitespace-nowrap">거래</span>
+                  <div className="flex-shrink-0 rounded-full bg-blue-400 dark:bg-blue-500 shadow" style={{ width: 11, height: 11 }} />
+                  <span className="text-[7px] ns-bold select-none leading-none pr-1.5 text-blue-500 dark:text-blue-400 whitespace-nowrap">거래</span>
                 </>
               )}
             </div>
@@ -806,11 +808,34 @@ function Confetti({ active }) {
   return <canvas ref={canvasRef} className="fixed inset-0 z-[300] pointer-events-none" />
 }
 
+// ── DB 저장 헬퍼 (optimistic — fire & forget) ─────────────────────────────────
+function saveRaid(characterId, entry) {
+  fetch('/api/homework', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      characterId,
+      raidId:      entry.raidId,
+      difficulty:  entry.difficulty,
+      gateClears:  entry.gateClears,
+      isGoldCheck: entry.isGoldCheck,
+      moreDone:    entry.moreDone  ?? false,
+      moreFrom:    entry.moreFrom  ?? 'bound',
+    }),
+  }).catch(() => {}) // 실패 시 무시 (optimistic)
+}
+
+function deleteRaid(characterId, raidId, difficulty) {
+  fetch(`/api/homework?characterId=${characterId}&raidId=${raidId}&difficulty=${difficulty}`, {
+    method: 'DELETE',
+  }).catch(() => {})
+}
+
 // ── 메인 대시보드 ─────────────────────────────────────────────────────────────
-export default function DashboardClient({ initialChars = [] }) {
+export default function DashboardClient({ initialChars = [], initialRaids = {} }) {
   const [chars, setChars] = useState(initialChars)
-  // raids: { [charId]: [{ raidId, difficulty, gateClears, isGoldCheck }] }
-  const [raids, setRaids] = useState({})
+  // raids: { [charId]: [{ raidId, difficulty, gateClears, isGoldCheck, moreDone, moreFrom }] }
+  const [raids, setRaids] = useState(initialRaids)
   const [showRaidSettings, setShowRaidSettings] = useState(false)
   const [showAddChar, setShowAddChar]           = useState(false)
   const [syncing, setSyncing]                   = useState(false)
@@ -824,7 +849,6 @@ export default function DashboardClient({ initialChars = [] }) {
     // EX 레이드: 같은 계정에서 캐릭터 하나만 선택 가능
     if (EX_RAID_IDS.has(raidId)) {
       const currentChar = chars.find(c => c.id === charId)
-      // 이미 선택된 난이도라면 해제 → 허용
       const alreadyHas = (raids[charId] || []).some(e => e.raidId === raidId)
       if (!alreadyHas && currentChar) {
         const accountKey = currentChar.loaAccountId || currentChar.account
@@ -845,15 +869,22 @@ export default function DashboardClient({ initialChars = [] }) {
       let list = [...(prev[charId] || [])]
       const sameIdx = list.findIndex(e => e.raidId === raidId && e.difficulty === diffKey)
       if (sameIdx >= 0) {
-        // 이미 선택된 난이도 → 해제
+        // 이미 선택된 난이도 → 해제 후 DB 삭제
         list.splice(sameIdx, 1)
+        deleteRaid(charId, raidId, diffKey)
       } else {
         // 같은 레이드의 다른 난이도가 있으면 먼저 제거
+        const oldEntry = list.find(e => e.raidId === raidId)
+        if (oldEntry) deleteRaid(charId, raidId, oldEntry.difficulty)
         list = list.filter(e => e.raidId !== raidId)
-        // 새 난이도 추가
+        // 새 난이도 추가 후 DB 저장
         const raid = RAIDS.find(r => r.id === raidId)
         const diff = raid?.difficulties.find(d => d.key === diffKey)
-        if (diff) list.push({ raidId, difficulty: diffKey, gateClears: new Array(diff.gates).fill(false), isGoldCheck: true })
+        if (diff) {
+          const newEntry = { raidId, difficulty: diffKey, gateClears: new Array(diff.gates).fill(false), isGoldCheck: true, moreDone: false, moreFrom: 'bound' }
+          list.push(newEntry)
+          saveRaid(charId, newEntry)
+        }
       }
       return { ...prev, [charId]: list }
     })
@@ -865,7 +896,9 @@ export default function DashboardClient({ initialChars = [] }) {
       const list = [...(prev[charId] || [])]
       const idx  = list.findIndex(e => e.raidId === raidId && e.difficulty === diffKey)
       if (idx === -1) return prev
-      list[idx] = { ...list[idx], isGoldCheck: !list[idx].isGoldCheck }
+      const updated = { ...list[idx], isGoldCheck: !list[idx].isGoldCheck }
+      list[idx] = updated
+      saveRaid(charId, updated)
       return { ...prev, [charId]: list }
     })
   }
@@ -882,26 +915,23 @@ export default function DashboardClient({ initialChars = [] }) {
       const allDone  = entry.gateClears.every(Boolean)
       const moreDone = entry.moreDone || false
 
-      // 해당 레이드에 더보기 골드가 있는지 확인
       const raid     = RAIDS.find(r => r.id === raidId)
       const diff     = raid?.difficulties.find(d => d.key === diffKey)
       const allGates = diff ? new Array(diff.gates).fill(true) : []
       const hasMore  = diff ? calcGoldMore(diff, allGates) > 0 : false
 
       if (!allDone) {
-        // 미완료 → 완료
         entry.gateClears = new Array(entry.gateClears.length).fill(true)
         entry.moreDone   = false
       } else if (!moreDone && hasMore) {
-        // 완료 → 더보기완료 (더보기 있는 레이드만)
         entry.moreDone  = true
-        entry.moreFrom  = 'bound' // 더보기 진입 시 항상 귀속으로 초기화
+        entry.moreFrom  = 'bound'
       } else {
-        // 완료/더보기완료 → 미완료
         entry.gateClears = new Array(entry.gateClears.length).fill(false)
         entry.moreDone   = false
       }
       list[idx] = entry
+      saveRaid(charId, entry)
       return { ...prev, [charId]: list }
     })
   }
@@ -915,6 +945,7 @@ export default function DashboardClient({ initialChars = [] }) {
       const entry = { ...list[idx] }
       entry.moreFrom = (entry.moreFrom || 'bound') === 'bound' ? 'trade' : 'bound'
       list[idx] = entry
+      saveRaid(charId, entry)
       return { ...prev, [charId]: list }
     })
   }
@@ -1032,18 +1063,18 @@ export default function DashboardClient({ initialChars = [] }) {
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowRaidSettings(true)}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#30363d] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
+            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
             </svg>
             레이드 설정
           </button>
           <button onClick={() => setShowAddChar(true)}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#30363d] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
+            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
             <IconPlus size={12} /> 캐릭터 추가
           </button>
           <button onClick={syncChars} disabled={syncing}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:hover:bg-[#21262d] dark:border-[#30363d] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+            className="flex items-center gap-1.5 rounded border border-gray-200 dark:hover:bg-[#2a2a2a] dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 transition-colors">
             <span className={syncing ? 'animate-spin' : ''}><IconRefresh /></span>
             {syncing ? '갱신 중…' : '캐릭터 갱신'}
           </button>
@@ -1053,13 +1084,13 @@ export default function DashboardClient({ initialChars = [] }) {
       {/* ── 요약 카드 ── */}
       <div className="grid grid-cols-3 gap-3">
         {/* 원정대 캐릭터 */}
-        <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] px-4 py-3">
+        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3">
           <p className="text-xs text-gray-400 dark:text-gray-500">원정대 캐릭터</p>
           <p className="ns-extrabold text-xl mt-0.5 text-gray-800 dark:text-gray-100">{chars.length}개</p>
         </div>
 
         {/* 이번 주 획득 골드 */}
-        <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] px-4 py-3">
+        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3">
           <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">이번 주 획득</p>
           {/* 그리드로 두 행 컬럼 정렬: [뱃지] [spacer] [획득량] [/] [합계G] */}
           <div className="grid items-baseline gap-y-1.5" style={{ gridTemplateColumns: 'auto 1fr auto auto auto', columnGap: '4px' }}>
@@ -1078,7 +1109,7 @@ export default function DashboardClient({ initialChars = [] }) {
         </div>
 
         {/* 완료 레이드 */}
-        <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] px-4 py-3">
+        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs text-gray-400 dark:text-gray-500">완료 레이드</p>
             <span className="text-xs ns-bold text-gray-500 dark:text-gray-400">
@@ -1086,7 +1117,7 @@ export default function DashboardClient({ initialChars = [] }) {
             </span>
           </div>
           {/* 프로그레스 바 */}
-          <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-[#21262d] overflow-hidden mb-1.5">
+          <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden mb-1.5">
             <div
               className="h-full rounded-full bg-yellow-400 transition-all duration-500"
               style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
@@ -1118,9 +1149,9 @@ export default function DashboardClient({ initialChars = [] }) {
                 .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
                 .sort((a, b) => RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId))
               return (
-                <div key={char.id} className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] overflow-hidden">
+                <div key={char.id} className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden">
                   {/* 캐릭터 헤더 */}
-                  <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-100 dark:border-[#21262d] bg-gray-50 dark:bg-[#0d1117]">
+                  <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
                     {getClassIcon(char.class)
                       ? <img src={getClassIcon(char.class)} alt={char.class} className="w-7 h-7 object-contain flex-shrink-0 opacity-85" />
                       : <span className="w-7 h-7 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
@@ -1140,7 +1171,7 @@ export default function DashboardClient({ initialChars = [] }) {
                     </div>
                   </div>
                   {/* 캐릭터 골드 요약 */}
-                  <div className="px-3 py-1.5 border-b border-gray-100 dark:border-[#21262d] bg-gray-50/50 dark:bg-[#0d1117]/50">
+                  <div className="px-3 py-1.5 border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50/50 dark:bg-[#181818]/50">
                     <CharGoldBadges
                       bound={charGoldMap[char.id]?.bound ?? 0}
                       trade={charGoldMap[char.id]?.trade ?? 0}
@@ -1150,7 +1181,7 @@ export default function DashboardClient({ initialChars = [] }) {
                   {charRaids.length === 0 ? (
                     <div className="py-6 text-center text-[11px] text-gray-300 dark:text-gray-600">레이드 없음</div>
                   ) : (
-                    <div className="divide-y divide-gray-50 dark:divide-[#21262d]">
+                    <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
                       {charRaids.map(entry => {
                         const raid = RAIDS.find(r => r.id === entry.raidId)
                         const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
@@ -1173,13 +1204,13 @@ export default function DashboardClient({ initialChars = [] }) {
                             className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors ${
                               moreDone ? 'bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20'
                               : allDone ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
-                              : 'hover:bg-gray-50 dark:hover:bg-[#21262d]'
+                              : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                             }`}
                           >
                             <div className={`h-5 w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                               moreDone ? 'bg-blue-400 border-blue-400 text-white shadow-sm'
                               : allDone ? 'bg-yellow-400 border-yellow-400 text-gray-900 shadow-sm'
-                              : 'border-gray-300 dark:border-[#30363d]'
+                              : 'border-gray-300 dark:border-[#383838]'
                             }`}>
                               {allDone && <IconCheck />}
                             </div>
@@ -1207,18 +1238,20 @@ export default function DashboardClient({ initialChars = [] }) {
                                 style={{ WebkitTapHighlightColor: 'transparent' }}
                               >
                                 {/* iOS 슬림 토글 */}
-                                <div className={`flex items-center rounded-full transition-colors duration-300 ${
-                                  moreFrom === 'bound' ? 'bg-orange-300 dark:bg-orange-400/70' : 'bg-sky-300 dark:bg-sky-400/70'
+                                <div className={`flex items-center rounded-full border transition-colors duration-300 ${
+                                  moreFrom === 'bound'
+                                    ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800/40'
+                                    : 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800/40'
                                 }`} style={{ height: 20, padding: 2, gap: 4 }}>
                                   {moreFrom === 'bound' ? (
                                     <>
-                                      <span className="text-[8px] ns-bold select-none leading-none pl-1.5 text-orange-900/80 dark:text-white/80 whitespace-nowrap">귀속골드 더보기</span>
-                                      <div className="flex-shrink-0 rounded-full bg-white/90 shadow" style={{ width: 16, height: 16 }} />
+                                      <span className="text-[8px] ns-bold select-none leading-none pl-1.5 text-orange-500 dark:text-orange-400 whitespace-nowrap">귀속골드 더보기</span>
+                                      <div className="flex-shrink-0 rounded-full bg-orange-400 dark:bg-orange-500 shadow" style={{ width: 16, height: 16 }} />
                                     </>
                                   ) : (
                                     <>
-                                      <div className="flex-shrink-0 rounded-full bg-white/90 shadow" style={{ width: 16, height: 16 }} />
-                                      <span className="text-[8px] ns-bold select-none leading-none pr-1.5 text-sky-900/80 dark:text-white/80 whitespace-nowrap">거래골드 더보기</span>
+                                      <div className="flex-shrink-0 rounded-full bg-blue-400 dark:bg-blue-500 shadow" style={{ width: 16, height: 16 }} />
+                                      <span className="text-[8px] ns-bold select-none leading-none pr-1.5 text-blue-500 dark:text-blue-400 whitespace-nowrap">거래골드 더보기</span>
                                     </>
                                   )}
                                 </div>
@@ -1253,15 +1286,15 @@ export default function DashboardClient({ initialChars = [] }) {
 
         // ── 테이블 뷰 ────────────────────────────────────────────────────────
         const renderTable = (charSubset) => (
-          <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] overflow-hidden">
+          <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="border-collapse w-full" style={{ minWidth: 'max-content' }}>
                 <thead>
                   {/* 1행: 캐릭터 이름 + 스탯 */}
-                  <tr className="border-b border-gray-100 dark:border-[#21262d] bg-gray-50 dark:bg-[#0d1117]">
-                    <th style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-30 bg-gray-50 dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#21262d]"/>
+                  <tr className="border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
+                    <th style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-30 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-[#2a2a2a]"/>
                     {charSubset.map(char => (
-                      <th key={char.id} style={{ width: COL_CHAR, minWidth: COL_CHAR }} className="px-2 py-2 border-r border-gray-100 dark:border-[#21262d] last:border-r-0 align-top">
+                      <th key={char.id} style={{ width: COL_CHAR, minWidth: COL_CHAR }} className="px-2 py-2 border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 align-top">
                         <div className="flex flex-col items-center gap-0.5">
                           <span className={`${nameSize(char.name)} ns-bold text-gray-800 dark:text-gray-100 leading-tight text-center break-keep`}>{char.name}</span>
                           <div className="flex flex-col items-start gap-0.5">
@@ -1281,10 +1314,10 @@ export default function DashboardClient({ initialChars = [] }) {
                     ))}
                   </tr>
                   {/* 2행: 캐릭터별 획득 골드 */}
-                  <tr className="border-b border-gray-200 dark:border-[#30363d] bg-gray-50 dark:bg-[#0d1117]">
-                    <th style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-30 bg-gray-50 dark:bg-[#0d1117] border-r border-gray-200 dark:border-[#21262d]"/>
+                  <tr className="border-b border-gray-200 dark:border-[#383838] bg-gray-50 dark:bg-[#181818]">
+                    <th style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-30 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-[#2a2a2a]"/>
                     {charSubset.map(char => (
-                      <th key={char.id} style={{ width: COL_CHAR, minWidth: COL_CHAR }} className="px-2 py-1.5 border-r border-gray-100 dark:border-[#21262d] last:border-r-0">
+                      <th key={char.id} style={{ width: COL_CHAR, minWidth: COL_CHAR }} className="px-2 py-1.5 border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0">
                         <CharGoldBadges
                           bound={charGoldMap[char.id]?.bound ?? 0}
                           trade={charGoldMap[char.id]?.trade ?? 0}
@@ -1293,19 +1326,19 @@ export default function DashboardClient({ initialChars = [] }) {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-[#21262d]">
+                <tbody className="divide-y divide-gray-100 dark:divide-[#2a2a2a]">
                   {raidRows.map(row => {
                     const raidData = RAIDS.find(r => r.id === row.raidId)
                     return (
                       <tr key={row.key} className="group">
-                        <td style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-10 bg-white dark:bg-[#161b22] border-r border-gray-100 dark:border-[#21262d] px-3 py-2">
+                        <td style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-3 py-2">
                           <span className="text-xs ns-bold text-gray-800 dark:text-gray-100">{row.raidName}</span>
                         </td>
                         {charSubset.map(char => {
                           const entry = (raids[char.id] || []).find(e => e.raidId === row.raidId)
                           const diff  = raidData?.difficulties.find(d => d.key === entry?.difficulty)
                           return (
-                            <td key={char.id} style={{ width: COL_CHAR, minWidth: COL_CHAR }} className="border-r border-gray-100 dark:border-[#21262d] last:border-r-0 p-1">
+                            <td key={char.id} style={{ width: COL_CHAR, minWidth: COL_CHAR }} className="border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1">
                               <RaidCell
                                 entry={entry}
                                 diff={diff}
@@ -1335,12 +1368,12 @@ export default function DashboardClient({ initialChars = [] }) {
         return (
           <div className="space-y-2">
             {/* 카드 / 테이블 뷰 토글 */}
-            <div className="flex justify-end gap-1 rounded-lg border border-gray-200 dark:border-[#30363d] p-0.5 w-fit ml-auto bg-gray-50 dark:bg-[#0d1117]">
+            <div className="flex justify-end gap-1 rounded-lg border border-gray-200 dark:border-[#383838] p-0.5 w-fit ml-auto bg-gray-50 dark:bg-[#181818]">
               <button
                 onClick={() => setCardView(false)}
                 className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs ns-bold transition-colors ${
                   !cardView
-                    ? 'bg-white dark:bg-[#161b22] text-gray-700 dark:text-gray-200 shadow-sm'
+                    ? 'bg-white dark:bg-[#222222] text-gray-700 dark:text-gray-200 shadow-sm'
                     : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
               >
@@ -1355,7 +1388,7 @@ export default function DashboardClient({ initialChars = [] }) {
                 onClick={() => setCardView(true)}
                 className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs ns-bold transition-colors ${
                   cardView
-                    ? 'bg-white dark:bg-[#161b22] text-gray-700 dark:text-gray-200 shadow-sm'
+                    ? 'bg-white dark:bg-[#222222] text-gray-700 dark:text-gray-200 shadow-sm'
                     : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
               >

@@ -90,15 +90,17 @@ model Character {
 // ─── 숙제 ─────────────────────────────────────────────────────────────────────
 
 model CharacterRaid {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   characterId String
-  raidId      String   // constants/raids.js 의 raid id
-  difficulty  String   // "normal" | "hard"
-  gateClears  Boolean[]        // 관문별 클리어 여부 배열
-  isGoldCheck Boolean  @default(true)  // 골드 획득 여부
-  resetAt     DateTime         // 다음 수요일 06:00 KST
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  raidId      String    // lib/raidData.js 의 raid id
+  difficulty  String    // "normal" | "hard" | "nightmare" 등
+  gateClears  Boolean[] // 관문별 클리어 여부 배열
+  isGoldCheck Boolean   @default(true)  // 골드 획득 여부
+  moreDone    Boolean   @default(false) // 더보기 완료 여부
+  moreFrom    String    @default("bound") // 더보기 차감 출처 "bound" | "trade"
+  resetAt     DateTime  // 다음 수요일 06:00 KST
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 

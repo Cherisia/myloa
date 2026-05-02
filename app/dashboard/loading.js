@@ -8,7 +8,7 @@ export default function DashboardLoading() {
         }
       `}</style>
 
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/5 dark:bg-[#0d1117]/10">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/5 dark:bg-[#181818]/10">
         <div className="flex items-end gap-1.5" style={{ height: 28 }}>
           {[0, 0.15, 0.3, 0.15, 0].map((delay, i) => (
             <div

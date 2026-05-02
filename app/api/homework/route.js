@@ -1,5 +1,6 @@
 // GET  /api/homework?characterId=... → 캐릭터 숙제 목록
-// POST /api/homework → 숙제 등록/수정 (관문 토글)
+// POST /api/homework                → 숙제 등록/수정 (upsert)
+// DELETE /api/homework              → 숙제 삭제
 
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
@@ -36,7 +37,12 @@ export async function GET(request) {
     await prisma.$transaction(
       resetIds.map(id => prisma.characterRaid.update({
         where: { id },
-        data: { gateClears: [], resetAt: getNextResetAt() },
+        data: {
+          gateClears: [],
+          moreDone: false,
+          moreFrom: 'bound',
+          resetAt: getNextResetAt(),
+        },
       }))
     )
   }
@@ -53,7 +59,9 @@ export async function POST(request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
 
-  const { characterId, raidId, difficulty, gateClears, isGoldCheck } = await request.json()
+  const body = await request.json()
+  const { characterId, raidId, difficulty, gateClears, isGoldCheck, moreDone, moreFrom } = body
+
   if (!characterId || !raidId || !difficulty) {
     return NextResponse.json({ error: '필수 항목 누락' }, { status: 400 })
   }
@@ -67,13 +75,17 @@ export async function POST(request) {
       characterId,
       raidId,
       difficulty,
-      gateClears: gateClears ?? [],
+      gateClears:  gateClears  ?? [],
       isGoldCheck: isGoldCheck ?? true,
-      resetAt: getNextResetAt(),
+      moreDone:    moreDone    ?? false,
+      moreFrom:    moreFrom    ?? 'bound',
+      resetAt:     getNextResetAt(),
     },
     update: {
-      gateClears: gateClears ?? [],
-      isGoldCheck: isGoldCheck ?? true,
+      ...(gateClears  !== undefined && { gateClears }),
+      ...(isGoldCheck !== undefined && { isGoldCheck }),
+      ...(moreDone    !== undefined && { moreDone }),
+      ...(moreFrom    !== undefined && { moreFrom }),
     },
   })
 
@@ -86,8 +98,12 @@ export async function DELETE(request) {
 
   const { searchParams } = new URL(request.url)
   const characterId = searchParams.get('characterId')
-  const raidId = searchParams.get('raidId')
-  const difficulty = searchParams.get('difficulty')
+  const raidId      = searchParams.get('raidId')
+  const difficulty  = searchParams.get('difficulty')
+
+  if (!characterId || !raidId || !difficulty) {
+    return NextResponse.json({ error: '필수 항목 누락' }, { status: 400 })
+  }
 
   const ok = await verifyCharacterOwner(characterId, session.user.id)
   if (!ok) return NextResponse.json({ error: '권한 없음' }, { status: 403 })

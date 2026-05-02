@@ -112,15 +112,15 @@ function MemberCard({ member, isMe }) {
   }).filter(Boolean)
 
   return (
-    <div className={`rounded-lg border bg-white dark:bg-[#161b22] overflow-hidden
-      ${isMe ? 'border-yellow-400/60 dark:border-yellow-500/40' : 'border-gray-200 dark:border-[#30363d]'}`}>
+    <div className={`rounded-lg border bg-white dark:bg-[#222222] overflow-hidden
+      ${isMe ? 'border-yellow-400/60 dark:border-yellow-500/40' : 'border-gray-200 dark:border-[#383838]'}`}>
       {isMe && <div className="h-0.5 bg-yellow-400"/>}
       <div className="p-4 space-y-3">
         {/* 멤버 정보 */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <div className={`h-9 w-9 rounded-full flex items-center justify-center text-sm ns-extrabold
-              ${isLeader ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400' : 'bg-gray-100 dark:bg-[#21262d] text-gray-500'}`}>
+              ${isLeader ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500'}`}>
               {member.nickname[0]}
             </div>
             <div>
@@ -143,7 +143,7 @@ function MemberCard({ member, isMe }) {
             </div>
           </div>
           {isMe && (
-            <button className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors border border-gray-200 dark:border-[#30363d] rounded px-2 py-1">
+            <button className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors border border-gray-200 dark:border-[#383838] rounded px-2 py-1">
               공개설정
             </button>
           )}
@@ -151,7 +151,7 @@ function MemberCard({ member, isMe }) {
 
         {/* 골드 or 비공개 */}
         {hidden ? (
-          <div className="rounded bg-gray-50 dark:bg-[#21262d] py-2 text-center">
+          <div className="rounded bg-gray-50 dark:bg-[#2a2a2a] py-2 text-center">
             <p className="text-xs text-gray-400">🔒 그룹장에게만 공개</p>
           </div>
         ) : (
@@ -161,7 +161,7 @@ function MemberCard({ member, isMe }) {
                 <span className="text-gray-400">주간 골드</span>
                 <span className="ns-bold text-yellow-600 dark:text-yellow-400">{earned.toLocaleString()}/{total.toLocaleString()}G</span>
               </div>
-              <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#30363d] overflow-hidden">
+              <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#383838] overflow-hidden">
                 <div className={`h-full rounded-full transition-all duration-300
                   ${pct >= 80 ? 'bg-green-400' : pct >= 40 ? 'bg-yellow-400' : 'bg-red-400'}`}
                   style={{ width: `${pct}%` }}/>
@@ -172,7 +172,7 @@ function MemberCard({ member, isMe }) {
                 <span key={i} className={`text-[11px] px-2 py-0.5 rounded-full ns-bold
                   ${r.allDone
                     ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                    : 'bg-gray-100 dark:bg-[#21262d] text-gray-500 dark:text-gray-400'
+                    : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400'
                   }`}>
                   {r.allDone ? '✓ ' : ''}{r.name} {r.diff[0]} ({r.cleared}/{r.total})
                 </span>
@@ -191,27 +191,27 @@ function CreateModal({ onClose }) {
   const [max, setMax] = useState(8)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] shadow-xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#30363d]">
+      <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">그룹 만들기</span>
           <button onClick={onClose} className="text-gray-400 text-lg leading-none">×</button>
         </div>
         <div className="px-5 py-4 space-y-3">
           <div>
             <label className="block text-xs ns-bold text-gray-500 dark:text-gray-400 mb-1.5">그룹 이름</label>
-            <input className="w-full rounded border border-gray-200 dark:border-[#30363d] px-3 py-2 text-sm bg-white dark:bg-[#0d1117] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
+            <input className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
               value={name} onChange={e => setName(e.target.value)} placeholder="예: 카제로스 주민들" />
           </div>
           <div>
             <label className="block text-xs ns-bold text-gray-500 dark:text-gray-400 mb-1.5">최대 인원</label>
-            <select className="w-full rounded border border-gray-200 dark:border-[#30363d] px-3 py-2 text-sm bg-white dark:bg-[#0d1117] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
+            <select className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
               value={max} onChange={e => setMax(Number(e.target.value))}>
               {[4, 6, 8, 10, 12, 16].map(n => <option key={n} value={n}>{n}명</option>)}
             </select>
           </div>
         </div>
-        <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#30363d]">
-          <button onClick={onClose} className="flex-1 rounded border border-gray-200 dark:border-[#30363d] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">취소</button>
+        <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#383838]">
+          <button onClick={onClose} className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">취소</button>
           <button onClick={onClose} className="flex-1 rounded bg-yellow-400 hover:bg-yellow-300 py-2 text-sm ns-bold text-gray-900 transition-colors">만들기</button>
         </div>
       </div>
@@ -224,20 +224,20 @@ function JoinModal({ onClose }) {
   const [code, setCode] = useState('')
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="w-full max-w-xs rounded-xl border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] shadow-xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#30363d]">
+      <div className="w-full max-w-xs rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">그룹 참가</span>
           <button onClick={onClose} className="text-gray-400 text-lg leading-none">×</button>
         </div>
         <div className="px-5 py-4 space-y-3">
           <label className="block text-xs ns-bold text-gray-500 dark:text-gray-400 mb-1.5">초대 코드</label>
           <input
-            className="w-full rounded border border-gray-200 dark:border-[#30363d] px-3 py-3 text-lg ns-extrabold text-center tracking-widest uppercase bg-white dark:bg-[#0d1117] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
+            className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-3 text-lg ns-extrabold text-center tracking-widest uppercase bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
             value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="XXXXXXXX" maxLength={8} />
           <p className="text-xs text-center text-gray-400">그룹장에게 초대 코드를 받아 입력하세요</p>
         </div>
-        <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#30363d]">
-          <button onClick={onClose} className="flex-1 rounded border border-gray-200 dark:border-[#30363d] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">취소</button>
+        <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#383838]">
+          <button onClick={onClose} className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">취소</button>
           <button onClick={onClose} className="flex-1 rounded bg-yellow-400 hover:bg-yellow-300 py-2 text-sm ns-bold text-gray-900 transition-colors">참가 신청</button>
         </div>
       </div>
@@ -284,7 +284,7 @@ export default function GroupPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowJoin(true)}
-            className="rounded border border-gray-200 dark:border-[#30363d] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
+            className="rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
             코드로 참가
           </button>
           <button onClick={() => setShowCreate(true)}
@@ -295,7 +295,7 @@ export default function GroupPage() {
       </div>
 
       {/* 그룹 정보 카드 */}
-      <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] px-4 py-4">
+      <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-center gap-3 flex-1">
             <div className="h-12 w-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center text-2xl flex-shrink-0">🏰</div>
@@ -315,7 +315,7 @@ export default function GroupPage() {
               </span>
               <button onClick={handleCopy}
                 className={`flex items-center gap-1 rounded px-2 py-1 text-xs ns-bold transition-colors
-                  ${copied ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-[#21262d] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#2d333b]'}`}>
+                  ${copied ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#2d333b]'}`}>
                 <IconCopy />{copied ? '복사됨' : '복사'}
               </button>
             </div>
@@ -325,7 +325,7 @@ export default function GroupPage() {
       </div>
 
       {/* 탭 */}
-      <div className="flex gap-0 border-b border-gray-200 dark:border-[#30363d]">
+      <div className="flex gap-0 border-b border-gray-200 dark:border-[#383838]">
         {[
           { key: 'members',  label: `멤버 (${members.length})` },
           { key: 'pending',  label: `대기중 (${pending.length})` },
@@ -355,14 +355,14 @@ export default function GroupPage() {
       {tab === 'pending' && (
         <div className="space-y-2">
           {pending.length === 0 ? (
-            <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] py-12 text-center">
+            <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] py-12 text-center">
               <p className="text-gray-400 text-sm">대기 중인 가입 신청이 없습니다</p>
             </div>
           ) : (
             pending.map(m => (
-              <div key={m.id} className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] px-4 py-3">
+              <div key={m.id} className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-gray-100 dark:bg-[#21262d] flex items-center justify-center text-sm ns-bold text-gray-500">
+                  <div className="h-9 w-9 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center text-sm ns-bold text-gray-500">
                     {m.nickname[0]}
                   </div>
                   <div>
@@ -372,7 +372,7 @@ export default function GroupPage() {
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => setPending(p => p.filter(x => x.id !== m.id))}
-                    className="rounded border border-gray-200 dark:border-[#30363d] px-3 py-1.5 text-xs ns-bold text-gray-500 hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
+                    className="rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-500 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
                     거절
                   </button>
                   <button onClick={() => setPending(p => p.filter(x => x.id !== m.id))}
@@ -390,11 +390,11 @@ export default function GroupPage() {
       {tab === 'overview' && (
         <div className="space-y-4">
           {/* 골드 순위 */}
-          <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#21262d]">
+          <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#2a2a2a]">
               <p className="text-sm ns-bold text-gray-700 dark:text-gray-200">주간 골드 현황</p>
             </div>
-            <div className="divide-y divide-gray-100 dark:divide-[#21262d]">
+            <div className="divide-y divide-gray-100 dark:divide-[#2a2a2a]">
               {members
                 .filter(m => m.visibility !== 'leader_only' || m.id === MY_ID)
                 .sort((a, b) => getMemberGold(b).earned - getMemberGold(a).earned)
@@ -406,7 +406,7 @@ export default function GroupPage() {
                       <span className={`text-sm ns-extrabold w-4 text-center ${rank === 0 ? 'text-yellow-500' : rank === 1 ? 'text-gray-400' : rank === 2 ? 'text-orange-700' : 'text-gray-300'}`}>
                         {rank + 1}
                       </span>
-                      <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-[#21262d] flex items-center justify-center text-sm ns-bold text-gray-500 flex-shrink-0">
+                      <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center text-sm ns-bold text-gray-500 flex-shrink-0">
                         {m.nickname[0]}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -414,7 +414,7 @@ export default function GroupPage() {
                           <span className="text-sm ns-bold text-gray-700 dark:text-gray-200">{m.nickname}</span>
                           <span className="text-sm ns-bold text-yellow-600 dark:text-yellow-400">{earned.toLocaleString()}G</span>
                         </div>
-                        <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#30363d] overflow-hidden">
+                        <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#383838] overflow-hidden">
                           <div className="h-full rounded-full bg-yellow-400" style={{ width: `${pct}%` }}/>
                         </div>
                       </div>
@@ -426,23 +426,23 @@ export default function GroupPage() {
           </div>
 
           {/* 레이드 완료 매트릭스 */}
-          <div className="rounded-lg border border-gray-200 dark:border-[#30363d] bg-white dark:bg-[#161b22] overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#21262d]">
+          <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-[#2a2a2a]">
               <p className="text-sm ns-bold text-gray-700 dark:text-gray-200">레이드 완료 현황</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-100 dark:border-[#21262d]">
+                  <tr className="border-b border-gray-100 dark:border-[#2a2a2a]">
                     <th className="text-left px-4 py-2 text-xs ns-bold text-gray-400">멤버</th>
                     {raidKeys.map(r => (
                       <th key={`${r.id}_${r.diff}`} className="px-3 py-2 text-xs ns-bold text-gray-400 text-center whitespace-nowrap">{r.label}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-[#21262d]">
+                <tbody className="divide-y divide-gray-100 dark:divide-[#2a2a2a]">
                   {members.map(m => (
-                    <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
+                    <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
                       <td className="px-4 py-2.5 text-sm ns-bold text-gray-700 dark:text-gray-200">{m.nickname}</td>
                       {raidKeys.map(r => {
                         const entry = m.raids.find(e => e.raidId === r.id && e.difficulty === r.diff)
@@ -458,7 +458,7 @@ export default function GroupPage() {
                             <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] ns-bold mx-auto
                               ${allDone ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                                 : cleared > 0 ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400'
-                                : 'bg-gray-100 dark:bg-[#21262d] text-gray-400'}`}>
+                                : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-400'}`}>
                               {allDone ? '✓' : `${cleared}/${entry.gateClears.length}`}
                             </span>
                           </td>

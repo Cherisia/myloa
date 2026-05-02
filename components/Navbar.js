@@ -21,7 +21,7 @@ const THEMES = [
   {
     key: 'dark',
     label: '🌙 별 헤는 밤',
-    bg: 'linear-gradient(135deg, #1e2433 50%, #0d1117 100%)',
+    bg: 'linear-gradient(135deg, #1e2433 50%, #181818 100%)',
     isGradient: true,
   },
 ]
@@ -48,7 +48,7 @@ export default function Navbar() {
       <button
         onClick={() => setThemeOpen(v => !v)}
         className={`flex items-center gap-1.5 h-8 px-2 rounded transition-colors
-          text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#21262d]
+          text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]
           ${mobile ? 'w-full justify-start' : ''}`}
         aria-label="테마 선택"
       >
@@ -63,8 +63,8 @@ export default function Navbar() {
         <>
           {/* 배경 닫기 오버레이 */}
           <div className="fixed inset-0 z-40" onClick={() => setThemeOpen(false)} />
-          <div className={`absolute z-50 mt-1 p-1.5 rounded-xl border border-gray-200 dark:border-[#30363d]
-            bg-white dark:bg-[#161b22] shadow-lg w-max
+          <div className={`absolute z-50 mt-1 p-1.5 rounded-xl border border-gray-200 dark:border-[#383838]
+            bg-white dark:bg-[#222222] shadow-lg w-max
             ${mobile ? 'left-0' : 'right-0'}`}
           >
             {THEMES.map(t => (
@@ -73,8 +73,8 @@ export default function Navbar() {
                 onClick={() => { setTheme(t.key); setThemeOpen(false) }}
                 className={`w-full flex items-center px-2.5 py-1.5 rounded-lg text-xs transition-colors
                   ${theme === t.key
-                    ? 'bg-gray-100 dark:bg-[#21262d] text-gray-800 dark:text-gray-100 ns-bold'
-                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#21262d]'}`}
+                    ? 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-100 ns-bold'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}
               >
                 {t.label}
               </button>
@@ -86,7 +86,7 @@ export default function Navbar() {
   )
 
   return (
-    <header className="sticky top-0 z-50 bg-white dark:bg-[#161b22] border-b border-gray-200 dark:border-[#30363d]">
+    <header className="sticky top-0 z-50 bg-white dark:bg-[#141414] border-b border-gray-200 dark:border-[#2e2e2e]">
       <div className="mx-auto max-w-5xl px-4 flex h-12 items-center justify-between">
 
         {/* 로고 */}
@@ -108,7 +108,7 @@ export default function Navbar() {
               className={`px-3 py-1.5 rounded text-sm transition-colors duration-100
                 ${isActive(href)
                   ? 'ns-bold text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/10'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#21262d]'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                 }`}
             >
               {label}
@@ -133,7 +133,7 @@ export default function Navbar() {
                   className="h-6 w-6 rounded-full object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-[#30363d] flex items-center justify-center flex-shrink-0">
+                <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-[#383838] flex items-center justify-center flex-shrink-0">
                   <span className="text-[10px] ns-bold text-gray-500 dark:text-gray-400">
                     {(session.user?.name || '?')[0].toUpperCase()}
                   </span>
@@ -144,7 +144,7 @@ export default function Navbar() {
               </span>
               <button
                 onClick={() => signOut()}
-                className="rounded border border-gray-200 dark:border-[#30363d] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
+                className="rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
               >
                 로그아웃
               </button>
@@ -164,7 +164,7 @@ export default function Navbar() {
           {/* 모바일 메뉴 버튼 */}
           <button
             onClick={() => setMobileOpen(v => !v)}
-            className="sm:hidden h-8 w-8 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors"
+            className="sm:hidden h-8 w-8 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
           >
             {mobileOpen ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -181,7 +181,7 @@ export default function Navbar() {
 
       {/* 모바일 메뉴 */}
       {mobileOpen && (
-        <div className="sm:hidden border-t border-gray-200 dark:border-[#30363d] px-4 py-2 space-y-1">
+        <div className="sm:hidden border-t border-gray-200 dark:border-[#383838] px-4 py-2 space-y-1">
           {navLinks.map(({ href, label }) => (
             <Link
               key={href}
@@ -190,13 +190,13 @@ export default function Navbar() {
               className={`block px-3 py-2 rounded text-sm transition-colors
                 ${isActive(href)
                   ? 'ns-bold text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/10'
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#21262d]'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                 }`}
             >
               {label}
             </Link>
           ))}
-          <div className="pt-2 pb-1 border-t border-gray-200 dark:border-[#30363d]">
+          <div className="pt-2 pb-1 border-t border-gray-200 dark:border-[#383838]">
             {/* 모바일 테마 선택 */}
             <div className="px-1 pb-2">
               <ThemePicker mobile />
@@ -211,7 +211,7 @@ export default function Navbar() {
                       className="h-6 w-6 rounded-full object-cover flex-shrink-0"
                     />
                   ) : (
-                    <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-[#30363d] flex items-center justify-center flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-[#383838] flex items-center justify-center flex-shrink-0">
                       <span className="text-[10px] ns-bold text-gray-500 dark:text-gray-400">
                         {(session.user?.name || '?')[0].toUpperCase()}
                       </span>
@@ -223,7 +223,7 @@ export default function Navbar() {
                 </div>
                 <button
                   onClick={() => signOut()}
-                  className="w-full flex items-center justify-center rounded border border-gray-200 dark:border-[#30363d] px-3 py-2 text-sm ns-bold text-gray-600 dark:text-gray-300"
+                  className="w-full flex items-center justify-center rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm ns-bold text-gray-600 dark:text-gray-300"
                 >
                   로그아웃
                 </button>

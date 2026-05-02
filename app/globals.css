@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4 — dark: 클래스 전략 (.dark 클래스 기반) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ── 나눔스퀘어 폰트 ─────────────────────────────────────────── */
 @font-face {
   font-family: NanumSquareL;
@@ -41,14 +44,14 @@ body {
 }
 
 .dark body {
-  background-color: #0d1117;
-  color: #e6edf3;
+  background-color: #181818;
+  color: #e0e0e0;
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { border-radius: 9999px; background: #d1d5db; }
-.dark ::-webkit-scrollbar-thumb { background: #30363d; }
+.dark ::-webkit-scrollbar-thumb { background: #444444; }
 
 /* ── 나눔스퀘어 weight 헬퍼 ─────────────────────────────────── */
 .ns-light     { font-family: 'NanumSquareL',  sans-serif; }
@@ -130,3 +133,68 @@ body {
 [data-theme="pink"] .border-sky-200        { border-color: #e9d5ff !important; }
 [data-theme="pink"] .text-sky-300          { color: #d8b4fe !important; }
 [data-theme="pink"] .text-sky-600          { color: #9333ea !important; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   다크 테마 (.dark)
+   ─ 노란색 액센트 → 흰색/밝은 중립
+   ─ 버튼/배경/텍스트 전반 재정의
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 텍스트: 노랑 → 회색 계열 ── */
+.dark .text-yellow-400  { color: #b0b0b0 !important; }
+.dark .text-yellow-500  { color: #aaaaaa !important; }
+.dark .text-yellow-600  { color: #c0c0c0 !important; }
+.dark .text-yellow-700  { color: #a0a0a0 !important; }
+.dark .text-yellow-900  { color: #d0d0d0 !important; }
+.dark .hover\:text-yellow-600:hover { color: #c0c0c0 !important; }
+
+/* ── 배경: 노랑 → 회색/중립 ── */
+/* 체크박스·프로그레스바 등 강조 fill */
+.dark .bg-yellow-400          { background-color: #888888 !important; }
+.dark .bg-yellow-300          { background-color: #707070 !important; }
+/* 버튼 (bg-yellow-200) */
+.dark .bg-yellow-200          { background-color: #2e2e2e !important; }
+/* 완료 셀 배경 */
+.dark .bg-yellow-50           { background-color: rgba(160,160,160,0.06) !important; }
+.dark .bg-yellow-100          { background-color: rgba(160,160,160,0.10) !important; }
+.dark .bg-yellow-900\/10      { background-color: rgba(160,160,160,0.07) !important; }
+
+/* ── hover 배경 ── */
+.dark .hover\:bg-yellow-400:hover  { background-color: #707070 !important; }
+.dark .hover\:bg-yellow-300:hover  { background-color: #383838 !important; }
+.dark .hover\:bg-yellow-100:hover  { background-color: rgba(160,160,160,0.10) !important; }
+.dark .hover\:bg-yellow-50:hover   { background-color: rgba(160,160,160,0.06) !important; }
+
+/* ── 테두리 ── */
+.dark .border-yellow-400      { border-color: #666666 !important; }
+.dark .border-yellow-400\/60  { border-color: rgba(140,140,140,0.6) !important; }
+.dark .focus\:border-yellow-400:focus { border-color: #666666 !important; }
+
+/* ── 기타 ── */
+.dark .ring-yellow-400        { --tw-ring-color: #666666 !important; }
+.dark .accent-yellow-500      { accent-color: #888888 !important; }
+.dark .bg-yellow-400\/40      { background-color: rgba(160,160,160,0.15) !important; }
+
+/* ── 완료 셀 hover ── */
+.dark .hover\:bg-yellow-900\/20:hover { background-color: rgba(160,160,160,0.10) !important; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   다크 테마 — 흰색/밝은 텍스트 → 회색 톤
+   ═══════════════════════════════════════════════════════════════ */
+.dark .text-white       { color: #c8c8c8 !important; }
+.dark .text-gray-100    { color: #c0c0c0 !important; }
+.dark .text-gray-200    { color: #b4b4b4 !important; }
+.dark .text-gray-300    { color: #9a9a9a !important; }
+.dark .text-gray-400    { color: #828282 !important; }
+.dark .text-gray-500    { color: #6e6e6e !important; }
+
+/* hover 상태 */
+.dark .hover\:text-gray-200:hover { color: #c0c0c0 !important; }
+.dark .dark\:hover\:text-gray-200:hover { color: #c0c0c0 !important; }
+
+/* 배경 밝기 조정 */
+.dark .bg-white         { background-color: #222222 !important; }
+.dark .bg-gray-50       { background-color: #1e1e1e !important; }
+.dark .bg-gray-100      { background-color: #252525 !important; }
