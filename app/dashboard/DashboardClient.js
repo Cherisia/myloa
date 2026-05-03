@@ -50,7 +50,7 @@ const CLASS_ICON = {
   // 가디언나이트
   '가디언나이트': 'guardianknight',
 }
-const getClassIcon = (cls) => CLASS_ICON[cls] ? `/class/${CLASS_ICON[cls]}.png` : null
+const getClassIcon = (cls) => CLASS_ICON[cls] ? `/class/${CLASS_ICON[cls]}.svg` : null
 
 // ── 아이콘 ────────────────────────────────────────────────────────────────────
 const IconPlus = ({ size = 13 }) => (
@@ -94,7 +94,7 @@ const IconPower = () => (
 )
 
 // ── 레이드 설정 모달 (캐릭터별) ───────────────────────────────────────────────
-function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRaidError, onClearExRaidError }) {
+function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onConfirm, exRaidError, onClearExRaidError }) {
   const [selectedIdx, setSelectedIdx] = useState(0)
   const selectedChar = chars[selectedIdx]
 
@@ -115,7 +115,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
     if (exceeded.length > 0) {
       setGoldError(exceeded)
     } else {
-      onClose()
+      onConfirm()
     }
   }
 
@@ -1221,9 +1221,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
 
   // 자동 설정 적용
   const applyAutoSetup = async (selectedChars, raidsByName, apiKey) => {
-    // 1. 신규 캐릭터 추가
-    const existingNames = new Set(chars.map(c => c.name))
-    const toAdd = selectedChars.filter(c => !existingNames.has(c.name))
+    // 1. 레이드가 배정된 캐릭터만 처리 (레이드 없는 캐릭터는 저장 제외)
+    const charsWithRaids = selectedChars.filter(c => (raidsByName[c.name] || []).length > 0)
+    const existingNames  = new Set(chars.map(c => c.name))
+    const toAdd          = charsWithRaids.filter(c => !existingNames.has(c.name))
     if (toAdd.length > 0) {
       try {
         await fetch('/api/characters', {
@@ -1243,7 +1244,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
     } catch {}
     // 3. 이름 → ID 매핑 후 레이드 배정 + DB 저장
     const newRaids = { ...raids }
-    selectedChars.forEach(sc => {
+    charsWithRaids.forEach(sc => {
       const char = updatedChars.find(c => c.name === sc.name)
       if (!char) return
       const entries = raidsByName[sc.name] || []
@@ -1253,7 +1254,30 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
     setRaids(newRaids)
   }
 
-  // 캐릭터 추가
+  // 레이드 없는 캐릭터 삭제 (DB soft-delete + state 제거)
+  const deleteRaidlessChars = (currentChars, currentRaids) => {
+    const noRaidIds = currentChars
+      .filter(c => (currentRaids[c.id] || []).length === 0)
+      .map(c => c.id)
+    if (noRaidIds.length === 0) return
+    setChars(prev => prev.filter(c => !noRaidIds.includes(c.id)))
+    setRaids(prev => {
+      const next = { ...prev }
+      noRaidIds.forEach(id => delete next[id])
+      return next
+    })
+    noRaidIds.forEach(id =>
+      fetch(`/api/characters?id=${id}`, { method: 'DELETE' }).catch(() => {})
+    )
+  }
+
+  // 레이드 설정 모달 확인 (금지 초과 검사 통과 후 호출)
+  const handleRaidSettingsConfirm = () => {
+    deleteRaidlessChars(chars, raids)
+    setShowRaidSettings(false)
+  }
+
+  // 캐릭터 추가 (완료 후 레이드 설정 모달 자동 오픈)
   const addChars = async (newChars, apiKey) => {
     setChars(prev => {
       const existingNames = new Set(prev.map(c => c.name))
@@ -1271,6 +1295,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
       const res = await fetch('/api/characters')
       if (res.ok) { const data = await res.json(); if (Array.isArray(data)) setChars(data) }
     } catch {}
+    // 캐릭터 추가 후 바로 레이드 설정 모달 오픈 (레이드 없으면 저장 안 됨)
+    setShowRaidSettings(true)
   }
 
   // 전체 캐릭터 갱신
@@ -1454,7 +1480,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
         // ── 카드 뷰 ────────────────────────────────────────────────────────
         const renderCardView = () => (
           <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
-            {chars.map(char => {
+            {chars.filter(c => (raids[c.id] || []).length > 0).map(char => {
               const charRaids = [...(raids[char.id] || [])]
                 .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
                 .sort((a, b) => RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId))
@@ -1463,7 +1489,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
                   {/* 캐릭터 헤더 */}
                   <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
                     {getClassIcon(char.class)
-                      ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-7 h-7 object-contain flex-shrink-0 opacity-85" />
+                      ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-7 h-7 object-contain flex-shrink-0" />
                       : <span className="w-7 h-7 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
                     }
                     <div className="flex-1 min-w-0">
@@ -1709,7 +1735,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
                 카드
               </button>
             </div>
-            {cardView ? renderCardView() : renderTable(chars)}
+            {cardView ? renderCardView() : renderTable(chars.filter(c => (raids[c.id] || []).length > 0))}
           </div>
         )
       })()}
@@ -1722,6 +1748,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
           onToggle={toggleCharRaid}
           onToggleGold={toggleCharRaidGold}
           onClose={() => setShowRaidSettings(false)}
+          onConfirm={handleRaidSettingsConfirm}
           exRaidError={exRaidError}
           onClearExRaidError={() => setExRaidError(null)}
         />

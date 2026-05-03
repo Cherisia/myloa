@@ -1,5 +1,6 @@
-// GET  /api/characters → 내 캐릭터 목록 (flat array)
-// POST /api/characters → 캐릭터 추가
+// GET    /api/characters       → 내 캐릭터 목록 (flat array)
+// POST   /api/characters       → 캐릭터 추가
+// DELETE /api/characters?id=.. → 캐릭터 비활성화 (soft delete)
 
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
@@ -93,4 +94,21 @@ export async function POST(request) {
   }
 
   return NextResponse.json({ success: true, added: newChars.length })
+}
+
+export async function DELETE(request) {
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
+
+  const { searchParams } = new URL(request.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 })
+
+  const char = await prisma.character.findFirst({
+    where: { id, loaAccount: { userId: session.user.id } },
+  })
+  if (!char) return NextResponse.json({ error: '권한 없음' }, { status: 403 })
+
+  await prisma.character.update({ where: { id }, data: { isActive: false } })
+  return NextResponse.json({ success: true })
 }
