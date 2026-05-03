@@ -85,6 +85,7 @@ body {
 
 /* ── 액센트: 노랑 → 파스텔 핑크 ── */
 [data-theme="pink"] .bg-yellow-200         { background-color: #fbcfe8 !important; } /* pink-200 */
+[data-theme="pink"] .bg-yellow-500         { background-color: #f472b6 !important; } /* pink-400: 더보기 */
 [data-theme="pink"] .bg-yellow-400         { background-color: #f9a8d4 !important; } /* pink-300 */
 [data-theme="pink"] .bg-yellow-300         { background-color: #f9a8d4 !important; } /* pink-300 */
 [data-theme="pink"] .bg-yellow-50          { background-color: #fdf2f8 !important; }
@@ -107,6 +108,7 @@ body {
 [data-theme="pink"] .bg-yellow-200    { background-color: #fbcfe8 !important; }
 [data-theme="pink"] .bg-yellow-400\/40 { background-color: rgba(244,114,182,0.3) !important; }
 
+[data-theme="pink"] .border-yellow-500     { border-color: #f472b6 !important; } /* 더보기 */
 [data-theme="pink"] .border-yellow-400     { border-color: #f9a8d4 !important; }
 [data-theme="pink"] .border-yellow-400\/60 { border-color: rgba(249,168,212,0.6) !important; }
 [data-theme="pink"] .ring-yellow-400       { --tw-ring-color: #f9a8d4 !important; }
@@ -165,6 +167,7 @@ body {
 
 /* ── 배경: 노랑 → 회색/중립 ── */
 /* 체크박스·프로그레스바 등 강조 fill */
+.dark .bg-yellow-500          { background-color: #666666 !important; } /* 더보기: 완료보다 조금 더 진한 회색 */
 .dark .bg-yellow-400          { background-color: #888888 !important; }
 .dark .bg-yellow-300          { background-color: #707070 !important; }
 /* 버튼 (bg-yellow-200) */
@@ -181,6 +184,7 @@ body {
 .dark .hover\:bg-yellow-50:hover   { background-color: rgba(160,160,160,0.06) !important; }
 
 /* ── 테두리 ── */
+.dark .border-yellow-500      { border-color: #666666 !important; } /* 더보기 */
 .dark .border-yellow-400      { border-color: #666666 !important; }
 .dark .border-yellow-400\/60  { border-color: rgba(140,140,140,0.6) !important; }
 .dark .focus\:border-yellow-400:focus { border-color: #666666 !important; }

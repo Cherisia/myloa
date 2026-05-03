@@ -73,8 +73,9 @@ function getMemberGold(member) {
     const raid = RAIDS.find(r => r.id === raidId)
     const diff = raid?.difficulties.find(d => d.key === difficulty)
     if (!diff) return
-    earned += calcGold(diff.gold, gateClears)
-    total += diff.gold.reduce((s, g) => s + g, 0)
+    earned += calcGold(diff, gateClears)
+    const allCleared = new Array((diff.goldBound || diff.goldTrade || []).length).fill(true)
+    total += calcGold(diff, allCleared)
   })
   return { earned, total }
 }

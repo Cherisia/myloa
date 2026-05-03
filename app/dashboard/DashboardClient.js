@@ -92,9 +92,16 @@ const IconItemLevel = () => (
 const IconPower = () => (
   <img src="/combat-power.svg" alt="전투력" style={{ width: 10, height: 10 }} />
 )
+const IconGrip = () => (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+    <circle cx="9"  cy="5"  r="1.8"/><circle cx="15" cy="5"  r="1.8"/>
+    <circle cx="9"  cy="12" r="1.8"/><circle cx="15" cy="12" r="1.8"/>
+    <circle cx="9"  cy="19" r="1.8"/><circle cx="15" cy="19" r="1.8"/>
+  </svg>
+)
 
 // ── 레이드 설정 모달 (캐릭터별) ───────────────────────────────────────────────
-function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onConfirm, exRaidError, onClearExRaidError }) {
+function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onConfirm, exRaidError, onClearExRaidError, onOpenCharAdd }) {
   const [selectedIdx, setSelectedIdx] = useState(0)
   const selectedChar = chars[selectedIdx]
 
@@ -125,8 +132,8 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onCo
         <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl px-5 py-10 text-center">
           <p className="text-sm text-gray-400 dark:text-gray-500 mb-1">등록된 캐릭터가 없습니다</p>
           <p className="text-xs text-gray-300 dark:text-gray-600">캐릭터를 먼저 추가해 주세요</p>
-          <button onClick={onClose} className="mt-6 px-4 py-2 rounded border border-gray-200 dark:border-[#383838] text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
-            닫기
+          <button onClick={() => { onClose(); onOpenCharAdd() }} className="mt-6 px-4 py-2 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+            캐릭터 추가
           </button>
         </div>
       </div>
@@ -435,20 +442,210 @@ function ApiKeyGuideModal({ onClose }) {
   )
 }
 
+// ── 캐릭터 설정 모달 ──────────────────────────────────────────────────────────
+function CharacterEditModal({ chars, raids, onAdd, onDelete, onClose, initialShowAdd = false }) {
+  const [showAddChar,      setShowAddChar]      = useState(initialShowAdd)
+  const [selectedIds,      setSelectedIds]      = useState(new Set())
+  const [showBatchConfirm, setShowBatchConfirm] = useState(false)
+
+  const allSelected  = chars.length > 0 && selectedIds.size === chars.length
+  const someSelected = selectedIds.size > 0 && selectedIds.size < chars.length
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const toggleAll = () => {
+    setSelectedIds(selectedIds.size === chars.length ? new Set() : new Set(chars.map(c => c.id)))
+  }
+
+  const handleBatchDelete = () => {
+    selectedIds.forEach(id => onDelete(id))
+    setSelectedIds(new Set())
+    setShowBatchConfirm(false)
+  }
+
+  const handleAdd = (newChars, apiKey, raidsByName) => {
+    onAdd(newChars, apiKey, raidsByName)
+    onClose()
+  }
+
+  if (showAddChar) {
+    return (
+      <CharacterAddModal
+        existingNames={new Set(chars.map(c => c.name))}
+        onAdd={handleAdd}
+        onClose={() => setShowAddChar(false)}
+      />
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
+      <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[80vh]">
+
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            {/* 전체선택 체크박스 */}
+            {chars.length > 0 && (
+              <div
+                onClick={toggleAll}
+                className={`w-4 h-4 flex-shrink-0 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
+                  allSelected || someSelected
+                    ? 'bg-yellow-400 border-yellow-400'
+                    : 'border-gray-300 dark:border-[#555] hover:border-yellow-400'
+                }`}
+              >
+                {allSelected && <IconCheck />}
+                {someSelected && (
+                  <svg width="8" height="2" viewBox="0 0 8 2" fill="currentColor" className="text-yellow-900">
+                    <rect width="8" height="2" rx="1"/>
+                  </svg>
+                )}
+              </div>
+            )}
+            <span className="ns-bold text-gray-900 dark:text-white">캐릭터 설정</span>
+            {selectedIds.size > 0 && (
+              <span className="text-[11px] text-gray-400 dark:text-gray-500">{selectedIds.size}개 선택</span>
+            )}
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">×</button>
+        </div>
+
+        {/* 캐릭터 목록 */}
+        <div className="overflow-y-auto flex-1 px-3 py-3 space-y-1.5">
+          {chars.length === 0 && (
+            <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-10">등록된 캐릭터가 없습니다</p>
+          )}
+          {chars.map(char => {
+            const isSelected = selectedIds.has(char.id)
+            const hasRaids   = (raids[char.id] || []).length > 0
+            return (
+              <div
+                key={char.id}
+                onClick={() => toggleSelect(char.id)}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+                  isSelected
+                    ? 'border-yellow-400/60 dark:border-yellow-600/40 bg-yellow-50 dark:bg-yellow-900/10'
+                    : 'border-gray-200 dark:border-[#383838] hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                }`}
+              >
+                {/* 체크박스 */}
+                <div className={`w-4 h-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                  isSelected
+                    ? 'bg-yellow-400 border-yellow-400'
+                    : 'border-gray-300 dark:border-[#555]'
+                }`}>
+                  {isSelected && <IconCheck />}
+                </div>
+                {/* 클래스 아이콘 */}
+                {getClassIcon(char.class)
+                  ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-6 h-6 object-contain flex-shrink-0" />
+                  : <span className="w-6 h-6 flex-shrink-0" />
+                }
+                {/* 이름 + 메타 */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{char.name}</span>
+                    {!hasRaids && (
+                      <span className="text-[9px] ns-bold px-1 py-0.5 rounded bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 dark:text-gray-500 flex-shrink-0">
+                        레이드 미설정
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">
+                    {char.class} · {char.itemLevel?.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* 푸터 */}
+        <div className="px-4 py-3 border-t border-gray-100 dark:border-[#383838] flex-shrink-0">
+          {showBatchConfirm ? (
+            /* 일괄 삭제 확인 */
+            <div className="flex items-center gap-2">
+              <span className="flex-1 text-[13px] ns-bold text-red-500 dark:text-red-400">
+                {selectedIds.size}개를 삭제할까요?
+              </span>
+              <button
+                onClick={handleBatchDelete}
+                className="px-3 py-1.5 rounded bg-red-500 hover:bg-red-600 text-white text-[12px] ns-bold transition-colors">
+                삭제
+              </button>
+              <button
+                onClick={() => setShowBatchConfirm(false)}
+                className="px-3 py-1.5 rounded border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 text-[12px] hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                취소
+              </button>
+            </div>
+          ) : selectedIds.size > 0 ? (
+            /* 선택 상태 */
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                선택 취소
+              </button>
+              <button
+                onClick={() => setShowBatchConfirm(true)}
+                className="flex-1 rounded bg-red-500 hover:bg-red-600 py-2 text-sm ns-bold text-white transition-colors">
+                삭제 ({selectedIds.size}개)
+              </button>
+            </div>
+          ) : (
+            /* 기본 */
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowAddChar(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                <IconPlus size={12} /> 캐릭터 추가
+              </button>
+              <button
+                onClick={onClose}
+                className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+                완료
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── 캐릭터 추가 모달 ──────────────────────────────────────────────────────────
 const LOA_KEY_STORAGE = 'myloa_api_key'
 
-function CharacterAddModal({ existingNames, onAdd, onClose }) {
-  const [charName,  setCharName]  = useState('')
-  const [apiKey,    setApiKey]    = useState('')
-  const [keySaved,  setKeySaved]  = useState(false)
-  const [loading,   setLoading]   = useState(false)
-  const [error,     setError]     = useState('')
-  const [results,   setResults]   = useState(null)
-  const [selected,  setSelected]  = useState(new Set())
-  const [showGuide, setShowGuide] = useState(false)
+const DIFF_LABEL = { nightmare: '나메', hard: '하드', normal: '노말', stage3: '3단계', stage2: '2단계', stage1: '1단계' }
+const DIFF_COLOR  = {
+  nightmare: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  hard:      'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+  normal:    'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400',
+  stage3:    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  stage2:    'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
+  stage1:    'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400',
+}
 
-  // 마운트 시 저장된 API 키 불러오기
+function CharacterAddModal({ existingNames, onAdd, onClose }) {
+  const [charName,    setCharName]    = useState('')
+  const [apiKey,      setApiKey]      = useState('')
+  const [keySaved,    setKeySaved]    = useState(false)
+  const [loading,     setLoading]     = useState(false)
+  const [error,       setError]       = useState('')
+  const [results,     setResults]     = useState(null)
+  const [selected,    setSelected]    = useState(new Set())
+  const [showGuide,   setShowGuide]   = useState(false)
+  const [step,        setStep]        = useState('search') // 'search' | 'choose' | 'setup'
+  const [strategies,  setStrategies]  = useState({})      // { [name]: 'trade'|'bound' }
+
   useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(LOA_KEY_STORAGE)
@@ -478,13 +675,204 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
   const toggleSelect = (name) =>
     setSelected(prev => { const n = new Set(prev); n.has(name) ? n.delete(name) : n.add(name); return n })
 
-  const handleAdd = () => {
-    onAdd((results || []).filter(c => selected.has(c.name)), apiKey.trim())
+  // 선택된 캐릭터 (아이템레벨 내림차순)
+  const selectedChars = useMemo(() =>
+    (results || []).filter(c => selected.has(c.name)).sort((a, b) => b.itemLevel - a.itemLevel),
+    [results, selected]
+  )
+
+  // 캐릭터별 레이드 자동 배정 미리보기
+  const raidsByName = useMemo(() => {
+    const map = {}
+    selectedChars.forEach((char, idx) => {
+      const strategy = strategies[char.name] || 'trade'
+      const normal   = autoSelectNormalRaids(char, strategy)
+      const entries  = [...normal]
+      if (idx === 0) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
+      map[char.name] = entries
+    })
+    return map
+  }, [selectedChars, strategies])
+
+  const goChoose = () => {
+    const init = {}
+    selectedChars.forEach(c => { init[c.name] = strategies[c.name] || 'trade' })
+    setStrategies(init)
+    setStep('choose')
+  }
+
+  const handleConfirm = () => {
+    onAdd(selectedChars, apiKey.trim(), raidsByName)
+    onClose()
+  }
+
+  const handleManualSetup = () => {
+    onAdd(selectedChars, apiKey.trim(), {})
     onClose()
   }
 
   const newCount = results ? results.filter(c => selected.has(c.name)).length : 0
 
+  // ── 스텝 2: 레이드 설정 방식 선택 ──────────────────────────────────────────
+  if (step === 'choose') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
+        <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col">
+          {/* 헤더 */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
+            <div className="flex items-center gap-2">
+              <button onClick={() => setStep('search')} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+              </button>
+              <div>
+                <span className="ns-bold text-gray-900 dark:text-white">레이드 설정</span>
+                <span className="ml-2 text-xs text-gray-400">설정 방식을 선택하세요</span>
+              </div>
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          </div>
+
+          {/* 선택 카드 */}
+          <div className="px-5 py-5 space-y-3">
+            {/* 자동 설정 */}
+            <button onClick={() => setStep('setup')}
+              className="w-full flex items-start gap-4 rounded-lg border border-gray-200 dark:border-[#383838] px-4 py-4 text-left hover:border-yellow-400 hover:bg-yellow-50 dark:hover:border-[#666] dark:hover:bg-yellow-900/10 transition-colors group">
+              <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow-500">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm ns-bold text-gray-800 dark:text-gray-100 group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors">레이드 자동 설정</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">캐릭터별 골드 전략을 선택해 레이드를 자동으로 배정합니다</p>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-300 dark:text-gray-600 mt-1 flex-shrink-0">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+
+            {/* 직접 설정 */}
+            <button onClick={handleManualSetup}
+              className="w-full flex items-start gap-4 rounded-lg border border-gray-200 dark:border-[#383838] px-4 py-4 text-left hover:border-yellow-400 hover:bg-yellow-50 dark:hover:border-[#666] dark:hover:bg-yellow-900/10 transition-colors group">
+              <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500 dark:text-gray-400">
+                  <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm ns-bold text-gray-800 dark:text-gray-100 group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors">레이드 직접 설정</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">레이드 설정 모달에서 캐릭터별로 직접 레이드를 추가합니다</p>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-300 dark:text-gray-600 mt-1 flex-shrink-0">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── 스텝 3: 레이드 자동 설정 ──────────────────────────────────────────────
+  if (step === 'setup') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
+        <div className="w-full max-w-lg rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[88vh]">
+          {/* 헤더 */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
+            <div>
+              <span className="ns-bold text-gray-900 dark:text-white">레이드 자동 설정</span>
+              <span className="ml-2 text-xs text-gray-400">캐릭터별 골드 전략을 선택하세요.</span>
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          </div>
+
+          {/* 캐릭터별 미리보기 */}
+          <div className="overflow-y-auto flex-1 px-4 py-3 space-y-3">
+            {selectedChars.map((char, idx) => {
+              const isRep     = idx === 0
+              const strategy  = strategies[char.name] || 'trade'
+              const entries   = raidsByName[char.name] || []
+              return (
+                <div key={char.name} className="rounded-lg border border-gray-200 dark:border-[#383838] overflow-hidden">
+                  {/* 캐릭터 헤더 */}
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#181818] border-b border-gray-100 dark:border-[#2a2a2a]">
+                    {getClassIcon(char.class)
+                      ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />
+                      : null}
+                    <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{char.name}</span>
+                    <span className="text-[10px] text-gray-400 flex-shrink-0">{char.itemLevel.toFixed(2)}</span>
+                    {isRep && (
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0 text-yellow-400 dark:text-yellow-500">
+                        <path d="M2 19h20v2H2v-2zm2-2l2-9 4 4 2-7 2 7 4-4 2 9H4z"/>
+                      </svg>
+                    )}
+                    <span className="flex-1" />
+                    {/* 전략 토글 */}
+                    <div className="flex items-center gap-0.5 ml-1 rounded-md border border-gray-200 dark:border-[#383838] overflow-hidden flex-shrink-0">
+                      {[['trade','거래골드 우선'],['bound','전체골드 우선']].map(([key, label]) => (
+                        <button key={key}
+                          onClick={() => setStrategies(prev => ({ ...prev, [char.name]: key }))}
+                          className={`px-2 py-1 text-[10px] ns-bold transition-colors
+                            ${strategy === key
+                              ? 'bg-yellow-200 dark:bg-[#2e2e2e] text-yellow-800 dark:text-gray-200'
+                              : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'}`}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* 레이드 목록 */}
+                  <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
+                    {entries.length === 0 ? (
+                      <p className="px-3 py-2.5 text-xs text-gray-400 dark:text-gray-600">
+                        아이템레벨이 낮아 배정 가능한 레이드가 없습니다
+                      </p>
+                    ) : entries.map((entry, i) => {
+                      const raid = RAIDS.find(r => r.id === entry.raidId)
+                      const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
+                      if (!raid || !diff) return null
+                      const allGates  = new Array(diff.gates).fill(true)
+                      const goldBound = calcGoldBound(diff, allGates)
+                      const goldTrade = calcGoldTrade(diff, allGates)
+                      return (
+                        <div key={i} className="flex items-center gap-2 px-3 py-2">
+                          <span className={`text-[8px] ns-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${DIFF_COLOR[entry.difficulty]}`}>
+                            {DIFF_LABEL[entry.difficulty]}
+                          </span>
+                          <span className="text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">{raid.name}</span>
+                          <div className="flex items-center gap-2 text-[10px] tabular-nums text-gray-400 flex-shrink-0">
+                            {goldBound > 0 && <span className="text-orange-500 dark:text-orange-400">귀속 {goldBound.toLocaleString()}</span>}
+                            {goldTrade > 0 && <span className="text-blue-500 dark:text-blue-400">거래 {goldTrade.toLocaleString()}</span>}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* 푸터 */}
+          <div className="px-5 py-4 border-t border-gray-100 dark:border-[#383838] flex-shrink-0 flex gap-2">
+            <button onClick={() => setStep('search')}
+              className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+              이전
+            </button>
+            <button onClick={handleConfirm}
+              className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+              {selectedChars.length}개 캐릭터 추가
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── 스텝 1: 캐릭터 검색 ────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
       <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
@@ -542,17 +930,33 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
             {(() => {
               const selectables = results.filter(c => !existingNames.has(c.name))
               const allSelected = selectables.length > 0 && selectables.every(c => selected.has(c.name))
+              const top6Names   = [...selectables].sort((a, b) => b.itemLevel - a.itemLevel).slice(0, 6).map(c => c.name)
               return (
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs ns-bold text-gray-500 dark:text-gray-400">원정대 캐릭터 {results.length}개</p>
-                  <button
-                    onClick={() => allSelected
-                      ? setSelected(new Set())
-                      : setSelected(new Set(selectables.map(c => c.name)))
-                    }
-                    className="text-[10px] text-yellow-500 px-2 py-0.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors">
-                    {allSelected ? '전체해제' : '전체선택'}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <div className="relative group">
+                      <button
+                        onClick={() => setSelected(new Set(top6Names))}
+                        className="text-[10px] text-yellow-500 px-2 py-0.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors">
+                        자동선택
+                      </button>
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block z-10 pointer-events-none">
+                        <div className="bg-yellow-200 text-yellow-900 text-[10px] ns-bold rounded px-2.5 py-1.5 whitespace-nowrap shadow-lg">
+                          아이템 레벨 높은 6개 캐릭터가 선택됩니다.
+                        </div>
+                        <div className="w-2 h-2 bg-yellow-200 rotate-45 mx-auto -mt-1" />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => allSelected
+                        ? setSelected(new Set())
+                        : setSelected(new Set(selectables.map(c => c.name)))
+                      }
+                      className="text-[10px] text-yellow-500 px-2 py-0.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors">
+                      {allSelected ? '전체해제' : '전체선택'}
+                    </button>
+                  </div>
                 </div>
               )
             })()}
@@ -592,9 +996,9 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
         <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#383838] mt-3">
           <button onClick={onClose}
             className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">취소</button>
-          <button onClick={handleAdd} disabled={newCount === 0}
+          <button onClick={goChoose} disabled={newCount === 0}
             className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-yellow-900 transition-colors">
-            {newCount > 0 ? `${newCount}개 추가` : '추가'}
+            {newCount > 0 ? `${newCount}개 선택` : '추가'}
           </button>
         </div>
       </div>
@@ -659,6 +1063,8 @@ function buildAutoRaids(chars, strategy) {
 // ── 자동 설정 모달 ────────────────────────────────────────────────────────────
 function AutoSetupModal({ onApply, onClose, existingRaids, existingChars }) {
   const [charName,  setCharName]  = useState('')
+  const [apiKey,    setApiKey]    = useState(() => (typeof window !== 'undefined' ? localStorage.getItem(LOA_KEY_STORAGE) || '' : ''))
+  const [keySaved,  setKeySaved]  = useState(() => !!(typeof window !== 'undefined' && localStorage.getItem(LOA_KEY_STORAGE)))
   const [strategy,  setStrategy]  = useState('trade') // 'trade' | 'total'
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState('')
@@ -673,16 +1079,17 @@ function AutoSetupModal({ onApply, onClose, existingRaids, existingChars }) {
 
   const search = async () => {
     if (!charName.trim()) return setError('캐릭터명을 입력하세요')
-    const apiKey = localStorage.getItem(LOA_KEY_STORAGE)
-    if (!apiKey) return setError('저장된 API 키가 없습니다. 캐릭터 추가에서 먼저 등록해 주세요')
+    if (!apiKey.trim()) return setError('API 키를 입력하세요')
     setLoading(true); setError('')
     try {
-      const res  = await fetch(`/api/loa?characterName=${encodeURIComponent(charName.trim())}&apiKey=${encodeURIComponent(apiKey)}`)
+      const res  = await fetch(`/api/loa?characterName=${encodeURIComponent(charName.trim())}&apiKey=${encodeURIComponent(apiKey.trim())}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '오류 발생')
       const top6 = [...data].sort((a, b) => b.itemLevel - a.itemLevel).slice(0, 6)
       if (top6.length === 0) throw new Error('캐릭터를 찾을 수 없습니다')
-      setPreview({ chars: top6, raidsByName: buildAutoRaids(top6, strategy), apiKey })
+      localStorage.setItem(LOA_KEY_STORAGE, apiKey.trim())
+      setKeySaved(true)
+      setPreview({ chars: top6, raidsByName: buildAutoRaids(top6, strategy), apiKey: apiKey.trim() })
     } catch (e) {
       setError(e.message)
     } finally {
@@ -722,6 +1129,18 @@ function AutoSetupModal({ onApply, onClose, existingRaids, existingChars }) {
 
         {/* 설정 입력 */}
         <div className="px-5 pt-4 pb-3 border-b border-gray-100 dark:border-[#383838] flex-shrink-0 space-y-3">
+          {/* API 키 */}
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              className="flex-1 rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm font-mono bg-white dark:bg-[#1a1a1a] dark:text-gray-200 outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors"
+              value={apiKey} onChange={e => { setApiKey(e.target.value); setKeySaved(false) }}
+              placeholder="Lost Ark API 키"
+            />
+            {keySaved && (
+              <span className="flex-shrink-0 text-[11px] ns-bold text-green-600 dark:text-green-400 whitespace-nowrap">저장됨 ✓</span>
+            )}
+          </div>
           {/* 캐릭터 검색 */}
           <div className="flex gap-2">
             <input
@@ -929,7 +1348,7 @@ function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
       onClick={onToggle}
       className={`w-full flex items-center gap-1.5 px-1.5 py-1.5 rounded cursor-pointer transition-colors
         ${moreDone
-          ? 'bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20'
+          ? 'bg-yellow-100 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
           : allDone
           ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
           : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
@@ -938,7 +1357,7 @@ function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
       {/* 왼쪽: 체크박스 */}
       <div className={`h-[26px] w-[26px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all
         ${moreDone
-          ? 'bg-blue-400 border-blue-400 text-white shadow-sm'
+          ? 'bg-yellow-500 border-yellow-500 text-yellow-900 shadow-sm'
           : allDone
           ? 'bg-yellow-400 border-yellow-400 text-yellow-900 shadow-sm'
           : 'border-gray-200 dark:border-[#383838]'}`}>
@@ -995,7 +1414,7 @@ function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
             {diff.label}
           </span>
           <span className={`text-[9px] ns-bold leading-none tabular-nums tracking-tight
-            ${moreDone ? 'text-blue-600 dark:text-blue-400' : allDone ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-300 dark:text-gray-700'}`}>
+            ${moreDone ? 'text-yellow-700 dark:text-yellow-500' : allDone ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-300 dark:text-gray-700'}`}>
             {totalGold.toLocaleString()}G
           </span>
         </div>
@@ -1105,12 +1524,22 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
   const [raids, setRaids] = useState(initialRaids)
   const [showRaidSettings, setShowRaidSettings] = useState(false)
   const [showAutoSetup,    setShowAutoSetup]    = useState(false)
-  const [showAddChar, setShowAddChar]           = useState(false)
+  const [showCharEdit,     setShowCharEdit]     = useState(false)
+  const [charEditOpenAdd,  setCharEditOpenAdd]  = useState(false)
+  const [showNoChar,       setShowNoChar]       = useState(false)
   const [syncing, setSyncing]                   = useState(false)
   const [showConfetti, setShowConfetti]         = useState(false)
   const [exRaidError, setExRaidError]           = useState(null) // { raidName, conflictCharName }
   const [cardView, setCardView]                 = useState(false)
+  const [dragCharId, setDragCharId]             = useState(null) // 드래그 중인 캐릭터 id
+  const [dropCharId, setDropCharId]             = useState(null) // 드롭 대상 캐릭터 id
   const wasCompleteRef                          = useRef(false)
+  // 캐릭터가 있다가 0이 되면 빈 상태 모달 자동 표시 (초기 0은 제외)
+  const hadCharsRef                             = useRef(initialChars.length > 0)
+  useEffect(() => {
+    if (chars.length > 0) { hadCharsRef.current = true; return }
+    if (hadCharsRef.current && !showCharEdit) setShowNoChar(true)
+  }, [chars.length, showCharEdit])
 
   // 캐릭터별 레이드 토글 (설정 모달에서 사용) — 레이드당 난이도 하나만 허용
   const toggleCharRaid = (charId, raidId, diffKey) => {
@@ -1149,7 +1578,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
         const raid = RAIDS.find(r => r.id === raidId)
         const diff = raid?.difficulties.find(d => d.key === diffKey)
         if (diff) {
-          const newEntry = { raidId, difficulty: diffKey, gateClears: new Array(diff.gates).fill(false), isGoldCheck: true, moreDone: false, moreFrom: 'bound' }
+          // EX 레이드는 항상 골드, 일반 레이드는 현재 골드 수 기준으로 결정
+          const currentGoldCount = list.filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)).length
+          const isGoldCheck = EX_RAID_IDS.has(raidId) ? true : currentGoldCount < 3
+          const newEntry = { raidId, difficulty: diffKey, gateClears: new Array(diff.gates).fill(false), isGoldCheck, moreDone: false, moreFrom: 'bound' }
           list.push(newEntry)
           saveRaid(charId, newEntry)
         }
@@ -1221,10 +1653,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
 
   // 자동 설정 적용
   const applyAutoSetup = async (selectedChars, raidsByName, apiKey) => {
-    // 1. 레이드가 배정된 캐릭터만 처리 (레이드 없는 캐릭터는 저장 제외)
+    // 1. 선택된 모든 캐릭터를 DB에 추가 (레이드 배정 여부와 무관)
     const charsWithRaids = selectedChars.filter(c => (raidsByName[c.name] || []).length > 0)
     const existingNames  = new Set(chars.map(c => c.name))
-    const toAdd          = charsWithRaids.filter(c => !existingNames.has(c.name))
+    const toAdd          = selectedChars.filter(c => !existingNames.has(c.name))
     if (toAdd.length > 0) {
       try {
         await fetch('/api/characters', {
@@ -1254,31 +1686,23 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
     setRaids(newRaids)
   }
 
-  // 레이드 없는 캐릭터 삭제 (DB soft-delete + state 제거)
-  const deleteRaidlessChars = (currentChars, currentRaids) => {
-    const noRaidIds = currentChars
-      .filter(c => (currentRaids[c.id] || []).length === 0)
-      .map(c => c.id)
-    if (noRaidIds.length === 0) return
-    setChars(prev => prev.filter(c => !noRaidIds.includes(c.id)))
-    setRaids(prev => {
-      const next = { ...prev }
-      noRaidIds.forEach(id => delete next[id])
-      return next
-    })
-    noRaidIds.forEach(id =>
-      fetch(`/api/characters?id=${id}`, { method: 'DELETE' }).catch(() => {})
-    )
+  // 개별 캐릭터 삭제
+  const deleteChar = (charId) => {
+    setChars(prev => prev.filter(c => c.id !== charId))
+    setRaids(prev => { const n = { ...prev }; delete n[charId]; return n })
+    fetch(`/api/characters?id=${charId}`, { method: 'DELETE' }).catch(() => {})
   }
 
   // 레이드 설정 모달 확인 (금지 초과 검사 통과 후 호출)
   const handleRaidSettingsConfirm = () => {
-    deleteRaidlessChars(chars, raids)
     setShowRaidSettings(false)
   }
 
-  // 캐릭터 추가 (완료 후 레이드 설정 모달 자동 오픈)
-  const addChars = async (newChars, apiKey) => {
+  // 캐릭터 추가 (raidsByName이 있으면 자동 배정, 없으면 레이드 설정 모달 즉시 오픈)
+  const addChars = async (newChars, apiKey, raidsByName = {}) => {
+    const isManual = Object.keys(raidsByName).length === 0
+
+    // 낙관적 추가
     setChars(prev => {
       const existingNames = new Set(prev.map(c => c.name))
       const toAdd = newChars.filter(c => !existingNames.has(c.name)).map((c, i) => ({
@@ -1287,16 +1711,41 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
       }))
       return [...prev, ...toAdd]
     })
+
+    // 직접 설정: 레이드 설정 모달 즉시 오픈
+    if (isManual) setShowRaidSettings(true)
+
     try {
       await fetch('/api/characters', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey, label: '본계정', characters: newChars }),
       })
       const res = await fetch('/api/characters')
-      if (res.ok) { const data = await res.json(); if (Array.isArray(data)) setChars(data) }
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data)) {
+          setChars(data) // 실제 ID로 교체
+          if (!isManual) {
+            // 자동 배정
+            const newRaids = {}
+            data.forEach(char => {
+              const entries = raidsByName[char.name]
+              if (entries?.length > 0) {
+                newRaids[char.id] = entries
+                entries.forEach(entry => saveRaid(char.id, entry))
+              }
+            })
+            if (Object.keys(newRaids).length > 0) {
+              setRaids(prev => ({ ...prev, ...newRaids }))
+              return
+            }
+          }
+        }
+      }
     } catch {}
-    // 캐릭터 추가 후 바로 레이드 설정 모달 오픈 (레이드 없으면 저장 안 됨)
-    setShowRaidSettings(true)
+
+    // 자동 배정 실패 시 레이드 설정 모달 오픈
+    if (!isManual) setShowRaidSettings(true)
   }
 
   // 전체 캐릭터 갱신
@@ -1398,18 +1847,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
             </svg>
             레이드 설정
           </button>
-          <button onClick={() => setShowAutoSetup(true)}
+          <button onClick={() => setShowCharEdit(true)}
             className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
             </svg>
-            자동 설정
+            캐릭터 설정
           </button>
-          <button onClick={() => setShowAddChar(true)}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
-            <IconPlus size={12} /> 캐릭터 추가
-          </button>
-          <button onClick={syncChars} disabled={syncing}
+          <button onClick={chars.length === 0 ? () => setShowNoChar(true) : syncChars} disabled={syncing}
             className="flex items-center gap-1.5 rounded border border-gray-200 dark:hover:bg-[#2a2a2a] dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 transition-colors">
             <span className={syncing ? 'animate-spin' : ''}><IconRefresh /></span>
             {syncing ? '갱신 중…' : '캐릭터 갱신'}
@@ -1477,17 +1922,124 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
           return 'text-[9px]'
         }
 
+        // ── 드래그앤드랍 순서 변경 ────────────────────────────────────────
+        const saveCharOrder = async (ordered) => {
+          // tmp ID(낙관적 업데이트 중)가 섞인 경우 스킵
+          if (ordered.some(c => String(c.id).startsWith('tmp-'))) return
+          try {
+            await fetch('/api/characters', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ order: ordered.map((c, i) => ({ id: c.id, sortOrder: i })) }),
+            })
+          } catch {}
+        }
+
+        const handleCharDragStart = (e, charId) => {
+          setDragCharId(charId)
+          e.dataTransfer.effectAllowed = 'move'
+
+          // ── 전체 컬럼 ghost 생성 ──────────────────────────────────
+          const char     = chars.find(c => c.id === charId)
+          const charRaids = (raids[charId] || [])
+            .filter(entry => !HIDDEN_RAID_IDS.has(entry.raidId))
+            .sort((a, b) => RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId))
+
+          const isDark = document.documentElement.classList.contains('dark')
+          const col    = { bg: isDark ? '#222222' : '#ffffff', hdr: isDark ? '#181818' : '#f9fafb', bdr: isDark ? '#2a2a2a' : '#f0f0f0', txt: isDark ? '#e0e0e0' : '#111827', sub: isDark ? '#888' : '#6b7280' }
+
+          const ghost = document.createElement('div')
+          ghost.setAttribute('aria-hidden', 'true')
+          ghost.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${COL_CHAR}px;background:${col.bg};border:2px solid #fbbf24;border-radius:8px;box-shadow:0 24px 56px rgba(0,0,0,0.35),0 8px 20px rgba(0,0,0,0.2);overflow:hidden;font-family:NanumSquareR,sans-serif;pointer-events:none;`
+
+          // 캐릭터 헤더
+          const hdr = document.createElement('div')
+          hdr.style.cssText = `background:${col.hdr};padding:8px 6px 6px;text-align:center;border-bottom:2px solid #fbbf24;`
+          hdr.innerHTML = `<div style="font-size:11px;font-weight:bold;color:${col.txt};line-height:1.4;">${char?.name || ''}</div><div style="font-size:10px;color:${col.sub};margin-top:1px;">${char?.itemLevel?.toFixed(2) || ''}</div>`
+          ghost.appendChild(hdr)
+
+          // 레이드 행
+          charRaids.forEach(entry => {
+            const raid   = RAIDS.find(r => r.id === entry.raidId)
+            if (!raid) return
+            const allDone = entry.gateClears.every(Boolean)
+            const row = document.createElement('div')
+            row.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid ${col.bdr};background:${allDone ? (isDark ? 'rgba(253,224,71,0.08)' : 'rgba(254,252,232,0.7)') : col.bg};`
+            const chk = document.createElement('div')
+            chk.style.cssText = `width:13px;height:13px;flex-shrink:0;border-radius:3px;border:2px solid ${allDone ? '#fbbf24' : (isDark ? '#444' : '#d1d5db')};background:${allDone ? '#fbbf24' : 'transparent'};`
+            const lbl = document.createElement('span')
+            lbl.style.cssText = `font-size:10px;color:${allDone ? '#d97706' : col.txt};`
+            lbl.textContent = raid.name
+            row.appendChild(chk)
+            row.appendChild(lbl)
+            ghost.appendChild(row)
+          })
+
+          // 레이드 없을 때 빈 셀
+          if (charRaids.length === 0) {
+            const empty = document.createElement('div')
+            empty.style.cssText = `padding:14px 8px;text-align:center;font-size:10px;color:${col.sub};`
+            empty.textContent = '레이드 없음'
+            ghost.appendChild(empty)
+          }
+
+          document.body.appendChild(ghost)
+          e.dataTransfer.setDragImage(ghost, Math.floor(COL_CHAR / 2), 28)
+          setTimeout(() => { ghost.remove() }, 0)
+        }
+
+        const handleCharDragOver = (e, charId) => {
+          e.preventDefault()
+          e.dataTransfer.dropEffect = 'move'
+          if (charId !== dropCharId) setDropCharId(charId)
+        }
+
+        const handleCharDrop = (e, charId) => {
+          e.preventDefault()
+          if (!dragCharId || dragCharId === charId) return
+          setChars(prev => {
+            const arr      = [...prev]
+            const fromIdx  = arr.findIndex(c => c.id === dragCharId)
+            const toIdx    = arr.findIndex(c => c.id === charId)
+            if (fromIdx === -1 || toIdx === -1) return prev
+            const [moved]  = arr.splice(fromIdx, 1)
+            arr.splice(toIdx, 0, moved)
+            saveCharOrder(arr)
+            return arr
+          })
+        }
+
+        const handleCharDragEnd = () => {
+          setDragCharId(null)
+          setDropCharId(null)
+        }
+
         // ── 카드 뷰 ────────────────────────────────────────────────────────
         const renderCardView = () => (
           <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
-            {chars.filter(c => (raids[c.id] || []).length > 0).map(char => {
+            {chars.map(char => {
               const charRaids = [...(raids[char.id] || [])]
                 .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
                 .sort((a, b) => RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId))
+              const isDragging = dragCharId === char.id
+              const isDragOver = dropCharId === char.id && dragCharId !== char.id
               return (
-                <div key={char.id} className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden">
+                <div
+                  key={char.id}
+                  draggable
+                  onDragStart={(e) => handleCharDragStart(e, char.id)}
+                  onDragOver={(e) => handleCharDragOver(e, char.id)}
+                  onDrop={(e) => handleCharDrop(e, char.id)}
+                  onDragEnd={handleCharDragEnd}
+                  className={`rounded-lg border bg-white dark:bg-[#222222] overflow-hidden transition-all select-none ${
+                    isDragging  ? 'opacity-40 border-gray-200 dark:border-[#383838]' :
+                    isDragOver  ? 'border-yellow-400 dark:border-yellow-600 ring-2 ring-yellow-300/50 dark:ring-yellow-700/30' :
+                                  'border-gray-200 dark:border-[#383838]'
+                  }`}
+                >
                   {/* 캐릭터 헤더 */}
-                  <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
+                  <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818] cursor-grab active:cursor-grabbing">
+                    <span className="text-gray-300 dark:text-gray-600 flex-shrink-0"><IconGrip /></span>
                     {getClassIcon(char.class)
                       ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-7 h-7 object-contain flex-shrink-0" />
                       : <span className="w-7 h-7 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
@@ -1538,14 +2090,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
                             key={entry.raidId}
                             onClick={() => toggleRaid(char.id, entry.raidId, entry.difficulty)}
                             className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors ${
-                              moreDone ? 'bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20'
+                              moreDone ? 'bg-yellow-100 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
                               : allDone ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
                               : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                             }`}
                           >
                             <div className={`h-5 w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
-                              moreDone ? 'bg-blue-400 border-blue-400 text-white shadow-sm'
-                              : allDone ? 'bg-yellow-400 border-yellow-400 text-gray-900 shadow-sm'
+                              moreDone ? 'bg-yellow-500 border-yellow-500 text-yellow-900 shadow-sm'
+                              : allDone ? 'bg-yellow-400 border-yellow-400 text-yellow-900 shadow-sm'
                               : 'border-gray-300 dark:border-[#383838]'
                             }`}>
                               {allDone && <IconCheck />}
@@ -1557,7 +2109,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
                                 {/* 클리어 골드: 더보기 여부 무관하게 항상 totalGold */}
                                 {entry.isGoldCheck && (
                                   <span className={`text-[10px] ns-bold tabular-nums ${
-                                    moreDone ? 'text-blue-500 dark:text-blue-400'
+                                    moreDone ? 'text-yellow-600 dark:text-yellow-500'
                                     : allDone ? 'text-yellow-500 dark:text-yellow-400'
                                     : 'text-gray-300 dark:text-gray-600'
                                   }`}>
@@ -1629,31 +2181,59 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
                   {/* 1행: 캐릭터 이름 + 스탯 */}
                   <tr className="border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
                     <th style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-30 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-[#2a2a2a]"/>
-                    {charSubset.map(char => (
-                      <th key={char.id} style={{ width: COL_CHAR, minWidth: COL_CHAR }} className="px-2 py-2 border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 align-top">
-                        <div className="flex flex-col items-center gap-0.5">
-                          <span className={`${nameSize(char.name)} ns-bold text-gray-800 dark:text-gray-100 leading-tight text-center break-keep`}>{char.name}</span>
-                          <div className="flex flex-col items-start gap-0.5">
-                            <div className="flex items-center gap-1">
-                              <span className="flex items-center justify-center flex-shrink-0 text-gray-400 dark:text-gray-500"><IconItemLevel /></span>
-                              <span className="text-[10px] ns-bold text-gray-600 dark:text-gray-300">{char.itemLevel.toFixed(2)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <img src="/combat-power.svg" alt="전투력" className="w-[11px] h-[11px] object-contain flex-shrink-0" />
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                                {char.combatPower != null ? char.combatPower.toFixed(2) : '—'}
-                              </span>
+                    {charSubset.map(char => {
+                      const isDragging = dragCharId === char.id
+                      const isDragOver = dropCharId === char.id && dragCharId !== char.id
+                      return (
+                        <th
+                          key={char.id}
+                          draggable
+                          onDragStart={(e) => handleCharDragStart(e, char.id)}
+                          onDragOver={(e) => handleCharDragOver(e, char.id)}
+                          onDrop={(e) => handleCharDrop(e, char.id)}
+                          onDragEnd={handleCharDragEnd}
+                          style={{ width: COL_CHAR, minWidth: COL_CHAR }}
+                          className={`px-2 py-2 border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 align-top select-none cursor-grab active:cursor-grabbing transition-colors ${
+                            isDragging ? 'bg-yellow-100/80 dark:bg-yellow-900/25' :
+                            isDragOver ? 'bg-yellow-50 dark:bg-yellow-900/10' :
+                            dragCharId ? 'opacity-50' : ''
+                          }`}
+                        >
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-gray-300 dark:text-gray-600 mb-0.5"><IconGrip /></span>
+                            <span className={`${nameSize(char.name)} ns-bold text-gray-800 dark:text-gray-100 leading-tight text-center break-keep`}>{char.name}</span>
+                            <div className="flex flex-col items-start gap-0.5">
+                              <div className="flex items-center gap-1">
+                                <span className="flex items-center justify-center flex-shrink-0 text-gray-400 dark:text-gray-500"><IconItemLevel /></span>
+                                <span className="text-[10px] ns-bold text-gray-600 dark:text-gray-300">{char.itemLevel.toFixed(2)}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <img src="/combat-power.svg" alt="전투력" className="w-[11px] h-[11px] object-contain flex-shrink-0" />
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                  {char.combatPower != null ? char.combatPower.toFixed(2) : '—'}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </th>
-                    ))}
+                        </th>
+                      )
+                    })}
                   </tr>
                   {/* 2행: 캐릭터별 획득 골드 */}
                   <tr className="border-b border-gray-200 dark:border-[#383838] bg-gray-50 dark:bg-[#181818]">
                     <th style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-30 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-[#2a2a2a]"/>
                     {charSubset.map(char => (
-                      <th key={char.id} style={{ width: COL_CHAR, minWidth: COL_CHAR }} className="px-2 py-1.5 border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0">
+                      <th
+                        key={char.id}
+                        onDragOver={(e) => handleCharDragOver(e, char.id)}
+                        onDrop={(e) => handleCharDrop(e, char.id)}
+                        style={{ width: COL_CHAR, minWidth: COL_CHAR }}
+                        className={`px-2 py-1.5 border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 transition-colors ${
+                          dragCharId === char.id     ? 'bg-yellow-100/70 dark:bg-yellow-900/20' :
+                          dropCharId === char.id     ? 'bg-yellow-50 dark:bg-yellow-900/10' :
+                          dragCharId                 ? 'opacity-50' : ''
+                        }`}
+                      >
                         <CharGoldBadges
                           bound={charGoldMap[char.id]?.bound ?? 0}
                           trade={charGoldMap[char.id]?.trade ?? 0}
@@ -1674,7 +2254,17 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
                           const entry = (raids[char.id] || []).find(e => e.raidId === row.raidId)
                           const diff  = raidData?.difficulties.find(d => d.key === entry?.difficulty)
                           return (
-                            <td key={char.id} style={{ width: COL_CHAR, minWidth: COL_CHAR }} className="border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1">
+                            <td
+                              key={char.id}
+                              onDragOver={(e) => handleCharDragOver(e, char.id)}
+                              onDrop={(e) => handleCharDrop(e, char.id)}
+                              style={{ width: COL_CHAR, minWidth: COL_CHAR }}
+                              className={`border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1 transition-colors ${
+                                dragCharId === char.id ? 'bg-yellow-100/50 dark:bg-yellow-900/15' :
+                                dropCharId === char.id ? 'bg-yellow-50/70 dark:bg-yellow-900/8' :
+                                dragCharId            ? 'opacity-50' : ''
+                              }`}
+                            >
                               <RaidCell
                                 entry={entry}
                                 diff={diff}
@@ -1735,7 +2325,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
                 카드
               </button>
             </div>
-            {cardView ? renderCardView() : renderTable(chars.filter(c => (raids[c.id] || []).length > 0))}
+            {cardView ? renderCardView() : renderTable(chars)}
           </div>
         )
       })()}
@@ -1751,13 +2341,30 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
           onConfirm={handleRaidSettingsConfirm}
           exRaidError={exRaidError}
           onClearExRaidError={() => setExRaidError(null)}
+          onOpenCharAdd={() => { setCharEditOpenAdd(true); setShowCharEdit(true) }}
         />
       )}
-      {showAddChar && (
-        <CharacterAddModal
-          existingNames={new Set(chars.map(c => c.name))}
+      {showNoChar && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
+          <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl px-5 py-10 text-center">
+            <p className="text-sm text-gray-400 dark:text-gray-500 mb-1">등록된 캐릭터가 없습니다</p>
+            <p className="text-xs text-gray-300 dark:text-gray-600">캐릭터를 먼저 추가해 주세요</p>
+            <button
+              onClick={() => { setShowNoChar(false); setCharEditOpenAdd(true); setShowCharEdit(true) }}
+              className="mt-6 px-4 py-2 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+              캐릭터 추가
+            </button>
+          </div>
+        </div>
+      )}
+      {showCharEdit && (
+        <CharacterEditModal
+          chars={chars}
+          raids={raids}
           onAdd={addChars}
-          onClose={() => setShowAddChar(false)}
+          onDelete={deleteChar}
+          initialShowAdd={charEditOpenAdd}
+          onClose={() => { setShowCharEdit(false); setCharEditOpenAdd(false) }}
         />
       )}
       {showAutoSetup && (

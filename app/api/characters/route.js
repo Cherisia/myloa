@@ -70,14 +70,25 @@ export async function POST(request) {
     })
   }
 
-  // 이미 존재하는 캐릭터명 조회 후 신규만 저장
+  // 기존 캐릭터 조회 (활성/비활성 모두)
   const existing = await prisma.character.findMany({
     where:  { loaAccountId: loaAccount.id },
-    select: { name: true },
+    select: { name: true, isActive: true },
   })
-  const existingNames = new Set(existing.map(c => c.name))
+  const activeNames   = new Set(existing.filter(c =>  c.isActive).map(c => c.name))
+  const inactiveNames = new Set(existing.filter(c => !c.isActive).map(c => c.name))
 
-  const newChars = characters.filter(c => !existingNames.has(c.name))
+  // 소프트삭제 캐릭터 재활성화
+  const toReactivate = characters.filter(c => inactiveNames.has(c.name)).map(c => c.name)
+  if (toReactivate.length > 0) {
+    await prisma.character.updateMany({
+      where: { loaAccountId: loaAccount.id, name: { in: toReactivate }, isActive: false },
+      data:  { isActive: true },
+    })
+  }
+
+  // 완전히 새로운 캐릭터만 생성
+  const newChars = characters.filter(c => !activeNames.has(c.name) && !inactiveNames.has(c.name))
   if (newChars.length > 0) {
     await prisma.character.createMany({
       data: newChars.map((c, i) => ({
@@ -93,7 +104,31 @@ export async function POST(request) {
     })
   }
 
-  return NextResponse.json({ success: true, added: newChars.length })
+  return NextResponse.json({ success: true, added: newChars.length + toReactivate.length })
+}
+
+// PATCH /api/characters → sortOrder 일괄 업데이트
+export async function PATCH(request) {
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
+
+  const { order } = await request.json()
+  if (!Array.isArray(order) || order.length === 0)
+    return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
+
+  const ids = order.map(o => o.id)
+  const owned = await prisma.character.findMany({
+    where: { id: { in: ids }, loaAccount: { userId: session.user.id } },
+    select: { id: true },
+  })
+  if (owned.length !== ids.length)
+    return NextResponse.json({ error: '권한 없음' }, { status: 403 })
+
+  await prisma.$transaction(
+    order.map(o => prisma.character.update({ where: { id: o.id }, data: { sortOrder: o.sortOrder } }))
+  )
+
+  return NextResponse.json({ success: true })
 }
 
 export async function DELETE(request) {
