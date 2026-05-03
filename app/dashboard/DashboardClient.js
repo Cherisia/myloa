@@ -220,13 +220,17 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, exRa
                     const hasActive = !!entry
                     const isGold    = hasActive && entry.isGoldCheck
                     const isEx      = EX_RAID_IDS.has(raid.id)
-                    const canToggle = hasActive && (isGold || isEx || normalGoldCount < 3)
+                    const canToggle = hasActive && !isEx && (isGold || normalGoldCount < 3)
+                    const title     = !hasActive ? '레이드를 먼저 선택하세요'
+                                    : isEx       ? 'EX 레이드는 골드가 항상 지급됩니다'
+                                    : !canToggle ? '골드 보상 3개 초과'
+                                    : ''
                     return (
                       <button
                         onClick={() => canToggle && onToggleGold(selectedChar.id, raid.id, entry.difficulty)}
-                        disabled={!canToggle}
+                        disabled={!hasActive || isEx && !isGold}
                         className="flex items-center gap-1.5 flex-shrink-0 disabled:cursor-not-allowed"
-                        title={!hasActive ? '레이드를 먼저 선택하세요' : !canToggle ? '골드 보상 3개 초과' : ''}
+                        title={title}
                       >
                         <span className={`text-[10px] ns-bold transition-colors ${
                           isGold ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-300 dark:text-gray-600'
@@ -567,7 +571,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
                       onChange={() => !already && toggleSelect(c.name)}
                       className="accent-yellow-500 w-3.5 h-3.5 flex-shrink-0"/>
                     {getClassIcon(c.class)
-                      ? <img src={getClassIcon(c.class)} alt={c.class} title={c.class} className="w-5 h-5 flex-shrink-0 object-contain" />
+                      ? <img src={getClassIcon(c.class)} alt={c.class} title={c.class} className="class-icon w-5 h-5 flex-shrink-0 object-contain" />
                       : <span className={`text-[10px] px-1.5 py-0.5 rounded ns-bold leading-tight flex-shrink-0 ${CLASS_COLOR[c.class] || 'bg-gray-100 text-gray-600'}`}>{c.class}</span>
                     }
                     <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 flex-1 min-w-0 truncate">{c.name}</span>
@@ -595,6 +599,269 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
         </div>
       </div>
       {showGuide && <ApiKeyGuideModal onClose={() => setShowGuide(false)} />}
+    </div>
+  )
+}
+
+// ── 자동 설정 헬퍼 ────────────────────────────────────────────────────────────
+function autoSelectNormalRaids(char, strategy) {
+  const eligible = RAIDS
+    .filter(r => !HIDDEN_RAID_IDS.has(r.id) && !EX_RAID_IDS.has(r.id))
+    .flatMap(raid => {
+      const bestDiff = [...raid.difficulties]
+        .sort((a, b) => b.minItemLevel - a.minItemLevel)
+        .find(d => char.itemLevel >= d.minItemLevel)
+      if (!bestDiff) return []
+      const allGates  = new Array(bestDiff.gates).fill(true)
+      const goldTrade = calcGoldTrade(bestDiff, allGates)
+      const goldBound = calcGoldBound(bestDiff, allGates)
+      return [{ raid, diff: bestDiff, goldTrade, totalGold: goldTrade + goldBound }]
+    })
+
+  const sorted = [...eligible].sort((a, b) =>
+    strategy === 'trade' ? b.goldTrade - a.goldTrade : b.totalGold - a.totalGold
+  )
+
+  return sorted.slice(0, 3).map(({ raid, diff }) => ({
+    raidId: raid.id, difficulty: diff.key,
+    gateClears: new Array(diff.gates).fill(false),
+    isGoldCheck: true, moreDone: false, moreFrom: 'bound',
+  }))
+}
+
+function autoSelectExRaid(char) {
+  const exRaid = RAIDS.find(r => r.id === 'egir-ex')
+  if (!exRaid) return null
+  const bestDiff = [...exRaid.difficulties]
+    .sort((a, b) => b.minItemLevel - a.minItemLevel)
+    .find(d => char.itemLevel >= d.minItemLevel)
+  if (!bestDiff) return null
+  return {
+    raidId: exRaid.id, difficulty: bestDiff.key,
+    gateClears: new Array(bestDiff.gates).fill(false),
+    isGoldCheck: true, moreDone: false, moreFrom: 'bound',
+  }
+}
+
+function buildAutoRaids(chars, strategy) {
+  const raidsByName = {}
+  chars.forEach((char, idx) => {
+    const entries = autoSelectNormalRaids(char, strategy)
+    if (idx === 0) {
+      const ex = autoSelectExRaid(char)
+      if (ex) entries.push(ex)
+    }
+    raidsByName[char.name] = entries
+  })
+  return raidsByName
+}
+
+// ── 자동 설정 모달 ────────────────────────────────────────────────────────────
+function AutoSetupModal({ onApply, onClose, existingRaids, existingChars }) {
+  const [charName,  setCharName]  = useState('')
+  const [strategy,  setStrategy]  = useState('trade') // 'trade' | 'total'
+  const [loading,   setLoading]   = useState(false)
+  const [error,     setError]     = useState('')
+  const [preview,   setPreview]   = useState(null) // { chars, raidsByName, apiKey }
+  const [confirm,   setConfirm]   = useState(false) // 초기화 경고 확인 단계
+
+  // 전략 변경 시 미리보기 재계산
+  useEffect(() => {
+    if (!preview) return
+    setPreview(p => ({ ...p, raidsByName: buildAutoRaids(p.chars, strategy) }))
+  }, [strategy])
+
+  const search = async () => {
+    if (!charName.trim()) return setError('캐릭터명을 입력하세요')
+    const apiKey = localStorage.getItem(LOA_KEY_STORAGE)
+    if (!apiKey) return setError('저장된 API 키가 없습니다. 캐릭터 추가에서 먼저 등록해 주세요')
+    setLoading(true); setError('')
+    try {
+      const res  = await fetch(`/api/loa?characterName=${encodeURIComponent(charName.trim())}&apiKey=${encodeURIComponent(apiKey)}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '오류 발생')
+      const top6 = [...data].sort((a, b) => b.itemLevel - a.itemLevel).slice(0, 6)
+      if (top6.length === 0) throw new Error('캐릭터를 찾을 수 없습니다')
+      setPreview({ chars: top6, raidsByName: buildAutoRaids(top6, strategy), apiKey })
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const hasExistingSetup = (() => {
+    if (!preview) return false
+    const previewNames = new Set(preview.chars.map(c => c.name))
+    // 미리보기 캐릭터 중 이미 레이드가 설정된 캐릭터가 있는지 확인
+    return existingChars.some(c => previewNames.has(c.name) && (existingRaids[c.id]?.length > 0))
+      || Object.values(existingRaids).some(r => r.length > 0)
+  })()
+
+  const handleApply = () => {
+    if (hasExistingSetup && !confirm) {
+      setConfirm(true)
+      return
+    }
+    onApply(preview.chars, preview.raidsByName, preview.apiKey)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
+      <div className="w-full max-w-2xl rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90vh]">
+
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
+          <div>
+            <span className="ns-bold text-gray-900 dark:text-gray-100">자동 설정</span>
+            <span className="ml-2 text-xs text-gray-400">원정대 상위 6캐릭터를 자동으로 세팅합니다</span>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+        </div>
+
+        {/* 설정 입력 */}
+        <div className="px-5 pt-4 pb-3 border-b border-gray-100 dark:border-[#383838] flex-shrink-0 space-y-3">
+          {/* 캐릭터 검색 */}
+          <div className="flex gap-2">
+            <input
+              className="flex-1 rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm bg-white dark:bg-[#1a1a1a] dark:text-gray-200 outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors"
+              value={charName} onChange={e => setCharName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && search()}
+              placeholder="원정대 캐릭터명 입력" autoFocus
+            />
+            <button onClick={search} disabled={loading}
+              className="flex-shrink-0 flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-4 py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] disabled:opacity-50 transition-colors">
+              {loading
+                ? <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              }
+              검색
+            </button>
+          </div>
+
+          {/* 골드 우선순위 */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-500 dark:text-gray-400 ns-bold flex-shrink-0">우선순위</span>
+            <div className="flex gap-1.5">
+              {[
+                { key: 'trade', label: '거래 골드 우선', desc: '거래 가능 골드가 높은 레이드' },
+                { key: 'total', label: '총 골드 우선',   desc: '귀속 + 거래 골드가 높은 레이드' },
+              ].map(opt => (
+                <button key={opt.key} onClick={() => setStrategy(opt.key)} title={opt.desc}
+                  className={`px-3 py-1 rounded-full text-xs ns-bold transition-colors ${
+                    strategy === opt.key
+                      ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
+                      : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                  }`}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
+        </div>
+
+        {/* 미리보기 */}
+        {preview && (
+          <div className="overflow-y-auto flex-1 px-5 py-3 space-y-2">
+            <p className="text-xs ns-bold text-gray-500 dark:text-gray-400 mb-2">
+              상위 {preview.chars.length}캐릭터 자동 배정 미리보기
+            </p>
+            {preview.chars.map((char, idx) => {
+              const entries = preview.raidsByName[char.name] || []
+              return (
+                <div key={char.name} className="rounded-lg border border-gray-200 dark:border-[#383838] overflow-hidden">
+                  {/* 캐릭터 헤더 */}
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-[#383838]">
+                    {idx === 0 && (
+                      <span className="text-[9px] ns-bold px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-gray-700 text-yellow-700 dark:text-gray-300">최고레벨</span>
+                    )}
+                    <span className="text-sm ns-bold text-gray-800 dark:text-gray-200">{char.name}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{char.itemLevel.toFixed(2)}</span>
+                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">{entries.length}개 레이드</span>
+                  </div>
+                  {/* 레이드 목록 */}
+                  <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
+                    {entries.map(entry => {
+                      const raid = RAIDS.find(r => r.id === entry.raidId)
+                      const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
+                      if (!raid || !diff) return null
+                      const allGates  = new Array(diff.gates).fill(true)
+                      const goldTrade = calcGoldTrade(diff, allGates)
+                      const goldBound = calcGoldBound(diff, allGates)
+                      const totalGold = goldTrade + goldBound
+                      const isEx = EX_RAID_IDS.has(entry.raidId)
+                      const diffColor =
+                        entry.difficulty === 'nightmare' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' :
+                        entry.difficulty === 'hard'      ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                                                           'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                      return (
+                        <div key={entry.raidId} className="flex items-center gap-2 px-3 py-1.5">
+                          <span className={`text-[8px] ns-bold px-1.5 py-0.5 rounded-full ${diffColor}`}>{diff.label}</span>
+                          <span className="text-xs text-gray-700 dark:text-gray-300 flex-1">{raid.name}</span>
+                          <div className="flex items-center gap-2 text-[10px] tabular-nums text-gray-500 dark:text-gray-400">
+                            {goldBound > 0 && <span className="text-orange-500 dark:text-orange-400">귀속 {goldBound.toLocaleString()}</span>}
+                            {goldTrade > 0 && <span className="text-blue-500 dark:text-blue-400">거래 {goldTrade.toLocaleString()}</span>}
+                            <span className="ns-bold text-gray-600 dark:text-gray-300">{totalGold.toLocaleString()}G</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {!preview && !loading && (
+          <div className="flex-1 flex items-center justify-center py-12 text-sm text-gray-300 dark:text-gray-600">
+            캐릭터명을 검색하면 자동 배정 결과를 미리볼 수 있습니다
+          </div>
+        )}
+
+        {/* 초기화 경고 확인 단계 */}
+        {confirm && (
+          <div className="px-5 py-4 border-t border-orange-200 dark:border-orange-900/50 bg-orange-50 dark:bg-orange-900/10 flex-shrink-0">
+            <div className="flex items-start gap-2 mb-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-orange-500 flex-shrink-0 mt-0.5">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <div>
+                <p className="text-sm ns-bold text-orange-700 dark:text-orange-400">기존 레이드 설정이 초기화됩니다</p>
+                <p className="text-xs text-orange-600 dark:text-orange-500 mt-0.5">자동 설정을 적용하면 현재 설정된 모든 레이드 정보가 삭제되고 새로 설정됩니다. 계속하시겠습니까?</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirm(false)}
+                className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                돌아가기
+              </button>
+              <button onClick={() => { onApply(preview.chars, preview.raidsByName, preview.apiKey); onClose() }}
+                className="flex-1 rounded bg-orange-500 hover:bg-orange-600 py-1.5 text-sm ns-bold text-white transition-colors">
+                초기화 후 적용
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 푸터 */}
+        {!confirm && (
+        <div className="px-5 py-4 border-t border-gray-100 dark:border-[#383838] flex-shrink-0 flex gap-2">
+          <button onClick={onClose}
+            className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+            취소
+          </button>
+          <button onClick={handleApply} disabled={!preview}
+            className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+            자동 설정 적용
+          </button>
+        </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -837,6 +1104,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
   // raids: { [charId]: [{ raidId, difficulty, gateClears, isGoldCheck, moreDone, moreFrom }] }
   const [raids, setRaids] = useState(initialRaids)
   const [showRaidSettings, setShowRaidSettings] = useState(false)
+  const [showAutoSetup,    setShowAutoSetup]    = useState(false)
   const [showAddChar, setShowAddChar]           = useState(false)
   const [syncing, setSyncing]                   = useState(false)
   const [showConfetti, setShowConfetti]         = useState(false)
@@ -890,8 +1158,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
     })
   }
 
-  // 골드 보상 토글 (설정 모달에서 사용)
+  // 골드 보상 토글 (설정 모달에서 사용) — EX 레이드는 항상 골드 고정
   const toggleCharRaidGold = (charId, raidId, diffKey) => {
+    if (EX_RAID_IDS.has(raidId)) return // EX는 골드 해제 불가
     setRaids(prev => {
       const list = [...(prev[charId] || [])]
       const idx  = list.findIndex(e => e.raidId === raidId && e.difficulty === diffKey)
@@ -948,6 +1217,40 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
       saveRaid(charId, entry)
       return { ...prev, [charId]: list }
     })
+  }
+
+  // 자동 설정 적용
+  const applyAutoSetup = async (selectedChars, raidsByName, apiKey) => {
+    // 1. 신규 캐릭터 추가
+    const existingNames = new Set(chars.map(c => c.name))
+    const toAdd = selectedChars.filter(c => !existingNames.has(c.name))
+    if (toAdd.length > 0) {
+      try {
+        await fetch('/api/characters', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey, label: '본계정', characters: toAdd }),
+        })
+      } catch {}
+    }
+    // 2. 최신 캐릭터 목록 재조회 (ID 확보)
+    let updatedChars = chars
+    try {
+      const res = await fetch('/api/characters')
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data)) { updatedChars = data; setChars(data) }
+      }
+    } catch {}
+    // 3. 이름 → ID 매핑 후 레이드 배정 + DB 저장
+    const newRaids = { ...raids }
+    selectedChars.forEach(sc => {
+      const char = updatedChars.find(c => c.name === sc.name)
+      if (!char) return
+      const entries = raidsByName[sc.name] || []
+      newRaids[char.id] = entries
+      entries.forEach(entry => saveRaid(char.id, entry))
+    })
+    setRaids(newRaids)
   }
 
   // 캐릭터 추가
@@ -1069,6 +1372,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
             </svg>
             레이드 설정
           </button>
+          <button onClick={() => setShowAutoSetup(true)}
+            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
+            자동 설정
+          </button>
           <button onClick={() => setShowAddChar(true)}
             className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
             <IconPlus size={12} /> 캐릭터 추가
@@ -1153,7 +1463,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
                   {/* 캐릭터 헤더 */}
                   <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
                     {getClassIcon(char.class)
-                      ? <img src={getClassIcon(char.class)} alt={char.class} className="w-7 h-7 object-contain flex-shrink-0 opacity-85" />
+                      ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-7 h-7 object-contain flex-shrink-0 opacity-85" />
                       : <span className="w-7 h-7 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
                     }
                     <div className="flex-1 min-w-0">
@@ -1421,6 +1731,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
           existingNames={new Set(chars.map(c => c.name))}
           onAdd={addChars}
           onClose={() => setShowAddChar(false)}
+        />
+      )}
+      {showAutoSetup && (
+        <AutoSetupModal
+          onApply={applyAutoSetup}
+          onClose={() => setShowAutoSetup(false)}
+          existingRaids={raids}
+          existingChars={chars}
         />
       )}
     </div>

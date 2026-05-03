@@ -58,6 +58,9 @@ body {
 .ns-bold      { font-family: 'NanumSquareB',  sans-serif; }
 .ns-extrabold { font-family: 'NanumSquareEB', sans-serif; }
 
+/* ── 직업 아이콘: 다크모드에서 회색으로 ── */
+.dark .class-icon { filter: invert(0.65) opacity(0.85); }
+
 
 /* ═══════════════════════════════════════════════════════════════
    핑크 테마  [data-theme="pink"]
