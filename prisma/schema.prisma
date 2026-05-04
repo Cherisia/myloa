@@ -24,6 +24,9 @@ model User {
   loaAccounts      LoaAccount[]
   expeditionMember ExpeditionMember[]
   leadingExpeditions Expedition[]     @relation("ExpeditionLeader")
+  groupMemberships GroupMember[]
+  leadingGroups    Group[]            @relation("GroupLeader")
+  joinRequests     JoinRequest[]
 }
 
 model Account {
@@ -121,6 +124,53 @@ model Expedition {
 
   leader  User               @relation("ExpeditionLeader", fields: [leaderId], references: [id])
   members ExpeditionMember[]
+}
+
+// ─── 그룹 ────────────────────────────────────────────────────────────────────
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  notice      String?  // 그룹장 공지사항
+  isPublic    Boolean  @default(true)
+  inviteCode  String   @unique @default(cuid())
+  leaderId    String
+  maxMembers  Int      @default(30)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  leader   User          @relation("GroupLeader", fields: [leaderId], references: [id])
+  members  GroupMember[]
+  requests JoinRequest[]
+}
+
+model GroupMember {
+  id         String   @id @default(cuid())
+  groupId    String
+  userId     String
+  role       String   @default("member") // "leader" | "officer" | "member"
+  visibility String   @default("all")   // "all" | "none"
+  joinedAt   DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
+model JoinRequest {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  message   String?
+  status    String   @default("pending") // "pending" | "accepted" | "rejected"
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
 }
 
 model ExpeditionMember {
