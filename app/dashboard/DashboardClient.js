@@ -2089,7 +2089,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {} }
                                                              'bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400'
                         return (
                           <div
-                            key={entry.raidId}
+                            key={`${entry.raidId}:${entry.difficulty}`}
                             onClick={() => toggleRaid(char.id, entry.raidId, entry.difficulty)}
                             className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors ${
                               moreDone ? 'bg-yellow-100 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
