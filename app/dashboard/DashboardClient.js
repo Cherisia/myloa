@@ -935,25 +935,27 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs ns-bold text-gray-500 dark:text-gray-400">원정대 캐릭터 {results.length}개</p>
                   <div className="flex items-center gap-1">
-                    <div className="relative group">
+                    {/* 자동선택 */}
+                    <div className="relative group inline-flex items-center">
                       <button
                         onClick={() => setSelected(new Set(top6Names))}
-                        className="text-[10px] text-yellow-500 px-2 py-0.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors">
+                        className="text-[10px] ns-bold text-yellow-500 dark:text-yellow-400 px-1.5 py-0.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors whitespace-nowrap">
                         자동선택
                       </button>
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block z-10 pointer-events-none">
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10 pointer-events-none">
                         <div className="bg-yellow-200 text-yellow-900 text-[10px] ns-bold rounded px-2.5 py-1.5 whitespace-nowrap shadow-lg">
                           아이템 레벨 높은 6개 캐릭터가 선택됩니다.
                         </div>
                         <div className="w-2 h-2 bg-yellow-200 rotate-45 mx-auto -mt-1" />
                       </div>
                     </div>
+                    {/* 전체선택 / 전체해제 */}
                     <button
                       onClick={() => allSelected
                         ? setSelected(new Set())
                         : setSelected(new Set(selectables.map(c => c.name)))
                       }
-                      className="text-[10px] text-yellow-500 px-2 py-0.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors">
+                      className="text-[10px] ns-bold text-yellow-500 dark:text-yellow-400 px-1.5 py-0.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors whitespace-nowrap">
                       {allSelected ? '전체해제' : '전체선택'}
                     </button>
                   </div>
