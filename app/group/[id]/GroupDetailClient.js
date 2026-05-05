@@ -94,29 +94,21 @@ function RaidMembersModal({ raidId, diffKey, members, onClose }) {
               <p className="text-[11px] ns-bold text-red-500 dark:text-red-400 mb-2">
                 미완료 · {incomplete.length}명
               </p>
-              <div className="space-y-2">
-                {incomplete.map((e, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {incomplete.map((e, i) => {
+                  const partialCount = e.gateClears.filter(Boolean).length
+                  return (
+                    <div key={i} className="flex items-center gap-1">
                       <span className="text-xs ns-bold text-gray-700 dark:text-gray-200">{e.charName}</span>
-                      <span className="text-[11px] text-gray-400 ml-1.5">{e.memberName}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {e.gateClears.map((done, gi) => (
-                        <span
-                          key={gi}
-                          className={`w-5 h-5 rounded text-[10px] ns-bold flex items-center justify-center ${
-                            done
-                              ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                              : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 dark:text-gray-500'
-                          }`}
-                        >
-                          {gi + 1}
+                      <span className="text-[11px] text-gray-400">{e.memberName}</span>
+                      {partialCount > 0 && (
+                        <span className="text-[9px] text-gray-400 dark:text-gray-500">
+                          ({partialCount}/{e.gateClears.length})
                         </span>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
@@ -126,20 +118,11 @@ function RaidMembersModal({ raidId, diffKey, members, onClose }) {
               <p className="text-[11px] ns-bold text-green-500 dark:text-green-400 mb-2">
                 완료 · {complete.length}명
               </p>
-              <div className="space-y-2 opacity-50">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 opacity-50">
                 {complete.map((e, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs ns-bold text-gray-700 dark:text-gray-200 line-through">{e.charName}</span>
-                      <span className="text-[11px] text-gray-400 ml-1.5">{e.memberName}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {e.gateClears.map((_, gi) => (
-                        <span key={gi} className="w-5 h-5 rounded text-[10px] ns-bold flex items-center justify-center bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                          {gi + 1}
-                        </span>
-                      ))}
-                    </div>
+                  <div key={i} className="flex items-center gap-1">
+                    <span className="text-xs ns-bold text-gray-700 dark:text-gray-200 line-through">{e.charName}</span>
+                    <span className="text-[11px] text-gray-400">{e.memberName}</span>
                   </div>
                 ))}
               </div>
@@ -273,7 +256,6 @@ function HomeworkTab({ members }) {
                                 : status === 'partial'
                                   ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-500 border-yellow-200 dark:border-yellow-900/40'
                                   : 'bg-gray-50 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400 border-gray-200 dark:border-[#383838]'
-                            const doneCount = r.gateClears.filter(Boolean).length
                             return (
                               <button
                                 key={`${r.raidId}:${r.difficulty}`}
@@ -281,9 +263,6 @@ function HomeworkTab({ members }) {
                                 className={`text-[10px] ns-bold px-2 py-1 rounded border transition-colors hover:opacity-75 ${colorCls}`}
                               >
                                 {raidName} {diffLabel}
-                                {status === 'partial' && (
-                                  <span className="ml-1 opacity-70">({doneCount}/{r.gateClears.length})</span>
-                                )}
                               </button>
                             )
                           })}

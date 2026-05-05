@@ -18,9 +18,25 @@ export default async function RootLayout({ children }) {
         <SessionProvider session={session}>
           <ThemeProvider>
             <Navbar />
-            <main className="mx-auto max-w-5xl px-4 py-6">
-              {children}
-            </main>
+            {/* 외부 컨테이너: 2xl(1536px+)에서 광고 사이드 슬롯 포함 최대 1600px */}
+            <div className="mx-auto max-w-[1600px]">
+              <div className="flex items-start">
+                {/* 좌측 광고 슬롯 — 2xl 이상에서만 표시 */}
+                <aside className="hidden 2xl:flex 2xl:w-[160px] flex-shrink-0 items-start justify-center sticky top-12 pt-6 min-h-[calc(100vh-3rem)]">
+                  {/* AdSense 160×600 */}
+                </aside>
+
+                {/* 본문 */}
+                <main className="flex-1 min-w-0 px-4 py-6">
+                  {children}
+                </main>
+
+                {/* 우측 광고 슬롯 — 2xl 이상에서만 표시 */}
+                <aside className="hidden 2xl:flex 2xl:w-[160px] flex-shrink-0 items-start justify-center sticky top-12 pt-6 min-h-[calc(100vh-3rem)]">
+                  {/* AdSense 160×600 */}
+                </aside>
+              </div>
+            </div>
           </ThemeProvider>
         </SessionProvider>
       </body>

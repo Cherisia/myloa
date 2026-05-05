@@ -61,15 +61,15 @@ body {
 /* ── 직업 아이콘 테마별 필터 ────────────────────────────────── */
 /* 기본(노랑): 검정 아이콘을 노란빛 갈색 톤으로 */
 .class-icon {
-  filter: sepia(0.4) saturate(1.2) hue-rotate(5deg) brightness(0.55);
+  filter: brightness(0) sepia(1) saturate(2) hue-rotate(5deg) brightness(0.6);
 }
 /* 핑크: 검정 아이콘을 로즈 핑크 톤으로 */
 [data-theme="pink"] .class-icon {
-  filter: sepia(0.6) saturate(2) hue-rotate(280deg) brightness(0.6);
+  filter: brightness(0) sepia(1) saturate(3) hue-rotate(280deg) brightness(0.65);
 }
-/* 다크: 검정 아이콘을 밝은 회색으로 */
+/* 다크: 완전히 흰색 계열로 */
 .dark .class-icon {
-  filter: invert(0.75) brightness(1.15) opacity(0.85);
+  filter: brightness(0) invert(1) opacity(0.6);
 }
 
 
