@@ -151,13 +151,14 @@ function JoinCodeModal({ onClose, onJoined }) {
 }
 
 // ── 공개 그룹 카드 ─────────────────────────────────────────────────────────────
-function PublicGroupCard({ group, onApply }) {
+function PublicGroupCard({ group, onApply, isDemo, onDemoAction }) {
   const [applied, setApplied] = useState(group.hasPending)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   const handleApply = async (e) => {
     e.stopPropagation()
+    if (isDemo) { onDemoAction?.(); return }
     if (applied || loading) return
     setLoading(true)
     try {
@@ -170,9 +171,14 @@ function PublicGroupCard({ group, onApply }) {
     } finally { setLoading(false) }
   }
 
+  const handleClick = () => {
+    if (isDemo) { onDemoAction?.(); return }
+    router.push(`/group/${group.id}`)
+  }
+
   return (
     <div
-      onClick={() => router.push(`/group/${group.id}`)}
+      onClick={handleClick}
       className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] p-4 cursor-pointer hover:border-yellow-400/60 dark:hover:border-yellow-600/40 transition-colors"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -194,16 +200,16 @@ function PublicGroupCard({ group, onApply }) {
         </div>
         <button
           onClick={handleApply}
-          disabled={applied || loading || group.memberCount >= group.maxMembers}
+          disabled={!isDemo && (applied || loading || group.memberCount >= group.maxMembers)}
           className={`flex-shrink-0 text-xs ns-bold px-3 py-1.5 rounded transition-colors ${
-            applied
+            !isDemo && applied
               ? 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 cursor-default'
-              : group.memberCount >= group.maxMembers
+              : !isDemo && group.memberCount >= group.maxMembers
                 ? 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 cursor-default'
                 : 'bg-yellow-400 hover:bg-yellow-300 text-gray-900'
           }`}
         >
-          {loading ? '…' : applied ? '신청 중' : group.memberCount >= group.maxMembers ? '인원 마감' : '참가 신청'}
+          {!isDemo && loading ? '…' : !isDemo && applied ? '신청 중' : !isDemo && group.memberCount >= group.maxMembers ? '인원 마감' : '참가 신청'}
         </button>
       </div>
       {group.description && (
@@ -252,13 +258,45 @@ function MyGroupCard({ group }) {
   )
 }
 
+// ── 데모 로그인 안내 모달 ──────────────────────────────────────────────────────
+function DemoLoginModal({ onClose }) {
+  const { signIn } = require('next-auth/react')
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <div className="w-full max-w-xs rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
+        <div className="px-6 py-6 text-center space-y-3">
+          <p className="ns-bold text-gray-900 dark:text-white text-base">로그인이 필요해요</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            지금 보이는 원정대는 샘플 데이터에요.<br />
+            디스코드 로그인 후 직접 그룹을 만들거나<br />
+            참가해 보세요!
+          </p>
+          <div className="flex flex-col gap-2 pt-1">
+            <button
+              onClick={() => signIn('discord', { callbackUrl: '/group' })}
+              className="w-full rounded-lg py-2.5 text-sm ns-bold text-white transition-colors"
+              style={{ backgroundColor: '#5865F2' }}
+            >
+              디스코드 로그인
+            </button>
+            <button onClick={onClose} className="w-full rounded-lg py-2.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+              닫기
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── 메인 ───────────────────────────────────────────────────────────────────────
-export default function GroupClient({ initialMyGroups, initialPublicGroups, userId, userName }) {
+export default function GroupClient({ initialMyGroups, initialPublicGroups, userId, userName, isDemo = false }) {
   const [myGroups,      setMyGroups]      = useState(initialMyGroups)
   const [publicGroups,  setPublicGroups]  = useState(initialPublicGroups)
   const [showCreate,    setShowCreate]    = useState(false)
   const [showJoinCode,  setShowJoinCode]  = useState(false)
-  const [browseMode,    setBrowseMode]    = useState(myGroups.length === 0) // 그룹 없으면 탐색 모드
+  const [showDemoModal, setShowDemoModal] = useState(false)
+  const [browseMode,    setBrowseMode]    = useState(myGroups.length === 0)
   const [searchQ,       setSearchQ]       = useState('')
   const [sort,          setSort]          = useState('members')
 
@@ -275,33 +313,35 @@ export default function GroupClient({ initialMyGroups, initialPublicGroups, user
     setBrowseMode(false)
   }
 
-  if (!userId) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-gray-400 dark:text-gray-500 text-sm mb-1">로그인이 필요한 기능입니다</p>
-        <p className="text-xs text-gray-300 dark:text-gray-600">로그인 후 그룹에 참가하거나 만들 수 있습니다</p>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-5">
+      {/* 데모 배너 */}
+      {isDemo && (
+        <div className="flex items-center gap-3 rounded-lg border border-yellow-200 dark:border-yellow-900/30 bg-yellow-50 dark:bg-yellow-900/10 px-3.5 py-2.5 text-xs">
+          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-yellow-400" />
+          <span className="text-gray-500 dark:text-gray-400">
+            <span className="ns-bold text-gray-700 dark:text-gray-200">미리보기 모드</span>
+            {' '}· 샘플 그룹 데이터가 표시되고 있어요. 로그인하면 실제 그룹을 만들고 참가할 수 있어요.
+          </span>
+        </div>
+      )}
+
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="ns-extrabold text-lg text-gray-900 dark:text-white">그룹</h1>
           <p className="text-xs text-gray-400 mt-0.5">
-            {myGroups.length > 0 ? `${myGroups.length}개 그룹 참여 중` : '아직 참여한 그룹이 없습니다'}
+            {isDemo ? '샘플 그룹이 표시되고 있습니다' : myGroups.length > 0 ? `${myGroups.length}개 그룹 참여 중` : '아직 참여한 그룹이 없습니다'}
           </p>
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setShowJoinCode(true)}
+            onClick={() => isDemo ? setShowDemoModal(true) : setShowJoinCode(true)}
             className="rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
             코드로 참가
           </button>
           <button
-            onClick={() => setShowCreate(true)}
+            onClick={() => isDemo ? setShowDemoModal(true) : setShowCreate(true)}
             className="flex items-center gap-1 rounded bg-yellow-400 hover:bg-yellow-300 px-3 py-1.5 text-xs ns-bold text-gray-900 transition-colors">
             <IconPlus /> 그룹 만들기
           </button>
@@ -313,11 +353,13 @@ export default function GroupClient({ initialMyGroups, initialPublicGroups, user
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-xs ns-bold text-gray-500 dark:text-gray-400">내 그룹</p>
-            <button
-              onClick={() => setBrowseMode(v => !v)}
-              className="text-xs text-yellow-500 dark:text-yellow-400 hover:underline">
-              {browseMode ? '탐색 닫기' : '공개 그룹 탐색'}
-            </button>
+            {!isDemo && (
+              <button
+                onClick={() => setBrowseMode(v => !v)}
+                className="text-xs text-yellow-500 dark:text-yellow-400 hover:underline">
+                {browseMode ? '탐색 닫기' : '공개 그룹 탐색'}
+              </button>
+            )}
           </div>
           <div className="grid sm:grid-cols-2 gap-2">
             {myGroups.map(g => <MyGroupCard key={g.id} group={g} />)}
@@ -326,7 +368,7 @@ export default function GroupClient({ initialMyGroups, initialPublicGroups, user
       )}
 
       {/* 공개 그룹 탐색 */}
-      {browseMode && (
+      {(browseMode || isDemo) && (
         <div className="space-y-3">
           {myGroups.length > 0 && <div className="border-t border-gray-100 dark:border-[#383838]" />}
           <p className="text-xs ns-bold text-gray-500 dark:text-gray-400">공개 그룹 탐색</p>
@@ -362,7 +404,7 @@ export default function GroupClient({ initialMyGroups, initialPublicGroups, user
           ) : (
             <div className="grid sm:grid-cols-2 gap-2">
               {filteredPublic.map(g => (
-                <PublicGroupCard key={g.id} group={g} onApply={() => {}} />
+                <PublicGroupCard key={g.id} group={g} onApply={() => {}} isDemo={isDemo} onDemoAction={() => setShowDemoModal(true)} />
               ))}
             </div>
           )}
@@ -370,8 +412,9 @@ export default function GroupClient({ initialMyGroups, initialPublicGroups, user
       )}
 
       {/* 모달 */}
-      {showCreate   && <CreateModal  onClose={() => setShowCreate(false)}   onCreate={handleCreated} />}
-      {showJoinCode && <JoinCodeModal onClose={() => setShowJoinCode(false)} onJoined={() => {}} />}
+      {showCreate    && <CreateModal    onClose={() => setShowCreate(false)}    onCreate={handleCreated} />}
+      {showJoinCode  && <JoinCodeModal  onClose={() => setShowJoinCode(false)}  onJoined={() => {}} />}
+      {showDemoModal && <DemoLoginModal onClose={() => setShowDemoModal(false)} />}
     </div>
   )
 }

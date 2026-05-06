@@ -145,12 +145,13 @@ export async function PATCH(request, { params }) {
 
   const body = await request.json()
   const data = {}
-  if (body.name       !== undefined) data.name        = body.name.trim()
-  if (body.description !== undefined) data.description = body.description?.trim() || null
-  if (body.notice     !== undefined) data.notice      = body.notice?.trim() || null
-  if (body.isPublic   !== undefined) data.isPublic    = body.isPublic
-  if (body.maxMembers !== undefined) data.maxMembers  = body.maxMembers
-  if (body.rotateCode)               data.inviteCode  = makeInviteCode()
+  if (body.name            !== undefined) data.name           = body.name.trim()
+  if (body.description     !== undefined) data.description    = body.description?.trim() || null
+  if (body.notice          !== undefined) data.notice         = body.notice?.trim() || null
+  if (body.isPublic        !== undefined) data.isPublic       = body.isPublic
+  if (body.maxMembers      !== undefined) data.maxMembers     = body.maxMembers
+  if (body.discordWebhook  !== undefined) data.discordWebhook = body.discordWebhook?.trim() || null
+  if (body.rotateCode)                    data.inviteCode     = makeInviteCode()
 
   const updated = await prisma.group.update({ where: { id }, data })
   return NextResponse.json(updated)

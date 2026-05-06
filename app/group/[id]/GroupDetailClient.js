@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import { RAIDS } from '@/lib/raidData'
+import DiscordIcon from '@/components/DiscordIcon'
 
 const HIDDEN_RAID_IDS = new Set(['abrel-ex'])
 
@@ -39,8 +41,13 @@ function getRaidLabel(raidId, diffKey) {
 }
 
 // ── 레이드별 공대원 모달 ───────────────────────────────────────────────────────
-function RaidMembersModal({ raidId, diffKey, members, onClose }) {
+function RaidMembersModal({ raidId, diffKey, members, onClose, canNotify, groupId }) {
   const { raidName, diffLabel, gates } = getRaidLabel(raidId, diffKey)
+  const [selected,    setSelected]    = useState(new Set())
+  const [showNotify,  setShowNotify]  = useState(false)
+  const [notifyMsg,   setNotifyMsg]   = useState('')
+  const [sending,     setSending]     = useState(false)
+  const [sentResult,  setSentResult]  = useState(null) // null | 'ok' | 'err'
 
   const entries = useMemo(() => {
     const result = []
@@ -49,6 +56,7 @@ function RaidMembersModal({ raidId, diffKey, members, onClose }) {
         const re = c.raids.find(r => r.raidId === raidId && r.difficulty === diffKey)
         if (!re) continue
         result.push({
+          userId:     m.userId,
           memberName: m.name,
           charName:   c.name,
           charClass:  c.class,
@@ -65,17 +73,48 @@ function RaidMembersModal({ raidId, diffKey, members, onClose }) {
   const incomplete = entries.filter(e => e.status !== 'complete')
   const complete   = entries.filter(e => e.status === 'complete')
 
+  const toggleSelect = (userId) => {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(userId)) next.delete(userId)
+      else next.add(userId)
+      return next
+    })
+  }
+
+  const selectAll = () => {
+    setSelected(new Set(incomplete.map(e => e.userId)))
+  }
+
+  const handleSend = async () => {
+    if (selected.size === 0 || sending) return
+    setSending(true)
+    setSentResult(null)
+    try {
+      const res = await fetch(`/api/groups/${groupId}/discord-notify`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ raidId, diffKey, userIds: [...selected], message: notifyMsg }),
+      })
+      setSentResult(res.ok ? 'ok' : 'err')
+    } catch {
+      setSentResult('err')
+    } finally {
+      setSending(false)
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl max-h-[80vh] flex flex-col"
+        className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl max-h-[85vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
           <div>
             <p className="ns-bold text-gray-900 dark:text-white">{raidName}</p>
             <p className="text-xs text-gray-400 mt-0.5">{diffLabel} · {gates}관문</p>
@@ -91,14 +130,32 @@ function RaidMembersModal({ raidId, diffKey, members, onClose }) {
 
           {incomplete.length > 0 && (
             <div>
-              <p className="text-[11px] ns-bold text-red-500 dark:text-red-400 mb-2">
-                미완료 · {incomplete.length}명
-              </p>
-              <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] ns-bold text-red-500 dark:text-red-400">
+                  미완료 · {incomplete.length}명
+                </p>
+                {canNotify && (
+                  <button
+                    onClick={selectAll}
+                    className="text-[10px] text-gray-400 hover:text-yellow-500 transition-colors"
+                  >
+                    전체 선택
+                  </button>
+                )}
+              </div>
+              <div className="space-y-1.5">
                 {incomplete.map((e, i) => {
                   const partialCount = e.gateClears.filter(Boolean).length
                   return (
-                    <div key={i} className="flex items-center gap-1">
+                    <div key={i} className="flex items-center gap-2">
+                      {canNotify && (
+                        <input
+                          type="checkbox"
+                          checked={selected.has(e.userId)}
+                          onChange={() => toggleSelect(e.userId)}
+                          className="w-3.5 h-3.5 flex-shrink-0 cursor-pointer accent-yellow-400"
+                        />
+                      )}
                       <span className="text-xs ns-bold text-gray-700 dark:text-gray-200">{e.charName}</span>
                       <span className="text-[11px] text-gray-400">{e.memberName}</span>
                       {partialCount > 0 && (
@@ -118,9 +175,10 @@ function RaidMembersModal({ raidId, diffKey, members, onClose }) {
               <p className="text-[11px] ns-bold text-green-500 dark:text-green-400 mb-2">
                 완료 · {complete.length}명
               </p>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 opacity-50">
+              <div className="space-y-1.5 opacity-50">
                 {complete.map((e, i) => (
-                  <div key={i} className="flex items-center gap-1">
+                  <div key={i} className="flex items-center gap-2">
+                    {canNotify && <div className="w-3.5 flex-shrink-0" />}
                     <span className="text-xs ns-bold text-gray-700 dark:text-gray-200 line-through">{e.charName}</span>
                     <span className="text-[11px] text-gray-400">{e.memberName}</span>
                   </div>
@@ -129,13 +187,70 @@ function RaidMembersModal({ raidId, diffKey, members, onClose }) {
             </div>
           )}
         </div>
+
+        {/* Discord 알림 패널 */}
+        {canNotify && incomplete.length > 0 && (
+          <div className="border-t border-gray-100 dark:border-[#383838] flex-shrink-0">
+            {!showNotify ? (
+              <div className="px-5 py-3 flex items-center justify-between gap-3">
+                <span className="text-[11px] text-gray-400">
+                  {selected.size > 0 ? `${selected.size}명 선택됨` : '알림 보낼 멤버를 선택하세요'}
+                </span>
+                <button
+                  onClick={() => setShowNotify(true)}
+                  disabled={selected.size === 0}
+                  className="flex items-center gap-1.5 text-[11px] ns-bold px-3 py-1.5 rounded transition-colors disabled:opacity-40 text-white flex-shrink-0"
+                  style={{ backgroundColor: '#5865F2' }}
+                >
+                  <DiscordIcon size={11} /> Discord 알림
+                </button>
+              </div>
+            ) : (
+              <div className="px-5 py-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] ns-bold text-gray-700 dark:text-gray-200">
+                    {selected.size}명에게 Discord 알림 전송
+                  </span>
+                  <button
+                    onClick={() => { setShowNotify(false); setSentResult(null) }}
+                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    취소
+                  </button>
+                </div>
+                <textarea
+                  value={notifyMsg}
+                  onChange={e => setNotifyMsg(e.target.value)}
+                  placeholder="추가 메세지 (선택사항) — 예: 토요일 밤 10시 모여요!"
+                  rows={2}
+                  className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-[11px] bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-[#5865F2] transition-colors resize-none"
+                />
+                {sentResult === 'ok' && (
+                  <p className="text-[11px] text-green-500 dark:text-green-400">✓ Discord로 알림을 전송했습니다!</p>
+                )}
+                {sentResult === 'err' && (
+                  <p className="text-[11px] text-red-500">전송 실패. 웹훅 URL을 확인해주세요.</p>
+                )}
+                <button
+                  onClick={handleSend}
+                  disabled={sending || sentResult === 'ok'}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded text-[11px] ns-bold text-white disabled:opacity-60 transition-colors"
+                  style={{ backgroundColor: '#5865F2' }}
+                >
+                  <DiscordIcon size={11} />
+                  {sending ? '전송 중…' : sentResult === 'ok' ? '전송 완료' : 'Discord로 보내기'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 // ── 숙제 현황 탭 ──────────────────────────────────────────────────────────────
-function HomeworkTab({ members }) {
+function HomeworkTab({ members, canNotify, groupId }) {
   const [viewRaid, setViewRaid] = useState(null) // { raidId, diffKey }
 
   // 그룹 전체에 등록된 고유 레이드 목록
@@ -220,6 +335,14 @@ function HomeworkTab({ members }) {
                   부그룹장
                 </span>
               )}
+              {m.repChar && (
+                <span className="ml-auto text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                  <svg width="9" height="9" viewBox="0 0 24 22" fill="currentColor" className="text-yellow-400"><path d="M2 19h20v2H2zM22 3.27l-5.5 6.5L12 2 7.5 9.77 2 3.27V18h20V3.27z"/></svg>
+                  {m.repChar.name}
+                  <span className="text-gray-300 dark:text-gray-600">·</span>
+                  {m.repChar.class}
+                </span>
+              )}
             </div>
 
             {/* 캐릭터 목록 */}
@@ -283,6 +406,8 @@ function HomeworkTab({ members }) {
           diffKey={viewRaid.diffKey}
           members={members}
           onClose={() => setViewRaid(null)}
+          canNotify={canNotify}
+          groupId={groupId}
         />
       )}
     </div>
@@ -327,6 +452,16 @@ function MembersTab({ members, myRole, myUserId, groupId, onKick, onRoleChange, 
                 <span className="text-[10px] text-gray-400 dark:text-gray-500">(나)</span>
               )}
             </div>
+            {/* 대표 캐릭터 */}
+            {m.repChar && (
+              <p className="text-[11px] mt-0.5 flex items-center gap-1 text-yellow-600 dark:text-yellow-500">
+                <IconShield />
+                <span className="ns-bold">{m.repChar.name}</span>
+                <span className="text-gray-400 dark:text-gray-500">
+                  {m.repChar.class} · Lv.{Number(m.repChar.itemLevel).toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </p>
+            )}
             <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1">
               캐릭터 {m.characters.length}개
               {m.visibility === 'none' && m.userId !== myUserId && (
@@ -483,6 +618,11 @@ function SettingsTab({ group, myRole, myUserId, myVisibility, onUpdate, onDelete
   const [codeLoading,   setCodeLoading]   = useState(false)
   const [codeCopied,    setCodeCopied]    = useState(false)
 
+  // Discord 웹훅
+  const [webhook,      setWebhook]      = useState(group.discordWebhook ?? '')
+  const [webhookSaved, setWebhookSaved] = useState(false)
+  const [webhookLoading, setWebhookLoading] = useState(false)
+
   // 그룹 삭제 확인
   const [showDelete, setShowDelete] = useState(false)
   const [delInput,   setDelInput]   = useState('')
@@ -508,6 +648,22 @@ function SettingsTab({ group, myRole, myUserId, myVisibility, onUpdate, onDelete
         setTimeout(() => setSaved(false), 2000)
       }
     } finally { setSaveLoading(false) }
+  }
+
+  const handleSaveWebhook = async () => {
+    setWebhookLoading(true)
+    try {
+      const res = await fetch(`/api/groups/${group.id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ discordWebhook: webhook.trim() || null }),
+      })
+      if (res.ok) {
+        onUpdate({ discordWebhook: webhook.trim() || null, hasDiscordWebhook: !!webhook.trim() })
+        setWebhookSaved(true)
+        setTimeout(() => setWebhookSaved(false), 2000)
+      }
+    } finally { setWebhookLoading(false) }
   }
 
   const handleRotateCode = async () => {
@@ -676,6 +832,40 @@ function SettingsTab({ group, myRole, myUserId, myVisibility, onUpdate, onDelete
         </div>
       )}
 
+      {/* Discord 웹훅 (리더 전용) */}
+      {isLeader && (
+        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-gray-100 dark:border-[#2a2a2a] flex items-center gap-2">
+            <DiscordIcon size={14} />
+            <div>
+              <p className="text-sm ns-bold text-gray-800 dark:text-gray-100">Discord 웹훅</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">레이드 알림을 보낼 Discord 채널 웹훅 URL</p>
+            </div>
+          </div>
+          <div className="px-5 py-4 space-y-2">
+            <input
+              value={webhook}
+              onChange={e => setWebhook(e.target.value)}
+              placeholder="https://discord.com/api/webhooks/..."
+              className={inputCls}
+            />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSaveWebhook}
+                disabled={webhookLoading}
+                className="rounded bg-[#5865F2] hover:bg-[#4752C4] px-3 py-1.5 text-xs ns-bold text-white disabled:opacity-60 transition-colors"
+              >
+                {webhookLoading ? '저장 중…' : '저장'}
+              </button>
+              {webhookSaved && <span className="text-xs text-green-500">저장됨 ✓</span>}
+            </div>
+            <p className="text-[11px] text-gray-400">
+              Discord 채널 → 설정 → 연동 → 웹훅 → URL 복사
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 위험 구역 */}
       <div className="rounded-lg border border-red-200 dark:border-red-900/30 bg-white dark:bg-[#222222] overflow-hidden">
         <div className="px-5 py-3.5 bg-red-50 dark:bg-red-900/10 border-b border-red-200 dark:border-red-900/30">
@@ -733,7 +923,7 @@ function SettingsTab({ group, myRole, myUserId, myVisibility, onUpdate, onDelete
 }
 
 // ── 메인 ──────────────────────────────────────────────────────────────────────
-export default function GroupDetailClient({ group: initialGroup, userId }) {
+export default function GroupDetailClient({ group: initialGroup, userId, isDemo = false }) {
   const router = useRouter()
   const [group,     setGroup]     = useState(initialGroup)
   const [activeTab, setActiveTab] = useState('homework')
@@ -741,6 +931,7 @@ export default function GroupDetailClient({ group: initialGroup, userId }) {
 
   const isLeader    = group.myRole === 'leader'
   const canManage   = group.myRole === 'leader' || group.myRole === 'officer'
+  const canNotify   = !isDemo && group.isMember && group.hasDiscordWebhook
   const pendingCount = group.requests.length
 
   const showToast = (msg) => {
@@ -822,12 +1013,17 @@ export default function GroupDetailClient({ group: initialGroup, userId }) {
   }
 
   // ── 탭 목록 ────────────────────────────────────────────────────────────────
-  const tabs = [
-    { key: 'homework', label: '숙제 현황' },
-    { key: 'members',  label: '멤버' },
-    ...(canManage ? [{ key: 'pending', label: '대기중', badge: pendingCount }] : []),
-    { key: 'settings', label: '설정' },
-  ]
+  const tabs = isDemo
+    ? [
+        { key: 'homework', label: '숙제 현황' },
+        { key: 'members',  label: '멤버' },
+      ]
+    : [
+        { key: 'homework', label: '숙제 현황' },
+        { key: 'members',  label: '멤버' },
+        ...(canManage ? [{ key: 'pending', label: '대기중', badge: pendingCount }] : []),
+        { key: 'settings', label: '설정' },
+      ]
 
   return (
     <div className="space-y-5">
@@ -879,6 +1075,17 @@ export default function GroupDetailClient({ group: initialGroup, userId }) {
         )}
       </div>
 
+      {/* ── 데모 배너 ── */}
+      {isDemo && (
+        <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-3.5 py-2.5 text-xs">
+          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-yellow-500" />
+          <span className="text-gray-500 dark:text-gray-400">
+            <span className="ns-bold text-gray-700 dark:text-gray-200">미리보기 모드</span>
+            {' '}· 샘플 그룹 데이터가 표시되고 있어요.
+          </span>
+        </div>
+      )}
+
       {/* ── 탭 네비게이션 ── */}
       <div className="flex gap-1 border-b border-gray-100 dark:border-[#383838]">
         {tabs.map(t => (
@@ -903,7 +1110,7 @@ export default function GroupDetailClient({ group: initialGroup, userId }) {
 
       {/* ── 탭 콘텐츠 ── */}
       {activeTab === 'homework' && (
-        <HomeworkTab members={group.members} />
+        <HomeworkTab members={group.members} canNotify={canNotify} groupId={group.id} />
       )}
       {activeTab === 'members' && (
         <MembersTab
