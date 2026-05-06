@@ -69,7 +69,11 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id
-  let accounts = await prisma.loaAccount.findMany({ where: { userId }, include: ACCOUNT_INCLUDE })
+  const [userRecord, accountsRaw] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { repCharId: true } }),
+    prisma.loaAccount.findMany({ where: { userId }, include: ACCOUNT_INCLUDE }),
+  ])
+  let accounts = accountsRaw
 
   // 리셋 만료된 항목 일괄 처리
   const expiredIds = []
@@ -87,6 +91,8 @@ export default async function DashboardPage() {
     )
     accounts = await prisma.loaAccount.findMany({ where: { userId }, include: ACCOUNT_INCLUDE })
   }
+
+  const initialRepCharId = userRecord?.repCharId ?? null
 
   const initialChars = []
   const initialRaids = {}
@@ -113,5 +119,5 @@ export default async function DashboardPage() {
     })
   )
 
-  return <DashboardClient initialChars={initialChars} initialRaids={initialRaids} isLoggedIn />
+  return <DashboardClient initialChars={initialChars} initialRaids={initialRaids} isLoggedIn initialRepCharId={initialRepCharId} />
 }

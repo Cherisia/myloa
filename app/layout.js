@@ -5,8 +5,9 @@ import Navbar from '@/components/Navbar'
 import { auth } from '@/lib/auth'
 
 export const metadata = {
-  title: '로아숙제 - 로스트아크 레이드 숙제 관리',
+  title: 'myloa - 로스트아크 레이드 숙제 관리',
   description: '로스트아크 레이드 숙제를 관리하고 원정대원들과 공유하세요.',
+  icons: { icon: '/icon.svg' },
 }
 
 export default async function RootLayout({ children }) {

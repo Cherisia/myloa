@@ -16,6 +16,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  repCharId     String?   // 대표 캐릭터 ID (그룹에서 나를 대표하는 캐릭터)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -129,16 +130,17 @@ model Expedition {
 // ─── 그룹 ────────────────────────────────────────────────────────────────────
 
 model Group {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  notice      String?  // 그룹장 공지사항
-  isPublic    Boolean  @default(true)
-  inviteCode  String   @unique @default(cuid())
-  leaderId    String
-  maxMembers  Int      @default(30)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  notice         String?  // 그룹장 공지사항
+  isPublic       Boolean  @default(true)
+  inviteCode     String   @unique @default(cuid())
+  discordWebhook String?  // Discord 채널 웹훅 URL
+  leaderId       String
+  maxMembers     Int      @default(30)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   leader   User          @relation("GroupLeader", fields: [leaderId], references: [id])
   members  GroupMember[]
