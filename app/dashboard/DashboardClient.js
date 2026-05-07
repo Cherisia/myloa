@@ -1703,9 +1703,20 @@ function Confetti({ active }) {
 // ── 커스텀 숙제 설정 모달 ─────────────────────────────────────────────────────
 const CUSTOM_MAX = 10
 
-function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onReorder, onClose }) {
+const PRESET_ITEMS = [
+  { name: '쿠르잔 전선', type: 'daily',  image: '/schedule/kurzan.png'   },
+  { name: '가디언 토벌', type: 'daily',  image: '/schedule/guardian.png' },
+  { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
+  { name: '낙원',        type: 'weekly', image: '/schedule/paradise.png'  },
+  { name: '큐브',        type: 'weekly', image: '/schedule/cube.webp'     },
+]
+// 휴식 게이지가 적용되는 항목 이름
+const REST_GAUGE_NAMES = new Set(['쿠르잔 전선', '가디언 토벌'])
+
+function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onDeleteAll, onReorder, onClose }) {
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [input, setInput]             = useState('')
+  const [itemType, setItemType]       = useState('weekly')
   const [dragIdx, setDragIdx]         = useState(null)
   const [dropIdx, setDropIdx]         = useState(null)
   const inputRef                      = useRef(null)
@@ -1713,18 +1724,27 @@ function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onReorder, o
   const selectedChar  = chars[selectedIdx]
   const charItems     = (selectedChar ? customItems[selectedChar.id] : null) || []
   const charItemNames = new Set(charItems.map(it => it.name))
+
+  // 2개 이상 캐릭터에 존재하는 이름 — 전체 삭제 버튼 표시 기준
+  const multiCharNames = useMemo(() => {
+    const counts = new Map()
+    chars.forEach(char => {
+      ;(customItems[char.id] || []).forEach(it => counts.set(it.name, (counts.get(it.name) || 0) + 1))
+    })
+    return new Set([...counts.entries()].filter(([, n]) => n > 1).map(([name]) => name))
+  }, [chars, customItems])
   const isFull        = charItems.length >= CUSTOM_MAX
   const isDuplicate   = !!input.trim() && charItemNames.has(input.trim())
   const canAdd        = !!input.trim() && !isFull && !isDuplicate
 
-  // 다른 캐릭터에만 있고 이 캐릭터에 없는 고유 이름 목록
-  const otherNames = useMemo(() => {
+  // 다른 캐릭터에만 있고 이 캐릭터에 없는 고유 이름+타입 목록
+  const otherItems = useMemo(() => {
     const seen = new Set(charItemNames)
     const result = []
     chars.forEach(char => {
       if (char.id === selectedChar?.id) return
       ;(customItems[char.id] || []).forEach(it => {
-        if (!seen.has(it.name)) { seen.add(it.name); result.push(it.name) }
+        if (!seen.has(it.name)) { seen.add(it.name); result.push(it) }
       })
     })
     return result
@@ -1734,14 +1754,14 @@ function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onReorder, o
 
   const handleAdd = () => {
     if (!canAdd || !selectedChar) return
-    onAdd(selectedChar.id, input.trim())
+    onAdd(selectedChar.id, input.trim(), itemType)
     setInput('')
     inputRef.current?.focus()
   }
   const handleAddAll = () => {
     const name = input.trim()
     if (!name) return
-    chars.forEach(char => onAdd(char.id, name))
+    chars.forEach(char => onAdd(char.id, name, itemType))
     setInput('')
     inputRef.current?.focus()
   }
@@ -1749,7 +1769,18 @@ function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onReorder, o
     if (e.key === 'Enter') handleAdd()
     if (e.key === 'Escape') onClose()
   }
-  const handleSelectChar = (i) => { setSelectedIdx(i); setInput('') }
+  const handleSelectChar = (i) => { setSelectedIdx(i); setInput(''); }
+
+  const handlePreset = (preset) => {
+    if (!selectedChar || isFull || charItemNames.has(preset.name)) return
+    onAdd(selectedChar.id, preset.name, preset.type, preset.image)
+    inputRef.current?.focus()
+  }
+  const handlePresetAll = (e, preset) => {
+    e.stopPropagation()
+    chars.forEach(char => onAdd(char.id, preset.name, preset.type, preset.image))
+    inputRef.current?.focus()
+  }
 
   // ── DnD 핸들러 ──
   const handleDragStart = (e, idx) => {
@@ -1836,7 +1867,24 @@ function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onReorder, o
           <div className="flex-1 flex flex-col min-h-0">
 
             {/* 입력 영역 */}
-            <div className="px-3 py-3 border-b border-gray-100 dark:border-[#2a2a2a] flex-shrink-0">
+            <div className="px-3 py-3 border-b border-gray-100 dark:border-[#2a2a2a] flex-shrink-0 space-y-2">
+              {/* 일일/주간 토글 */}
+              <div className="flex items-center gap-1.5">
+                <div className="flex rounded-md overflow-hidden border border-gray-200 dark:border-[#383838]">
+                  {[{ key: 'daily', label: '일일' }, { key: 'weekly', label: '주간' }].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setItemType(key)}
+                      className={`px-3 py-1 text-[10px] ns-bold transition-colors ${
+                        itemType === key
+                          ? 'bg-yellow-400 dark:bg-yellow-500 text-yellow-900'
+                          : 'bg-white dark:bg-[#181818] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#222]'
+                      }`}
+                    >{label}</button>
+                  ))}
+                </div>
+              </div>
+              {/* 이름 입력 */}
               <div className="flex gap-2">
                 <div className="flex-1 relative">
                   <input
@@ -1863,12 +1911,42 @@ function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onReorder, o
                   전체 추가
                 </button>
               </div>
+              {/* 예시 프리셋 */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {PRESET_ITEMS.map(preset => {
+                  const already = charItemNames.has(preset.name)
+                  return (
+                    <div key={preset.name} className="flex items-center rounded-full border border-gray-200 dark:border-[#383838] overflow-hidden">
+                      <button
+                        onClick={() => handlePreset(preset)}
+                        disabled={already || isFull}
+                        className={`flex items-center gap-1 pl-2 pr-1.5 py-0.5 text-[10px] transition-colors ${
+                          already || isFull
+                            ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-yellow-700 dark:hover:text-yellow-400'
+                        }`}
+                      >
+                        <img src={preset.image} alt="" className="w-3 h-3 object-contain flex-shrink-0" />
+                        {preset.name}
+                        <span className={`text-[9px] ${preset.type === 'daily' ? 'text-blue-400' : 'text-purple-400'}`}>
+                          {preset.type === 'daily' ? '일' : '주'}
+                        </span>
+                      </button>
+                      <button
+                        onClick={e => handlePresetAll(e, preset)}
+                        title="전체 캐릭터에 추가"
+                        className="pl-1 pr-2 py-0.5 text-[9px] ns-bold text-gray-300 dark:text-gray-600 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors border-l border-gray-200 dark:border-[#383838]"
+                      >전체</button>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
             {/* 항목 목록 (스크롤) */}
             <div className="flex-1 overflow-y-auto">
               {/* 이 캐릭터의 항목 — 드래그앤드랍 순서 변경 */}
-              {charItems.length === 0 && otherNames.length === 0 ? (
+              {charItems.length === 0 && otherItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full py-10 gap-1">
                   <p className="text-xs text-gray-400 dark:text-gray-600">아직 추가된 숙제가 없어요</p>
                   <p className="text-[10px] text-gray-300 dark:text-gray-700">이름을 입력하고 추가해 보세요</p>
@@ -1888,16 +1966,30 @@ function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onReorder, o
                             onDragOver={e => handleDragOver(e, idx)}
                             onDrop={e => handleDrop(e, idx)}
                             onDragEnd={handleDragEnd}
-                            className={`flex items-center gap-2 px-3 py-2.5 border-b border-gray-50 dark:border-[#2a2a2a] last:border-b-0 group/item select-none transition-colors ${
+                            className={`flex items-center gap-2 px-3 py-2.5 border-b border-gray-50 dark:border-[#2a2a2a] last:border-b-0 select-none transition-colors ${
                               isDragging ? 'opacity-40' : isOver ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''
                             }`}
                           >
                             <span className="cursor-default text-gray-300 dark:text-gray-600 flex-shrink-0"><IconGrip /></span>
                             <span className="text-[10px] text-gray-300 dark:text-gray-700 w-4 text-center tabular-nums flex-shrink-0">{idx + 1}</span>
-                            <span className="flex-1 text-xs ns-bold text-gray-700 dark:text-gray-200">{item.name}</span>
+                            <div className="flex-1 flex items-center gap-1.5 min-w-0">
+                              {item.image && <img src={item.image} alt="" className="w-4 h-4 object-contain flex-shrink-0" />}
+                              <span className="text-xs ns-bold text-gray-700 dark:text-gray-200 truncate">{item.name}</span>
+                              {item.type && (
+                                <span className={`text-[9px] ns-bold flex-shrink-0 ${item.type === 'daily' ? 'text-blue-400' : 'text-purple-400'}`}>
+                                  {item.type === 'daily' ? '일일' : '주간'}
+                                </span>
+                              )}
+                            </div>
+                            {multiCharNames.has(item.name) && (
+                              <button
+                                onClick={() => onDeleteAll(item.name)}
+                                className="text-[9px] ns-bold text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition-colors flex-shrink-0 whitespace-nowrap"
+                              >전체삭제</button>
+                            )}
                             <button
                               onClick={() => onDelete(selectedChar.id, item.id)}
-                              className="opacity-0 group-hover/item:opacity-100 text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition-all flex-shrink-0"
+                              className="text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition-colors flex-shrink-0"
                             >
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             </button>
@@ -1908,22 +2000,27 @@ function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onReorder, o
                   )}
 
                   {/* 다른 캐릭터 항목 — 체크박스로 추가 */}
-                  {otherNames.length > 0 && (
+                  {otherItems.length > 0 && (
                     <div className={charItems.length > 0 ? 'border-t border-gray-100 dark:border-[#2a2a2a]' : ''}>
                       <p className="px-3 py-2 text-[10px] ns-bold text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#1c1c1c]">
                         다른 캐릭터 숙제에서 추가
                       </p>
                       <ul>
-                        {otherNames.map(name => (
+                        {otherItems.map(it => (
                           <li
-                            key={name}
-                            onClick={() => !isFull && onAdd(selectedChar.id, name)}
+                            key={it.name}
+                            onClick={() => !isFull && onAdd(selectedChar.id, it.name, it.type)}
                             className={`flex items-center gap-2.5 px-3 py-2.5 border-b border-gray-50 dark:border-[#2a2a2a] last:border-b-0 transition-colors ${
                               isFull ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-[#282828]'
                             }`}
                           >
                             <div className="w-4 h-4 rounded border-2 border-gray-300 dark:border-[#555] flex-shrink-0" />
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{name}</span>
+                            <span className="flex-1 text-xs text-gray-500 dark:text-gray-400">{it.name}</span>
+                            {it.type && (
+                              <span className={`text-[9px] ns-bold ${it.type === 'daily' ? 'text-blue-400' : 'text-purple-400'}`}>
+                                {it.type === 'daily' ? '일일' : '주간'}
+                              </span>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -1990,8 +2087,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [dropCharId, setDropCharId]             = useState(null) // 드롭 대상 캐릭터 id
   const [selectedRaid, setSelectedRaid]         = useState(null) // { raidId, diffKey } — 레이드 필터
   const [showCustomSettings, setShowCustomSettings] = useState(false)
-  const [customItems, setCustomItems]           = useState({})   // {charId: [{id, name}]}
+  const [customItems, setCustomItems]           = useState({})   // {charId: [{id, name, type, image}]}
   const [customChecks, setCustomChecks]         = useState({})   // {charId: {itemId: bool}}
+  const [restGauge, setRestGauge]               = useState({})   // {charId: {itemId: 0-100}}
+  const [restGaugeDeducted, setRestGaugeDeducted] = useState({}) // {charId: {itemId: bool}} — 체크 시 실제 차감 여부
   const wasCompleteRef                          = useRef(false)
   const tableWrapRef                            = useRef(null)
   const [tableContainerWidth, setTableContainerWidth] = useState(0)
@@ -2003,6 +2102,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       if (items) setCustomItems(JSON.parse(items))
       const checks = localStorage.getItem('myloa_custom_checks')
       if (checks) setCustomChecks(JSON.parse(checks))
+      const gauge = localStorage.getItem('myloa_rest_gauge')
+      if (gauge) setRestGauge(JSON.parse(gauge))
+      const deducted = localStorage.getItem('myloa_rest_gauge_deducted')
+      if (deducted) setRestGaugeDeducted(JSON.parse(deducted))
     } catch {}
   }, [])
   useEffect(() => {
@@ -2011,6 +2114,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   useEffect(() => {
     try { localStorage.setItem('myloa_custom_checks', JSON.stringify(customChecks)) } catch {}
   }, [customChecks])
+  useEffect(() => {
+    try { localStorage.setItem('myloa_rest_gauge', JSON.stringify(restGauge)) } catch {}
+  }, [restGauge])
+  useEffect(() => {
+    try { localStorage.setItem('myloa_rest_gauge_deducted', JSON.stringify(restGaugeDeducted)) } catch {}
+  }, [restGaugeDeducted])
 
   // 테이블 컨테이너 너비 추적 (한눈에 보기 스케일 계산용)
   useEffect(() => {
@@ -2026,11 +2135,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const persistDelete = (charId, raidId, diffKey) => { if (isLoggedIn) deleteRaid(charId, raidId, diffKey) }
 
   // 커스텀 항목 CRUD
-  const addCustomItem = (charId, name) => {
+  const addCustomItem = (charId, name, type = 'weekly', image) => {
     setCustomItems(prev => {
       const list = prev[charId] || []
       if (list.length >= CUSTOM_MAX) return prev
-      return { ...prev, [charId]: [...list, { id: `c-${Date.now()}`, name }] }
+      if (list.some(it => it.name === name)) return prev
+      const item = { id: `c-${Date.now()}`, name, type }
+      if (image) item.image = image
+      return { ...prev, [charId]: [...list, item] }
     })
   }
   const deleteCustomItem = (charId, itemId) => {
@@ -2040,14 +2152,65 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       return { ...prev, [charId]: rest }
     })
   }
+  const deleteCustomItemAll = (name) => {
+    setCustomItems(prev => {
+      const next = { ...prev }
+      Object.keys(next).forEach(cid => { next[cid] = (next[cid] || []).filter(it => it.name !== name) })
+      return next
+    })
+    setCustomChecks(prev => {
+      const next = { ...prev }
+      Object.keys(next).forEach(cid => {
+        const itemIds = (customItems[cid] || []).filter(it => it.name === name).map(it => it.id)
+        if (!itemIds.length) return
+        const charChecks = { ...next[cid] }
+        itemIds.forEach(id => { delete charChecks[id] })
+        next[cid] = charChecks
+      })
+      return next
+    })
+  }
   const reorderCustomItems = (charId, newItems) => {
     setCustomItems(prev => ({ ...prev, [charId]: newItems }))
   }
   const toggleCustomCheck = (charId, itemId) => {
+    const item = (customItems[charId] || []).find(it => it.id === itemId)
+    const currentChecked = !!(customChecks[charId]?.[itemId])
+    const newChecked = !currentChecked
+
+    if (item && REST_GAUGE_NAMES.has(item.name)) {
+      const cur = restGauge[charId]?.[itemId] ?? 0
+      if (newChecked) {
+        // 체크: 게이지 20 이상일 때만 차감, 차감 여부 기록
+        const didDeduct = cur >= 20
+        setRestGaugeDeducted(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: didDeduct } }))
+        if (didDeduct) {
+          setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: cur - 20 } }))
+        }
+      } else {
+        // 체크 해제: 이전에 실제로 차감했을 때만 복원
+        const wasDeducted = restGaugeDeducted[charId]?.[itemId] ?? false
+        setRestGaugeDeducted(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: false } }))
+        if (wasDeducted) {
+          setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: Math.min(100, cur + 20) } }))
+        }
+      }
+    }
+
     setCustomChecks(prev => {
       const charChecks = prev[charId] || {}
-      return { ...prev, [charId]: { ...charChecks, [itemId]: !charChecks[itemId] } }
+      return { ...prev, [charId]: { ...charChecks, [itemId]: newChecked } }
     })
+  }
+  const adjustRestGauge = (charId, itemId, delta) => {
+    setRestGauge(prev => {
+      const cur = prev[charId]?.[itemId] ?? 0
+      const next = Math.max(0, Math.min(100, cur + delta))
+      return { ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: next } }
+    })
+  }
+  const setRestGaugeValue = (charId, itemId, value) => {
+    setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: Math.max(0, Math.min(100, value)) } }))
   }
 
   // 대표 캐릭터 = 아이템레벨 최고
@@ -2618,7 +2781,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {/* ── 숙제 테이블 / 카드 ── */}
       <div ref={tableWrapRef}>
       {(() => {
-        const COL_RAID = 110
+        const COL_RAID = 140
         const COL_CHAR = 148
 
         const nameSize = (name) => {
@@ -2781,6 +2944,47 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       tradeTotal={charGoldMap[char.id]?.tradeTotal ?? 0}
                     />
                   </div>
+                  {/* 쿠르잔·가디언 — 커스텀 항목 중 휴식게이지 대상, 레이드 위에 표시 */}
+                  {!selectedRaid && (() => {
+                    const topItems = (customItems[char.id] || []).filter(it => REST_GAUGE_NAMES.has(it.name))
+                    if (!topItems.length) return null
+                    return (
+                      <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a] border-b border-gray-100 dark:border-[#2a2a2a]">
+                        {topItems.map(item => {
+                          const checked = !!(customChecks[char.id]?.[item.id])
+                          const gauge   = restGauge[char.id]?.[item.id] ?? 0
+                          return (
+                            <div key={item.id} className={`flex flex-col transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''}`}>
+                              <div onClick={() => toggleCustomCheck(char.id, item.id)} className={`flex items-center gap-1.5 px-2 py-1.5 cursor-pointer ${checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
+                                <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'}`}>{checked && <IconCheck />}</div>
+                                {item.image && <img src={item.image} alt="" className="w-4 h-4 object-contain flex-shrink-0" />}
+                                <span className={`flex-1 text-[11px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-600 dark:text-gray-300'}`}>{item.name}</span>
+                              </div>
+                              <div className="px-2 pb-2 pt-0.5">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="flex-1 flex gap-px">
+                                    {Array.from({ length: 10 }).map((_, i) => (
+                                      <div
+                                        key={i}
+                                        onClick={e => { e.stopPropagation(); setRestGaugeValue(char.id, item.id, (i + 1) * 10) }}
+                                        className={`h-2 flex-1 cursor-pointer transition-colors ${gauge > i * 10 ? 'bg-green-400 dark:bg-green-500 hover:bg-green-300 dark:hover:bg-green-400' : 'bg-gray-200 dark:bg-[#2e2e2e] hover:bg-gray-100 dark:hover:bg-[#3a3a3a]'} ${i === 0 ? 'rounded-l-full' : ''} ${i === 9 ? 'rounded-r-full' : ''}`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span className="text-[10px] tabular-nums ns-bold text-green-500 dark:text-green-400 flex-shrink-0 w-[34px] text-right leading-none">{gauge}/100</span>
+                                </div>
+                                <div className="flex items-center justify-between mt-1">
+                                  <button onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, -10) }} disabled={gauge <= 0} className="text-[9px] ns-bold px-1.5 py-0.5 rounded text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors">−10</button>
+                                  <span className="text-[9px] text-gray-300 dark:text-gray-600">휴식 게이지</span>
+                                  <button onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, 10) }} disabled={gauge >= 100} className="text-[9px] ns-bold px-1.5 py-0.5 rounded text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors">+10</button>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
                   {/* 레이드 목록 */}
                   {charRaids.length === 0 ? (
                     <div className="py-4 text-center text-[10px] text-gray-300 dark:text-gray-600">레이드 없음</div>
@@ -2818,6 +3022,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                             }`}>
                               {allDone && <IconCheck />}
                             </div>
+                            {raid.image && (
+                              <img src={raid.image} alt={raid.name} className="w-5 h-5 object-contain flex-shrink-0" />
+                            )}
                             <div className="flex-1 min-w-0">
                               <p className="text-[10px] ns-bold text-gray-700 dark:text-gray-200 truncate">{raid.name}</p>
                               <div className="flex items-center gap-1">
@@ -2882,28 +3089,70 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       })}
                     </div>
                   )}
-                  {/* 커스텀 항목 — 레이드 필터 선택 시 숨김 */}
-                  {!selectedRaid && (customItems[char.id] || []).length > 0 && (
+                  {/* 커스텀 항목 (기타) — REST_GAUGE_NAMES 제외, 레이드 필터 선택 시 숨김 */}
+                  {!selectedRaid && (customItems[char.id] || []).some(it => !REST_GAUGE_NAMES.has(it.name)) && (
                     <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a] border-t border-gray-100 dark:border-[#2a2a2a]">
-                      {(customItems[char.id] || []).map(item => {
-                        const checked = !!(customChecks[char.id]?.[item.id])
+                      {(customItems[char.id] || []).filter(it => !REST_GAUGE_NAMES.has(it.name)).map(item => {
+                        const checked  = !!(customChecks[char.id]?.[item.id])
+                        const gauge    = restGauge[char.id]?.[item.id] ?? 0
+                        const isDaily  = false
                         return (
-                          <div
-                            key={item.id}
-                            onClick={() => toggleCustomCheck(char.id, item.id)}
-                            className={`flex items-center gap-1.5 px-2 py-1.5 cursor-pointer transition-colors ${
-                              checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
-                                      : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
-                            }`}
-                          >
-                            <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
-                              checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
-                            }`}>
-                              {checked && <IconCheck />}
+                          <div key={item.id} className={`flex flex-col transition-colors ${
+                            checked ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''
+                          }`}>
+                            <div
+                              onClick={() => toggleCustomCheck(char.id, item.id)}
+                              className={`flex items-center gap-1.5 px-2 py-1.5 cursor-pointer ${
+                                checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
+                                        : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                              }`}
+                            >
+                              <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                                checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
+                              }`}>
+                                {checked && <IconCheck />}
+                              </div>
+                              {item.image && (
+                                <img src={item.image} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
+                              )}
+                              <span className={`flex-1 text-[11px] ns-bold truncate ${
+                                checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-600 dark:text-gray-300'
+                              }`}>{item.name}</span>
                             </div>
-                            <span className={`text-[11px] ns-bold truncate ${
-                              checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-600 dark:text-gray-300'
-                            }`}>{item.name}</span>
+                            {/* 휴식 게이지 — daily 항목만 */}
+                            {isDaily && (
+                              <div className="px-2 pb-2 pt-0.5">
+                                <div className="flex items-center gap-1.5">
+                                  {/* 게이지 바 */}
+                                  <div className="flex-1 flex gap-px">
+                                    {Array.from({ length: 10 }).map((_, i) => {
+                                      const filled = gauge > i * 10
+                                      return (
+                                        <div
+                                          key={i}
+                                          className={`h-2 flex-1 transition-colors ${filled ? 'bg-green-400 dark:bg-green-500' : 'bg-gray-200 dark:bg-[#2e2e2e]'} ${i === 0 ? 'rounded-l-full' : ''} ${i === 9 ? 'rounded-r-full' : ''}`}
+                                        />
+                                      )
+                                    })}
+                                  </div>
+                                  <span className="text-[10px] tabular-nums ns-bold text-green-500 dark:text-green-400 flex-shrink-0 w-[34px] text-right leading-none">{gauge}/100</span>
+                                </div>
+                                {/* ±10 버튼 */}
+                                <div className="flex items-center justify-between mt-1">
+                                  <button
+                                    onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, -10) }}
+                                    disabled={gauge <= 0}
+                                    className="text-[9px] ns-bold px-1.5 py-0.5 rounded text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors"
+                                  >−10</button>
+                                  <span className="text-[9px] text-gray-300 dark:text-gray-600">휴식 게이지</span>
+                                  <button
+                                    onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, 10) }}
+                                    disabled={gauge >= 100}
+                                    className="text-[9px] ns-bold px-1.5 py-0.5 rounded text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors"
+                                  >+10</button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )
                       })}
@@ -2916,6 +3165,54 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         )
 
         // ── 테이블 뷰 ────────────────────────────────────────────────────────
+        const renderCustomRow = (name, charMap, meta, chars) => (
+          <tr key={name} className="group">
+            <td style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-2">
+              <div className="flex items-center gap-1.5">
+                {meta.image && <img src={meta.image} alt="" className="w-4 h-4 object-contain flex-shrink-0" />}
+                <span className="text-xs ns-bold text-gray-500 dark:text-gray-400 truncate">{name}</span>
+              </div>
+            </td>
+            {chars.map(char => {
+              const itemId  = charMap.get(char.id)
+              const checked = !!(itemId && customChecks[char.id]?.[itemId])
+              const gauge   = itemId ? (restGauge[char.id]?.[itemId] ?? 0) : 0
+              const isRest  = REST_GAUGE_NAMES.has(name)
+              return (
+                <td key={char.id} style={{ width: COL_CHAR, maxWidth: COL_CHAR }} className="border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1">
+                  {itemId ? (
+                    <div className="flex flex-col gap-0.5">
+                      <div onClick={() => toggleCustomCheck(char.id, itemId)} className={`flex items-center justify-center h-7 rounded cursor-pointer transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'}`}>{checked && <IconCheck />}</div>
+                      </div>
+                      {isRest && (
+                        <div className="px-1 pt-0.5">
+                          <div className="flex gap-px mb-0.5">
+                            {Array.from({ length: 10 }).map((_, i) => (
+                              <div
+                                key={i}
+                                onClick={e => { e.stopPropagation(); setRestGaugeValue(char.id, itemId, (i + 1) * 10) }}
+                                className={`h-1.5 flex-1 cursor-pointer transition-colors ${gauge > i * 10 ? 'bg-green-400 dark:bg-green-500 hover:bg-green-300 dark:hover:bg-green-400' : 'bg-gray-200 dark:bg-[#2e2e2e] hover:bg-gray-100 dark:hover:bg-[#3a3a3a]'} ${i === 0 ? 'rounded-l-full' : ''} ${i === 9 ? 'rounded-r-full' : ''}`}
+                              />
+                            ))}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <button onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, itemId, -10) }} disabled={gauge <= 0} className="text-[8px] text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors">−</button>
+                            <span className="text-[8px] tabular-nums ns-bold text-green-500 dark:text-green-400">{gauge}</span>
+                            <button onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, itemId, 10) }} disabled={gauge >= 100} className="text-[8px] text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors">+</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="h-8 flex items-center justify-center"><span className="text-gray-200 dark:text-gray-700">—</span></div>
+                  )}
+                </td>
+              )
+            })}
+          </tr>
+        )
+
         const renderTable = (charSubset) => {
           const filteredChars = selectedRaid
             ? charSubset.filter(char => (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
@@ -3014,12 +3311,31 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-[#2a2a2a]">
+                  {/* 커스텀 항목 공통 헬퍼: byName 맵 생성 */}
+                  {!selectedRaid && (() => {
+                    const byName = new Map()
+                    filteredChars.forEach(char => {
+                      ;(customItems[char.id] || []).forEach(it => {
+                        if (!byName.has(it.name)) byName.set(it.name, { charMap: new Map(), meta: { image: it.image, type: it.type } })
+                        byName.get(it.name).charMap.set(char.id, it.id)
+                      })
+                    })
+                    // REST_GAUGE 행만 여기(레이드 앞)에 렌더링
+                    return [...byName.entries()]
+                      .filter(([name]) => REST_GAUGE_NAMES.has(name))
+                      .map(([name, { charMap, meta }]) => renderCustomRow(name, charMap, meta, filteredChars))
+                  })()}
                   {(selectedRaid ? raidRows.filter(row => row.raidId === selectedRaid.raidId) : raidRows).map(row => {
                     const raidData = RAIDS.find(r => r.id === row.raidId)
                     return (
                       <tr key={row.key} className="group">
-                        <td style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-3 py-2">
-                          <span className="text-xs ns-bold text-gray-800 dark:text-gray-100">{row.raidName}</span>
+                        <td style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-1.5">
+                          <div className="flex items-center gap-1.5">
+                            {raidData?.image && (
+                              <img src={raidData.image} alt={row.raidName} className="w-5 h-5 object-contain flex-shrink-0" />
+                            )}
+                            <span className="text-xs ns-bold text-gray-800 dark:text-gray-100 truncate">{row.raidName}</span>
+                          </div>
                         </td>
                         {filteredChars.map(char => {
                           const entry = (raids[char.id] || []).find(e => e.raidId === row.raidId)
@@ -3056,54 +3372,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       </td>
                     </tr>
                   )}
-                  {/* 커스텀 항목 행 — 이름 기준으로 묶어서 표시, 레이드 필터 선택 시 숨김 */}
+                  {/* 커스텀 항목 행 (기타) — REST_GAUGE 제외, 레이드 필터 선택 시 숨김 */}
                   {!selectedRaid && (() => {
-                    // 이름 기준 그룹: name -> { charId -> itemId }
                     const byName = new Map()
                     filteredChars.forEach(char => {
-                      ;(customItems[char.id] || []).forEach(it => {
-                        if (!byName.has(it.name)) byName.set(it.name, new Map())
-                        byName.get(it.name).set(char.id, it.id)
+                      ;(customItems[char.id] || []).filter(it => !REST_GAUGE_NAMES.has(it.name)).forEach(it => {
+                        if (!byName.has(it.name)) byName.set(it.name, { charMap: new Map(), meta: { image: it.image, type: it.type } })
+                        byName.get(it.name).charMap.set(char.id, it.id)
                       })
                     })
-                    return [...byName.entries()].map(([name, charMap]) => (
-                      <tr key={name} className="group">
-                        <td style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-3 py-2">
-                          <span className="text-xs ns-bold text-gray-500 dark:text-gray-400">{name}</span>
-                        </td>
-                        {filteredChars.map(char => {
-                          const itemId = charMap.get(char.id)
-                          const checked = !!(itemId && customChecks[char.id]?.[itemId])
-                          return (
-                            <td
-                              key={char.id}
-                              style={{ width: COL_CHAR, maxWidth: COL_CHAR }}
-                              className="border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1"
-                            >
-                              {itemId ? (
-                                <div
-                                  onClick={() => toggleCustomCheck(char.id, itemId)}
-                                  className={`flex items-center justify-center h-8 rounded cursor-pointer transition-colors ${
-                                    checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
-                                            : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
-                                  }`}
-                                >
-                                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
-                                    checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
-                                  }`}>
-                                    {checked && <IconCheck />}
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="h-8 flex items-center justify-center">
-                                  <span className="text-gray-200 dark:text-gray-700">—</span>
-                                </div>
-                              )}
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    ))
+                    return [...byName.entries()].map(([name, { charMap, meta }]) => renderCustomRow(name, charMap, meta, filteredChars))
                   })()}
                 </tbody>
               </table>
@@ -3418,6 +3696,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           customItems={customItems}
           onAdd={addCustomItem}
           onDelete={deleteCustomItem}
+          onDeleteAll={deleteCustomItemAll}
           onReorder={reorderCustomItems}
           onClose={() => setShowCustomSettings(false)}
         />
