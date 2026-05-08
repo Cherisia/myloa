@@ -111,8 +111,9 @@ const IconGrip = () => (
 )
 
 // ── 레이드 설정 모달 (캐릭터별) ───────────────────────────────────────────────
-function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onConfirm, exRaidError, onClearExRaidError, onOpenCharAdd }) {
-  const [selectedIdx, setSelectedIdx] = useState(0)
+function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onConfirm, exRaidError, onClearExRaidError, onOpenCharAdd, initialCharId }) {
+  const initialIdx = initialCharId ? Math.max(0, chars.findIndex(c => c.id === initialCharId)) : 0
+  const [selectedIdx, setSelectedIdx] = useState(initialIdx)
   const selectedChar = chars[selectedIdx]
 
   const [goldError, setGoldError]         = useState(null) // 캐릭터당 초과 목록
@@ -871,11 +872,11 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
     return map
   }, [selectedChars, strategies])
 
-  const goChoose = () => {
+  const goSetup = () => {
     const init = {}
     selectedChars.forEach(c => { init[c.name] = strategies[c.name] || 'trade' })
     setStrategies(init)
-    setStep('choose')
+    setStep('setup')
   }
 
   const handleConfirm = () => {
@@ -890,69 +891,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
 
   const newCount = results ? results.filter(c => selected.has(c.name)).length : 0
 
-  // ── 스텝 2: 레이드 설정 방식 선택 ──────────────────────────────────────────
-  if (step === 'choose') {
-    return (
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={onClose}>
-        <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col" onClick={e => e.stopPropagation()}>
-          {/* 헤더 */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
-            <div className="flex items-center gap-2">
-              <button onClick={() => setStep('search')} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6"/>
-                </svg>
-              </button>
-              <div>
-                <span className="ns-bold text-gray-900 dark:text-white">레이드 설정</span>
-                <span className="ml-2 text-xs text-gray-400">설정 방식을 선택하세요</span>
-              </div>
-            </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
-          </div>
-
-          {/* 선택 카드 */}
-          <div className="px-5 py-5 space-y-3">
-            {/* 자동 설정 */}
-            <button onClick={() => setStep('setup')}
-              className="w-full flex items-start gap-4 rounded-lg border border-gray-200 dark:border-[#383838] px-4 py-4 text-left hover:border-yellow-400 hover:bg-yellow-50 dark:hover:border-[#666] dark:hover:bg-yellow-900/10 transition-colors group">
-              <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow-500">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm ns-bold text-gray-800 dark:text-gray-100 group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors">레이드 자동 설정</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">캐릭터별 골드 전략을 선택해 레이드를 자동으로 배정합니다</p>
-              </div>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-300 dark:text-gray-600 mt-1 flex-shrink-0">
-                <polyline points="9 18 15 12 9 6"/>
-              </svg>
-            </button>
-
-            {/* 직접 설정 */}
-            <button onClick={handleManualSetup}
-              className="w-full flex items-start gap-4 rounded-lg border border-gray-200 dark:border-[#383838] px-4 py-4 text-left hover:border-yellow-400 hover:bg-yellow-50 dark:hover:border-[#666] dark:hover:bg-yellow-900/10 transition-colors group">
-              <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500 dark:text-gray-400">
-                  <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm ns-bold text-gray-800 dark:text-gray-100 group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors">레이드 직접 설정</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">레이드 설정 모달에서 캐릭터별로 직접 레이드를 추가합니다</p>
-              </div>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-300 dark:text-gray-600 mt-1 flex-shrink-0">
-                <polyline points="9 18 15 12 9 6"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ── 스텝 3: 레이드 자동 설정 ──────────────────────────────────────────────
+  // ── 스텝 2: 레이드 자동 설정 ──────────────────────────────────────────────
   if (step === 'setup') {
     return (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={onClose}>
@@ -1173,9 +1112,9 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
         <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#383838] mt-3">
           <button onClick={onClose}
             className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">취소</button>
-          <button onClick={goChoose} disabled={newCount === 0}
+          <button onClick={goSetup} disabled={newCount === 0}
             className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-yellow-900 transition-colors">
-            {newCount > 0 ? `${newCount}개 선택` : '추가'}
+            {newCount > 0 ? `${newCount}개 선택 → 레이드 설정` : '추가'}
           </button>
         </div>
       </div>
@@ -1708,13 +1647,58 @@ const PRESET_ITEMS = [
   { name: '가디언 토벌', type: 'daily',  image: '/schedule/guardian.png' },
   { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
   { name: '낙원',        type: 'weekly', image: '/schedule/paradise.png'  },
-  { name: '큐브',        type: 'weekly', image: '/schedule/cube.webp'     },
+  { name: '큐브',        type: 'weekly', image: '/schedule/cube.png'      },
+]
+
+// 캐릭터 추가 시 자동으로 붙는 프리셋
+const AUTO_PRESETS = [
+  { name: '쿠르잔 전선', type: 'daily',  image: '/schedule/kurzan.png'   },
+  { name: '가디언 토벌', type: 'daily',  image: '/schedule/guardian.png' },
+  { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
+  { name: '낙원',        type: 'weekly', image: '/schedule/paradise.png'  },
+  { name: '큐브',        type: 'weekly', image: '/schedule/cube.png'      },
 ]
 // 휴식 게이지가 적용되는 항목 이름
 const REST_GAUGE_NAMES = new Set(['쿠르잔 전선', '가디언 토벌'])
 
-function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onDeleteAll, onReorder, onClose }) {
-  const [selectedIdx, setSelectedIdx] = useState(0)
+// 캐릭터 아이템 레벨에 맞는 레이드 자동 배정 (최고 골드 순 top 3, isTopChar 이면 EX 레이드 추가)
+function computeAutoRaids(char, isTopChar) {
+  const qualifying = RAIDS
+    .filter(r => !EX_RAID_IDS.has(r.id) && !HIDDEN_RAID_IDS.has(r.id))
+    .flatMap(raid => {
+      const bestDiff = raid.difficulties.find(d => char.itemLevel >= d.minItemLevel)
+      if (!bestDiff) return []
+      const totalGold = (bestDiff.goldBound || []).reduce((s, g) => s + g, 0)
+                      + (bestDiff.goldTrade  || []).reduce((s, g) => s + g, 0)
+      return [{ raidId: raid.id, diff: bestDiff, totalGold }]
+    })
+    .sort((a, b) => b.totalGold - a.totalGold)
+    .slice(0, GOLD_RAID_LIMIT)
+    .map(({ raidId, diff }) => ({
+      raidId, difficulty: diff.key,
+      gateClears: new Array(diff.gates).fill(false),
+      isGoldCheck: true, moreDone: false, moreFrom: 'bound',
+    }))
+
+  if (isTopChar) {
+    const exRaid = RAIDS.find(r => EX_RAID_IDS.has(r.id) && !HIDDEN_RAID_IDS.has(r.id))
+    if (exRaid) {
+      const exDiff = exRaid.difficulties.find(d => char.itemLevel >= d.minItemLevel)
+      if (exDiff) {
+        qualifying.unshift({
+          raidId: exRaid.id, difficulty: exDiff.key,
+          gateClears: new Array(exDiff.gates).fill(false),
+          isGoldCheck: true, moreDone: false, moreFrom: 'bound',
+        })
+      }
+    }
+  }
+  return qualifying
+}
+
+function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onDeleteAll, onReorder, onClose, initialCharId }) {
+  const initialIdx = initialCharId ? Math.max(0, chars.findIndex(c => c.id === initialCharId)) : 0
+  const [selectedIdx, setSelectedIdx] = useState(initialIdx)
   const [input, setInput]             = useState('')
   const [itemType, setItemType]       = useState('weekly')
   const [dragIdx, setDragIdx]         = useState(null)
@@ -1973,7 +1957,7 @@ function CustomSettingsModal({ chars, customItems, onAdd, onDelete, onDeleteAll,
                             <span className="cursor-default text-gray-300 dark:text-gray-600 flex-shrink-0"><IconGrip /></span>
                             <span className="text-[10px] text-gray-300 dark:text-gray-700 w-4 text-center tabular-nums flex-shrink-0">{idx + 1}</span>
                             <div className="flex-1 flex items-center gap-1.5 min-w-0">
-                              {item.image && <img src={item.image} alt="" className="w-4 h-4 object-contain flex-shrink-0" />}
+                              {item.image && <img src={item.image} alt="" className="w-[18px] h-[18px] object-contain flex-shrink-0" />}
                               <span className="text-xs ns-bold text-gray-700 dark:text-gray-200 truncate">{item.name}</span>
                               {item.type && (
                                 <span className={`text-[9px] ns-bold flex-shrink-0 ${item.type === 'daily' ? 'text-blue-400' : 'text-purple-400'}`}>
@@ -2080,13 +2064,22 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [syncing, setSyncing]                   = useState(false)
   const [showConfetti, setShowConfetti]         = useState(false)
   const [exRaidError, setExRaidError]           = useState(null) // { raidName, conflictCharName }
-  const [cardView, setCardView]                 = useState(false)
+  const [cardView, setCardView]                 = useState(true)
   const [fitMode, setFitMode]                   = useState(false)
   const [showRepCharModal, setShowRepCharModal] = useState(false)
   const [dragCharId, setDragCharId]             = useState(null) // 드래그 중인 캐릭터 id
   const [dropCharId, setDropCharId]             = useState(null) // 드롭 대상 캐릭터 id
   const [selectedRaid, setSelectedRaid]         = useState(null) // { raidId, diffKey } — 레이드 필터
   const [showCustomSettings, setShowCustomSettings] = useState(false)
+  const [gearMenuCharId, setGearMenuCharId]     = useState(null) // 카드 톱니바퀴 메뉴
+  const [raidSettingsCharId, setRaidSettingsCharId] = useState(null)
+  const [customSettingsCharId, setCustomSettingsCharId] = useState(null)
+  // 원정대 페이지
+  const [expPages, setExpPages]                 = useState([])   // [{id, name}]
+  const [activePageId, setActivePageId]         = useState(null)
+  const [editingPageId, setEditingPageId]       = useState(null) // 이름 편집 중인 페이지 id
+  const [editingPageName, setEditingPageName]   = useState('')
+  const [charPageMap, setCharPageMap]           = useState({})   // charId -> pageId
   const [customItems, setCustomItems]           = useState({})   // {charId: [{id, name, type, image}]}
   const [customChecks, setCustomChecks]         = useState({})   // {charId: {itemId: bool}}
   const [restGauge, setRestGauge]               = useState({})   // {charId: {itemId: 0-100}}
@@ -2094,6 +2087,36 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const wasCompleteRef                          = useRef(false)
   const tableWrapRef                            = useRef(null)
   const [tableContainerWidth, setTableContainerWidth] = useState(0)
+
+  // 원정대 페이지 localStorage 동기화
+  useEffect(() => {
+    try {
+      const pagesRaw = localStorage.getItem('myloa_exp_pages')
+      const savedPages = pagesRaw ? JSON.parse(pagesRaw) : null
+      const pages = (Array.isArray(savedPages) && savedPages.length > 0)
+        ? savedPages
+        : [{ id: 'page_default', name: '원정대 1' }]
+      setExpPages(pages)
+
+      const savedActive = localStorage.getItem('myloa_active_page')
+      const validActive = pages.find(p => p.id === savedActive) ? savedActive : pages[0].id
+      setActivePageId(validActive)
+
+      const mapRaw = localStorage.getItem('myloa_char_page_map')
+      if (mapRaw) setCharPageMap(JSON.parse(mapRaw))
+    } catch {}
+  }, [])
+  useEffect(() => {
+    if (expPages.length === 0) return
+    try { localStorage.setItem('myloa_exp_pages', JSON.stringify(expPages)) } catch {}
+  }, [expPages])
+  useEffect(() => {
+    if (!activePageId) return
+    try { localStorage.setItem('myloa_active_page', activePageId) } catch {}
+  }, [activePageId])
+  useEffect(() => {
+    try { localStorage.setItem('myloa_char_page_map', JSON.stringify(charPageMap)) } catch {}
+  }, [charPageMap])
 
   // 커스텀 항목 localStorage 동기화
   useEffect(() => {
@@ -2129,6 +2152,49 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     obs.observe(el)
     return () => obs.disconnect()
   }, [])
+
+  // 페이지별 캐릭터 필터링
+  const activeChars = useMemo(() => {
+    if (!activePageId || expPages.length === 0) return chars
+    const firstPageId = expPages[0]?.id
+    return chars.filter(c => {
+      const pageId = charPageMap[c.id] || firstPageId
+      return pageId === activePageId
+    })
+  }, [chars, charPageMap, activePageId, expPages])
+
+  // 현재 페이지에 캐릭터 + 레이드 있으면 새 페이지 추가 가능
+  const canAddPage = useMemo(() => {
+    return activeChars.some(c => (raids[c.id] || []).length > 0)
+  }, [activeChars, raids])
+
+  // 새 페이지 추가
+  const addExpPage = () => {
+    if (!canAddPage || expPages.length >= 10) return
+    const newId   = `page_${Date.now()}`
+    const newName = `원정대 ${expPages.length + 1}`
+    setExpPages(prev => [...prev, { id: newId, name: newName }])
+    setActivePageId(newId)
+  }
+
+  // 페이지 이름 저장
+  const savePageName = () => {
+    if (!editingPageId) return
+    const trimmed = editingPageName.trim()
+    if (trimmed) {
+      setExpPages(prev => prev.map(p => p.id === editingPageId ? { ...p, name: trimmed } : p))
+    }
+    setEditingPageId(null)
+    setEditingPageName('')
+  }
+
+  // 톱니바퀴 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!gearMenuCharId) return
+    const close = () => setGearMenuCharId(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [gearMenuCharId])
 
   // 비로그인(데모) 시 DB 저장 스킵 래퍼
   const persistRaid   = (charId, entry)           => { if (isLoggedIn) saveRaid(charId, entry) }
@@ -2232,10 +2298,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     })
   }
 
-  // ── 레이드 필터 — 전체 캐릭터에 등록된 고유 레이드 목록 ─────────────────────
+  // ── 레이드 필터 — 활성 계정 캐릭터에 등록된 고유 레이드 목록 ──────────────
   const allRegisteredRaids = useMemo(() => {
     const seen = new Map()
-    for (const char of chars) {
+    for (const char of activeChars) {
       for (const r of (raids[char.id] || [])) {
         if (HIDDEN_RAID_IDS.has(r.raidId)) continue
         const key = `${r.raidId}:${r.difficulty}`
@@ -2263,7 +2329,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   // 선택된 레이드에서 미완료 캐릭터 목록
   const raidIncompleteChars = useMemo(() => {
     if (!selectedRaid) return []
-    return chars.flatMap(char => {
+    return activeChars.flatMap(char => {
       const entry = (raids[char.id] || []).find(
         r => r.raidId === selectedRaid.raidId && r.difficulty === selectedRaid.diffKey
       )
@@ -2495,9 +2561,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       return [...prev, ...toAdd]
     })
 
-    // 직접 설정: 레이드 설정 모달 즉시 오픈
-    if (isManual) setShowRaidSettings(true)
-
     try {
       await fetch('/api/characters', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2508,8 +2571,40 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         const data = await res.json()
         if (Array.isArray(data)) {
           setChars(data) // 실제 ID로 교체
+
+          const newNames   = new Set(newChars.map(c => c.name))
+          const freshChars = data.filter(c => newNames.has(c.name))
+
+          // 현재 페이지 배정
+          if (freshChars.length > 0 && activePageId) {
+            setCharPageMap(prev => {
+              const next = { ...prev }
+              freshChars.forEach(char => { next[char.id] = activePageId })
+              return next
+            })
+          }
+
+          // 프리셋 커스텀 항목 자동 추가
+          if (freshChars.length > 0) {
+            setCustomItems(prev => {
+              const next = { ...prev }
+              freshChars.forEach(char => {
+                const existing      = next[char.id] || []
+                const existingNames = new Set(existing.map(it => it.name))
+                const toAdd = AUTO_PRESETS.filter(p => !existingNames.has(p.name))
+                if (toAdd.length > 0) {
+                  next[char.id] = [
+                    ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${char.id}`, ...p })),
+                    ...existing,
+                  ]
+                }
+              })
+              return next
+            })
+          }
+
+          // !isManual: AutoSetupModal에서 온 raidsByName 우선 적용
           if (!isManual) {
-            // 자동 배정
             const newRaids = {}
             data.forEach(char => {
               const entries = raidsByName[char.name]
@@ -2523,12 +2618,39 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               return
             }
           }
+
+          // 레이드 자동 배정: 아이템 레벨 기반 top 3 (계정 최고레벨 캐릭터는 EX 포함)
+          if (freshChars.length > 0) {
+            // 계정별 전체 캐릭터 중 최고레벨 캐릭터 ID 확인
+            const acctTopMap  = new Map() // accountKey -> char
+            const acctHasEx   = new Map() // accountKey -> bool (기존 캐릭터 EX 레이드 보유 여부)
+            const currentRaids = raids    // 현재 state (클로저)
+            data.forEach(c => {
+              const key = c.loaAccountId || c.account || 'default'
+              const cur = acctTopMap.get(key)
+              if (!cur || c.itemLevel > cur.itemLevel) acctTopMap.set(key, c)
+              if (!newNames.has(c.name) && (currentRaids[c.id] || []).some(e => EX_RAID_IDS.has(e.raidId))) {
+                acctHasEx.set(key, true)
+              }
+            })
+
+            const autoRaids = {}
+            freshChars.forEach(fc => {
+              const key      = fc.loaAccountId || fc.account || 'default'
+              const isTop    = acctTopMap.get(key)?.id === fc.id && !acctHasEx.get(key)
+              const entries  = computeAutoRaids(fc, isTop)
+              if (entries.length > 0) autoRaids[fc.id] = entries
+            })
+            if (Object.keys(autoRaids).length > 0) {
+              setRaids(prev => ({ ...prev, ...autoRaids }))
+              Object.entries(autoRaids).forEach(([charId, entries]) =>
+                entries.forEach(entry => persistRaid(charId, entry))
+              )
+            }
+          }
         }
       }
     } catch {}
-
-    // 자동 배정 실패 시 레이드 설정 모달 오픈
-    if (!isManual) setShowRaidSettings(true)
   }
 
   // 전체 캐릭터 갱신
@@ -2577,18 +2699,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       .map(raid => ({ key: raid.id, raidId: raid.id, raidName: raid.name }))
   }, [raids])
 
-  // 요약 통계 — earnedBound/Trade 는 charGoldMap 합산, totalBound/Trade 는 isGoldCheck 레이드 기준
+  // 요약 통계 — activeChars 기준 (계정 탭에 따라 필터링)
   const { earnedBound, earnedTrade, totalBound, totalTrade, completedCount, totalCount } = useMemo(() => {
-    // 획득 골드: charGoldMap 을 그대로 합산 (이미 isGoldCheck + 더보기 차감 반영)
+    const activeIds = new Set(activeChars.map(c => c.id))
     let earnedBound = 0, earnedTrade = 0
-    Object.values(charGoldMap).forEach(({ bound, trade }) => {
-      earnedBound += bound
-      earnedTrade += trade
+    Object.entries(charGoldMap).forEach(([id, { bound, trade }]) => {
+      if (activeIds.has(id)) { earnedBound += bound; earnedTrade += trade }
     })
-
-    // 최대 골드 / 완료 수: isGoldCheck 레이드 기준
     let totalBound = 0, totalTrade = 0, completedCount = 0, totalCount = 0
-    Object.values(raids).forEach(list =>
+    Object.entries(raids).forEach(([charId, list]) => {
+      if (!activeIds.has(charId)) return
       list.forEach(entry => {
         if (!entry.isGoldCheck) return
         const raid = RAIDS.find(r => r.id === entry.raidId)
@@ -2600,9 +2720,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         totalCount++
         if (entry.gateClears.every(Boolean)) completedCount++
       })
-    )
+    })
     return { earnedBound, earnedTrade, totalBound, totalTrade, completedCount, totalCount }
-  }, [charGoldMap, raids])
+  }, [charGoldMap, raids, activeChars])
 
   // 100% 달성 시 폭죽 트리거 (처음 완료되는 순간에만)
   useEffect(() => {
@@ -2638,7 +2758,69 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {/* ── 헤더 ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="ns-extrabold text-lg text-gray-900 dark:text-white">원정대</h1>
+          {/* 원정대 페이지 탭 */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {expPages.map(page => {
+              const isActive = page.id === activePageId
+              return (
+                <button
+                  key={page.id}
+                  onClick={() => { setActivePageId(page.id); setEditingPageId(null) }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors flex-shrink-0 ${
+                    isActive
+                      ? 'bg-yellow-300 dark:bg-yellow-500/30 text-yellow-900 dark:text-yellow-300'
+                      : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                  }`}
+                >
+                  {editingPageId === page.id ? (
+                    <input
+                      autoFocus
+                      value={editingPageName}
+                      onChange={e => setEditingPageName(e.target.value)}
+                      onBlur={savePageName}
+                      onKeyDown={e => { if (e.key === 'Enter') savePageName(); if (e.key === 'Escape') { setEditingPageId(null); setEditingPageName('') } }}
+                      onClick={e => e.stopPropagation()}
+                      className="bg-transparent outline-none w-20 text-xs ns-bold"
+                    />
+                  ) : (
+                    <>
+                      <span>{page.name}</span>
+                      {isActive && (
+                        <span
+                          onClick={e => { e.stopPropagation(); setEditingPageId(page.id); setEditingPageName(page.name) }}
+                          className="opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+                          title="이름 편집"
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+              )
+            })}
+            {/* + 페이지 추가 버튼 */}
+            {expPages.length < 10 && (
+              <button
+                onClick={addExpPage}
+                disabled={!canAddPage}
+                title={!canAddPage ? '현재 페이지에 캐릭터와 레이드를 먼저 추가하세요' : '새 원정대 추가'}
+                className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-dashed border-gray-300 dark:border-[#444] text-gray-400 dark:text-gray-500 hover:border-yellow-400 dark:hover:border-yellow-600 hover:text-yellow-500 dark:hover:text-yellow-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              >
+                <IconPlus size={12} />
+              </button>
+            )}
+          </div>
+          {/* 현재 페이지 제목 + 캐릭터 수 */}
+          <div className="flex items-center gap-2 mt-2">
+            <h1 className="ns-extrabold text-lg text-gray-900 dark:text-white">
+              {expPages.find(p => p.id === activePageId)?.name || '원정대'}
+            </h1>
+            <span className="text-xs text-gray-400 dark:text-gray-500">· 캐릭터 수 {activeChars.length}</span>
+          </div>
           <p className="text-xs text-gray-400 mt-0.5">주간 초기화 · 매주 수요일 06:00</p>
         </div>
         <div className="flex gap-2">
@@ -2677,7 +2859,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       <div className="grid grid-cols-3 gap-3 max-w-[50%]">
         {/* 원정대 캐릭터 */}
         <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 flex flex-col">
-          {isLoggedIn && chars.length === 0 && (
+          {isLoggedIn && activeChars.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full gap-1.5 py-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600">
                 <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
@@ -2686,8 +2868,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               <p className="text-[10px] text-gray-300 dark:text-gray-600 text-center leading-relaxed">상단 캐릭터 설정 버튼으로<br/>원정대를 추가하세요</p>
             </div>
           )}
-          {isLoggedIn && chars.length > 0 && (() => {
-            const repChar = chars.find(c => c.id === repCharId)
+          {isLoggedIn && activeChars.length > 0 && (() => {
+            const repChar = activeChars.find(c => c.id === repCharId)
+              || activeChars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b)
             return (
               <div className="flex items-start gap-1.5 flex-1">
                 <span className="text-yellow-400 flex-shrink-0 mt-px"><IconCrown /></span>
@@ -2720,7 +2903,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         )}
                       </div>
                     </div>
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-auto pt-3">원정대 캐릭터 <span className="ns-bold text-gray-600 dark:text-gray-300">{chars.length}개</span></p>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-auto pt-3">원정대 캐릭터 <span className="ns-bold text-gray-600 dark:text-gray-300">{activeChars.length}개</span></p>
                   </div>
                 ) : (
                   <div className="flex-1 flex items-center justify-between">
@@ -2885,15 +3068,31 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
         // ── 카드 뷰 ────────────────────────────────────────────────────────
         const renderCardView = () => (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
-            {chars.map(char => {
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+            {activeChars.map(char => {
               const charRaids = [...(raids[char.id] || [])]
                 .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
                 .filter(e => !selectedRaid || (e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
                 .sort((a, b) => RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId))
               if (selectedRaid && charRaids.length === 0) return null
+
               const isDragging = dragCharId === char.id
               const isDragOver = dropCharId === char.id && dragCharId !== char.id
+
+              // 일일 숙제 항목 (휴식게이지 대상)
+              const dailyItems = !selectedRaid
+                ? (customItems[char.id] || []).filter(it => REST_GAUGE_NAMES.has(it.name))
+                : []
+              // 주간 레이드 완료 카운트
+              const raidDoneCount = charRaids.filter(e => e.gateClears.every(Boolean)).length
+              // 일일 숙제 완료 카운트
+              const dailyDoneCount = dailyItems.filter(it => !!(customChecks[char.id]?.[it.id])).length
+              // 주간 숙제 항목 (비 휴식게이지)
+              const weeklyItems = !selectedRaid
+                ? (customItems[char.id] || []).filter(it => !REST_GAUGE_NAMES.has(it.name))
+                : []
+              const weeklyDoneCount = weeklyItems.filter(it => !!(customChecks[char.id]?.[it.id])).length
+
               return (
                 <div
                   key={char.id}
@@ -2902,41 +3101,50 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onDragOver={(e) => handleCharDragOver(e, char.id)}
                   onDrop={(e) => handleCharDrop(e, char.id)}
                   onDragEnd={handleCharDragEnd}
-                  className={`rounded-lg border bg-white dark:bg-[#222222] overflow-hidden transition-all select-none ${
+                  className={`relative rounded-xl border bg-white dark:bg-[#222222] overflow-hidden transition-all select-none ${
                     isDragging  ? 'opacity-40 border-gray-200 dark:border-[#383838]' :
                     isDragOver  ? 'border-yellow-400 dark:border-yellow-600 ring-2 ring-yellow-300/50 dark:ring-yellow-700/30' :
                                   'border-gray-200 dark:border-[#383838]'
                   }`}
                 >
-                  {/* 캐릭터 헤더 */}
-                  <div className="flex items-center gap-1.5 px-2 py-2 border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818] cursor-default">
-                    <span className="text-gray-300 dark:text-gray-600 flex-shrink-0"><IconGrip /></span>
+                  {/* ── 캐릭터 헤더 ── */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-2 bg-gray-50 dark:bg-[#181818]">
+                    <span className="text-gray-300 dark:text-gray-600 flex-shrink-0 cursor-grab"><IconGrip /></span>
                     {getClassIcon(char.class)
                       ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-6 h-6 object-contain flex-shrink-0" />
                       : <span className="w-6 h-6 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
                     }
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-0.5">
-                        {char.id === repCharId && (
-                          <span className="text-yellow-400 flex-shrink-0"><IconCrown /></span>
-                        )}
+                        {char.id === repCharId && <span className="text-yellow-400 flex-shrink-0"><IconCrown /></span>}
                         <p className={`${nameSize(char.name)} ns-bold text-gray-900 dark:text-white truncate`}>{char.name}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="flex items-center gap-0.5 text-[9px] text-gray-500 dark:text-gray-400">
-                          <IconItemLevel />{char.itemLevel.toFixed(2)}
-                        </span>
-                        {char.combatPower != null && (
-                          <span className="flex items-center gap-0.5 text-[9px] text-gray-400 dark:text-gray-500">
-                            <img src="/combat-power.svg" className="w-[9px] h-[9px] object-contain" alt="" />
-                            {char.combatPower.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
+                      <p className="text-[9px] text-gray-500 dark:text-gray-400 truncate">
+                        {char.itemLevel.toFixed(2)}
+                        {char.combatPower != null && ` · ${Math.round(char.combatPower).toLocaleString()}`}
+                      </p>
                     </div>
+                    {/* ⚙ 설정 버튼 */}
+                    <button
+                      onClick={e => { e.stopPropagation(); setRaidSettingsCharId(char.id); setShowRaidSettings(true) }}
+                      title="레이드 설정"
+                      className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#2a2a2a] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                      </svg>
+                    </button>
+                    {/* × 삭제 버튼 */}
+                    <button
+                      onClick={e => { e.stopPropagation(); deleteChar(char.id) }}
+                      title="캐릭터 삭제"
+                      className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors flex-shrink-0 text-base leading-none"
+                    >×</button>
                   </div>
-                  {/* 캐릭터 골드 요약 */}
-                  <div className="px-2 py-1 border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50/50 dark:bg-[#181818]/50">
+
+                  {/* 골드 요약 */}
+                  <div className="px-2.5 py-1.5 border-t border-gray-100 dark:border-[#2a2a2a] bg-gray-50/50 dark:bg-[#181818]/50">
                     <CharGoldBadges
                       bound={charGoldMap[char.id]?.bound ?? 0}
                       trade={charGoldMap[char.id]?.trade ?? 0}
@@ -2944,220 +3152,169 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       tradeTotal={charGoldMap[char.id]?.tradeTotal ?? 0}
                     />
                   </div>
-                  {/* 쿠르잔·가디언 — 커스텀 항목 중 휴식게이지 대상, 레이드 위에 표시 */}
-                  {!selectedRaid && (() => {
-                    const topItems = (customItems[char.id] || []).filter(it => REST_GAUGE_NAMES.has(it.name))
-                    if (!topItems.length) return null
-                    return (
-                      <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a] border-b border-gray-100 dark:border-[#2a2a2a]">
-                        {topItems.map(item => {
+
+                  {/* ── 일일 숙제 섹션 ── */}
+                  {dailyItems.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
+                        <span className="text-[10px] ns-bold text-yellow-700 dark:text-yellow-400">일일 숙제</span>
+                        <span className="text-[10px] text-yellow-500 dark:text-yellow-500">({dailyDoneCount}/{dailyItems.length})</span>
+                      </div>
+                      <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
+                        {dailyItems.map(item => {
                           const checked = !!(customChecks[char.id]?.[item.id])
                           const gauge   = restGauge[char.id]?.[item.id] ?? 0
                           return (
-                            <div key={item.id} className={`flex flex-col transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''}`}>
-                              <div onClick={() => toggleCustomCheck(char.id, item.id)} className={`flex items-center gap-1.5 px-2 py-1.5 cursor-pointer ${checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
-                                <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'}`}>{checked && <IconCheck />}</div>
-                                {item.image && <img src={item.image} alt="" className="w-4 h-4 object-contain flex-shrink-0" />}
-                                <span className={`flex-1 text-[11px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-600 dark:text-gray-300'}`}>{item.name}</span>
-                              </div>
-                              <div className="px-2 pb-2 pt-0.5">
-                                <div className="flex items-center gap-1.5">
-                                  <div className="flex-1 flex gap-px">
-                                    {Array.from({ length: 10 }).map((_, i) => (
-                                      <div
-                                        key={i}
-                                        onClick={e => { e.stopPropagation(); setRestGaugeValue(char.id, item.id, (i + 1) * 10) }}
-                                        className={`h-2 flex-1 cursor-pointer transition-colors ${gauge > i * 10 ? 'bg-green-400 dark:bg-green-500 hover:bg-green-300 dark:hover:bg-green-400' : 'bg-gray-200 dark:bg-[#2e2e2e] hover:bg-gray-100 dark:hover:bg-[#3a3a3a]'} ${i === 0 ? 'rounded-l-full' : ''} ${i === 9 ? 'rounded-r-full' : ''}`}
-                                      />
-                                    ))}
+                            <div key={item.id} className={`transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''}`}>
+                              <div
+                                onClick={() => toggleCustomCheck(char.id, item.id)}
+                                className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer ${
+                                  checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                                }`}
+                              >
+                                {item.image && <img src={item.image} alt="" className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-[11px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
+                                  {/* 휴식 게이지 */}
+                                  <div className="flex items-center gap-1 mt-0.5">
+                                    <div className="flex-1 flex gap-px">
+                                      {Array.from({ length: 10 }).map((_, i) => (
+                                        <div
+                                          key={i}
+                                          onClick={e => { e.stopPropagation(); setRestGaugeValue(char.id, item.id, (i + 1) * 10) }}
+                                          className={`h-1.5 flex-1 cursor-pointer transition-colors ${gauge > i * 10 ? 'bg-green-400 dark:bg-green-500 hover:bg-green-300' : 'bg-gray-200 dark:bg-[#2e2e2e] hover:bg-gray-300'} ${i === 0 ? 'rounded-l-full' : ''} ${i === 9 ? 'rounded-r-full' : ''}`}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="text-[9px] tabular-nums ns-bold text-green-500 dark:text-green-400 flex-shrink-0">{gauge}</span>
                                   </div>
-                                  <span className="text-[10px] tabular-nums ns-bold text-green-500 dark:text-green-400 flex-shrink-0 w-[34px] text-right leading-none">{gauge}/100</span>
                                 </div>
-                                <div className="flex items-center justify-between mt-1">
-                                  <button onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, -10) }} disabled={gauge <= 0} className="text-[9px] ns-bold px-1.5 py-0.5 rounded text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors">−10</button>
-                                  <span className="text-[9px] text-gray-300 dark:text-gray-600">휴식 게이지</span>
-                                  <button onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, 10) }} disabled={gauge >= 100} className="text-[9px] ns-bold px-1.5 py-0.5 rounded text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors">+10</button>
+                                {/* 체크박스 — 오른쪽 */}
+                                <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                                  checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
+                                }`}>
+                                  {checked && <IconCheck />}
                                 </div>
                               </div>
                             </div>
                           )
                         })}
                       </div>
-                    )
-                  })()}
-                  {/* 레이드 목록 */}
-                  {charRaids.length === 0 ? (
-                    <div className="py-4 text-center text-[10px] text-gray-300 dark:text-gray-600">레이드 없음</div>
-                  ) : (
-                    <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
-                      {charRaids.map(entry => {
-                        const raid = RAIDS.find(r => r.id === entry.raidId)
-                        const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
-                        if (!raid || !diff) return null
-                        const allGates  = new Array(diff.gates).fill(true)
-                        const allDone   = entry.gateClears.every(Boolean)
-                        const moreDone  = entry.moreDone || false
-                        const moreFrom  = entry.moreFrom || 'bound'
-                        const totalGold = calcGold(diff, allGates)
-                        const moreGold  = calcGoldMore(diff, allGates)
-                        const netGold   = totalGold - moreGold
-                        const diffBadge =
-                          entry.difficulty === 'nightmare' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-500 dark:text-purple-400' :
-                          entry.difficulty === 'hard'      ? 'bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400' :
-                                                             'bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400'
-                        return (
-                          <div
-                            key={`${entry.raidId}:${entry.difficulty}`}
-                            onClick={() => toggleRaid(char.id, entry.raidId, entry.difficulty)}
-                            className={`flex items-center gap-1.5 px-2 py-1.5 cursor-pointer transition-colors ${
-                              moreDone ? 'bg-yellow-100 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
-                              : allDone ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
-                              : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
-                            }`}
-                          >
-                            <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
-                              moreDone ? 'bg-yellow-500 border-yellow-500 text-yellow-900 shadow-sm'
-                              : allDone ? 'bg-yellow-400 border-yellow-400 text-yellow-900 shadow-sm'
-                              : 'border-gray-300 dark:border-[#383838]'
-                            }`}>
-                              {allDone && <IconCheck />}
-                            </div>
-                            {raid.image && (
-                              <img src={raid.image} alt={raid.name} className="w-5 h-5 object-contain flex-shrink-0" />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[10px] ns-bold text-gray-700 dark:text-gray-200 truncate">{raid.name}</p>
-                              <div className="flex items-center gap-1">
-                                <span className={`text-[8px] ns-bold px-1 py-0.5 rounded leading-tight ${diffBadge}`}>{diff.label}</span>
-                                {/* 클리어 골드: 더보기 여부 무관하게 항상 totalGold */}
-                                {entry.isGoldCheck && (
-                                  <span className={`text-[10px] ns-bold tabular-nums ${
-                                    moreDone ? 'text-yellow-600 dark:text-yellow-500'
-                                    : allDone ? 'text-yellow-500 dark:text-yellow-400'
-                                    : 'text-gray-300 dark:text-gray-600'
-                                  }`}>
-                                    {totalGold.toLocaleString()}G
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            {/* 더보기 토글 — 항상 공간 예약, moreDone 아닐 때 invisible */}
-                            <div className={`relative group/cardtoggle flex-shrink-0 ${moreDone ? '' : 'invisible pointer-events-none'}`}>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); toggleMoreFrom(char.id, entry.raidId, entry.difficulty) }}
-                                className="active:scale-95 transition-transform block"
-                                style={{ WebkitTapHighlightColor: 'transparent' }}
-                              >
-                                {/* iOS 슬림 토글 */}
-                                <div className={`flex items-center rounded-full border transition-colors duration-300 ${
-                                  moreFrom === 'bound'
-                                    ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800/40'
-                                    : 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800/40'
-                                }`} style={{ height: 20, padding: 2, gap: 4 }}>
-                                  {moreFrom === 'bound' ? (
-                                    <>
-                                      <span className="text-[8px] ns-bold select-none leading-none pl-1.5 text-orange-500 dark:text-orange-400 whitespace-nowrap">귀속골드 더보기</span>
-                                      <div className="flex-shrink-0 rounded-full bg-orange-400 dark:bg-orange-500 shadow" style={{ width: 16, height: 16 }} />
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="flex-shrink-0 rounded-full bg-blue-400 dark:bg-blue-500 shadow" style={{ width: 16, height: 16 }} />
-                                      <span className="text-[8px] ns-bold select-none leading-none pr-1.5 text-blue-500 dark:text-blue-400 whitespace-nowrap">거래골드 더보기</span>
-                                    </>
-                                  )}
-                                </div>
-                              </button>
-                              {/* 호버 툴팁: 더보기 차감액 */}
-                              <div className="pointer-events-none absolute bottom-full right-0 mb-2 hidden group-hover/cardtoggle:block z-50">
-                                <div className={`whitespace-nowrap rounded-lg border px-2.5 py-0.5 text-[9px] ns-bold shadow-md ${
-                                  moreFrom === 'bound'
-                                    ? 'bg-orange-50 dark:bg-orange-950/60 border-orange-200 dark:border-orange-800/50 text-orange-600 dark:text-orange-300'
-                                    : 'bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800/50 text-sky-600 dark:text-sky-300'
-                                }`}>
-                                  더보기 -{moreGold.toLocaleString()}G
-                                </div>
-                                {/* 아래 화살표 */}
-                                <div className={`ml-auto mr-2 w-1.5 h-1.5 rotate-45 border-r border-b -mt-1 ${
-                                  moreFrom === 'bound'
-                                    ? 'bg-orange-50 dark:bg-orange-950/60 border-orange-200 dark:border-orange-800/50'
-                                    : 'bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800/50'
-                                }`} />
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
                     </div>
                   )}
-                  {/* 커스텀 항목 (기타) — REST_GAUGE_NAMES 제외, 레이드 필터 선택 시 숨김 */}
-                  {!selectedRaid && (customItems[char.id] || []).some(it => !REST_GAUGE_NAMES.has(it.name)) && (
-                    <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a] border-t border-gray-100 dark:border-[#2a2a2a]">
-                      {(customItems[char.id] || []).filter(it => !REST_GAUGE_NAMES.has(it.name)).map(item => {
-                        const checked  = !!(customChecks[char.id]?.[item.id])
-                        const gauge    = restGauge[char.id]?.[item.id] ?? 0
-                        const isDaily  = false
-                        return (
-                          <div key={item.id} className={`flex flex-col transition-colors ${
-                            checked ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''
-                          }`}>
+
+                  {/* ── 주간 레이드 섹션 ── */}
+                  <div>
+                    <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
+                      <span className="text-[10px] ns-bold text-yellow-700 dark:text-yellow-400">주간 레이드</span>
+                      <span className="text-[10px] text-yellow-500 dark:text-yellow-500">({raidDoneCount}/{charRaids.length})</span>
+                    </div>
+                    {charRaids.length === 0 ? (
+                      <div className="py-3 text-center text-[10px] text-gray-300 dark:text-gray-600">레이드 미설정</div>
+                    ) : (
+                      <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
+                        {charRaids.map(entry => {
+                          const raid = RAIDS.find(r => r.id === entry.raidId)
+                          const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
+                          if (!raid || !diff) return null
+                          const allGates  = new Array(diff.gates).fill(true)
+                          const allDone   = entry.gateClears.every(Boolean)
+                          const moreDone  = entry.moreDone || false
+                          const moreFrom  = entry.moreFrom || 'bound'
+                          const totalGold = calcGold(diff, allGates)
+                          const moreGold  = calcGoldMore(diff, allGates)
+                          const diffBadge =
+                            entry.difficulty === 'nightmare' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-500 dark:text-purple-400' :
+                            entry.difficulty === 'hard'      ? 'bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400' :
+                                                               'bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400'
+                          return (
                             <div
-                              onClick={() => toggleCustomCheck(char.id, item.id)}
-                              className={`flex items-center gap-1.5 px-2 py-1.5 cursor-pointer ${
-                                checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
-                                        : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                              key={`${entry.raidId}:${entry.difficulty}`}
+                              onClick={() => toggleRaid(char.id, entry.raidId, entry.difficulty)}
+                              className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
+                                moreDone ? 'bg-yellow-100 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
+                                : allDone ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
+                                : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
+                              {raid.image && <img src={raid.image} alt={raid.name} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-[10px] ns-bold truncate ${allDone ? 'text-yellow-700 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
+                                <div className="flex items-center gap-1">
+                                  <span className={`text-[8px] ns-bold px-1 py-px rounded leading-tight ${diffBadge}`}>{diff.label}</span>
+                                  {entry.isGoldCheck && (
+                                    <span className={`text-[9px] ns-bold tabular-nums ${
+                                      moreDone ? 'text-yellow-600 dark:text-yellow-500'
+                                      : allDone ? 'text-yellow-500 dark:text-yellow-400'
+                                      : 'text-gray-300 dark:text-gray-600'
+                                    }`}>{totalGold.toLocaleString()}G</span>
+                                  )}
+                                  {/* 더보기 토글 */}
+                                  {moreDone && (
+                                    <button
+                                      onClick={e => { e.stopPropagation(); toggleMoreFrom(char.id, entry.raidId, entry.difficulty) }}
+                                      className={`text-[7px] ns-bold px-1 py-px rounded-full border leading-none ${
+                                        moreFrom === 'bound'
+                                          ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800/40 text-orange-500 dark:text-orange-400'
+                                          : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/40 text-blue-500 dark:text-blue-400'
+                                      }`}
+                                      title={`더보기 -${moreGold.toLocaleString()}G`}
+                                    >
+                                      {moreFrom === 'bound' ? '귀속' : '거래'}더보기
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              {/* 체크박스 — 오른쪽 */}
+                              <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                                moreDone ? 'bg-yellow-500 border-yellow-500 text-yellow-900'
+                                : allDone ? 'bg-yellow-400 border-yellow-400 text-yellow-900'
+                                : 'border-gray-300 dark:border-[#383838]'
+                              }`}>
+                                {allDone && <IconCheck />}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── 주간 숙제 섹션 ── */}
+                  {weeklyItems.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
+                        <span className="text-[10px] ns-bold text-yellow-700 dark:text-yellow-400">주간 숙제</span>
+                        <span className="text-[10px] text-yellow-500 dark:text-yellow-500">({weeklyDoneCount}/{weeklyItems.length})</span>
+                      </div>
+                      <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
+                        {weeklyItems.map(item => {
+                          const checked = !!(customChecks[char.id]?.[item.id])
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => toggleCustomCheck(char.id, item.id)}
+                              className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
+                                checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                              }`}
+                            >
+                              {item.image && <img src={item.image} alt="" className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                              <span className={`flex-1 text-[11px] ns-bold truncate ${
+                                checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
+                              }`}>{item.name}</span>
+                              {/* 체크박스 — 오른쪽 */}
                               <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
                               }`}>
                                 {checked && <IconCheck />}
                               </div>
-                              {item.image && (
-                                <img src={item.image} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
-                              )}
-                              <span className={`flex-1 text-[11px] ns-bold truncate ${
-                                checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-600 dark:text-gray-300'
-                              }`}>{item.name}</span>
                             </div>
-                            {/* 휴식 게이지 — daily 항목만 */}
-                            {isDaily && (
-                              <div className="px-2 pb-2 pt-0.5">
-                                <div className="flex items-center gap-1.5">
-                                  {/* 게이지 바 */}
-                                  <div className="flex-1 flex gap-px">
-                                    {Array.from({ length: 10 }).map((_, i) => {
-                                      const filled = gauge > i * 10
-                                      return (
-                                        <div
-                                          key={i}
-                                          className={`h-2 flex-1 transition-colors ${filled ? 'bg-green-400 dark:bg-green-500' : 'bg-gray-200 dark:bg-[#2e2e2e]'} ${i === 0 ? 'rounded-l-full' : ''} ${i === 9 ? 'rounded-r-full' : ''}`}
-                                        />
-                                      )
-                                    })}
-                                  </div>
-                                  <span className="text-[10px] tabular-nums ns-bold text-green-500 dark:text-green-400 flex-shrink-0 w-[34px] text-right leading-none">{gauge}/100</span>
-                                </div>
-                                {/* ±10 버튼 */}
-                                <div className="flex items-center justify-between mt-1">
-                                  <button
-                                    onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, -10) }}
-                                    disabled={gauge <= 0}
-                                    className="text-[9px] ns-bold px-1.5 py-0.5 rounded text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors"
-                                  >−10</button>
-                                  <span className="text-[9px] text-gray-300 dark:text-gray-600">휴식 게이지</span>
-                                  <button
-                                    onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, 10) }}
-                                    disabled={gauge >= 100}
-                                    className="text-[9px] ns-bold px-1.5 py-0.5 rounded text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors"
-                                  >+10</button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
                     </div>
                   )}
+
                 </div>
               )
             })}
@@ -3169,7 +3326,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           <tr key={name} className="group">
             <td style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-2">
               <div className="flex items-center gap-1.5">
-                {meta.image && <img src={meta.image} alt="" className="w-4 h-4 object-contain flex-shrink-0" />}
+                {meta.image && <img src={meta.image} alt="" className="w-[18px] h-[18px] object-contain flex-shrink-0" />}
                 <span className="text-xs ns-bold text-gray-500 dark:text-gray-400 truncate">{name}</span>
               </div>
             </td>
@@ -3332,7 +3489,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         <td style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-1.5">
                           <div className="flex items-center gap-1.5">
                             {raidData?.image && (
-                              <img src={raidData.image} alt={row.raidName} className="w-5 h-5 object-contain flex-shrink-0" />
+                              <img src={raidData.image} alt={row.raidName} className="w-[18px] h-[18px] object-contain flex-shrink-0" />
                             )}
                             <span className="text-xs ns-bold text-gray-800 dark:text-gray-100 truncate">{row.raidName}</span>
                           </div>
@@ -3454,7 +3611,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 {selectedRaid && (() => {
                   const incompleteIds = new Set(raidIncompleteChars.map(({ char }) => char.id))
                   // 해당 레이드가 등록된 캐릭터만 표시
-                  const relevantChars = chars.filter(char =>
+                  const relevantChars = activeChars.filter(char =>
                     (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey)
                   )
                   return (
@@ -3498,7 +3655,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             )}
 
             {/* 카드 / 테이블 뷰 토글 + 한눈에 보기 — 캐릭터 있을 때만 */}
-            {chars.length > 0 && <div className="flex items-center justify-end gap-2">
+            {activeChars.length > 0 && <div className="flex items-center justify-end gap-2">
               {/* 한눈에 보기 — 테이블 모드에서만 표시 */}
               {!cardView && (
                 <button
@@ -3555,13 +3712,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 </button>
               </div>
             </div>}
-            {chars.length === 0 ? (
+            {activeChars.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-2">
                 <p className="text-sm text-gray-400 dark:text-gray-600">표시할 레이드가 없습니다</p>
                 <p className="text-xs text-gray-300 dark:text-gray-700">레이드 설정에서 캐릭터별로 참여할 레이드를 추가하세요</p>
               </div>
             ) : (
-              cardView ? renderCardView() : renderTable(chars)
+              cardView ? renderCardView() : renderTable(activeChars)
             )}
           </div>
         )
@@ -3640,15 +3797,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {/* ── 모달 ── */}
       {showRaidSettings && (
         <RaidSettingsModal
-          chars={chars}
+          chars={activeChars}
           raids={raids}
           onToggle={toggleCharRaid}
           onToggleGold={toggleCharRaidGold}
-          onClose={() => setShowRaidSettings(false)}
+          onClose={() => { setShowRaidSettings(false); setRaidSettingsCharId(null) }}
           onConfirm={handleRaidSettingsConfirm}
           exRaidError={exRaidError}
           onClearExRaidError={() => setExRaidError(null)}
           onOpenCharAdd={() => { setCharEditOpenAdd(true); setShowCharEdit(true) }}
+          initialCharId={raidSettingsCharId}
         />
       )}
       {showNoChar && (
@@ -3692,13 +3850,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
       {showCustomSettings && (
         <CustomSettingsModal
-          chars={chars}
+          chars={activeChars}
           customItems={customItems}
           onAdd={addCustomItem}
           onDelete={deleteCustomItem}
           onDeleteAll={deleteCustomItemAll}
           onReorder={reorderCustomItems}
-          onClose={() => setShowCustomSettings(false)}
+          onClose={() => { setShowCustomSettings(false); setCustomSettingsCharId(null) }}
+          initialCharId={customSettingsCharId}
         />
       )}
 
