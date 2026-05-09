@@ -863,7 +863,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
   const raidsByName = useMemo(() => {
     const map = {}
     selectedChars.forEach((char, idx) => {
-      const strategy = strategies[char.name] || 'trade'
+      const strategy = strategies[char.name] || ('bound')
       const normal   = autoSelectNormalRaids(char, strategy)
       const entries  = [...normal]
       if (idx === 0) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
@@ -874,7 +874,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
 
   const goSetup = () => {
     const init = {}
-    selectedChars.forEach(c => { init[c.name] = strategies[c.name] || 'trade' })
+    selectedChars.forEach(c => { init[c.name] = strategies[c.name] || 'bound' })
     setStrategies(init)
     setStep('setup')
   }
@@ -894,7 +894,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
   // ── 스텝 2: 레이드 자동 설정 ──────────────────────────────────────────────
   if (step === 'setup') {
     return (
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={onClose}>
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
         <div className="w-full max-w-lg rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[88vh]" onClick={e => e.stopPropagation()}>
           {/* 헤더 */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
@@ -909,7 +909,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
           <div className="overflow-y-auto flex-1 px-4 py-3 space-y-3">
             {selectedChars.map((char, idx) => {
               const isRep     = idx === 0
-              const strategy  = strategies[char.name] || 'trade'
+              const strategy  = strategies[char.name] || ('bound')
               const entries   = raidsByName[char.name] || []
               return (
                 <div key={char.name} className="rounded-lg border border-gray-200 dark:border-[#383838] overflow-hidden">
@@ -988,7 +988,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
 
   // ── 스텝 1: 캐릭터 검색 ────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
       <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">캐릭터 추가</span>
@@ -1110,11 +1110,14 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
         )}
 
         <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#383838] mt-3">
-          <button onClick={onClose}
-            className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">취소</button>
+          <button
+            onClick={results !== null ? () => setResults(null) : onClose}
+            className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+            {results !== null ? '이전' : '취소'}
+          </button>
           <button onClick={goSetup} disabled={newCount === 0}
             className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-yellow-900 transition-colors">
-            {newCount > 0 ? `${newCount}개 선택 → 레이드 설정` : '추가'}
+            선택
           </button>
         </div>
       </div>
@@ -1128,6 +1131,7 @@ function autoSelectNormalRaids(char, strategy) {
   const eligible = RAIDS
     .filter(r => !HIDDEN_RAID_IDS.has(r.id) && !EX_RAID_IDS.has(r.id))
     .flatMap(raid => {
+      // 입장 가능한 난이도 중 가장 높은 것 선택
       const bestDiff = [...raid.difficulties]
         .sort((a, b) => b.minItemLevel - a.minItemLevel)
         .find(d => char.itemLevel >= d.minItemLevel)
@@ -1138,11 +1142,19 @@ function autoSelectNormalRaids(char, strategy) {
       return [{ raid, diff: bestDiff, goldTrade, totalGold: goldTrade + goldBound }]
     })
 
-  const sorted = [...eligible].sort((a, b) =>
-    strategy === 'trade' ? b.goldTrade - a.goldTrade : b.totalGold - a.totalGold
+  // 전략에 따라 top-3 선택 (어떤 레이드를 뽑을지 결정)
+  const selected = [...eligible]
+    .sort((a, b) => strategy === 'trade' ? b.goldTrade - a.goldTrade : b.totalGold - a.totalGold)
+    .slice(0, 3)
+
+  // 표시 순서: 입장 레벨 내림차순 → 전체골드 내림차순 (전략과 무관하게 고정)
+  selected.sort((a, b) =>
+    b.diff.minItemLevel !== a.diff.minItemLevel
+      ? b.diff.minItemLevel - a.diff.minItemLevel
+      : b.totalGold - a.totalGold
   )
 
-  return sorted.slice(0, 3).map(({ raid, diff }) => ({
+  return selected.map(({ raid, diff }) => ({
     raidId: raid.id, difficulty: diff.key,
     gateClears: new Array(diff.gates).fill(false),
     isGoldCheck: true, moreDone: false, moreFrom: 'bound',
@@ -1181,7 +1193,7 @@ function AutoSetupModal({ onApply, onClose, existingRaids, existingChars }) {
   const [charName,  setCharName]  = useState('')
   const [apiKey,    setApiKey]    = useState(() => (typeof window !== 'undefined' ? localStorage.getItem(LOA_KEY_STORAGE) || '' : ''))
   const [keySaved,  setKeySaved]  = useState(() => !!(typeof window !== 'undefined' && localStorage.getItem(LOA_KEY_STORAGE)))
-  const [strategy,  setStrategy]  = useState('trade') // 'trade' | 'total'
+  const [strategy,  setStrategy]  = useState('bound') // 'trade' | 'bound'
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState('')
   const [previewBase, setPreviewBase] = useState(null) // { chars, apiKey }
@@ -1663,27 +1675,42 @@ const REST_GAUGE_NAMES = new Set(['쿠르잔 전선', '가디언 토벌'])
 
 // 캐릭터 아이템 레벨에 맞는 레이드 자동 배정 (최고 골드 순 top 3, isTopChar 이면 EX 레이드 추가)
 function computeAutoRaids(char, isTopChar) {
-  const qualifying = RAIDS
+  const eligible = RAIDS
     .filter(r => !EX_RAID_IDS.has(r.id) && !HIDDEN_RAID_IDS.has(r.id))
     .flatMap(raid => {
-      const bestDiff = raid.difficulties.find(d => char.itemLevel >= d.minItemLevel)
+      // 입장 가능한 난이도 중 가장 높은 것 선택
+      const bestDiff = [...raid.difficulties]
+        .sort((a, b) => b.minItemLevel - a.minItemLevel)
+        .find(d => char.itemLevel >= d.minItemLevel)
       if (!bestDiff) return []
-      const totalGold = (bestDiff.goldBound || []).reduce((s, g) => s + g, 0)
-                      + (bestDiff.goldTrade  || []).reduce((s, g) => s + g, 0)
-      return [{ raidId: raid.id, diff: bestDiff, totalGold }]
+      const goldTrade = (bestDiff.goldTrade || []).reduce((s, g) => s + g, 0)
+      const goldBound = (bestDiff.goldBound || []).reduce((s, g) => s + g, 0)
+      return [{ raidId: raid.id, diff: bestDiff, goldTrade, totalGold: goldTrade + goldBound }]
     })
+
+  // 전체골드 기준 top-3 선택 후 입장레벨 내림차순 → 전체골드 내림차순으로 정렬
+  const selected = [...eligible]
     .sort((a, b) => b.totalGold - a.totalGold)
     .slice(0, GOLD_RAID_LIMIT)
-    .map(({ raidId, diff }) => ({
-      raidId, difficulty: diff.key,
-      gateClears: new Array(diff.gates).fill(false),
-      isGoldCheck: true, moreDone: false, moreFrom: 'bound',
-    }))
+
+  selected.sort((a, b) =>
+    b.diff.minItemLevel !== a.diff.minItemLevel
+      ? b.diff.minItemLevel - a.diff.minItemLevel
+      : b.totalGold - a.totalGold
+  )
+
+  const qualifying = selected.map(({ raidId, diff }) => ({
+    raidId, difficulty: diff.key,
+    gateClears: new Array(diff.gates).fill(false),
+    isGoldCheck: true, moreDone: false, moreFrom: 'bound',
+  }))
 
   if (isTopChar) {
     const exRaid = RAIDS.find(r => EX_RAID_IDS.has(r.id) && !HIDDEN_RAID_IDS.has(r.id))
     if (exRaid) {
-      const exDiff = exRaid.difficulties.find(d => char.itemLevel >= d.minItemLevel)
+      const exDiff = [...exRaid.difficulties]
+        .sort((a, b) => b.minItemLevel - a.minItemLevel)
+        .find(d => char.itemLevel >= d.minItemLevel)
       if (exDiff) {
         qualifying.unshift({
           raidId: exRaid.id, difficulty: exDiff.key,
@@ -2051,7 +2078,7 @@ function deleteRaid(characterId, raidId, difficulty) {
 }
 
 // ── 메인 대시보드 ─────────────────────────────────────────────────────────────
-export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialRepCharId = null }) {
+export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialRepCharId = null, initialCustomItems = {} }) {
   const isDemo = !isLoggedIn
   const [chars, setChars] = useState(initialChars)
   const [raids, setRaids] = useState(initialRaids)
@@ -2060,7 +2087,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [showCharEdit,     setShowCharEdit]     = useState(false)
   const [charEditOpenAdd,  setCharEditOpenAdd]  = useState(false)
   const [showNoChar,       setShowNoChar]       = useState(false)
-  const [showLoginGuide,   setShowLoginGuide]   = useState(false)
+  const [showLoginGuide,      setShowLoginGuide]      = useState(false)
+  const [confirmDeleteCharId, setConfirmDeleteCharId] = useState(null)
   const [syncing, setSyncing]                   = useState(false)
   const [showConfetti, setShowConfetti]         = useState(false)
   const [exRaidError, setExRaidError]           = useState(null) // { raidName, conflictCharName }
@@ -2080,7 +2108,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [editingPageId, setEditingPageId]       = useState(null) // 이름 편집 중인 페이지 id
   const [editingPageName, setEditingPageName]   = useState('')
   const [charPageMap, setCharPageMap]           = useState({})   // charId -> pageId
-  const [customItems, setCustomItems]           = useState({})   // {charId: [{id, name, type, image}]}
+  const [customItems, setCustomItems]           = useState(initialCustomItems) // {charId: [{id, name, type, image}]}
   const [customChecks, setCustomChecks]         = useState({})   // {charId: {itemId: bool}}
   const [restGauge, setRestGauge]               = useState({})   // {charId: {itemId: 0-100}}
   const [restGaugeDeducted, setRestGaugeDeducted] = useState({}) // {charId: {itemId: bool}} — 체크 시 실제 차감 여부
@@ -2341,11 +2369,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   }, [selectedRaid, chars, raids])
 
   // 캐릭터가 있다가 0이 되면 빈 상태 모달 자동 표시 (초기 0은 제외)
-  const hadCharsRef = useRef(initialChars.length > 0)
+  // CharacterEditModal을 완료로 닫은 직후에는 억제 (이미 빈 상태임을 알고 닫은 것)
+  const hadCharsRef      = useRef(initialChars.length > 0)
+  const prevCharEditRef  = useRef(false)
   useEffect(() => {
+    const wasEditOpen = prevCharEditRef.current
+    prevCharEditRef.current = showCharEdit
     if (isDemo) return
     if (chars.length > 0) { hadCharsRef.current = true; return }
-    if (hadCharsRef.current && !showCharEdit) setShowNoChar(true)
+    if (hadCharsRef.current && !showCharEdit && !wasEditOpen) setShowNoChar(true)
   }, [chars.length, showCharEdit, isDemo])
 
   // 캐릭터별 레이드 토글 (설정 모달에서 사용) — 레이드당 난이도 하나만 허용
@@ -2549,106 +2581,119 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
   // 캐릭터 추가 (raidsByName이 있으면 자동 배정, 없으면 레이드 설정 모달 즉시 오픈)
   const addChars = async (newChars, apiKey, raidsByName = {}) => {
-    const isManual = Object.keys(raidsByName).length === 0
+    const isManual   = Object.keys(raidsByName).length === 0
+    const timestamp  = Date.now()
+    const newNames   = new Set(newChars.map(c => c.name))
 
-    // 낙관적 추가
-    setChars(prev => {
-      const existingNames = new Set(prev.map(c => c.name))
-      const toAdd = newChars.filter(c => !existingNames.has(c.name)).map((c, i) => ({
-        id: `tmp_${Date.now()}_${i}`, name: c.name, class: c.class,
-        server: c.server, itemLevel: c.itemLevel, combatPower: null, account: '본계정',
+    // ── 1. tmp ID로 낙관적 캐릭터 생성 ──────────────────────────────────────
+    const existingNames = new Set(chars.map(c => c.name))
+    const tmpChars = newChars
+      .filter(c => !existingNames.has(c.name))
+      .map((c, i) => ({
+        id: `tmp_${timestamp}_${i}`,
+        name: c.name, class: c.class, server: c.server,
+        itemLevel: c.itemLevel, combatPower: c.combatPower ?? null,
+        account: '본계정', loaAccountId: c.loaAccountId ?? null,
       }))
-      return [...prev, ...toAdd]
+    if (tmpChars.length === 0) return
+
+    // ── 2. 레이드 낙관적 계산 (tmp ID 기준) ─────────────────────────────────
+    const optRaids = {}
+    if (!isManual) {
+      // CharacterAddModal / AutoSetupModal 에서 온 raidsByName (name 키)
+      tmpChars.forEach(tc => {
+        const entries = raidsByName[tc.name]
+        if (entries?.length > 0) optRaids[tc.id] = entries
+      })
+    } else {
+      // 아이템 레벨 기반 자동 배정
+      const allForAcct  = [...chars, ...tmpChars]
+      const acctTopMap  = new Map()
+      const acctHasEx   = new Map()
+      allForAcct.forEach(c => {
+        const key = c.loaAccountId || c.account || 'default'
+        const cur = acctTopMap.get(key)
+        if (!cur || c.itemLevel > cur.itemLevel) acctTopMap.set(key, c)
+        if (!newNames.has(c.name) && (raids[c.id] || []).some(e => EX_RAID_IDS.has(e.raidId)))
+          acctHasEx.set(key, true)
+      })
+      tmpChars.forEach(tc => {
+        const key    = tc.loaAccountId || tc.account || 'default'
+        const isTop  = acctTopMap.get(key)?.id === tc.id && !acctHasEx.get(key)
+        const entries = computeAutoRaids(tc, isTop)
+        if (entries.length > 0) optRaids[tc.id] = entries
+      })
+    }
+
+    // ── 3. 커스텀 항목 낙관적 계산 (tmp ID 기준) ────────────────────────────
+    const optCustom = {}
+    tmpChars.forEach(tc => {
+      const existing     = customItems[tc.id] || []
+      const existingSet  = new Set(existing.map(it => it.name))
+      const toAdd        = AUTO_PRESETS.filter(p => !existingSet.has(p.name))
+      if (toAdd.length > 0)
+        optCustom[tc.id] = [
+          ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${tc.id}`, ...p })),
+          ...existing,
+        ]
     })
 
+    // ── 4. 페이지 배정 낙관적 계산 ─────────────────────────────────────────
+    const optPageMap = {}
+    if (activePageId) tmpChars.forEach(tc => { optPageMap[tc.id] = activePageId })
+
+    // ── 5. 즉시 반영 ────────────────────────────────────────────────────────
+    setChars(prev => [...prev, ...tmpChars])
+    if (Object.keys(optRaids).length   > 0) setRaids(prev       => ({ ...prev, ...optRaids   }))
+    if (Object.keys(optCustom).length  > 0) setCustomItems(prev  => ({ ...prev, ...optCustom  }))
+    if (Object.keys(optPageMap).length > 0) setCharPageMap(prev  => ({ ...prev, ...optPageMap }))
+
+    // 비로그인(데모)은 여기서 종료
+    if (!isLoggedIn) return
+
+    // ── 6. DB 저장 후 tmp ID → 실제 ID 교체 ────────────────────────────────
     try {
       await fetch('/api/characters', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey, label: '본계정', characters: newChars }),
       })
       const res = await fetch('/api/characters')
-      if (res.ok) {
-        const data = await res.json()
-        if (Array.isArray(data)) {
-          setChars(data) // 실제 ID로 교체
+      if (!res.ok) return
+      const data = await res.json()
+      if (!Array.isArray(data)) return
 
-          const newNames   = new Set(newChars.map(c => c.name))
-          const freshChars = data.filter(c => newNames.has(c.name))
+      // tmp → real ID 매핑
+      const tmpToReal = new Map()
+      tmpChars.forEach(tc => {
+        const real = data.find(d => d.name === tc.name)
+        if (real) tmpToReal.set(tc.id, real.id)
+      })
 
-          // 현재 페이지 배정
-          if (freshChars.length > 0 && activePageId) {
-            setCharPageMap(prev => {
-              const next = { ...prev }
-              freshChars.forEach(char => { next[char.id] = activePageId })
-              return next
-            })
-          }
+      // chars 실제 데이터로 교체
+      setChars(data)
 
-          // 프리셋 커스텀 항목 자동 추가
-          if (freshChars.length > 0) {
-            setCustomItems(prev => {
-              const next = { ...prev }
-              freshChars.forEach(char => {
-                const existing      = next[char.id] || []
-                const existingNames = new Set(existing.map(it => it.name))
-                const toAdd = AUTO_PRESETS.filter(p => !existingNames.has(p.name))
-                if (toAdd.length > 0) {
-                  next[char.id] = [
-                    ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${char.id}`, ...p })),
-                    ...existing,
-                  ]
-                }
-              })
-              return next
-            })
-          }
+      // raids / customItems / charPageMap: tmp ID → real ID로 키 교체
+      if (tmpToReal.size > 0) {
+        setRaids(prev => {
+          const next = { ...prev }
+          tmpToReal.forEach((realId, tmpId) => { if (next[tmpId]) { next[realId] = next[tmpId]; delete next[tmpId] } })
+          return next
+        })
+        setCustomItems(prev => {
+          const next = { ...prev }
+          tmpToReal.forEach((realId, tmpId) => { if (next[tmpId]) { next[realId] = next[tmpId]; delete next[tmpId] } })
+          return next
+        })
+        setCharPageMap(prev => {
+          const next = { ...prev }
+          tmpToReal.forEach((realId, tmpId) => { if (next[tmpId]) { next[realId] = next[tmpId]; delete next[tmpId] } })
+          return next
+        })
 
-          // !isManual: AutoSetupModal에서 온 raidsByName 우선 적용
-          if (!isManual) {
-            const newRaids = {}
-            data.forEach(char => {
-              const entries = raidsByName[char.name]
-              if (entries?.length > 0) {
-                newRaids[char.id] = entries
-                entries.forEach(entry => persistRaid(char.id, entry))
-              }
-            })
-            if (Object.keys(newRaids).length > 0) {
-              setRaids(prev => ({ ...prev, ...newRaids }))
-              return
-            }
-          }
-
-          // 레이드 자동 배정: 아이템 레벨 기반 top 3 (계정 최고레벨 캐릭터는 EX 포함)
-          if (freshChars.length > 0) {
-            // 계정별 전체 캐릭터 중 최고레벨 캐릭터 ID 확인
-            const acctTopMap  = new Map() // accountKey -> char
-            const acctHasEx   = new Map() // accountKey -> bool (기존 캐릭터 EX 레이드 보유 여부)
-            const currentRaids = raids    // 현재 state (클로저)
-            data.forEach(c => {
-              const key = c.loaAccountId || c.account || 'default'
-              const cur = acctTopMap.get(key)
-              if (!cur || c.itemLevel > cur.itemLevel) acctTopMap.set(key, c)
-              if (!newNames.has(c.name) && (currentRaids[c.id] || []).some(e => EX_RAID_IDS.has(e.raidId))) {
-                acctHasEx.set(key, true)
-              }
-            })
-
-            const autoRaids = {}
-            freshChars.forEach(fc => {
-              const key      = fc.loaAccountId || fc.account || 'default'
-              const isTop    = acctTopMap.get(key)?.id === fc.id && !acctHasEx.get(key)
-              const entries  = computeAutoRaids(fc, isTop)
-              if (entries.length > 0) autoRaids[fc.id] = entries
-            })
-            if (Object.keys(autoRaids).length > 0) {
-              setRaids(prev => ({ ...prev, ...autoRaids }))
-              Object.entries(autoRaids).forEach(([charId, entries]) =>
-                entries.forEach(entry => persistRaid(charId, entry))
-              )
-            }
-          }
-        }
+        // 레이드 DB 저장 (real ID 확정 후)
+        tmpToReal.forEach((realId, tmpId) => {
+          ;(optRaids[tmpId] || []).forEach(entry => persistRaid(realId, entry))
+        })
       }
     } catch {}
   }
@@ -2831,7 +2876,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             </svg>
             레이드 설정
           </button>
-          <button onClick={() => setShowCustomSettings(true)}
+          <button onClick={() => activeChars.length === 0 ? setShowNoChar(true) : setShowCustomSettings(true)}
             className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -2969,9 +3014,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
         const nameSize = (name) => {
           const korLen = [...name].filter(c => /[가-힣ᄀ-ᇿ㄰-㆏]/.test(c)).length
-          if (korLen <= 5) return 'text-xs'
-          if (korLen <= 7) return 'text-[10px]'
-          return 'text-[9px]'
+          if (korLen <= 5) return 'text-sm'
+          if (korLen <= 7) return 'text-xs'
+          return 'text-[10px]'
         }
 
         // ── 드래그앤드랍 순서 변경 ────────────────────────────────────────
@@ -3101,28 +3146,36 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onDragOver={(e) => handleCharDragOver(e, char.id)}
                   onDrop={(e) => handleCharDrop(e, char.id)}
                   onDragEnd={handleCharDragEnd}
-                  className={`relative rounded-xl border bg-white dark:bg-[#222222] overflow-hidden transition-all select-none ${
+                  className={`relative rounded-xl border bg-white dark:bg-[#222222] overflow-hidden transition-all select-none flex flex-col ${
                     isDragging  ? 'opacity-40 border-gray-200 dark:border-[#383838]' :
                     isDragOver  ? 'border-yellow-400 dark:border-yellow-600 ring-2 ring-yellow-300/50 dark:ring-yellow-700/30' :
                                   'border-gray-200 dark:border-[#383838]'
                   }`}
                 >
                   {/* ── 캐릭터 헤더 ── */}
-                  <div className="flex items-center gap-1.5 px-2.5 py-2 bg-gray-50 dark:bg-[#181818]">
+                  <div className="flex items-center gap-1.5 px-2.5 bg-gray-50 dark:bg-[#181818] h-[52px] overflow-hidden">
                     <span className="text-gray-300 dark:text-gray-600 flex-shrink-0 cursor-grab"><IconGrip /></span>
                     {getClassIcon(char.class)
-                      ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-6 h-6 object-contain flex-shrink-0" />
-                      : <span className="w-6 h-6 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
+                      ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-7 h-7 object-contain flex-shrink-0" />
+                      : <span className="w-7 h-7 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
                     }
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-0.5">
                         {char.id === repCharId && <span className="text-yellow-400 flex-shrink-0"><IconCrown /></span>}
                         <p className={`${nameSize(char.name)} ns-bold text-gray-900 dark:text-white truncate`}>{char.name}</p>
                       </div>
-                      <p className="text-[9px] text-gray-500 dark:text-gray-400 truncate">
-                        {char.itemLevel.toFixed(2)}
-                        {char.combatPower != null && ` · ${Math.round(char.combatPower).toLocaleString()}`}
-                      </p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500 overflow-hidden">
+                        <span className="flex items-center gap-0.5 flex-shrink-0 text-gray-400 dark:text-gray-500">
+                          <IconItemLevel />
+                          <span className="tabular-nums ns-bold text-gray-600 dark:text-gray-300">{char.itemLevel.toFixed(2)}</span>
+                        </span>
+                        {char.combatPower != null && (
+                          <span className="flex items-center gap-0.5 min-w-0 truncate">
+                            <IconPower />
+                            <span className="tabular-nums truncate">{Math.round(char.combatPower).toLocaleString()}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {/* ⚙ 설정 버튼 */}
                     <button
@@ -3137,7 +3190,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     </button>
                     {/* × 삭제 버튼 */}
                     <button
-                      onClick={e => { e.stopPropagation(); deleteChar(char.id) }}
+                      onClick={e => { e.stopPropagation(); setConfirmDeleteCharId(char.id) }}
                       title="캐릭터 삭제"
                       className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors flex-shrink-0 text-base leading-none"
                     >×</button>
@@ -3204,7 +3257,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   )}
 
                   {/* ── 주간 레이드 섹션 ── */}
-                  <div>
+                  <div className="flex-1 flex flex-col">
                     <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
                       <span className="text-[10px] ns-bold text-yellow-700 dark:text-yellow-400">주간 레이드</span>
                       <span className="text-[10px] text-yellow-500 dark:text-yellow-500">({raidDoneCount}/{charRaids.length})</span>
@@ -3862,6 +3915,38 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       )}
 
       {/* ── 데모 모드 로그인 유도 모달 ── */}
+      {/* ── 캐릭터 삭제 확인 모달 ── */}
+      {confirmDeleteCharId && (() => {
+        const target = chars.find(c => c.id === confirmDeleteCharId)
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={() => setConfirmDeleteCharId(null)}>
+            <div
+              className="relative w-full max-w-xs rounded-2xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
+              onClick={e => e.stopPropagation()}
+            >
+              <button onClick={() => setConfirmDeleteCharId(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
+              <div className="space-y-1.5">
+                <p className="text-sm ns-bold text-gray-900 dark:text-white">캐릭터 삭제</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                  <span className="ns-bold text-gray-800 dark:text-gray-200">{target?.name}</span> 캐릭터와<br/>
+                  설정된 모든 레이드 숙제가 삭제됩니다.
+                </p>
+              </div>
+              <div className="flex gap-2 w-full">
+                <button
+                  onClick={() => setConfirmDeleteCharId(null)}
+                  className="flex-1 rounded-lg border border-gray-200 dark:border-[#444] px-4 py-2 text-xs ns-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
+                >취소</button>
+                <button
+                  onClick={() => { deleteChar(confirmDeleteCharId); setConfirmDeleteCharId(null) }}
+                  className="flex-1 rounded-lg bg-red-500 hover:bg-red-400 px-4 py-2 text-xs ns-bold text-white transition-colors"
+                >삭제</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {showLoginGuide && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={() => setShowLoginGuide(false)}>
           <div

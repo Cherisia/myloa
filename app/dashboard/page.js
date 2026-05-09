@@ -14,44 +14,56 @@ const DEMO_CHARS = [
   { id: 'demo-6', name: '도화가장인김우림',  class: '도화가',     server: '루페온', itemLevel: 1720.83, combatPower: 1314.27, account: '본계정', loaAccountId: 'demo' },
 ]
 const DEMO_RAIDS = {
-  // 킴지니 1773.33 — serca 나메(1740✓) · kazeros-final 하드(1730✓) · armocha 하드(1720✓) + egir-ex 나메(1770✓)
+  // 팍지니 1773.33 — EX나메(1770✓) + serca나메(54000G) + kazeros-final하드(52000G) + cathedral3단계(50000G)
   'demo-1': [
     { raidId: 'egir-ex',       difficulty: 'nightmare', gateClears: [false],         isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'serca',         difficulty: 'nightmare', gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
+    { raidId: 'cathedral',     difficulty: 'stage3',    gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
   ],
-  // 지니뇨속 1755.00 — serca 나메(1740✓) · kazeros-final 하드(1730✓) · armocha 하드(1720✓)
+  // 로헨델카지노박마담 1755.00 — serca나메(54000G) + kazeros-final하드(52000G) + cathedral3단계(50000G)
   'demo-2': [
     { raidId: 'serca',         difficulty: 'nightmare', gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
+    { raidId: 'cathedral',     difficulty: 'stage3',    gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
   ],
-  // 킴젤르 1740.00 — serca 나메(1740✓) · kazeros-final 하드(1730✓) · armocha 하드(1720✓)
+  // 절구주는비치 1740.00 — serca나메(54000G) + kazeros-final하드(52000G) + armocha하드(42000G)
   'demo-3': [
     { raidId: 'serca',         difficulty: 'nightmare', gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
   ],
-  // 쮜니킴 1732.50 — kazeros-final 하드(1730✓) · serca 하드(1730✓) · armocha 하드(1720✓)  [나메 1740 미달]
+  // 질풍노도훈수사 1732.50 — kazeros-final하드(52000G) + serca하드(44000G) + armocha하드(42000G)
   'demo-4': [
     { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'serca',         difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
   ],
-  // 지니킴 1730.00 — kazeros-final 하드(1730✓) · serca 하드(1730✓) · armocha 하드(1720✓)  [나메 1740 미달]
+  // 다베어버릴거에요 1730.00 — kazeros-final하드(52000G) + serca하드(44000G) + armocha하드(42000G)
   'demo-5': [
     { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'serca',         difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
   ],
-  // 붓지니 1720.83 — armocha 하드(1720✓) · serca 노말(1710✓) · kazeros-final 노말(1710✓)  [하드 1730 미달]
+  // 도화가장인김우림 1720.83 — armocha하드(42000G) + cathedral2단계(40000G) + kazeros-final노말(40000G)
   'demo-6': [
     { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'serca',         difficulty: 'normal',    gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
+    { raidId: 'cathedral',     difficulty: 'stage2',    gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'kazeros-final', difficulty: 'normal',    gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
   ],
 }
+
+// 데모용 커스텀 항목 (쿠르잔전선·가디언토벌·할의모래시계·낙원·큐브)
+const mkPresets = (id) => [
+  { id: `d-kurzan-${id}`,  name: '쿠르잔 전선',   type: 'daily',  image: '/schedule/kurzan.png'   },
+  { id: `d-guardian-${id}`,name: '가디언 토벌',   type: 'daily',  image: '/schedule/guardian.png' },
+  { id: `d-hal-${id}`,     name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
+  { id: `d-paradise-${id}`,name: '낙원',          type: 'weekly', image: '/schedule/paradise.png' },
+  { id: `d-cube-${id}`,    name: '큐브',          type: 'weekly', image: '/schedule/cube.png'     },
+]
+const DEMO_CUSTOM_ITEMS = Object.fromEntries(
+  ['demo-1','demo-2','demo-3','demo-4','demo-5','demo-6'].map(id => [id, mkPresets(id)])
+)
 
 const ACCOUNT_INCLUDE = {
   characters: {
@@ -65,7 +77,7 @@ export default async function DashboardPage() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    return <DashboardClient initialChars={DEMO_CHARS} initialRaids={DEMO_RAIDS} />
+    return <DashboardClient initialChars={DEMO_CHARS} initialRaids={DEMO_RAIDS} initialCustomItems={DEMO_CUSTOM_ITEMS} />
   }
 
   const userId = session.user.id
