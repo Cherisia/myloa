@@ -124,10 +124,24 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onCo
   const normalGoldCount = charRaidList.filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)).length
   const exGoldCount     = charRaidList.filter(e => e.isGoldCheck &&  EX_RAID_IDS.has(e.raidId)).length
 
+  // 계정별 골드 캐릭터 현황 (chars 순서 = 계정 등록 순서)
+  // 대표캐릭터: accountRepChar(DB 저장값) > 아이템레벨 최고 캐릭터명 순으로 fallback
+  const acctGoldMap = (() => {
+    const seenKeys = []
+    const map = {}
+    chars.forEach(c => {
+      const key = c.loaAccountId || c.account || 'unknown'
+      if (!map[key]) {
+        seenKeys.push(key)
+        // accountRepChar가 있으면 우선, 없으면 첫 번째 등장 캐릭터(sortOrder 최소)로 fallback
+        map[key] = { key, label: c.accountRepChar || c.name, count: 0 }
+      }
+      if ((raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))) map[key].count++
+    })
+    return seenKeys.map(k => map[k])
+  })()
   const acctKey          = selectedChar ? (selectedChar.loaAccountId || selectedChar.account) : null
-  const acctGoldCharCount = acctKey
-    ? chars.filter(c => (c.loaAccountId || c.account) === acctKey && (raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))).length
-    : 0
+  const acctGoldCharCount = acctGoldMap.find(a => a.key === acctKey)?.count ?? 0
   const charHasGold = charRaidList.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
 
   const handleConfirm = () => {
@@ -232,20 +246,22 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onCo
               </span>
             )}
           </div>
-          {/* 계정당 골드 캐릭터 수 */}
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-gray-400 dark:text-gray-500">골드 캐릭터</span>
-            <div className="flex gap-0.5">
-              {Array.from({ length: GOLD_CHAR_LIMIT }).map((_, i) => (
-                <div key={i} className={`h-1.5 w-3 rounded-full transition-colors ${
-                  acctGoldCharCount > GOLD_CHAR_LIMIT ? 'bg-red-400' : i < acctGoldCharCount ? 'bg-yellow-400' : 'bg-gray-200 dark:bg-[#2a2a2a]'
-                }`} />
-              ))}
+          {/* 선택된 캐릭터의 계정 골드 캐릭터 수 */}
+          {acctGoldMap.filter(({ key }) => key === acctKey).map(({ key, label, count }) => (
+            <div key={key} className="flex items-center gap-2">
+              <span className="text-[11px] text-gray-400 dark:text-gray-500">{label} 계정 골드 캐릭터</span>
+              <div className="flex gap-0.5">
+                {Array.from({ length: GOLD_CHAR_LIMIT }).map((_, i) => (
+                  <div key={i} className={`h-1.5 w-3 rounded-full transition-colors ${
+                    count > GOLD_CHAR_LIMIT ? 'bg-red-400' : i < count ? 'bg-yellow-400' : 'bg-gray-200 dark:bg-[#2a2a2a]'
+                  }`} />
+                ))}
+              </div>
+              <span className={`text-[11px] ns-bold transition-colors ${
+                count > GOLD_CHAR_LIMIT ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
+              }`}>{count}/{GOLD_CHAR_LIMIT}</span>
             </div>
-            <span className={`text-[11px] ns-bold transition-colors ${
-              acctGoldCharCount > GOLD_CHAR_LIMIT ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
-            }`}>{acctGoldCharCount}/{GOLD_CHAR_LIMIT}</span>
-          </div>
+          ))}
         </div>
 
         {/* 레이드 목록 */}
@@ -279,7 +295,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onCo
                     const title     = !hasActive ? '레이드를 먼저 선택하세요'
                                     : isEx       ? 'EX 레이드는 골드가 항상 지급됩니다'
                                     : !canToggle && normalGoldCount >= GOLD_RAID_LIMIT ? `골드 보상 ${GOLD_RAID_LIMIT}개 초과`
-                                    : !canToggle ? `계정 골드 캐릭터 ${GOLD_CHAR_LIMIT}개 초과`
+                                    : !canToggle ? `계정 내 골드 캐릭터 ${GOLD_CHAR_LIMIT}개 초과`
                                     : ''
                     return (
                       <button
@@ -437,9 +453,9 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onCo
                   <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
               </div>
-              <p className="text-sm ns-bold text-gray-900 dark:text-white text-center mb-1">골드 캐릭터 초과</p>
+              <p className="text-sm ns-bold text-gray-900 dark:text-white text-center mb-1">계정 내 골드 캐릭터 초과</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 text-center mb-5">
-                계정당 골드 수령 캐릭터는 최대 {GOLD_CHAR_LIMIT}개입니다
+                계정 내 골드 수령 캐릭터는 최대 {GOLD_CHAR_LIMIT}개입니다
               </p>
               <div className="space-y-1.5">
                 {acctGoldError.map(a => (
@@ -623,8 +639,8 @@ function CharacterEditModal({ chars, raids, onAdd, onDelete, onClose, onReorder,
     setShowBatchConfirm(false)
   }
 
-  const handleAdd = (newChars, apiKey, raidsByName) => {
-    onAdd(newChars, apiKey, raidsByName)
+  const handleAdd = (newChars, apiKey, raidsByName, repCharName) => {
+    onAdd(newChars, apiKey, raidsByName, repCharName)
     onClose()
   }
 
@@ -880,12 +896,12 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
   }
 
   const handleConfirm = () => {
-    onAdd(selectedChars, apiKey.trim(), raidsByName)
+    onAdd(selectedChars, apiKey.trim(), raidsByName, charName.trim())
     onClose()
   }
 
   const handleManualSetup = () => {
-    onAdd(selectedChars, apiKey.trim(), {})
+    onAdd(selectedChars, apiKey.trim(), {}, charName.trim())
     onClose()
   }
 
@@ -2579,8 +2595,27 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     setShowRaidSettings(false)
   }
 
+  // 캐릭터 정렬: 계정 등록 순서(sortOrder 최솟값) → 아이템레벨 내림차순 → 이름 가나다 순
+  const sortChars = (arr) => {
+    // 계정별 최소 sortOrder 계산 (tmp 캐릭터는 배열 인덱스를 fallback으로 사용)
+    const acctMinOrder = {}
+    arr.forEach((c, idx) => {
+      const key   = c.loaAccountId || c.account || 'unknown'
+      const order = c.sortOrder != null ? c.sortOrder : 1_000_000 + idx
+      if (!(key in acctMinOrder) || order < acctMinOrder[key]) acctMinOrder[key] = order
+    })
+    return [...arr].sort((a, b) => {
+      const aKey = a.loaAccountId || a.account || 'unknown'
+      const bKey = b.loaAccountId || b.account || 'unknown'
+      const acctDiff = (acctMinOrder[aKey] ?? 9_999_999) - (acctMinOrder[bKey] ?? 9_999_999)
+      if (acctDiff !== 0) return acctDiff
+      if (b.itemLevel !== a.itemLevel) return b.itemLevel - a.itemLevel
+      return a.name.localeCompare(b.name, 'ko-KR')
+    })
+  }
+
   // 캐릭터 추가 (raidsByName이 있으면 자동 배정, 없으면 레이드 설정 모달 즉시 오픈)
-  const addChars = async (newChars, apiKey, raidsByName = {}) => {
+  const addChars = async (newChars, apiKey, raidsByName = {}, repCharName = null) => {
     const isManual   = Object.keys(raidsByName).length === 0
     const timestamp  = Date.now()
     const newNames   = new Set(newChars.map(c => c.name))
@@ -2643,7 +2678,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     if (activePageId) tmpChars.forEach(tc => { optPageMap[tc.id] = activePageId })
 
     // ── 5. 즉시 반영 ────────────────────────────────────────────────────────
-    setChars(prev => [...prev, ...tmpChars])
+    setChars(prev => sortChars([...prev, ...tmpChars]))
     if (Object.keys(optRaids).length   > 0) setRaids(prev       => ({ ...prev, ...optRaids   }))
     if (Object.keys(optCustom).length  > 0) setCustomItems(prev  => ({ ...prev, ...optCustom  }))
     if (Object.keys(optPageMap).length > 0) setCharPageMap(prev  => ({ ...prev, ...optPageMap }))
@@ -2655,7 +2690,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     try {
       await fetch('/api/characters', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey, label: '본계정', characters: newChars }),
+        body: JSON.stringify({ apiKey, label: '본계정', repCharName, characters: newChars }),
       })
       const res = await fetch('/api/characters')
       if (!res.ok) return
@@ -2669,8 +2704,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         if (real) tmpToReal.set(tc.id, real.id)
       })
 
-      // chars 실제 데이터로 교체
-      setChars(data)
+      // chars 실제 데이터로 교체 (동일 정렬 적용)
+      setChars(sortChars(data))
 
       // raids / customItems / charPageMap: tmp ID → real ID로 키 교체
       if (tmpToReal.size > 0) {
@@ -3423,10 +3458,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           </tr>
         )
 
-        const renderTable = (charSubset) => {
+        const renderTable = (charSubset, isSplit = false) => {
           const filteredChars = selectedRaid
             ? charSubset.filter(char => (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
             : charSubset
+
+          // 이 청크에 속한 캐릭터들이 가진 레이드 행만 표시
+          const chunkRaidRows = raidRows.filter(row =>
+            filteredChars.some(char => (raids[char.id] || []).some(e => e.raidId === row.raidId))
+          )
 
           const tableNaturalWidth = COL_RAID + COL_CHAR * filteredChars.length
           const tableScale = (fitMode && tableContainerWidth > 0)
@@ -3436,12 +3476,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           return (
           <div
             className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden"
-            style={fitMode ? { width: '100%' } : { width: 'fit-content', maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto' }}
+            style={fitMode ? { width: '100%' } : isSplit ? { width: tableNaturalWidth } : { width: 'fit-content', maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto' }}
           >
             <div
               style={fitMode
                 ? { zoom: tableScale, transformOrigin: 'top left', width: `${tableNaturalWidth}px` }
-                : { overflowX: 'auto' }
+                : {}
               }
             >
               <table className="border-collapse" style={{ tableLayout: 'fixed', width: COL_RAID + COL_CHAR * filteredChars.length }}>
@@ -3535,7 +3575,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       .filter(([name]) => REST_GAUGE_NAMES.has(name))
                       .map(([name, { charMap, meta }]) => renderCustomRow(name, charMap, meta, filteredChars))
                   })()}
-                  {(selectedRaid ? raidRows.filter(row => row.raidId === selectedRaid.raidId) : raidRows).map(row => {
+                  {(selectedRaid ? chunkRaidRows.filter(row => row.raidId === selectedRaid.raidId) : chunkRaidRows).map(row => {
                     const raidData = RAIDS.find(r => r.id === row.raidId)
                     return (
                       <tr key={row.key} className="group">
@@ -3574,7 +3614,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       </tr>
                     )
                   })}
-                  {raidRows.length === 0 && !filteredChars.some(c => (customItems[c.id] || []).length > 0) && (
+                  {chunkRaidRows.length === 0 && !filteredChars.some(c => (customItems[c.id] || []).length > 0) && (
                     <tr>
                       <td colSpan={filteredChars.length + 1} className="py-16 text-center">
                         <p className="text-gray-400 dark:text-gray-600 text-sm mb-2">표시할 레이드가 없습니다</p>
@@ -3771,7 +3811,35 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 <p className="text-xs text-gray-300 dark:text-gray-700">레이드 설정에서 캐릭터별로 참여할 레이드를 추가하세요</p>
               </div>
             ) : (
-              cardView ? renderCardView() : renderTable(activeChars)
+              cardView ? renderCardView() : (() => {
+                if (fitMode) return renderTable(activeChars)
+                // 화면 너비에 맞춰 청크 분할 — 스크롤 없이 테이블 세로 적층
+                // tableContainerWidth가 0이면 적당한 기본값(6) 사용
+                const containerW   = tableContainerWidth > 0 ? tableContainerWidth : COL_RAID + COL_CHAR * 6
+                const charsPerTable = Math.max(1, Math.floor((containerW - COL_RAID) / COL_CHAR))
+                const chunks = []
+                for (let i = 0; i < activeChars.length; i += charsPerTable)
+                  chunks.push(activeChars.slice(i, i + charsPerTable))
+                if (chunks.length === 1) return renderTable(chunks[0])
+                // 첫 번째 테이블 너비로 좌측 여백 계산 (가운데 정렬 기준)
+                const topTableW  = COL_RAID + COL_CHAR * chunks[0].length
+                const leftOffset = Math.max(0, Math.floor((containerW - topTableW) / 2))
+                return (
+                  <div className="space-y-3">
+                    {chunks.map((chunk, idx) => (
+                      <div
+                        key={idx}
+                        style={idx === 0
+                          ? { width: 'fit-content', margin: '0 auto' }
+                          : { marginLeft: leftOffset }
+                        }
+                      >
+                        {renderTable(chunk, true)}
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()
             )}
           </div>
         )

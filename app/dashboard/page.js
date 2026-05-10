@@ -117,8 +117,10 @@ export default async function DashboardPage() {
         server:       char.server,
         itemLevel:    char.itemLevel,
         combatPower:  char.combatPower ?? null,
-        account:      acc.label,
-        loaAccountId: acc.id,
+        sortOrder:    char.sortOrder,
+        account:        acc.label,
+        loaAccountId:   acc.id,
+        accountRepChar: acc.repCharName ?? null,
       })
       initialRaids[char.id] = char.characterRaids.map(r => ({
         raidId:      r.raidId,

@@ -5,7 +5,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { encrypt } from '@/lib/encrypt'
+import { encrypt, decrypt } from '@/lib/encrypt'
 
 export async function GET() {
   const session = await auth()
@@ -30,8 +30,10 @@ export async function GET() {
       server:       c.server,
       itemLevel:    c.itemLevel,
       combatPower:  c.combatPower ?? null,
-      account:      acc.label,
-      loaAccountId: acc.id,
+      sortOrder:    c.sortOrder,
+      account:        acc.label,
+      loaAccountId:   acc.id,
+      accountRepChar: acc.repCharName ?? null,
     }))
   )
 
@@ -42,32 +44,49 @@ export async function POST(request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 })
 
-  const { apiKey, label, characters } = await request.json()
+  const { apiKey, label, repCharName, characters } = await request.json()
   if (!characters?.length) {
     return NextResponse.json({ error: '추가할 캐릭터가 없습니다' }, { status: 400 })
   }
 
-  // 동일 label의 기존 계정 재사용, 없으면 생성
-  const accountLabel = label || '본계정'
-  let loaAccount = await prisma.loaAccount.findFirst({
-    where: { userId: session.user.id, label: accountLabel },
-  })
+  // API 키로 기존 계정 매칭 (같은 API 키 = 같은 계정)
+  // API 키가 없으면 label로 fallback
+  let loaAccount = null
+
+  if (apiKey) {
+    const allAccounts = await prisma.loaAccount.findMany({ where: { userId: session.user.id } })
+    for (const acc of allAccounts) {
+      try {
+        if (acc.apiKey && decrypt(acc.apiKey) === apiKey) { loaAccount = acc; break }
+      } catch {}
+    }
+  }
+
+  if (!loaAccount && !apiKey) {
+    const accountLabel = label || '본계정'
+    loaAccount = await prisma.loaAccount.findFirst({ where: { userId: session.user.id, label: accountLabel } })
+  }
 
   if (!loaAccount) {
+    // 새 계정 생성 — label 자동 부여
+    const existingCount = await prisma.loaAccount.count({ where: { userId: session.user.id } })
+    const newLabel = label || (existingCount === 0 ? '본계정' : `부계정${existingCount}`)
     loaAccount = await prisma.loaAccount.create({
       data: {
         userId:       session.user.id,
-        label:        accountLabel,
+        label:        newLabel,
+        repCharName:  repCharName || null,
         apiKey:       apiKey ? encrypt(apiKey) : '',
         lastSyncedAt: new Date(),
       },
     })
-  } else if (apiKey) {
-    // API 키 갱신
-    await prisma.loaAccount.update({
-      where: { id: loaAccount.id },
-      data:  { apiKey: encrypt(apiKey), lastSyncedAt: new Date() },
-    })
+  } else {
+    // 기존 계정 업데이트 (apiKey 갱신, repCharName 미설정 시 최초 설정)
+    const updateData = {}
+    if (apiKey) { updateData.apiKey = encrypt(apiKey); updateData.lastSyncedAt = new Date() }
+    if (repCharName && !loaAccount.repCharName) updateData.repCharName = repCharName
+    if (Object.keys(updateData).length > 0)
+      await prisma.loaAccount.update({ where: { id: loaAccount.id }, data: updateData })
   }
 
   // 기존 캐릭터 조회 (활성/비활성 모두)

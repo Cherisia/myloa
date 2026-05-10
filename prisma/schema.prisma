@@ -64,6 +64,7 @@ model LoaAccount {
   id           String   @id @default(cuid())
   userId       String
   label        String   @default("본계정")  // 본계정 / 부계정1 등
+  repCharName  String?  // 계정 대표캐릭터 이름 (최초 등록 시 설정, 이후 변경 가능)
   apiKey       String   // AES-256 암호화 저장
   lastSyncedAt DateTime?
   createdAt    DateTime @default(now())
