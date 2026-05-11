@@ -130,7 +130,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onCo
     const seenKeys = []
     const map = {}
     chars.forEach(c => {
-      const key = c.loaAccountId || c.account || 'unknown'
+      const key = c.expeditionId || c.account || 'unknown'
       if (!map[key]) {
         seenKeys.push(key)
         // accountRepChar가 있으면 우선, 없으면 첫 번째 등장 캐릭터(sortOrder 최소)로 fallback
@@ -140,7 +140,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onCo
     })
     return seenKeys.map(k => map[k])
   })()
-  const acctKey          = selectedChar ? (selectedChar.loaAccountId || selectedChar.account) : null
+  const acctKey          = selectedChar ? (selectedChar.expeditionId || selectedChar.account) : null
   const acctGoldCharCount = acctGoldMap.find(a => a.key === acctKey)?.count ?? 0
   const charHasGold = charRaidList.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
 
@@ -157,7 +157,7 @@ function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onCo
     // 계정당 골드 캐릭터 6개 초과 검사
     const accountMap = {}
     chars.forEach(char => {
-      const key = char.loaAccountId || char.account
+      const key = char.expeditionId || char.account
       if (!accountMap[key]) accountMap[key] = { label: char.account, goldCount: 0 }
       if ((raids[char.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
         accountMap[key].goldCount++
@@ -548,7 +548,7 @@ function ApiKeyGuideModal({ onClose }) {
 }
 
 // ── 캐릭터 설정 모달 ──────────────────────────────────────────────────────────
-function CharacterEditModal({ chars, raids, onAdd, onDelete, onClose, onReorder, initialShowAdd = false, isDemo = false, onLoginRequired }) {
+function CharacterEditModal({ chars, raids, onAdd, onDelete, onClose, onReorder, initialShowAdd = false, isDemo = false, onLoginRequired, activeTabLoaAccountId = null, getTargetTabName = null }) {
   const [showAddChar,      setShowAddChar]      = useState(initialShowAdd)
   const [selectedIds,      setSelectedIds]      = useState(new Set())
   const [showBatchConfirm, setShowBatchConfirm] = useState(false)
@@ -639,8 +639,8 @@ function CharacterEditModal({ chars, raids, onAdd, onDelete, onClose, onReorder,
     setShowBatchConfirm(false)
   }
 
-  const handleAdd = (newChars, apiKey, raidsByName, repCharName) => {
-    onAdd(newChars, apiKey, raidsByName, repCharName)
+  const handleAdd = (newChars, apiKey, raidsByName, repCharName, siblingNames) => {
+    onAdd(newChars, apiKey, raidsByName, repCharName, siblingNames)
     onClose()
   }
 
@@ -650,6 +650,9 @@ function CharacterEditModal({ chars, raids, onAdd, onDelete, onClose, onReorder,
         existingNames={new Set(chars.map(c => c.name))}
         onAdd={handleAdd}
         onClose={() => setShowAddChar(false)}
+        isLoggedIn={!isDemo}
+        activeTabLoaAccountId={activeTabLoaAccountId}
+        getTargetTabName={getTargetTabName}
       />
     )
   }
@@ -830,17 +833,20 @@ const DIFF_COLOR  = {
   stage1:    'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400',
 }
 
-function CharacterAddModal({ existingNames, onAdd, onClose }) {
-  const [charName,    setCharName]    = useState('')
-  const [apiKey,      setApiKey]      = useState('')
-  const [keySaved,    setKeySaved]    = useState(false)
-  const [loading,     setLoading]     = useState(false)
-  const [error,       setError]       = useState('')
-  const [results,     setResults]     = useState(null)
-  const [selected,    setSelected]    = useState(new Set())
-  const [showGuide,   setShowGuide]   = useState(false)
-  const [step,        setStep]        = useState('search') // 'search' | 'choose' | 'setup'
-  const [strategies,  setStrategies]  = useState({})      // { [name]: 'trade'|'bound' }
+function CharacterAddModal({ existingNames, onAdd, onClose, isLoggedIn = true, activeTabLoaAccountId = null, getTargetTabName = null }) {
+  const [charName,            setCharName]            = useState('')
+  const [apiKey,              setApiKey]              = useState('')
+  const [keySaved,            setKeySaved]            = useState(false)
+  const [loading,             setLoading]             = useState(false)
+  const [error,               setError]               = useState('')
+  const [results,             setResults]             = useState(null)
+  const [selected,            setSelected]            = useState(new Set())
+  const [showGuide,           setShowGuide]           = useState(false)
+  const [step,                setStep]                = useState('search') // 'search' | 'choose' | 'setup'
+  const [strategies,          setStrategies]          = useState({})      // { [name]: 'trade'|'bound' }
+  const [isNewAccount,         setIsNewAccount]         = useState(false)
+  const [matchedExpeditionId,  setMatchedExpeditionId]  = useState(null)
+  const [targetTabName,        setTargetTabName]        = useState(null)   // 저장될 탭 이름 (null = 새 탭)
 
   useEffect(() => {
     const saved = localStorage.getItem(LOA_KEY_STORAGE)
@@ -850,7 +856,7 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
   const search = async () => {
     if (!charName.trim()) return setError('캐릭터명을 입력하세요')
     if (!apiKey.trim())   return setError('API 키를 입력하세요')
-    setLoading(true); setError(''); setResults(null); setSelected(new Set())
+    setLoading(true); setError(''); setResults(null); setSelected(new Set()); setIsNewAccount(false); setMatchedExpeditionId(null); setTargetTabName(null)
     try {
       const res  = await fetch(`/api/loa?characterName=${encodeURIComponent(charName.trim())}&apiKey=${encodeURIComponent(apiKey.trim())}`)
       const data = await res.json()
@@ -859,6 +865,26 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
       setKeySaved(true)
       setResults(data)
       setSelected(new Set())
+      // 계정 확인 (현재 탭에 캐릭터가 있을 때만 의미 있음)
+      if (isLoggedIn) {
+        try {
+          // siblingNames: 검색 결과의 모든 캐릭터명 (같은 원정대)
+          const siblingNamesParam = (data || []).map(c => c.name).join(',')
+          const chkParams = new URLSearchParams()
+          if (apiKey.trim()) chkParams.set('apiKey', apiKey.trim())
+          if (siblingNamesParam) chkParams.set('siblingNames', siblingNamesParam)
+          const chkRes  = await fetch(`/api/characters/check-account?${chkParams}`)
+          const chkData  = await chkRes.json()
+          const matchedExpId = chkData.matchedExpeditionId ?? null
+          setIsNewAccount(chkData.isNewAccount === true)
+          setMatchedExpeditionId(matchedExpId)
+          // 현재 탭에 캐릭터가 있고 다른 원정대일 때, 저장될 탭 이름 미리 계산
+          const isDifferentAcct = activeTabLoaAccountId && (chkData.isNewAccount || (matchedExpId && matchedExpId !== activeTabLoaAccountId))
+          if (isDifferentAcct && getTargetTabName) {
+            setTargetTabName(getTargetTabName(matchedExpId)) // null이면 새 탭 생성 예정
+          }
+        } catch {}
+      }
     } catch (e) {
       setError(e.message)
     } finally {
@@ -896,12 +922,14 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
   }
 
   const handleConfirm = () => {
-    onAdd(selectedChars, apiKey.trim(), raidsByName, charName.trim())
+    const siblingNames = (results || []).map(c => c.name)
+    onAdd(selectedChars, apiKey.trim(), raidsByName, charName.trim(), siblingNames)
     onClose()
   }
 
   const handleManualSetup = () => {
-    onAdd(selectedChars, apiKey.trim(), {}, charName.trim())
+    const siblingNames = (results || []).map(c => c.name)
+    onAdd(selectedChars, apiKey.trim(), {}, charName.trim(), siblingNames)
     onClose()
   }
 
@@ -987,15 +1015,29 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
           </div>
 
           {/* 푸터 */}
-          <div className="px-5 py-4 border-t border-gray-100 dark:border-[#383838] flex-shrink-0 flex gap-2">
-            <button onClick={() => setStep('search')}
-              className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
-              이전
-            </button>
-            <button onClick={handleConfirm}
-              className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
-              {selectedChars.length}개 캐릭터 추가
-            </button>
+          <div className="px-5 pb-4 border-t border-gray-100 dark:border-[#383838] flex-shrink-0">
+            {/* 현재 탭에 캐릭터가 있고, 검색한 계정이 다를 때만 안내 표시 */}
+            {activeTabLoaAccountId && (isNewAccount || (matchedExpeditionId && matchedExpeditionId !== activeTabLoaAccountId)) && (
+              <div className="flex items-start gap-2 mt-3 mb-3 px-3 py-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                  현재 원정대와 <span className="ns-bold">다른 계정</span>의 캐릭터입니다.<br/>
+                  <span className="ns-bold">{targetTabName ? `${targetTabName} 탭` : '새 원정대 탭'}</span>에 저장됩니다.
+                </p>
+              </div>
+            )}
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => setStep('search')}
+                className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                이전
+              </button>
+              <button onClick={handleConfirm}
+                className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+                {selectedChars.length}개 캐릭터 추가
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1125,16 +1167,29 @@ function CharacterAddModal({ existingNames, onAdd, onClose }) {
           </div>
         )}
 
-        <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#383838] mt-3">
-          <button
-            onClick={results !== null ? () => setResults(null) : onClose}
-            className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
-            {results !== null ? '이전' : '취소'}
-          </button>
-          <button onClick={goSetup} disabled={newCount === 0}
-            className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-yellow-900 transition-colors">
-            선택
-          </button>
+        <div className="px-5 pb-4 border-t border-gray-100 dark:border-[#383838] mt-3">
+          {activeTabLoaAccountId && newCount > 0 && (isNewAccount || (matchedExpeditionId && matchedExpeditionId !== activeTabLoaAccountId)) && (
+            <div className="flex items-start gap-2 mt-3 mb-3 px-3 py-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                현재 원정대와 <span className="ns-bold">다른 계정</span>의 캐릭터입니다.<br/>
+                <span className="ns-bold">새 원정대 탭</span>에 자동으로 추가됩니다.
+              </p>
+            </div>
+          )}
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={results !== null ? () => setResults(null) : onClose}
+              className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+              {results !== null ? '이전' : '취소'}
+            </button>
+            <button onClick={goSetup} disabled={newCount === 0}
+              className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-yellow-900 transition-colors">
+              선택
+            </button>
+          </div>
         </div>
       </div>
       {showGuide && <ApiKeyGuideModal onClose={() => setShowGuide(false)} />}
@@ -2105,6 +2160,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [showNoChar,       setShowNoChar]       = useState(false)
   const [showLoginGuide,      setShowLoginGuide]      = useState(false)
   const [confirmDeleteCharId, setConfirmDeleteCharId] = useState(null)
+  const [confirmDeletePageId, setConfirmDeletePageId] = useState(null) // 탭 삭제 확인
   const [syncing, setSyncing]                   = useState(false)
   const [showConfetti, setShowConfetti]         = useState(false)
   const [exRaidError, setExRaidError]           = useState(null) // { raidName, conflictCharName }
@@ -2219,6 +2275,27 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     const newName = `원정대 ${expPages.length + 1}`
     setExpPages(prev => [...prev, { id: newId, name: newName }])
     setActivePageId(newId)
+  }
+
+  // 탭 삭제 — 내부 캐릭터·레이드 모두 제거
+  const deleteExpPage = (pageId) => {
+    const firstPageId = expPages[0]?.id
+    const pageChars = chars.filter(c => (charPageMap[c.id] || firstPageId) === pageId)
+    const deletedIds = new Set(pageChars.map(c => c.id))
+
+    setChars(prev => prev.filter(c => !deletedIds.has(c.id)))
+    setRaids(prev => { const n = { ...prev }; deletedIds.forEach(id => delete n[id]); return n })
+    setCustomItems(prev => { const n = { ...prev }; deletedIds.forEach(id => delete n[id]); return n })
+    setCharPageMap(prev => { const n = { ...prev }; deletedIds.forEach(id => delete n[id]); return n })
+
+    if (isLoggedIn) {
+      pageChars.forEach(c => fetch(`/api/characters?id=${c.id}`, { method: 'DELETE' }).catch(() => {}))
+    }
+
+    const remaining = expPages.filter(p => p.id !== pageId)
+    setExpPages(remaining)
+    if (activePageId === pageId)
+      setActivePageId(remaining[remaining.length - 1]?.id ?? null)
   }
 
   // 페이지 이름 저장
@@ -2403,10 +2480,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       const currentChar = chars.find(c => c.id === charId)
       const alreadyHas = (raids[charId] || []).some(e => e.raidId === raidId)
       if (!alreadyHas && currentChar) {
-        const accountKey = currentChar.loaAccountId || currentChar.account
+        const accountKey = currentChar.expeditionId || currentChar.account
         const conflict = chars.find(c => {
           if (c.id === charId) return false
-          const cKey = c.loaAccountId || c.account
+          const cKey = c.expeditionId || c.account
           return cKey === accountKey && (raids[c.id] || []).some(e => e.raidId === raidId)
         })
         if (conflict) {
@@ -2437,10 +2514,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           const currentGoldCount  = list.filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)).length
           const charAlreadyHasGold = currentGoldCount > 0
           const curChar  = chars.find(c => c.id === charId)
-          const curAcctKey = curChar?.loaAccountId || curChar?.account
+          const curAcctKey = curChar?.expeditionId || curChar?.account
           const acctGoldChars = chars.filter(c =>
             c.id !== charId &&
-            (c.loaAccountId || c.account) === curAcctKey &&
+            (c.expeditionId || c.account) === curAcctKey &&
             (prev[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
           ).length
           const isGoldCheck = EX_RAID_IDS.has(raidId) ? true
@@ -2471,10 +2548,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         const charHasOtherGold = list.some((e, i) => i !== idx && e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
         if (!charHasOtherGold) {
           const curChar = chars.find(c => c.id === charId)
-          const curAcctKey = curChar?.loaAccountId || curChar?.account
+          const curAcctKey = curChar?.expeditionId || curChar?.account
           const acctGoldChars = chars.filter(c =>
             c.id !== charId &&
-            (c.loaAccountId || c.account) === curAcctKey &&
+            (c.expeditionId || c.account) === curAcctKey &&
             (prev[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
           ).length
           if (acctGoldChars >= GOLD_CHAR_LIMIT) return prev
@@ -2570,10 +2647,37 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     setRaids(newRaids)
   }
 
+  // expeditionId로 해당 원정대 캐릭터가 속한 탭 이름 조회
+  // null 반환 → 탭 없음 (새 탭 생성 예정)
+  const getTargetTabName = (expeditionId) => {
+    if (!expeditionId) return null
+    const fid = expPages[0]?.id
+    for (const page of expPages) {
+      if (chars.some(c => c.expeditionId === expeditionId && (charPageMap[c.id] || fid) === page.id))
+        return page.name
+    }
+    return null
+  }
+
   // 개별 캐릭터 삭제
   const deleteChar = (charId) => {
-    setChars(prev => prev.filter(c => c.id !== charId))
+    const updatedChars = chars.filter(c => c.id !== charId)
+    setChars(updatedChars)
     setRaids(prev => { const n = { ...prev }; delete n[charId]; return n })
+
+    // 탭 자동 정리: 삭제 후 해당 탭이 비면 탭도 제거 (탭이 2개 이상일 때만)
+    if (expPages.length > 1) {
+      const firstPageId = expPages[0]?.id
+      const deletedPage  = charPageMap[charId] || firstPageId
+      const stillHasChar = updatedChars.some(c => (charPageMap[c.id] || firstPageId) === deletedPage)
+      if (!stillHasChar) {
+        const remaining = expPages.filter(p => p.id !== deletedPage)
+        setExpPages(remaining)
+        if (activePageId === deletedPage)
+          setActivePageId(remaining[remaining.length - 1]?.id ?? null)
+      }
+    }
+
     if (isLoggedIn) fetch(`/api/characters?id=${charId}`, { method: 'DELETE' }).catch(() => {})
   }
 
@@ -2600,13 +2704,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     // 계정별 최소 sortOrder 계산 (tmp 캐릭터는 배열 인덱스를 fallback으로 사용)
     const acctMinOrder = {}
     arr.forEach((c, idx) => {
-      const key   = c.loaAccountId || c.account || 'unknown'
+      const key   = c.expeditionId || c.account || 'unknown'
       const order = c.sortOrder != null ? c.sortOrder : 1_000_000 + idx
       if (!(key in acctMinOrder) || order < acctMinOrder[key]) acctMinOrder[key] = order
     })
     return [...arr].sort((a, b) => {
-      const aKey = a.loaAccountId || a.account || 'unknown'
-      const bKey = b.loaAccountId || b.account || 'unknown'
+      const aKey = a.expeditionId || a.account || 'unknown'
+      const bKey = b.expeditionId || b.account || 'unknown'
       const acctDiff = (acctMinOrder[aKey] ?? 9_999_999) - (acctMinOrder[bKey] ?? 9_999_999)
       if (acctDiff !== 0) return acctDiff
       if (b.itemLevel !== a.itemLevel) return b.itemLevel - a.itemLevel
@@ -2615,7 +2719,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   }
 
   // 캐릭터 추가 (raidsByName이 있으면 자동 배정, 없으면 레이드 설정 모달 즉시 오픈)
-  const addChars = async (newChars, apiKey, raidsByName = {}, repCharName = null) => {
+  const addChars = async (newChars, apiKey, raidsByName = {}, repCharName = null, siblingNames = []) => {
     const isManual   = Object.keys(raidsByName).length === 0
     const timestamp  = Date.now()
     const newNames   = new Set(newChars.map(c => c.name))
@@ -2628,7 +2732,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         id: `tmp_${timestamp}_${i}`,
         name: c.name, class: c.class, server: c.server,
         itemLevel: c.itemLevel, combatPower: c.combatPower ?? null,
-        account: '본계정', loaAccountId: c.loaAccountId ?? null,
+        account: '본계정', loaAccountId: c.loaAccountId ?? null, expeditionId: c.expeditionId ?? null,
       }))
     if (tmpChars.length === 0) return
 
@@ -2646,14 +2750,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       const acctTopMap  = new Map()
       const acctHasEx   = new Map()
       allForAcct.forEach(c => {
-        const key = c.loaAccountId || c.account || 'default'
+        const key = c.expeditionId || c.account || 'default'
         const cur = acctTopMap.get(key)
         if (!cur || c.itemLevel > cur.itemLevel) acctTopMap.set(key, c)
         if (!newNames.has(c.name) && (raids[c.id] || []).some(e => EX_RAID_IDS.has(e.raidId)))
           acctHasEx.set(key, true)
       })
       tmpChars.forEach(tc => {
-        const key    = tc.loaAccountId || tc.account || 'default'
+        const key    = tc.expeditionId || tc.account || 'default'
         const isTop  = acctTopMap.get(key)?.id === tc.id && !acctHasEx.get(key)
         const entries = computeAutoRaids(tc, isTop)
         if (entries.length > 0) optRaids[tc.id] = entries
@@ -2690,7 +2794,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     try {
       await fetch('/api/characters', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey, label: '본계정', repCharName, characters: newChars }),
+        body: JSON.stringify({ apiKey, label: '본계정', repCharName, characters: newChars, siblingNames }),
       })
       const res = await fetch('/api/characters')
       if (!res.ok) return
@@ -2707,6 +2811,53 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       // chars 실제 데이터로 교체 (동일 정렬 적용)
       setChars(sortChars(data))
 
+      // ── 캐릭터 → 원정대 탭 라우팅 (tmp→real 교체 이후에 적용) ─────────────
+      // 규칙:
+      //  1. 현재 탭이 비어있거나 같은 계정 → 현재 탭
+      //  2. 다른 계정인데 그 계정이 이미 다른 탭에 있음 → 그 탭
+      //  3. 다른 계정이고 탭이 없음 → 새 탭 생성
+      const firstPageId    = expPages[0]?.id
+      const activeTabIsEmpty  = !chars.some(c => (charPageMap[c.id] || firstPageId) === activePageId)
+      const activeTabExpId = chars.find(c => (charPageMap[c.id] || firstPageId) === activePageId)?.expeditionId ?? null
+      // 기존 캐릭터의 원정대 → 탭 매핑
+      const existingAcctToPage = new Map()
+      chars.forEach(c => {
+        if (c.expeditionId && !existingAcctToPage.has(c.expeditionId))
+          existingAcctToPage.set(c.expeditionId, charPageMap[c.id] || firstPageId)
+      })
+
+      let newPageMapEntries = {}
+      const brandNewPages   = []
+      const newAcctToPage   = new Map() // 이번 추가로 새로 생성된 원정대→탭
+      let pageSeq = expPages.length
+
+      const newCharNames = new Set(tmpChars.map(tc => tc.name))
+      data.filter(d => newCharNames.has(d.name)).forEach(d => {
+        const acctId = d.expeditionId
+        if (!acctId || activeTabIsEmpty || acctId === activeTabExpId) {
+          // 현재 탭과 같은 계정 또는 현재 탭이 비어있음
+          newPageMapEntries[d.id] = activePageId
+        } else if (existingAcctToPage.has(acctId)) {
+          // 이미 다른 탭에 있는 계정 → 그 탭
+          newPageMapEntries[d.id] = existingAcctToPage.get(acctId)
+        } else if (newAcctToPage.has(acctId)) {
+          // 이번 추가에서 이미 탭 생성된 계정
+          newPageMapEntries[d.id] = newAcctToPage.get(acctId)
+        } else {
+          // 완전히 새 계정 → 새 탭 생성
+          pageSeq++
+          const newPageId = `page_${Date.now()}_${acctId.slice(-6)}`
+          brandNewPages.push({ id: newPageId, name: `원정대 ${pageSeq}` })
+          newAcctToPage.set(acctId, newPageId)
+          newPageMapEntries[d.id] = newPageId
+        }
+      })
+
+      if (brandNewPages.length > 0) setExpPages(prev => [...prev, ...brandNewPages])
+      // 다른 탭으로 이동이 발생한 경우 마지막 대상 탭으로 전환
+      const routedToOther = Object.values(newPageMapEntries).find(pid => pid !== activePageId)
+      if (routedToOther) setActivePageId(routedToOther)
+
       // raids / customItems / charPageMap: tmp ID → real ID로 키 교체
       if (tmpToReal.size > 0) {
         setRaids(prev => {
@@ -2722,6 +2873,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         setCharPageMap(prev => {
           const next = { ...prev }
           tmpToReal.forEach((realId, tmpId) => { if (next[tmpId]) { next[realId] = next[tmpId]; delete next[tmpId] } })
+          // 새 계정 캐릭터들은 새 페이지로 덮어씀 (tmp→real 이후에 적용)
+          Object.assign(next, newPageMapEntries)
           return next
         })
 
@@ -2729,6 +2882,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         tmpToReal.forEach((realId, tmpId) => {
           ;(optRaids[tmpId] || []).forEach(entry => persistRaid(realId, entry))
         })
+      } else if (Object.keys(newPageMapEntries).length > 0) {
+        // tmpToReal이 없지만 새 페이지 배정은 있는 경우
+        setCharPageMap(prev => ({ ...prev, ...newPageMapEntries }))
       }
     } catch {}
   }
@@ -2843,27 +2999,32 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             {expPages.map(page => {
               const isActive = page.id === activePageId
               return (
-                <button
+                <div
                   key={page.id}
-                  onClick={() => { setActivePageId(page.id); setEditingPageId(null) }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors flex-shrink-0 ${
-                    isActive
-                      ? 'bg-yellow-300 dark:bg-yellow-500/30 text-yellow-900 dark:text-yellow-300'
-                      : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
-                  }`}
+                  className="group/tab relative flex-shrink-0"
                 >
                   {editingPageId === page.id ? (
+                    /* 이름 편집 중: input을 button 밖에 독립적으로 렌더 */
                     <input
                       autoFocus
                       value={editingPageName}
                       onChange={e => setEditingPageName(e.target.value)}
                       onBlur={savePageName}
-                      onKeyDown={e => { if (e.key === 'Enter') savePageName(); if (e.key === 'Escape') { setEditingPageId(null); setEditingPageName('') } }}
-                      onClick={e => e.stopPropagation()}
-                      className="bg-transparent outline-none w-20 text-xs ns-bold"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter')  savePageName()
+                        if (e.key === 'Escape') { setEditingPageId(null); setEditingPageName('') }
+                      }}
+                      className="px-3 py-1.5 rounded-full text-xs ns-bold bg-yellow-300 dark:bg-yellow-500/30 text-yellow-900 dark:text-yellow-300 outline-none w-28"
                     />
                   ) : (
-                    <>
+                    <button
+                      onClick={() => { setActivePageId(page.id); setEditingPageId(null) }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
+                        isActive
+                          ? 'bg-yellow-300 dark:bg-yellow-500/30 text-yellow-900 dark:text-yellow-300'
+                          : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                      }`}
+                    >
                       <span>{page.name}</span>
                       {isActive && (
                         <span
@@ -2877,9 +3038,31 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           </svg>
                         </span>
                       )}
-                    </>
+                    </button>
                   )}
-                </button>
+                  {/* 탭 삭제 버튼 — 탭이 2개 이상일 때만 표시 */}
+                  {expPages.length > 1 && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        const firstPageId = expPages[0]?.id
+                        const hasChars = chars.some(c => (charPageMap[c.id] || firstPageId) === page.id)
+                        if (hasChars) {
+                          setConfirmDeletePageId(page.id)
+                        } else {
+                          deleteExpPage(page.id)
+                        }
+                      }}
+                      title="원정대 삭제"
+                      className={`absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gray-200 dark:bg-[#444] text-gray-500 dark:text-gray-400 hover:bg-red-400 dark:hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors
+                        ${isActive ? 'opacity-100' : 'opacity-0 group-hover/tab:opacity-100'}`}
+                    >
+                      <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
               )
             })}
             {/* + 페이지 추가 버튼 */}
@@ -3848,10 +4031,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
       {/* ── 대표 캐릭터 변경 모달 ── */}
       {showRepCharModal && (() => {
-        // 계정별로 그룹화
+        // 원정대별로 그룹화
         const accounts = chars.reduce((acc, c) => {
-          if (!acc[c.loaAccountId]) acc[c.loaAccountId] = { label: c.account, chars: [] }
-          acc[c.loaAccountId].chars.push(c)
+          const key = c.expeditionId || c.loaAccountId
+          if (!acc[key]) acc[key] = { label: c.account, chars: [] }
+          acc[key].chars.push(c)
           return acc
         }, {})
         return (
@@ -3958,6 +4142,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           onClose={() => { setShowCharEdit(false); setCharEditOpenAdd(false) }}
           isDemo={isDemo}
           onLoginRequired={() => { setShowCharEdit(false); setShowLoginGuide(true) }}
+          activeTabLoaAccountId={activeChars[0]?.expeditionId ?? null}
+          getTargetTabName={getTargetTabName}
         />
       )}
       {showAutoSetup && (
@@ -4007,6 +4193,41 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 >취소</button>
                 <button
                   onClick={() => { deleteChar(confirmDeleteCharId); setConfirmDeleteCharId(null) }}
+                  className="flex-1 rounded-lg bg-red-500 hover:bg-red-400 px-4 py-2 text-xs ns-bold text-white transition-colors"
+                >삭제</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ── 원정대 탭 삭제 확인 모달 ── */}
+      {confirmDeletePageId && (() => {
+        const page = expPages.find(p => p.id === confirmDeletePageId)
+        const firstPageId = expPages[0]?.id
+        const pageChars = chars.filter(c => (charPageMap[c.id] || firstPageId) === confirmDeletePageId)
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={() => setConfirmDeletePageId(null)}>
+            <div
+              className="relative w-full max-w-xs rounded-2xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
+              onClick={e => e.stopPropagation()}
+            >
+              <button onClick={() => setConfirmDeletePageId(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
+              <div className="space-y-1.5">
+                <p className="text-sm ns-bold text-gray-900 dark:text-white">원정대 삭제</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                  <span className="ns-bold text-gray-800 dark:text-gray-200">{page?.name}</span> 원정대를 삭제하면<br/>
+                  캐릭터 <span className="ns-bold text-red-500">{pageChars.length}개</span>와 설정된 모든 레이드 숙제가<br/>
+                  함께 삭제됩니다.
+                </p>
+              </div>
+              <div className="flex gap-2 w-full">
+                <button
+                  onClick={() => setConfirmDeletePageId(null)}
+                  className="flex-1 rounded-lg border border-gray-200 dark:border-[#444] px-4 py-2 text-xs ns-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
+                >취소</button>
+                <button
+                  onClick={() => { deleteExpPage(confirmDeletePageId); setConfirmDeletePageId(null) }}
                   className="flex-1 rounded-lg bg-red-500 hover:bg-red-400 px-4 py-2 text-xs ns-bold text-white transition-colors"
                 >삭제</button>
               </div>

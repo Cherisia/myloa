@@ -23,6 +23,7 @@ model User {
   accounts         Account[]
   sessions         Session[]
   loaAccounts      LoaAccount[]
+  loaExpeditions   LoaExpedition[]
   expeditionMember ExpeditionMember[]
   leadingExpeditions Expedition[]     @relation("ExpeditionLeader")
   groupMemberships GroupMember[]
@@ -58,19 +59,33 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// ─── 로스트아크 원정대 ────────────────────────────────────────────────────────
+
+model LoaExpedition {
+  id          String   @id @default(cuid())
+  userId      String
+  repCharName String?  // 원정대 대표캐릭터 이름 (원정대 식별에 사용)
+  createdAt   DateTime @default(now())
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts LoaAccount[]
+}
+
 // ─── 로스트아크 계정 ──────────────────────────────────────────────────────────
 
 model LoaAccount {
-  id           String   @id @default(cuid())
-  userId       String
-  label        String   @default("본계정")  // 본계정 / 부계정1 등
-  repCharName  String?  // 계정 대표캐릭터 이름 (최초 등록 시 설정, 이후 변경 가능)
-  apiKey       String   // AES-256 암호화 저장
-  lastSyncedAt DateTime?
-  createdAt    DateTime @default(now())
+  id               String   @id @default(cuid())
+  userId           String
+  loaExpeditionId  String?  // LoaExpedition FK (nullable — 마이그레이션 호환)
+  label            String   @default("본계정")  // 본계정 / 부계정1 등
+  repCharName      String?  // 계정 대표캐릭터 이름 (최초 등록 시 설정, 이후 변경 가능)
+  apiKey           String   // AES-256 암호화 저장
+  lastSyncedAt     DateTime?
+  createdAt        DateTime @default(now())
 
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  characters Character[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expedition   LoaExpedition? @relation(fields: [loaExpeditionId], references: [id])
+  characters   Character[]
 }
 
 // ─── 캐릭터 ──────────────────────────────────────────────────────────────────

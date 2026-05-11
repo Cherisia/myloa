@@ -120,6 +120,7 @@ export default async function DashboardPage() {
         sortOrder:    char.sortOrder,
         account:        acc.label,
         loaAccountId:   acc.id,
+        expeditionId:   acc.loaExpeditionId ?? acc.id,
         accountRepChar: acc.repCharName ?? null,
       })
       initialRaids[char.id] = char.characterRaids.map(r => ({

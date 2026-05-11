@@ -33,6 +33,7 @@ export async function GET() {
       sortOrder:    c.sortOrder,
       account:        acc.label,
       loaAccountId:   acc.id,
+      expeditionId:   acc.loaExpeditionId ?? acc.id,
       accountRepChar: acc.repCharName ?? null,
     }))
   )
@@ -44,16 +45,31 @@ export async function POST(request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 })
 
-  const { apiKey, label, repCharName, characters } = await request.json()
+  const { apiKey, label, repCharName, characters, siblingNames } = await request.json()
   if (!characters?.length) {
     return NextResponse.json({ error: '추가할 캐릭터가 없습니다' }, { status: 400 })
   }
 
-  // API 키로 기존 계정 매칭 (같은 API 키 = 같은 계정)
-  // API 키가 없으면 label로 fallback
+  // ── 원정대 매칭 순서 ──────────────────────────────────────────────────────
+  // 1순위: siblingNames(같은 원정대 캐릭터명 목록)로 기존 Character → LoaAccount 조회
+  // 2순위: API 키로 기존 LoaAccount 매칭
+  // 3순위: 없으면 새 LoaAccount + LoaExpedition 생성
   let loaAccount = null
 
-  if (apiKey) {
+  if (siblingNames?.length) {
+    // 내 캐릭터 중 siblingNames에 포함된 캐릭터의 계정을 찾는다
+    const matchedChar = await prisma.character.findFirst({
+      where: {
+        name: { in: siblingNames },
+        loaAccount: { userId: session.user.id },
+        isActive: true,
+      },
+      include: { loaAccount: true },
+    })
+    if (matchedChar) loaAccount = matchedChar.loaAccount
+  }
+
+  if (!loaAccount && apiKey) {
     const allAccounts = await prisma.loaAccount.findMany({ where: { userId: session.user.id } })
     for (const acc of allAccounts) {
       try {
@@ -62,52 +78,59 @@ export async function POST(request) {
     }
   }
 
-  if (!loaAccount && !apiKey) {
-    const accountLabel = label || '본계정'
-    loaAccount = await prisma.loaAccount.findFirst({ where: { userId: session.user.id, label: accountLabel } })
-  }
-
   if (!loaAccount) {
-    // 새 계정 생성 — label 자동 부여
+    // 새 계정 + 원정대 생성
     const existingCount = await prisma.loaAccount.count({ where: { userId: session.user.id } })
     const newLabel = label || (existingCount === 0 ? '본계정' : `부계정${existingCount}`)
-    loaAccount = await prisma.loaAccount.create({
+
+    // LoaExpedition 먼저 생성
+    const newExpedition = await prisma.loaExpedition.create({
       data: {
-        userId:       session.user.id,
-        label:        newLabel,
-        repCharName:  repCharName || null,
-        apiKey:       apiKey ? encrypt(apiKey) : '',
-        lastSyncedAt: new Date(),
+        userId:      session.user.id,
+        repCharName: repCharName || null,
       },
     })
+
+    loaAccount = await prisma.loaAccount.create({
+      data: {
+        userId:           session.user.id,
+        loaExpeditionId:  newExpedition.id,
+        label:            newLabel,
+        repCharName:      repCharName || null,
+        apiKey:           apiKey ? encrypt(apiKey) : '',
+        lastSyncedAt:     new Date(),
+      },
+    })
+    loaAccount.loaExpeditionId = newExpedition.id
   } else {
     // 기존 계정 업데이트 (apiKey 갱신, repCharName 미설정 시 최초 설정)
     const updateData = {}
     if (apiKey) { updateData.apiKey = encrypt(apiKey); updateData.lastSyncedAt = new Date() }
     if (repCharName && !loaAccount.repCharName) updateData.repCharName = repCharName
     if (Object.keys(updateData).length > 0)
-      await prisma.loaAccount.update({ where: { id: loaAccount.id }, data: updateData })
+      loaAccount = await prisma.loaAccount.update({ where: { id: loaAccount.id }, data: updateData })
+
+    // loaExpeditionId가 없으면 원정대 생성 (구형 데이터 호환)
+    if (!loaAccount.loaExpeditionId) {
+      const newExpedition = await prisma.loaExpedition.create({
+        data: { userId: session.user.id, repCharName: loaAccount.repCharName || null },
+      })
+      loaAccount = await prisma.loaAccount.update({
+        where: { id: loaAccount.id },
+        data:  { loaExpeditionId: newExpedition.id },
+      })
+    }
   }
 
-  // 기존 캐릭터 조회 (활성/비활성 모두)
+  // 기존 활성 캐릭터 조회
   const existing = await prisma.character.findMany({
     where:  { loaAccountId: loaAccount.id },
-    select: { name: true, isActive: true },
+    select: { name: true },
   })
-  const activeNames   = new Set(existing.filter(c =>  c.isActive).map(c => c.name))
-  const inactiveNames = new Set(existing.filter(c => !c.isActive).map(c => c.name))
+  const existingNames = new Set(existing.map(c => c.name))
 
-  // 소프트삭제 캐릭터 재활성화
-  const toReactivate = characters.filter(c => inactiveNames.has(c.name)).map(c => c.name)
-  if (toReactivate.length > 0) {
-    await prisma.character.updateMany({
-      where: { loaAccountId: loaAccount.id, name: { in: toReactivate }, isActive: false },
-      data:  { isActive: true },
-    })
-  }
-
-  // 완전히 새로운 캐릭터만 생성
-  const newChars = characters.filter(c => !activeNames.has(c.name) && !inactiveNames.has(c.name))
+  // 없는 캐릭터만 생성
+  const newChars = characters.filter(c => !existingNames.has(c.name))
   if (newChars.length > 0) {
     await prisma.character.createMany({
       data: newChars.map((c, i) => ({
@@ -123,7 +146,12 @@ export async function POST(request) {
     })
   }
 
-  return NextResponse.json({ success: true, added: newChars.length + toReactivate.length })
+  return NextResponse.json({
+    success:      true,
+    added:        newChars.length,
+    expeditionId: loaAccount.loaExpeditionId ?? loaAccount.id,
+    loaAccountId: loaAccount.id,
+  })
 }
 
 // PATCH /api/characters → sortOrder 일괄 업데이트
@@ -163,6 +191,7 @@ export async function DELETE(request) {
   })
   if (!char) return NextResponse.json({ error: '권한 없음' }, { status: 403 })
 
-  await prisma.character.update({ where: { id }, data: { isActive: false } })
+  // 하드 삭제 — CharacterRaid는 onDelete: Cascade로 자동 삭제
+  await prisma.character.delete({ where: { id } })
   return NextResponse.json({ success: true })
 }
