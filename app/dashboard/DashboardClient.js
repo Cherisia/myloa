@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import DiscordIcon from '@/components/DiscordIcon'
 import { RAIDS, CLASS_COLOR, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
@@ -16,7 +16,7 @@ import CharGoldBadges from './components/CharGoldBadges'
 import RaidCell from './components/RaidCell'
 import Confetti from './components/Confetti'
 
-export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialCustomItems = {} }) {
+export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialCustomItems = {}, initialExpNames = {} }) {
   const isDemo = !isLoggedIn
   const [chars, setChars] = useState(initialChars)
   const [raids, setRaids] = useState(initialRaids)
@@ -29,6 +29,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [confirmDeleteCharId, setConfirmDeleteCharId] = useState(null)
   const [confirmDeletePageId, setConfirmDeletePageId] = useState(null) // 탭 삭제 확인
   const [syncing, setSyncing]                   = useState(false)
+  const [addingChars, setAddingChars]           = useState(false)
   const [showConfetti, setShowConfetti]         = useState(false)
   const [exRaidError, setExRaidError]           = useState(null) // { raidName, conflictCharName }
   const [cardView, setCardView]                 = useState(true)
@@ -42,74 +43,82 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [raidSettingsCharId, setRaidSettingsCharId] = useState(null)
   const [customSettingsCharId, setCustomSettingsCharId] = useState(null)
   // 원정대 페이지
-  const [expPages, setExpPages]                 = useState([])   // [{id, name}]
   const [activePageId, setActivePageId]         = useState(null)
   const [editingPageId, setEditingPageId]       = useState(null) // 이름 편집 중인 페이지 id
   const [editingPageName, setEditingPageName]   = useState('')
-  const [charPageMap, setCharPageMap]           = useState({})   // charId -> pageId
+  const [expNames, setExpNames]                 = useState(initialExpNames)   // expeditionId -> 사용자 지정 탭 이름
   const [customItems, setCustomItems]           = useState(initialCustomItems) // {charId: [{id, name, type, image}]}
   const [customChecks, setCustomChecks]         = useState({})   // {charId: {itemId: bool}}
   const [restGauge, setRestGauge]               = useState({})   // {charId: {itemId: 0-100}}
   const [restGaugeDeducted, setRestGaugeDeducted] = useState({}) // {charId: {itemId: bool}} — 체크 시 실제 차감 여부
+  const [lsReady, setLsReady]                   = useState(false) // localStorage 로드 완료 여부
   const wasCompleteRef                          = useRef(false)
   const tableWrapRef                            = useRef(null)
   const [tableContainerWidth, setTableContainerWidth] = useState(0)
 
-  // 원정대 페이지 localStorage 동기화
+  // 원정대 탭 = chars의 expeditionId 기준으로 자동 파생
+  const expPages = useMemo(() => {
+    const expIds = []
+    const seen = new Set()
+    chars.forEach(c => {
+      if (c.expeditionId && !seen.has(c.expeditionId)) {
+        seen.add(c.expeditionId)
+        expIds.push(c.expeditionId)
+      }
+    })
+    return expIds.map((id, i) => ({
+      id,
+      name: expNames[id] || `원정대 ${i + 1}`,
+    }))
+  }, [chars, expNames])
+
+  // 원정대 탭 초기화 — activePageId만 localStorage 복원 (expNames는 DB 우선)
   useEffect(() => {
     try {
-      const pagesRaw = localStorage.getItem('myloa_exp_pages')
-      const savedPages = pagesRaw ? JSON.parse(pagesRaw) : null
-      const pages = (Array.isArray(savedPages) && savedPages.length > 0)
-        ? savedPages
-        : [{ id: 'page_default', name: '원정대 1' }]
-      setExpPages(pages)
-
-      const savedActive = localStorage.getItem('myloa_active_page')
-      const validActive = pages.find(p => p.id === savedActive) ? savedActive : pages[0].id
-      setActivePageId(validActive)
-
-      const mapRaw = localStorage.getItem('myloa_char_page_map')
-      if (mapRaw) setCharPageMap(JSON.parse(mapRaw))
+      setActivePageId(localStorage.getItem('myloa_active_page') || null) // 빈 문자열·null → 전체보기
     } catch {}
   }, [])
   useEffect(() => {
-    if (expPages.length === 0) return
-    try { localStorage.setItem('myloa_exp_pages', JSON.stringify(expPages)) } catch {}
-  }, [expPages])
-  useEffect(() => {
-    if (!activePageId) return
-    try { localStorage.setItem('myloa_active_page', activePageId) } catch {}
+    try { localStorage.setItem('myloa_active_page', activePageId ?? '') } catch {}
   }, [activePageId])
+  // activePageId가 더 이상 유효하지 않으면 전체보기(null)로 조정
   useEffect(() => {
-    try { localStorage.setItem('myloa_char_page_map', JSON.stringify(charPageMap)) } catch {}
-  }, [charPageMap])
+    if (activePageId && !expPages.find(p => p.id === activePageId)) {
+      setActivePageId(null)
+    }
+  }, [expPages]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 커스텀 항목 localStorage 동기화
-  useEffect(() => {
+  // 커스텀 항목 localStorage 로드 — useLayoutEffect로 첫 paint 전에 동기 실행
+  useLayoutEffect(() => {
     try {
-      const items = localStorage.getItem('myloa_custom_items')
-      if (items) setCustomItems(JSON.parse(items))
-      const checks = localStorage.getItem('myloa_custom_checks')
-      if (checks) setCustomChecks(JSON.parse(checks))
-      const gauge = localStorage.getItem('myloa_rest_gauge')
-      if (gauge) setRestGauge(JSON.parse(gauge))
+      const items    = localStorage.getItem('myloa_custom_items')
+      const checks   = localStorage.getItem('myloa_custom_checks')
+      const gauge    = localStorage.getItem('myloa_rest_gauge')
       const deducted = localStorage.getItem('myloa_rest_gauge_deducted')
+      if (items)    setCustomItems(JSON.parse(items))
+      if (checks)   setCustomChecks(JSON.parse(checks))
+      if (gauge)    setRestGauge(JSON.parse(gauge))
       if (deducted) setRestGaugeDeducted(JSON.parse(deducted))
     } catch {}
+    setLsReady(true)
   }, [])
+  // 저장 — lsReady 이전엔 실행하지 않아 초기 {} 로 덮어쓰는 버그 방지
   useEffect(() => {
+    if (!lsReady) return
     try { localStorage.setItem('myloa_custom_items', JSON.stringify(customItems)) } catch {}
-  }, [customItems])
+  }, [customItems, lsReady])
   useEffect(() => {
+    if (!lsReady) return
     try { localStorage.setItem('myloa_custom_checks', JSON.stringify(customChecks)) } catch {}
-  }, [customChecks])
+  }, [customChecks, lsReady])
   useEffect(() => {
+    if (!lsReady) return
     try { localStorage.setItem('myloa_rest_gauge', JSON.stringify(restGauge)) } catch {}
-  }, [restGauge])
+  }, [restGauge, lsReady])
   useEffect(() => {
+    if (!lsReady) return
     try { localStorage.setItem('myloa_rest_gauge_deducted', JSON.stringify(restGaugeDeducted)) } catch {}
-  }, [restGaugeDeducted])
+  }, [restGaugeDeducted, lsReady])
 
   // 테이블 컨테이너 너비 추적 (한눈에 보기 스케일 계산용)
   useEffect(() => {
@@ -120,57 +129,43 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     return () => obs.disconnect()
   }, [])
 
-  // 페이지별 캐릭터 필터링
+  // 페이지별 캐릭터 필터링 — activePageId가 null이면 전체보기
   const activeChars = useMemo(() => {
-    if (!activePageId || expPages.length === 0) return chars
-    const firstPageId = expPages[0]?.id
-    return chars.filter(c => {
-      const pageId = charPageMap[c.id] || firstPageId
-      return pageId === activePageId
-    })
-  }, [chars, charPageMap, activePageId, expPages])
-
-  // 현재 페이지에 캐릭터 + 레이드 있으면 새 페이지 추가 가능
-  const canAddPage = useMemo(() => {
-    return activeChars.some(c => (raids[c.id] || []).length > 0)
-  }, [activeChars, raids])
-
-  // 새 페이지 추가
-  const addExpPage = () => {
-    if (!canAddPage || expPages.length >= 10) return
-    const newId   = `page_${Date.now()}`
-    const newName = `원정대 ${expPages.length + 1}`
-    setExpPages(prev => [...prev, { id: newId, name: newName }])
-    setActivePageId(newId)
-  }
+    if (!activePageId) return chars
+    return chars.filter(c => c.expeditionId === activePageId)
+  }, [chars, activePageId])
 
   // 탭 삭제 — 내부 캐릭터·레이드 모두 제거
   const deleteExpPage = (pageId) => {
-    const firstPageId = expPages[0]?.id
-    const pageChars = chars.filter(c => (charPageMap[c.id] || firstPageId) === pageId)
+    const pageChars = chars.filter(c => c.expeditionId === pageId)
     const deletedIds = new Set(pageChars.map(c => c.id))
+
+    if (activePageId === pageId) {
+      setActivePageId(null) // 전체보기로 이동
+    }
 
     setChars(prev => prev.filter(c => !deletedIds.has(c.id)))
     setRaids(prev => { const n = { ...prev }; deletedIds.forEach(id => delete n[id]); return n })
     setCustomItems(prev => { const n = { ...prev }; deletedIds.forEach(id => delete n[id]); return n })
-    setCharPageMap(prev => { const n = { ...prev }; deletedIds.forEach(id => delete n[id]); return n })
 
     if (isLoggedIn) {
       pageChars.forEach(c => fetch(`/api/characters?id=${c.id}`, { method: 'DELETE' }).catch(() => {}))
     }
-
-    const remaining = expPages.filter(p => p.id !== pageId)
-    setExpPages(remaining)
-    if (activePageId === pageId)
-      setActivePageId(remaining[remaining.length - 1]?.id ?? null)
   }
 
-  // 페이지 이름 저장
+  // 페이지 이름 저장 — DB + 클라이언트 state 동시 갱신
   const savePageName = () => {
     if (!editingPageId) return
     const trimmed = editingPageName.trim()
     if (trimmed) {
-      setExpPages(prev => prev.map(p => p.id === editingPageId ? { ...p, name: trimmed } : p))
+      setExpNames(prev => ({ ...prev, [editingPageId]: trimmed }))
+      if (isLoggedIn) {
+        fetch(`/api/expeditions/${editingPageId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customName: trimmed }),
+        }).catch(() => {})
+      }
     }
     setEditingPageId(null)
     setEditingPageName('')
@@ -334,10 +329,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       const currentChar = chars.find(c => c.id === charId)
       const alreadyHas = (raids[charId] || []).some(e => e.raidId === raidId)
       if (!alreadyHas && currentChar) {
-        const accountKey = currentChar.expeditionId || currentChar.account
+        const accountKey = currentChar.expeditionId || 'unknown'
         const conflict = chars.find(c => {
           if (c.id === charId) return false
-          const cKey = c.expeditionId || c.account
+          const cKey = c.expeditionId || 'unknown'
           return cKey === accountKey && (raids[c.id] || []).some(e => e.raidId === raidId)
         })
         if (conflict) {
@@ -368,10 +363,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           const currentGoldCount  = list.filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)).length
           const charAlreadyHasGold = currentGoldCount > 0
           const curChar  = chars.find(c => c.id === charId)
-          const curAcctKey = curChar?.expeditionId || curChar?.account
+          const curAcctKey = curChar?.expeditionId || 'unknown'
           const acctGoldChars = chars.filter(c =>
             c.id !== charId &&
-            (c.expeditionId || c.account) === curAcctKey &&
+            (c.expeditionId || 'unknown') === curAcctKey &&
             (prev[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
           ).length
           const isGoldCheck = EX_RAID_IDS.has(raidId) ? true
@@ -402,10 +397,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         const charHasOtherGold = list.some((e, i) => i !== idx && e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
         if (!charHasOtherGold) {
           const curChar = chars.find(c => c.id === charId)
-          const curAcctKey = curChar?.expeditionId || curChar?.account
+          const curAcctKey = curChar?.expeditionId || 'unknown'
           const acctGoldChars = chars.filter(c =>
             c.id !== charId &&
-            (c.expeditionId || c.account) === curAcctKey &&
+            (c.expeditionId || 'unknown') === curAcctKey &&
             (prev[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
           ).length
           if (acctGoldChars >= GOLD_CHAR_LIMIT) return prev
@@ -476,7 +471,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       try {
         await fetch('/api/characters', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ apiKey, label: '본계정', characters: toAdd }),
+          body: JSON.stringify({ apiKey, characters: toAdd }),
         })
       } catch {}
     }
@@ -501,17 +496,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     setRaids(newRaids)
   }
 
-  // expeditionId로 해당 원정대 캐릭터가 속한 탭 이름 조회
-  // null 반환 → 탭 없음 (새 탭 생성 예정)
-  const getTargetTabName = (expeditionId) => {
-    if (!expeditionId) return null
-    const fid = expPages[0]?.id
-    for (const page of expPages) {
-      if (chars.some(c => c.expeditionId === expeditionId && (charPageMap[c.id] || fid) === page.id))
-        return page.name
-    }
-    return null
-  }
+  // expeditionId로 탭 이름 조회 (null → 새 탭 생성 예정)
+  const getTargetTabName = (expeditionId) => expPages.find(p => p.id === expeditionId)?.name ?? null
 
   // 개별 캐릭터 삭제
   const deleteChar = (charId) => {
@@ -519,16 +505,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     setChars(updatedChars)
     setRaids(prev => { const n = { ...prev }; delete n[charId]; return n })
 
-    // 탭 자동 정리: 삭제 후 해당 탭이 비면 탭도 제거 (탭이 2개 이상일 때만)
-    if (expPages.length > 1) {
-      const firstPageId = expPages[0]?.id
-      const deletedPage  = charPageMap[charId] || firstPageId
-      const stillHasChar = updatedChars.some(c => (charPageMap[c.id] || firstPageId) === deletedPage)
-      if (!stillHasChar) {
-        const remaining = expPages.filter(p => p.id !== deletedPage)
-        setExpPages(remaining)
-        if (activePageId === deletedPage)
-          setActivePageId(remaining[remaining.length - 1]?.id ?? null)
+    // 탭 자동 정리: 삭제 후 해당 탭이 비면 전체보기로 이동
+    if (activePageId) {
+      const deletedChar = chars.find(c => c.id === charId)
+      const deletedExpId = deletedChar?.expeditionId
+      if (deletedExpId && activePageId === deletedExpId) {
+        const stillHasChar = updatedChars.some(c => c.expeditionId === deletedExpId)
+        if (!stillHasChar) setActivePageId(null)
       }
     }
 
@@ -558,13 +541,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     // 계정별 최소 sortOrder 계산 (tmp 캐릭터는 배열 인덱스를 fallback으로 사용)
     const acctMinOrder = {}
     arr.forEach((c, idx) => {
-      const key   = c.expeditionId || c.account || 'unknown'
+      const key   = c.expeditionId || 'unknown'
       const order = c.sortOrder != null ? c.sortOrder : 1_000_000 + idx
       if (!(key in acctMinOrder) || order < acctMinOrder[key]) acctMinOrder[key] = order
     })
     return [...arr].sort((a, b) => {
-      const aKey = a.expeditionId || a.account || 'unknown'
-      const bKey = b.expeditionId || b.account || 'unknown'
+      const aKey = a.expeditionId || 'unknown'
+      const bKey = b.expeditionId || 'unknown'
       const acctDiff = (acctMinOrder[aKey] ?? 9_999_999) - (acctMinOrder[bKey] ?? 9_999_999)
       if (acctDiff !== 0) return acctDiff
       if (b.itemLevel !== a.itemLevel) return b.itemLevel - a.itemLevel
@@ -572,175 +555,135 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     })
   }
 
-  // 캐릭터 추가 (raidsByName이 있으면 자동 배정, 없으면 레이드 설정 모달 즉시 오픈)
+  // 캐릭터 추가
   const addChars = async (newChars, apiKey, raidsByName = {}, repCharName = null, siblingNames = []) => {
-    const isManual   = Object.keys(raidsByName).length === 0
-    const timestamp  = Date.now()
-    const newNames   = new Set(newChars.map(c => c.name))
-
-    // ── 1. tmp ID로 낙관적 캐릭터 생성 ──────────────────────────────────────
+    const isManual      = Object.keys(raidsByName).length === 0
     const existingNames = new Set(chars.map(c => c.name))
-    const tmpChars = newChars
-      .filter(c => !existingNames.has(c.name))
-      .map((c, i) => ({
-        id: `tmp_${timestamp}_${i}`,
+    const freshChars    = newChars.filter(c => !existingNames.has(c.name))
+    if (freshChars.length === 0) return
+
+    // ── 비로그인(데모): 로컬 상태만 업데이트 ──────────────────────────────────
+    if (!isLoggedIn) {
+      const ts       = Date.now()
+      const newNames = new Set(freshChars.map(c => c.name))
+      const demoChars = freshChars.map((c, i) => ({
+        id: `demo_${ts}_${i}`,
         name: c.name, class: c.class, server: c.server,
         itemLevel: c.itemLevel, combatPower: c.combatPower ?? null,
-        account: '원정대 1', expeditionId: c.expeditionId ?? null,
+        expeditionId: c.expeditionId ?? activePageId ?? 'demo',
       }))
-    if (tmpChars.length === 0) return
-
-    // ── 2. 레이드 낙관적 계산 (tmp ID 기준) ─────────────────────────────────
-    const optRaids = {}
-    if (!isManual) {
-      // CharacterAddModal / AutoSetupModal 에서 온 raidsByName (name 키)
-      tmpChars.forEach(tc => {
-        const entries = raidsByName[tc.name]
-        if (entries?.length > 0) optRaids[tc.id] = entries
+      const demoRaids = {}
+      if (!isManual) {
+        demoChars.forEach(dc => {
+          const entries = raidsByName[dc.name]
+          if (entries?.length > 0) demoRaids[dc.id] = entries
+        })
+      } else {
+        const allForAcct = [...chars, ...demoChars]
+        const acctTopMap = new Map()
+        const acctHasEx  = new Map()
+        allForAcct.forEach(c => {
+          const key = c.expeditionId || 'default'
+          const cur = acctTopMap.get(key)
+          if (!cur || c.itemLevel > cur.itemLevel) acctTopMap.set(key, c)
+          if (!newNames.has(c.name) && (raids[c.id] || []).some(e => EX_RAID_IDS.has(e.raidId)))
+            acctHasEx.set(key, true)
+        })
+        demoChars.forEach(dc => {
+          const key    = dc.expeditionId || 'default'
+          const isTop  = acctTopMap.get(key)?.id === dc.id && !acctHasEx.get(key)
+          const entries = computeAutoRaids(dc, isTop)
+          if (entries.length > 0) demoRaids[dc.id] = entries
+        })
+      }
+      const demoCustom = {}
+      demoChars.forEach(dc => {
+        const existing    = customItems[dc.id] || []
+        const existingSet = new Set(existing.map(it => it.name))
+        const toAdd       = AUTO_PRESETS.filter(p => !existingSet.has(p.name))
+        if (toAdd.length > 0)
+          demoCustom[dc.id] = [
+            ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${dc.id}`, ...p })),
+            ...existing,
+          ]
       })
-    } else {
-      // 아이템 레벨 기반 자동 배정
-      const allForAcct  = [...chars, ...tmpChars]
-      const acctTopMap  = new Map()
-      const acctHasEx   = new Map()
-      allForAcct.forEach(c => {
-        const key = c.expeditionId || c.account || 'default'
-        const cur = acctTopMap.get(key)
-        if (!cur || c.itemLevel > cur.itemLevel) acctTopMap.set(key, c)
-        if (!newNames.has(c.name) && (raids[c.id] || []).some(e => EX_RAID_IDS.has(e.raidId)))
-          acctHasEx.set(key, true)
-      })
-      tmpChars.forEach(tc => {
-        const key    = tc.expeditionId || tc.account || 'default'
-        const isTop  = acctTopMap.get(key)?.id === tc.id && !acctHasEx.get(key)
-        const entries = computeAutoRaids(tc, isTop)
-        if (entries.length > 0) optRaids[tc.id] = entries
-      })
+      setChars(prev => sortChars([...prev, ...demoChars]))
+      if (Object.keys(demoRaids).length  > 0) setRaids(prev      => ({ ...prev, ...demoRaids  }))
+      if (Object.keys(demoCustom).length > 0) setCustomItems(prev => ({ ...prev, ...demoCustom }))
+      return
     }
 
-    // ── 3. 커스텀 항목 낙관적 계산 (tmp ID 기준) ────────────────────────────
-    const optCustom = {}
-    tmpChars.forEach(tc => {
-      const existing     = customItems[tc.id] || []
-      const existingSet  = new Set(existing.map(it => it.name))
-      const toAdd        = AUTO_PRESETS.filter(p => !existingSet.has(p.name))
-      if (toAdd.length > 0)
-        optCustom[tc.id] = [
-          ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${tc.id}`, ...p })),
-          ...existing,
-        ]
-    })
-
-    // ── 4. 페이지 배정 낙관적 계산 ─────────────────────────────────────────
-    const optPageMap = {}
-    if (activePageId) tmpChars.forEach(tc => { optPageMap[tc.id] = activePageId })
-
-    // ── 5. 즉시 반영 ────────────────────────────────────────────────────────
-    setChars(prev => sortChars([...prev, ...tmpChars]))
-    if (Object.keys(optRaids).length   > 0) setRaids(prev       => ({ ...prev, ...optRaids   }))
-    if (Object.keys(optCustom).length  > 0) setCustomItems(prev  => ({ ...prev, ...optCustom  }))
-    if (Object.keys(optPageMap).length > 0) setCharPageMap(prev  => ({ ...prev, ...optPageMap }))
-
-    // 비로그인(데모)은 여기서 종료
-    if (!isLoggedIn) return
-
-    // ── 6. DB 저장 후 tmp ID → 실제 ID 교체 ────────────────────────────────
+    // ── 로그인: 로딩 오버레이 표시 후 실제 저장 ───────────────────────────────
+    setAddingChars(true)
     try {
       await fetch('/api/characters', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey, label: '본계정', repCharName, characters: newChars, siblingNames }),
+        body: JSON.stringify({ apiKey, repCharName, characters: newChars, siblingNames }),
       })
+
       const res = await fetch('/api/characters')
       if (!res.ok) return
       const data = await res.json()
       if (!Array.isArray(data)) return
 
-      // tmp → real ID 매핑
-      const tmpToReal = new Map()
-      tmpChars.forEach(tc => {
-        const real = data.find(d => d.name === tc.name)
-        if (real) tmpToReal.set(tc.id, real.id)
-      })
+      const newNames    = new Set(freshChars.map(c => c.name))
+      const addedChars  = data.filter(d => newNames.has(d.name))
 
-      // chars 실제 데이터로 교체 (동일 정렬 적용)
-      setChars(sortChars(data))
-
-      // ── 캐릭터 → 원정대 탭 라우팅 (tmp→real 교체 이후에 적용) ─────────────
-      // 규칙:
-      //  1. 현재 탭이 비어있거나 같은 계정 → 현재 탭
-      //  2. 다른 계정인데 그 계정이 이미 다른 탭에 있음 → 그 탭
-      //  3. 다른 계정이고 탭이 없음 → 새 탭 생성
-      const firstPageId    = expPages[0]?.id
-      const activeTabIsEmpty  = !chars.some(c => (charPageMap[c.id] || firstPageId) === activePageId)
-      const activeTabExpId = chars.find(c => (charPageMap[c.id] || firstPageId) === activePageId)?.expeditionId ?? null
-      // 기존 캐릭터의 원정대 → 탭 매핑
-      const existingAcctToPage = new Map()
-      chars.forEach(c => {
-        if (c.expeditionId && !existingAcctToPage.has(c.expeditionId))
-          existingAcctToPage.set(c.expeditionId, charPageMap[c.id] || firstPageId)
-      })
-
-      let newPageMapEntries = {}
-      const brandNewPages   = []
-      const newAcctToPage   = new Map() // 이번 추가로 새로 생성된 원정대→탭
-      let pageSeq = expPages.length
-
-      const newCharNames = new Set(tmpChars.map(tc => tc.name))
-      data.filter(d => newCharNames.has(d.name)).forEach(d => {
-        const acctId = d.expeditionId
-        if (!acctId || activeTabIsEmpty || acctId === activeTabExpId) {
-          // 현재 탭과 같은 계정 또는 현재 탭이 비어있음
-          newPageMapEntries[d.id] = activePageId
-        } else if (existingAcctToPage.has(acctId)) {
-          // 이미 다른 탭에 있는 계정 → 그 탭
-          newPageMapEntries[d.id] = existingAcctToPage.get(acctId)
-        } else if (newAcctToPage.has(acctId)) {
-          // 이번 추가에서 이미 탭 생성된 계정
-          newPageMapEntries[d.id] = newAcctToPage.get(acctId)
-        } else {
-          // 완전히 새 계정 → 새 탭 생성
-          pageSeq++
-          const newPageId = `page_${Date.now()}_${acctId.slice(-6)}`
-          brandNewPages.push({ id: newPageId, name: `원정대 ${pageSeq}` })
-          newAcctToPage.set(acctId, newPageId)
-          newPageMapEntries[d.id] = newPageId
-        }
-      })
-
-      if (brandNewPages.length > 0) setExpPages(prev => [...prev, ...brandNewPages])
-      // 다른 탭으로 이동이 발생한 경우 마지막 대상 탭으로 전환
-      const routedToOther = Object.values(newPageMapEntries).find(pid => pid !== activePageId)
-      if (routedToOther) setActivePageId(routedToOther)
-
-      // raids / customItems / charPageMap: tmp ID → real ID로 키 교체
-      if (tmpToReal.size > 0) {
-        setRaids(prev => {
-          const next = { ...prev }
-          tmpToReal.forEach((realId, tmpId) => { if (next[tmpId]) { next[realId] = next[tmpId]; delete next[tmpId] } })
-          return next
+      // 레이드 계산 (실제 ID 기준)
+      const newRaids = {}
+      if (!isManual) {
+        addedChars.forEach(c => {
+          const entries = raidsByName[c.name]
+          if (entries?.length > 0) newRaids[c.id] = entries
         })
-        setCustomItems(prev => {
-          const next = { ...prev }
-          tmpToReal.forEach((realId, tmpId) => { if (next[tmpId]) { next[realId] = next[tmpId]; delete next[tmpId] } })
-          return next
+      } else {
+        const allForAcct = [...chars, ...addedChars]
+        const acctTopMap = new Map()
+        const acctHasEx  = new Map()
+        allForAcct.forEach(c => {
+          const key = c.expeditionId || 'default'
+          const cur = acctTopMap.get(key)
+          if (!cur || c.itemLevel > cur.itemLevel) acctTopMap.set(key, c)
+          if (!newNames.has(c.name) && (raids[c.id] || []).some(e => EX_RAID_IDS.has(e.raidId)))
+            acctHasEx.set(key, true)
         })
-        setCharPageMap(prev => {
-          const next = { ...prev }
-          tmpToReal.forEach((realId, tmpId) => { if (next[tmpId]) { next[realId] = next[tmpId]; delete next[tmpId] } })
-          // 새 계정 캐릭터들은 새 페이지로 덮어씀 (tmp→real 이후에 적용)
-          Object.assign(next, newPageMapEntries)
-          return next
+        addedChars.forEach(c => {
+          const key    = c.expeditionId || 'default'
+          const isTop  = acctTopMap.get(key)?.id === c.id && !acctHasEx.get(key)
+          const entries = computeAutoRaids(c, isTop)
+          if (entries.length > 0) newRaids[c.id] = entries
         })
-
-        // 레이드 DB 저장 (real ID 확정 후)
-        tmpToReal.forEach((realId, tmpId) => {
-          ;(optRaids[tmpId] || []).forEach(entry => persistRaid(realId, entry))
-        })
-      } else if (Object.keys(newPageMapEntries).length > 0) {
-        // tmpToReal이 없지만 새 페이지 배정은 있는 경우
-        setCharPageMap(prev => ({ ...prev, ...newPageMapEntries }))
       }
-    } catch {}
+
+      // 커스텀 항목
+      const newCustom = {}
+      addedChars.forEach(c => {
+        const existing    = customItems[c.id] || []
+        const existingSet = new Set(existing.map(it => it.name))
+        const toAdd       = AUTO_PRESETS.filter(p => !existingSet.has(p.name))
+        if (toAdd.length > 0)
+          newCustom[c.id] = [
+            ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${c.id}`, ...p })),
+            ...existing,
+          ]
+      })
+
+      // 탭 라우팅: 추가된 캐릭터의 expeditionId 탭으로 이동 (expPages는 chars useMemo로 자동 갱신)
+      const addedExpId = addedChars[0]?.expeditionId
+      if (addedExpId && addedExpId !== activePageId) setActivePageId(addedExpId)
+
+      // 레이드 DB 저장 (실제 ID 확정 후)
+      Object.entries(newRaids).forEach(([charId, entries]) => {
+        entries.forEach(entry => persistRaid(charId, entry))
+      })
+
+      // 상태 일괄 업데이트
+      setChars(sortChars(data))
+      if (Object.keys(newRaids).length  > 0) setRaids(prev      => ({ ...prev, ...newRaids  }))
+      if (Object.keys(newCustom).length > 0) setCustomItems(prev => ({ ...prev, ...newCustom }))
+    } catch {} finally {
+      setAddingChars(false)
+    }
   }
 
   // 전체 캐릭터 갱신
@@ -828,6 +771,36 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     <div className="space-y-5">
       <Confetti active={showConfetti} />
 
+      {/* ── 캐릭터 추가 로딩 오버레이 ── */}
+      {addingChars && (
+        <>
+          <style>{`
+            @keyframes bar-wave-add {
+              0%, 100% { transform: scaleY(0.3); opacity: 0.4; }
+              50%       { transform: scaleY(1);   opacity: 1;   }
+            }
+          `}</style>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-white/70 dark:bg-[#181818]/80 backdrop-blur-[2px]">
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-end gap-1.5" style={{ height: 28 }}>
+                {[0, 0.15, 0.3, 0.15, 0].map((delay, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: 4, height: '100%', borderRadius: 9999,
+                      backgroundColor: '#facc15', transformOrigin: 'bottom',
+                      animation: 'bar-wave-add 0.9s ease-in-out infinite',
+                      animationDelay: `${delay}s`,
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="text-xs ns-bold text-gray-500 dark:text-gray-400">캐릭터 추가 중…</p>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* ── 데모 모드 안내 배너 ── */}
       {isDemo && (
         <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-3.5 py-2.5 text-xs">
@@ -850,6 +823,17 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         <div>
           {/* 원정대 페이지 탭 */}
           <div className="flex items-center gap-1.5 flex-wrap">
+            {/* 전체보기 탭 */}
+            <button
+              onClick={() => { setActivePageId(null); setEditingPageId(null) }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
+                activePageId === null
+                  ? 'bg-yellow-300 dark:bg-yellow-500/30 text-yellow-900 dark:text-yellow-300'
+                  : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+              }`}
+            >
+              전체
+            </button>
             {expPages.map(page => {
               const isActive = page.id === activePageId
               return (
@@ -899,8 +883,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     <button
                       onClick={e => {
                         e.stopPropagation()
-                        const firstPageId = expPages[0]?.id
-                        const hasChars = chars.some(c => (charPageMap[c.id] || firstPageId) === page.id)
+                        const hasChars = chars.some(c => c.expeditionId === page.id)
                         if (hasChars) {
                           setConfirmDeletePageId(page.id)
                         } else {
@@ -919,26 +902,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 </div>
               )
             })}
-            {/* + 페이지 추가 버튼 */}
-            {expPages.length < 10 && (
-              <button
-                onClick={addExpPage}
-                disabled={!canAddPage}
-                title={!canAddPage ? '현재 페이지에 캐릭터와 레이드를 먼저 추가하세요' : '새 원정대 추가'}
-                className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-dashed border-gray-300 dark:border-[#444] text-gray-400 dark:text-gray-500 hover:border-yellow-400 dark:hover:border-yellow-600 hover:text-yellow-500 dark:hover:text-yellow-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-              >
-                <IconPlus size={12} />
-              </button>
-            )}
           </div>
           {/* 현재 페이지 제목 + 캐릭터 수 */}
           <div className="flex items-center gap-2 mt-2">
             <h1 className="ns-extrabold text-lg text-gray-900 dark:text-white">
-              {expPages.find(p => p.id === activePageId)?.name || '원정대'}
+              {activePageId === null ? '전체' : (expPages.find(p => p.id === activePageId)?.name || '원정대')}
             </h1>
             <span className="text-xs text-gray-400 dark:text-gray-500">· 캐릭터 수 {activeChars.length}</span>
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">주간 초기화 · 매주 수요일 06:00</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowRaidSettings(true)}
@@ -1484,10 +1455,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             ? charSubset.filter(char => (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
             : charSubset
 
+          if (filteredChars.length === 0) return null
+
           // 이 청크에 속한 캐릭터들이 가진 레이드 행만 표시
           const chunkRaidRows = raidRows.filter(row =>
             filteredChars.some(char => (raids[char.id] || []).some(e => e.raidId === row.raidId))
           )
+
+          // 레이드도 커스텀 항목도 없으면 빈 뼈대를 남기지 않음
+          const hasCustom = filteredChars.some(c => (customItems[c.id] || []).length > 0)
+          if (chunkRaidRows.length === 0 && !hasCustom) return null
 
           const tableNaturalWidth = COL_RAID + COL_CHAR * filteredChars.length
           const tableScale = (fitMode && tableContainerWidth > 0)
@@ -1636,7 +1613,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     <tr>
                       <td colSpan={filteredChars.length + 1} className="py-16 text-center">
                         <p className="text-gray-400 dark:text-gray-600 text-sm mb-2">표시할 레이드가 없습니다</p>
-                        <p className="text-xs text-gray-300 dark:text-gray-700">레이드 설정에서 캐릭터별로 참여할 레이드를 추가하세요</p>
+                        <p className="text-xs text-gray-300 dark:text-gray-700">캐릭터를 추가하여 숙제를 관리해보세요!</p>
                       </td>
                     </tr>
                   )}
@@ -1869,6 +1846,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         <RaidSettingsModal
           chars={activeChars}
           raids={raids}
+          expPages={expPages}
           onToggle={toggleCharRaid}
           onToggleGold={toggleCharRaidGold}
           onClose={() => { setShowRaidSettings(false); setRaidSettingsCharId(null) }}
@@ -1969,8 +1947,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {/* ── 원정대 탭 삭제 확인 모달 ── */}
       {confirmDeletePageId && (() => {
         const page = expPages.find(p => p.id === confirmDeletePageId)
-        const firstPageId = expPages[0]?.id
-        const pageChars = chars.filter(c => (charPageMap[c.id] || firstPageId) === confirmDeletePageId)
+        const pageChars = chars.filter(c => c.expeditionId === confirmDeletePageId)
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={() => setConfirmDeletePageId(null)}>
             <div

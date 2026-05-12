@@ -5,7 +5,7 @@ import { RAIDS } from '@/lib/raidData'
 import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT } from '../_constants'
 
 // ── 레이드 설정 모달 (캐릭터별) ───────────────────────────────────────────────
-export default function RaidSettingsModal({ chars, raids, onToggle, onToggleGold, onClose, onConfirm, exRaidError, onClearExRaidError, onOpenCharAdd, initialCharId }) {
+export default function RaidSettingsModal({ chars, raids, expPages, onToggle, onToggleGold, onClose, onConfirm, exRaidError, onClearExRaidError, onOpenCharAdd, initialCharId }) {
   const initialIdx = initialCharId ? Math.max(0, chars.findIndex(c => c.id === initialCharId)) : 0
   const [selectedIdx, setSelectedIdx] = useState(initialIdx)
   const selectedChar = chars[selectedIdx]
@@ -24,17 +24,16 @@ export default function RaidSettingsModal({ chars, raids, onToggle, onToggleGold
     const seenKeys = []
     const map = {}
     chars.forEach(c => {
-      const key = c.expeditionId || c.account || 'unknown'
+      const key = c.expeditionId || 'unknown'
       if (!map[key]) {
         seenKeys.push(key)
-        // accountRepChar가 있으면 우선, 없으면 첫 번째 등장 캐릭터(sortOrder 최소)로 fallback
         map[key] = { key, label: c.accountRepChar || c.name, count: 0 }
       }
       if ((raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))) map[key].count++
     })
     return seenKeys.map(k => map[k])
   })()
-  const acctKey          = selectedChar ? (selectedChar.expeditionId || selectedChar.account) : null
+  const acctKey          = selectedChar ? (selectedChar.expeditionId || 'unknown') : null
   const acctGoldCharCount = acctGoldMap.find(a => a.key === acctKey)?.count ?? 0
   const charHasGold = charRaidList.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
 
@@ -51,8 +50,8 @@ export default function RaidSettingsModal({ chars, raids, onToggle, onToggleGold
     // 계정당 골드 캐릭터 6개 초과 검사
     const accountMap = {}
     chars.forEach(char => {
-      const key = char.expeditionId || char.account
-      if (!accountMap[key]) accountMap[key] = { label: char.account, goldCount: 0 }
+      const key = char.expeditionId || 'unknown'
+      if (!accountMap[key]) accountMap[key] = { label: expPages?.find(p => p.id === key)?.name || '원정대', goldCount: 0 }
       if ((raids[char.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
         accountMap[key].goldCount++
     })

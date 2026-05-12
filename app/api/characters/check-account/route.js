@@ -13,7 +13,7 @@ export async function GET(request) {
   const siblingParam = searchParams.get('siblingNames')
 
   if (!siblingParam) {
-    return NextResponse.json({ isNewExpedition: true, matchedExpeditionId: null, matchedLabel: null })
+    return NextResponse.json({ isNewExpedition: true, matchedExpeditionId: null })
   }
 
   const siblingNames = siblingParam.split(',').map(s => s.trim()).filter(Boolean)
@@ -28,13 +28,12 @@ export async function GET(request) {
   })
 
   if (!matchedChar) {
-    return NextResponse.json({ isNewExpedition: true, matchedExpeditionId: null, matchedLabel: null })
+    return NextResponse.json({ isNewExpedition: true, matchedExpeditionId: null })
   }
 
   return NextResponse.json({
     isNewExpedition:     false,
     matchedExpeditionId: matchedChar.expedition.id,
-    matchedLabel:        matchedChar.expedition.label,
     matchedRepChar:      matchedChar.expedition.repCharName ?? null,
   })
 }

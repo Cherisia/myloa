@@ -6,12 +6,12 @@ import DashboardClient from './DashboardClient'
 
 // ── 비로그인 미리보기용 더미 데이터 ───────────────────────────────────────────
 const DEMO_CHARS = [
-  { id: 'demo-1', name: '팍지니',           class: '배틀마스터', server: '루페온', itemLevel: 1773.33, combatPower: 6127.42, account: '원정대 1', expeditionId: 'demo' },
-  { id: 'demo-2', name: '로헨델카지노박마담', class: '아르카나',   server: '루페온', itemLevel: 1755.00, combatPower: 4619.88, account: '원정대 1', expeditionId: 'demo' },
-  { id: 'demo-3', name: '절구주는비치',      class: '바드',       server: '루페온', itemLevel: 1740.00, combatPower: 3648.97, account: '원정대 1', expeditionId: 'demo' },
-  { id: 'demo-4', name: '질풍노도훈수사',    class: '환수사',     server: '루페온', itemLevel: 1732.50, combatPower: 2557.27, account: '원정대 1', expeditionId: 'demo' },
-  { id: 'demo-5', name: '다베어버릴거에요',  class: '소울이터',   server: '루페온', itemLevel: 1730.00, combatPower: 3504.42, account: '원정대 1', expeditionId: 'demo' },
-  { id: 'demo-6', name: '도화가장인김우림',  class: '도화가',     server: '루페온', itemLevel: 1720.83, combatPower: 1314.27, account: '원정대 1', expeditionId: 'demo' },
+  { id: 'demo-1', name: '팍지니',           class: '배틀마스터', server: '루페온', itemLevel: 1773.33, combatPower: 6127.42, expeditionId: 'demo' },
+  { id: 'demo-2', name: '로헨델카지노박마담', class: '아르카나',   server: '루페온', itemLevel: 1755.00, combatPower: 4619.88, expeditionId: 'demo' },
+  { id: 'demo-3', name: '절구주는비치',      class: '바드',       server: '루페온', itemLevel: 1740.00, combatPower: 3648.97, expeditionId: 'demo' },
+  { id: 'demo-4', name: '질풍노도훈수사',    class: '환수사',     server: '루페온', itemLevel: 1732.50, combatPower: 2557.27, expeditionId: 'demo' },
+  { id: 'demo-5', name: '다베어버릴거에요',  class: '소울이터',   server: '루페온', itemLevel: 1730.00, combatPower: 3504.42, expeditionId: 'demo' },
+  { id: 'demo-6', name: '도화가장인김우림',  class: '도화가',     server: '루페온', itemLevel: 1720.83, combatPower: 1314.27, expeditionId: 'demo' },
 ]
 const DEMO_RAIDS = {
   'demo-1': [
@@ -96,7 +96,9 @@ export default async function DashboardPage() {
 
   const initialChars = []
   const initialRaids = {}
-  expeditions.forEach(exp =>
+  const initialExpNames = {}
+  expeditions.forEach(exp => {
+    if (exp.customName) initialExpNames[exp.id] = exp.customName
     exp.characters.forEach(char => {
       initialChars.push({
         id:             char.id,
@@ -106,7 +108,6 @@ export default async function DashboardPage() {
         itemLevel:      char.itemLevel,
         combatPower:    char.combatPower ?? null,
         sortOrder:      char.sortOrder,
-        account:        exp.label,
         expeditionId:   exp.id,
         accountRepChar: exp.repCharName ?? null,
       })
@@ -119,7 +120,7 @@ export default async function DashboardPage() {
         moreFrom:    r.moreFrom,
       }))
     })
-  )
+  })
 
-  return <DashboardClient initialChars={initialChars} initialRaids={initialRaids} isLoggedIn />
+  return <DashboardClient initialChars={initialChars} initialRaids={initialRaids} isLoggedIn initialExpNames={initialExpNames} />
 }

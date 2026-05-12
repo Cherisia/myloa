@@ -105,7 +105,6 @@ export async function POST() {
       itemLevel:    c.itemLevel,
       combatPower:  c.combatPower ?? null,
       sortOrder:    c.sortOrder,
-      account:        exp.label,
       expeditionId:   exp.id,
       accountRepChar: exp.repCharName ?? null,
     }))

@@ -31,7 +31,6 @@ export async function GET() {
       itemLevel:    c.itemLevel,
       combatPower:  c.combatPower ?? null,
       sortOrder:    c.sortOrder,
-      account:        exp.label,
       expeditionId:   exp.id,
       accountRepChar: exp.repCharName ?? null,
     }))
@@ -44,7 +43,7 @@ export async function POST(request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 })
 
-  const { apiKey, label, repCharName, characters, siblingNames } = await request.json()
+  const { apiKey, repCharName, characters, siblingNames } = await request.json()
   if (!characters?.length) {
     return NextResponse.json({ error: '추가할 캐릭터가 없습니다' }, { status: 400 })
   }
@@ -75,12 +74,9 @@ export async function POST(request) {
   }
 
   if (!expedition) {
-    const existingCount = await prisma.loaExpedition.count({ where: { userId: session.user.id } })
-    const newLabel = label || (existingCount === 0 ? '원정대 1' : `원정대 ${existingCount + 1}`)
     expedition = await prisma.loaExpedition.create({
       data: {
         userId:      session.user.id,
-        label:       newLabel,
         repCharName: repCharName || null,
       },
     })
@@ -160,5 +156,10 @@ export async function DELETE(request) {
 
   // 하드 삭제 — CharacterRaid는 onDelete: Cascade로 자동 삭제
   await prisma.character.delete({ where: { id } })
+
+  // 마지막 캐릭터 삭제 시 빈 expedition도 제거 (고아 레코드 방지)
+  const remaining = await prisma.character.count({ where: { expeditionId: char.expeditionId } })
+  if (remaining === 0) await prisma.loaExpedition.delete({ where: { id: char.expeditionId } })
+
   return NextResponse.json({ success: true })
 }
