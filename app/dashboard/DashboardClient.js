@@ -16,6 +16,38 @@ import CharGoldBadges from './components/CharGoldBadges'
 import RaidCell from './components/RaidCell'
 import Confetti from './components/Confetti'
 
+/** 카드 레이어보다 나중에 깜박이는 img 아이콘을 줄이기 위해 브라우저 캐시에 선적재한다. */
+function collectDashboardImageUrls(chars, raidsByCharId, customByCharId = {}) {
+  const urls = []
+  for (const char of chars) {
+    const clsIcon = getClassIcon(char.class)
+    if (clsIcon) urls.push(clsIcon)
+    for (const entry of raidsByCharId[char.id] || []) {
+      const raid = RAIDS.find(r => r.id === entry.raidId)
+      if (raid?.image) urls.push(raid.image)
+    }
+    for (const item of customByCharId[char.id] || []) {
+      if (item?.image) urls.push(item.image)
+    }
+  }
+  return urls
+}
+
+function prefetchImageUrls(rawUrls, timeoutMs = 12_000) {
+  const uniq = [...new Set((rawUrls || []).filter(Boolean))]
+  if (uniq.length === 0) return Promise.resolve()
+  const deadline = new Promise(resolve => setTimeout(resolve, timeoutMs))
+  const loadAll = Promise.all(
+    uniq.map(src => new Promise(resolve => {
+      const img = new Image()
+      img.onload = () => resolve()
+      img.onerror = () => resolve()
+      img.src = src
+    }))
+  )
+  return Promise.race([loadAll, deadline])
+}
+
 export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialCustomItems = {}, initialExpNames = {} }) {
   const isDemo = !isLoggedIn
   const [chars, setChars] = useState(initialChars)
@@ -477,11 +509,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     }
     // 2. 최신 캐릭터 목록 재조회 (ID 확보)
     let updatedChars = chars
+    let didFetchChars = false
     try {
       const res = await fetch('/api/characters')
       if (res.ok) {
         const data = await res.json()
-        if (Array.isArray(data)) { updatedChars = data; setChars(data) }
+        if (Array.isArray(data)) {
+          updatedChars = data
+          didFetchChars = true
+        }
       }
     } catch {}
     // 3. 이름 → ID 매핑 후 레이드 배정 + DB 저장
@@ -493,6 +529,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       newRaids[char.id] = entries
       entries.forEach(entry => persistRaid(char.id, entry))
     })
+
+    const affectedChars = charsWithRaids.map(sc => updatedChars.find(c => c.name === sc.name)).filter(Boolean)
+    const raidsForPrefetch = {}
+    affectedChars.forEach(c => {
+      const list = newRaids[c.id]
+      if (list?.length) raidsForPrefetch[c.id] = list
+    })
+    await prefetchImageUrls(collectDashboardImageUrls(affectedChars, raidsForPrefetch, {}))
+
+    if (didFetchChars) setChars(updatedChars)
     setRaids(newRaids)
   }
 
@@ -501,20 +547,22 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
   // 개별 캐릭터 삭제
   const deleteChar = (charId) => {
-    const updatedChars = chars.filter(c => c.id !== charId)
-    setChars(updatedChars)
-    setRaids(prev => { const n = { ...prev }; delete n[charId]; return n })
+    setChars(prev => {
+      const deletedChar = prev.find(c => c.id === charId)
+      const updatedChars = prev.filter(c => c.id !== charId)
 
-    // 탭 자동 정리: 삭제 후 해당 탭이 비면 전체보기로 이동
-    if (activePageId) {
-      const deletedChar = chars.find(c => c.id === charId)
-      const deletedExpId = deletedChar?.expeditionId
-      if (deletedExpId && activePageId === deletedExpId) {
-        const stillHasChar = updatedChars.some(c => c.expeditionId === deletedExpId)
-        if (!stillHasChar) setActivePageId(null)
+      // 탭 자동 정리: 삭제 후 해당 탭이 비면 전체보기로 이동
+      if (activePageId) {
+        const deletedExpId = deletedChar?.expeditionId
+        if (deletedExpId && activePageId === deletedExpId) {
+          const stillHasChar = updatedChars.some(c => c.expeditionId === deletedExpId)
+          if (!stillHasChar) setActivePageId(null)
+        }
       }
-    }
 
+      return updatedChars
+    })
+    setRaids(prev => { const n = { ...prev }; delete n[charId]; return n })
     if (isLoggedIn) fetch(`/api/characters?id=${charId}`, { method: 'DELETE' }).catch(() => {})
   }
 
@@ -607,6 +655,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             ...existing,
           ]
       })
+      await prefetchImageUrls(collectDashboardImageUrls(demoChars, demoRaids, demoCustom))
       setChars(prev => sortChars([...prev, ...demoChars]))
       if (Object.keys(demoRaids).length  > 0) setRaids(prev      => ({ ...prev, ...demoRaids  }))
       if (Object.keys(demoCustom).length > 0) setCustomItems(prev => ({ ...prev, ...demoCustom }))
@@ -673,6 +722,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       if (addedExpId && addedExpId !== activePageId) setActivePageId(addedExpId)
 
       // 레이드 DB 저장 (실제 ID 확정 후)
+      await prefetchImageUrls(collectDashboardImageUrls(addedChars, newRaids, newCustom))
+
       Object.entries(newRaids).forEach(([charId, entries]) => {
         entries.forEach(entry => persistRaid(charId, entry))
       })
