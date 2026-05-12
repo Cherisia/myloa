@@ -10,7 +10,7 @@ import { getNextResetAt, isResetPassed } from '@/lib/raidData'
 // 소유권 검증
 async function verifyCharacterOwner(characterId, userId) {
   const char = await prisma.character.findFirst({
-    where: { id: characterId, loaAccount: { userId } },
+    where: { id: characterId, expedition: { userId } },
   })
   return !!char
 }

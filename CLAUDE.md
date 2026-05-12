@@ -14,8 +14,22 @@
 ```
 app/
   dashboard/
-    page.js            # 서버 컴포넌트 — DB 조회 후 DashboardClient에 전달
-    DashboardClient.js # 메인 대시보드 (캐릭터·레이드 숙제, 테이블/카드 뷰)
+    page.js              # 서버 컴포넌트 — DB 조회 후 DashboardClient에 전달
+    DashboardClient.js   # 메인 대시보드 (import만 + 메인 함수, ~2100줄)
+    _constants.js        # EX_RAID_IDS, GOLD_RAID_LIMIT, CLASS_ICON, AUTO_PRESETS 등
+    _icons.js            # IconCrown, IconPlus, IconCheck 등 SVG 아이콘 컴포넌트
+    _raidHelpers.js      # saveRaid, deleteRaid, computeAutoRaids, autoSelect* 함수
+    modals/
+      RaidSettingsModal.js   # 캐릭터별 레이드·골드 설정
+      CharacterEditModal.js  # 캐릭터 목록 (DnD 순서변경, 일괄삭제)
+      CharacterAddModal.js   # API 키 가이드 + 로스트아크 API 캐릭터 검색·추가 (3단계)
+      AutoSetupModal.js      # 원정대 자동 세팅
+      CustomSettingsModal.js # 커스텀 숙제 설정
+    components/
+      RaidCell.js        # 레이드 완료 토글 셀
+      AnimatedGold.js    # 골드 숫자 애니메이션
+      CharGoldBadges.js  # 캐릭터별 골드 배지
+      Confetti.js        # 100% 완료 폭죽
   group/
     page.js            # 그룹 목록
     [id]/
@@ -87,19 +101,8 @@ const ACCOUNT_INCLUDE = {
 }
 ```
 
-## 주요 컴포넌트 (DashboardClient.js)
-
-| 컴포넌트 | 역할 |
-|---|---|
-| `RaidSettingsModal` | 캐릭터별 레이드·골드 설정 |
-| `CharacterEditModal` | 캐릭터 목록 (DnD 순서변경, 일괄삭제) |
-| `CharacterAddModal` | 로스트아크 API 캐릭터 검색·추가 (3단계 flow) |
-| `AutoSetupModal` | 원정대 자동 세팅 |
-| `RaidCell` | 레이드 완료 토글 셀 |
-| `AnimatedGold` | 골드 숫자 애니메이션 |
-| `Confetti` | 100% 완료 폭죽 |
-
 ## 알려진 제약
 - `AutoSetupModal`: `raidsByName`은 `previewBase`(chars+apiKey) + `strategy`에서 `useMemo`로 파생 — effect로 관리하지 않음
 - 드래그앤드랍(캐릭터 순서): HTML5 DnD API + 커스텀 ghost (`setDragImage`)
 - `CharacterAddModal`의 localStorage API키 로드는 `useEffect`로 처리
+- `ApiKeyGuideModal`은 `CharacterAddModal.js` 안에 로컬 함수로 포함됨

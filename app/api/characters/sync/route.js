@@ -1,5 +1,5 @@
 // POST /api/characters/sync
-// 저장된 API 키로 전체 캐릭터 정보(아이템레벨·전투력)를 갱신
+// User에 저장된 API 키로 전체 캐릭터 정보(아이템레벨·전투력)를 갱신
 
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
@@ -22,43 +22,47 @@ async function fetchProfile(name, apiKey) {
 
 export async function POST() {
   const session = await auth()
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 })
-  }
+  if (!session?.user?.id) return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 })
 
-  const accounts = await prisma.loaAccount.findMany({
-    where: { userId: session.user.id },
-    include: {
-      characters: { where: { isActive: true } },
-    },
+  // User에 저장된 API 키 조회
+  const user = await prisma.user.findUnique({
+    where:  { id: session.user.id },
+    select: { apiKey: true },
   })
 
-  if (!accounts.length) {
-    return NextResponse.json({ error: '연동된 계정이 없습니다' }, { status: 404 })
+  if (!user?.apiKey) {
+    return NextResponse.json({ error: 'API 키가 등록되어 있지 않습니다' }, { status: 404 })
+  }
+
+  let apiKey
+  try {
+    apiKey = decrypt(user.apiKey)
+  } catch {
+    return NextResponse.json({ error: 'API 키 복호화 실패' }, { status: 500 })
+  }
+
+  // 모든 원정대 캐릭터 조회
+  const expeditions = await prisma.loaExpedition.findMany({
+    where: { userId: session.user.id },
+    include: { characters: { where: { isActive: true } } },
+  })
+
+  if (!expeditions.length) {
+    return NextResponse.json({ error: '등록된 캐릭터가 없습니다' }, { status: 404 })
   }
 
   let updatedCount = 0
 
-  for (const account of accounts) {
-    let apiKey
-    try {
-      apiKey = decrypt(account.apiKey)
-    } catch {
-      continue // 복호화 실패 시 해당 계정 스킵
-    }
-
-    // 각 캐릭터 프로필 병렬 조회
-    await Promise.all(
-      account.characters.map(async (char) => {
+  await Promise.all(
+    expeditions.flatMap(exp =>
+      exp.characters.map(async (char) => {
         try {
           const data = await fetchProfile(char.name, apiKey)
           if (!data?.ArmoryProfile) return
 
-          const profile = data.ArmoryProfile
-
-          const rawLevel = profile.ItemMaxLevel ?? profile.ItemAvgLevel ?? '0'
-          const itemLevel = parseFloat(String(rawLevel).replace(/,/g, '')) || char.itemLevel
-
+          const profile    = data.ArmoryProfile
+          const rawLevel   = profile.ItemMaxLevel ?? profile.ItemAvgLevel ?? '0'
+          const itemLevel  = parseFloat(String(rawLevel).replace(/,/g, '')) || char.itemLevel
           const combatPower = profile.CombatPower
             ? parseFloat(String(profile.CombatPower).replace(/,/g, ''))
             : char.combatPower
@@ -73,16 +77,16 @@ export async function POST() {
         }
       })
     )
+  )
 
-    // 계정 마지막 동기화 시각 갱신
-    await prisma.loaAccount.update({
-      where: { id: account.id },
-      data:  { lastSyncedAt: new Date() },
-    })
-  }
+  // 마지막 동기화 시각 갱신
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data:  { lastSyncedAt: new Date() },
+  })
 
   // 갱신된 캐릭터 목록 반환
-  const updated = await prisma.loaAccount.findMany({
+  const updated = await prisma.loaExpedition.findMany({
     where: { userId: session.user.id },
     include: {
       characters: {
@@ -92,15 +96,18 @@ export async function POST() {
     },
   })
 
-  const characters = updated.flatMap(acc =>
-    acc.characters.map(c => ({
-      id:          c.id,
-      name:        c.name,
-      class:       c.class,
-      server:      c.server,
-      itemLevel:   c.itemLevel,
-      combatPower: c.combatPower ?? null,
-      account:     acc.label,
+  const characters = updated.flatMap(exp =>
+    exp.characters.map(c => ({
+      id:           c.id,
+      name:         c.name,
+      class:        c.class,
+      server:       c.server,
+      itemLevel:    c.itemLevel,
+      combatPower:  c.combatPower ?? null,
+      sortOrder:    c.sortOrder,
+      account:        exp.label,
+      expeditionId:   exp.id,
+      accountRepChar: exp.repCharName ?? null,
     }))
   )
 

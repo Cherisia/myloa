@@ -26,7 +26,7 @@ export async function GET(_, { params }) {
           user: {
             select: {
               id: true, name: true, image: true,
-              loaAccounts: {
+              loaExpeditions: {
                 include: {
                   characters: {
                     where:   { isActive: true },
@@ -46,7 +46,7 @@ export async function GET(_, { params }) {
           user: {
             select: {
               id: true, name: true, image: true,
-              loaAccounts: {
+              loaExpeditions: {
                 include: {
                   characters: {
                     where: { isActive: true },
@@ -73,8 +73,8 @@ export async function GET(_, { params }) {
 
   // 멤버 데이터 가공
   const members = group.members.map(m => {
-    const chars = m.user.loaAccounts.flatMap(acc =>
-      acc.characters.map(c => ({
+    const chars = m.user.loaExpeditions.flatMap(exp =>
+      exp.characters.map(c => ({
         id:          c.id,
         name:        c.name,
         class:       c.class,
@@ -111,7 +111,7 @@ export async function GET(_, { params }) {
     image:     r.user.image,
     message:   r.message,
     createdAt: r.createdAt,
-    topChar:   r.user.loaAccounts.flatMap(a => a.characters)[0] || null,
+    topChar:   r.user.loaExpeditions.flatMap(e => e.characters)[0] || null,
   })) : []
 
   return NextResponse.json({

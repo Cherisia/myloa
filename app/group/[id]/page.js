@@ -106,7 +106,7 @@ export default async function GroupDetailPage({ params }) {
             select: {
               id: true, name: true, image: true,
               repCharId: true,
-              loaAccounts: {
+              loaExpeditions: {
                 include: {
                   characters: {
                     where:   { isActive: true },
@@ -126,7 +126,7 @@ export default async function GroupDetailPage({ params }) {
           user: {
             select: {
               id: true, name: true, image: true,
-              loaAccounts: {
+              loaExpeditions: {
                 include: {
                   characters: {
                     where:   { isActive: true },
@@ -154,7 +154,7 @@ export default async function GroupDetailPage({ params }) {
 
   // 멤버 데이터 가공
   const members = group.members.map(m => {
-    const allChars = m.user.loaAccounts.flatMap(acc => acc.characters)
+    const allChars = m.user.loaExpeditions.flatMap(exp => exp.characters)
     const chars = allChars.map(c => ({
       id:          c.id,
       name:        c.name,
@@ -204,7 +204,7 @@ export default async function GroupDetailPage({ params }) {
         image:     r.user.image,
         message:   r.message,
         createdAt: r.createdAt,
-        topChar:   r.user.loaAccounts.flatMap(a => a.characters)[0] ?? null,
+        topChar:   r.user.loaExpeditions.flatMap(e => e.characters)[0] ?? null,
       }))
     : []
 
