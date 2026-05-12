@@ -185,22 +185,49 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     }
   }
 
-  // 페이지 이름 저장 — DB + 클라이언트 state 동시 갱신
+  // 페이지 이름 저장 — DB + 클라이언트 state 동시 갱신 (실패 시 DB 기준 이름으로 되돌림)
   const savePageName = () => {
-    if (!editingPageId) return
+    const pageId = editingPageId
+    if (!pageId) return
     const trimmed = editingPageName.trim()
-    if (trimmed) {
-      setExpNames(prev => ({ ...prev, [editingPageId]: trimmed }))
-      if (isLoggedIn) {
-        fetch(`/api/expeditions/${editingPageId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ customName: trimmed }),
-        }).catch(() => {})
-      }
+    const hadStoredName = Object.prototype.hasOwnProperty.call(expNames, pageId)
+    const previous = expNames[pageId]
+
+    const closeEditor = () => {
+      setEditingPageId(null)
+      setEditingPageName('')
     }
-    setEditingPageId(null)
-    setEditingPageName('')
+
+    if (!trimmed) {
+      closeEditor()
+      return
+    }
+
+    setExpNames(prev => ({ ...prev, [pageId]: trimmed }))
+    closeEditor()
+
+    if (!isLoggedIn) return
+
+    fetch(`/api/expeditions/${encodeURIComponent(pageId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customName: trimmed }),
+    }).then(res => {
+      if (res.ok) return
+      setExpNames(prev => {
+        const next = { ...prev }
+        if (hadStoredName) next[pageId] = previous
+        else delete next[pageId]
+        return next
+      })
+    }).catch(() => {
+      setExpNames(prev => {
+        const next = { ...prev }
+        if (hadStoredName) next[pageId] = previous
+        else delete next[pageId]
+        return next
+      })
+    })
   }
 
   // 톱니바퀴 메뉴 외부 클릭 시 닫기
@@ -900,7 +927,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       onChange={e => setEditingPageName(e.target.value)}
                       onBlur={savePageName}
                       onKeyDown={e => {
-                        if (e.key === 'Enter')  savePageName()
+                        if (e.key === 'Enter') { e.preventDefault(); savePageName() }
                         if (e.key === 'Escape') { setEditingPageId(null); setEditingPageName('') }
                       }}
                       className="px-3 py-1.5 rounded-full text-xs ns-bold bg-yellow-300 dark:bg-yellow-500/30 text-yellow-900 dark:text-yellow-300 outline-none w-28"
