@@ -74,10 +74,7 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id
-  const [userRecord, expeditionsRaw] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { repCharId: true } }),
-    prisma.loaExpedition.findMany({ where: { userId }, include: EXPEDITION_INCLUDE }),
-  ])
+  const expeditionsRaw = await prisma.loaExpedition.findMany({ where: { userId }, include: EXPEDITION_INCLUDE })
   let expeditions = expeditionsRaw
 
   // 리셋 만료된 항목 일괄 처리
@@ -96,8 +93,6 @@ export default async function DashboardPage() {
     )
     expeditions = await prisma.loaExpedition.findMany({ where: { userId }, include: EXPEDITION_INCLUDE })
   }
-
-  const initialRepCharId = userRecord?.repCharId ?? null
 
   const initialChars = []
   const initialRaids = {}
@@ -126,5 +121,5 @@ export default async function DashboardPage() {
     })
   )
 
-  return <DashboardClient initialChars={initialChars} initialRaids={initialRaids} isLoggedIn initialRepCharId={initialRepCharId} />
+  return <DashboardClient initialChars={initialChars} initialRaids={initialRaids} isLoggedIn />
 }

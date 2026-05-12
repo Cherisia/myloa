@@ -16,7 +16,7 @@ import CharGoldBadges from './components/CharGoldBadges'
 import RaidCell from './components/RaidCell'
 import Confetti from './components/Confetti'
 
-export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialRepCharId = null, initialCustomItems = {} }) {
+export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialCustomItems = {} }) {
   const isDemo = !isLoggedIn
   const [chars, setChars] = useState(initialChars)
   const [raids, setRaids] = useState(initialRaids)
@@ -33,7 +33,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [exRaidError, setExRaidError]           = useState(null) // { raidName, conflictCharName }
   const [cardView, setCardView]                 = useState(true)
   const [fitMode, setFitMode]                   = useState(false)
-  const [showRepCharModal, setShowRepCharModal] = useState(false)
+
   const [dragCharId, setDragCharId]             = useState(null) // 드래그 중인 캐릭터 id
   const [dropCharId, setDropCharId]             = useState(null) // 드롭 대상 캐릭터 id
   const [selectedRaid, setSelectedRaid]         = useState(null) // { raidId, diffKey } — 레이드 필터
@@ -267,24 +267,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: Math.max(0, Math.min(100, value)) } }))
   }
 
-  // 대표 캐릭터 = 아이템레벨 최고
-  // 대표 캐릭터 — DB 저장값 우선, 없으면 최고 아이템레벨 캐릭터
-  const fallbackRepCharId = useMemo(
+  // 대표 캐릭터 — 아이템레벨 최고 캐릭터
+  const repCharId = useMemo(
     () => chars.length === 0 ? null : chars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b).id,
     [chars]
   )
-  const [repCharId, setRepCharIdState] = useState(initialRepCharId ?? fallbackRepCharId)
-
-  // 대표 캐릭터 변경
-  const setRepChar = async (charId) => {
-    if (!isLoggedIn || charId === repCharId) return
-    setRepCharIdState(charId) // optimistic
-    await fetch('/api/users/rep-char', {
-      method:  'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ charId }),
-    })
-  }
 
   // ── 레이드 필터 — 활성 계정 캐릭터에 등록된 고유 레이드 목록 ──────────────
   const allRegisteredRaids = useMemo(() => {
@@ -1009,13 +996,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <p className="text-xs ns-bold text-gray-800 dark:text-gray-100 truncate">{repChar.name}</p>
-                        <span className="text-[9px] ns-bold text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-1 py-px rounded flex-shrink-0">대표캐릭터</span>
-                        <button
-                          onClick={() => setShowRepCharModal(true)}
-                          className="text-[9px] ns-bold text-gray-400 dark:text-gray-500 hover:text-yellow-500 dark:hover:text-yellow-400 border border-gray-200 dark:border-[#383838] rounded px-1 py-px hover:border-yellow-300 dark:hover:border-yellow-700 transition-colors leading-none flex-shrink-0"
-                        >
-                          변경
-                        </button>
                       </div>
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         <span className="text-[10px] text-gray-400 dark:text-gray-500">{repChar.class}</span>
@@ -1036,15 +1016,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-auto pt-3">원정대 캐릭터 <span className="ns-bold text-gray-600 dark:text-gray-300">{activeChars.length}개</span></p>
                   </div>
                 ) : (
-                  <div className="flex-1 flex items-center justify-between">
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500">미설정</p>
-                    <button
-                      onClick={() => setShowRepCharModal(true)}
-                      className="text-[9px] ns-bold text-gray-400 dark:text-gray-500 hover:text-yellow-500 dark:hover:text-yellow-400 border border-gray-200 dark:border-[#383838] rounded px-1 py-px hover:border-yellow-300 dark:hover:border-yellow-700 transition-colors leading-none"
-                    >
-                      변경
-                    </button>
-                  </div>
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500">미설정</p>
                 )}
               </div>
             )
@@ -1246,7 +1218,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     }
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-0.5">
-                        {char.id === repCharId && <span className="text-yellow-400 flex-shrink-0"><IconCrown /></span>}
                         <p className={`${nameSize(char.name)} ns-bold text-gray-900 dark:text-white truncate`}>{char.name}</p>
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500 overflow-hidden">
@@ -1563,9 +1534,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />
                             )}
                             <div className="flex items-center gap-0.5 w-full justify-center overflow-hidden">
-                                {char.id === repCharId && (
-                                <span className="text-yellow-400 flex-shrink-0"><IconCrown /></span>
-                              )}
                               <span className={`${nameSize(char.name)} ns-bold text-gray-800 dark:text-gray-100 leading-tight text-center truncate`}>{char.name}</span>
                             </div>
                             <div className="flex flex-col items-start gap-0.5">
@@ -1895,76 +1863,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         )
       })()}
       </div>
-
-      {/* ── 대표 캐릭터 변경 모달 ── */}
-      {showRepCharModal && (() => {
-        // 원정대별로 그룹화
-        const accounts = chars.reduce((acc, c) => {
-          const key = c.expeditionId
-          if (!acc[key]) acc[key] = { label: c.account, chars: [] }
-          acc[key].chars.push(c)
-          return acc
-        }, {})
-        return (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-            onClick={() => setShowRepCharModal(false)}
-          >
-            <div
-              className="w-full max-w-xs rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[80vh]"
-              onClick={e => e.stopPropagation()}
-            >
-              {/* 헤더 */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
-                <div>
-                  <p className="ns-bold text-gray-900 dark:text-white">대표 캐릭터 변경</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">그룹에서 나를 대표할 캐릭터를 선택하세요</p>
-                </div>
-                <button onClick={() => setShowRepCharModal(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
-              </div>
-              {/* 목록 */}
-              <div className="overflow-y-auto flex-1 py-2">
-                {Object.values(accounts).map(({ label, chars: acChars }) => (
-                  <div key={label}>
-                    <p className="px-5 pt-3 pb-1.5 text-[10px] ns-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{label}</p>
-                    {acChars.map(c => {
-                      const isRep = c.id === repCharId
-                      const icon  = getClassIcon(c.class)
-                      return (
-                        <button
-                          key={c.id}
-                          onClick={() => { setRepChar(c.id); setShowRepCharModal(false) }}
-                          className={`w-full flex items-center gap-3 px-5 py-2.5 transition-colors text-left ${
-                            isRep
-                              ? 'bg-yellow-50 dark:bg-yellow-900/15'
-                              : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
-                          }`}
-                        >
-                          {icon
-                            ? <img src={icon} alt={c.class} className="class-icon w-7 h-7 object-contain flex-shrink-0" />
-                            : <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex-shrink-0" />
-                          }
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm ns-bold truncate ${isRep ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-800 dark:text-gray-100'}`}>
-                              {c.name}
-                            </p>
-                            <p className="text-[10px] text-gray-400 dark:text-gray-500">
-                              {c.class} · Lv.{c.itemLevel.toFixed(2)}
-                            </p>
-                          </div>
-                          {isRep && (
-                            <span className="flex-shrink-0 text-yellow-400"><IconCrown /></span>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )
-      })()}
 
       {/* ── 모달 ── */}
       {showRaidSettings && (
