@@ -4,13 +4,12 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import DiscordIcon from '@/components/DiscordIcon'
 import { RAIDS, CLASS_COLOR, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
-import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, getClassIcon, CUSTOM_MAX } from './_constants'
+import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, DAILY_PRESET_ORDER, orderedDailyCustomItems, isWeeklyCustomItem, getClassIcon, CUSTOM_MAX } from './_constants'
 import { IconCrown, IconPlus, IconCheck, IconRefresh, IconInfo, IconClass, IconItemLevel, IconPower, IconGrip } from './_icons'
 import { saveRaid, deleteRaid, computeAutoRaids } from './_raidHelpers'
 import RaidSettingsModal from './modals/RaidSettingsModal'
 import CharacterEditModal from './modals/CharacterEditModal'
 import AutoSetupModal from './modals/AutoSetupModal'
-import CustomSettingsModal from './modals/CustomSettingsModal'
 import AnimatedGold from './components/AnimatedGold'
 import CharGoldBadges from './components/CharGoldBadges'
 import RaidCell from './components/RaidCell'
@@ -48,6 +47,18 @@ function prefetchImageUrls(rawUrls, timeoutMs = 12_000) {
   return Promise.race([loadAll, deadline])
 }
 
+/** 표용: 조건에 맞는 커스텀 숙제를 이름별로 묶음 */
+function buildCustomHomeworkRowMap(filteredChars, customItems, includeItem) {
+  const byName = new Map()
+  filteredChars.forEach((char) => {
+    (customItems[char.id] || []).filter(includeItem).forEach((it) => {
+      if (!byName.has(it.name)) byName.set(it.name, { charMap: new Map(), meta: { image: it.image, type: it.type } })
+      byName.get(it.name).charMap.set(char.id, it.id)
+    })
+  })
+  return byName
+}
+
 export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialCustomItems = {}, initialExpNames = {} }) {
   const isDemo = !isLoggedIn
   const [chars, setChars] = useState(initialChars)
@@ -70,10 +81,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [dragCharId, setDragCharId]             = useState(null) // 드래그 중인 캐릭터 id
   const [dropCharId, setDropCharId]             = useState(null) // 드롭 대상 캐릭터 id
   const [selectedRaid, setSelectedRaid]         = useState(null) // { raidId, diffKey } — 레이드 필터
-  const [showCustomSettings, setShowCustomSettings] = useState(false)
   const [gearMenuCharId, setGearMenuCharId]     = useState(null) // 카드 톱니바퀴 메뉴
   const [raidSettingsCharId, setRaidSettingsCharId] = useState(null)
-  const [customSettingsCharId, setCustomSettingsCharId] = useState(null)
   // 원정대 페이지
   const [activePageId, setActivePageId]         = useState(null)
   const [editingPageId, setEditingPageId]       = useState(null) // 이름 편집 중인 페이지 id
@@ -995,14 +1004,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
             </svg>
-            레이드 설정
-          </button>
-          <button onClick={() => activeChars.length === 0 ? setShowNoChar(true) : setShowCustomSettings(true)}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            커스텀 설정
+            레이드 · 커스텀 설정
           </button>
           <button onClick={() => setShowCharEdit(true)}
             className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
@@ -1230,18 +1232,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               const isDragging = dragCharId === char.id
               const isDragOver = dropCharId === char.id && dragCharId !== char.id
 
-              // 일일 숙제 항목 (휴식게이지 대상)
-              const dailyItems = !selectedRaid
-                ? (customItems[char.id] || []).filter(it => REST_GAUGE_NAMES.has(it.name))
-                : []
+              const charCustomList = !selectedRaid ? (customItems[char.id] || []) : []
+              // 일일 숙제: 쿠르잔·가디언 고정 순 + type==='daily' 기타
+              const orderedDaily = !selectedRaid ? orderedDailyCustomItems(charCustomList) : []
               // 주간 레이드 완료 카운트
               const raidDoneCount = charRaids.filter(e => e.gateClears.every(Boolean)).length
               // 일일 숙제 완료 카운트
-              const dailyDoneCount = dailyItems.filter(it => !!(customChecks[char.id]?.[it.id])).length
-              // 주간 숙제 항목 (비 휴식게이지)
-              const weeklyItems = !selectedRaid
-                ? (customItems[char.id] || []).filter(it => !REST_GAUGE_NAMES.has(it.name))
-                : []
+              const dailyDoneCount = orderedDaily.filter(it => !!(customChecks[char.id]?.[it.id])).length
+              // 주간 숙제 항목
+              const weeklyItems = !selectedRaid ? charCustomList.filter(isWeeklyCustomItem) : []
               const weeklyDoneCount = weeklyItems.filter(it => !!(customChecks[char.id]?.[it.id])).length
 
               return (
@@ -1285,7 +1284,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     {/* ⚙ 설정 버튼 */}
                     <button
                       onClick={e => { e.stopPropagation(); setRaidSettingsCharId(char.id); setShowRaidSettings(true) }}
-                      title="레이드 설정"
+                      title="레이드 · 커스텀 설정"
                       className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#2a2a2a] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0"
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1312,47 +1311,67 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   </div>
 
                   {/* ── 일일 숙제 섹션 ── */}
-                  {dailyItems.length > 0 && (
+                  {orderedDaily.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
                         <span className="text-[10px] ns-bold text-yellow-700 dark:text-yellow-400">일일 숙제</span>
-                        <span className="text-[10px] text-yellow-500 dark:text-yellow-500">({dailyDoneCount}/{dailyItems.length})</span>
+                        <span className="text-[10px] text-yellow-500 dark:text-yellow-500">({dailyDoneCount}/{orderedDaily.length})</span>
                       </div>
                       <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
-                        {dailyItems.map(item => {
+                        {orderedDaily.map(item => {
                           const checked = !!(customChecks[char.id]?.[item.id])
                           const gauge   = restGauge[char.id]?.[item.id] ?? 0
-                          return (
-                            <div key={item.id} className={`transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''}`}>
-                              <div
-                                onClick={() => toggleCustomCheck(char.id, item.id)}
-                                className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer ${
-                                  checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
-                                }`}
-                              >
-                                {item.image && <img src={item.image} alt="" className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
-                                <div className="flex-1 min-w-0">
-                                  <p className={`text-[11px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
-                                  {/* 휴식 게이지 */}
-                                  <div className="flex items-center gap-1 mt-0.5">
-                                    <div className="flex-1 flex gap-px">
-                                      {Array.from({ length: 10 }).map((_, i) => (
-                                        <div
-                                          key={i}
-                                          onClick={e => { e.stopPropagation(); setRestGaugeValue(char.id, item.id, (i + 1) * 10) }}
-                                          className={`h-1.5 flex-1 cursor-pointer transition-colors ${gauge > i * 10 ? 'bg-green-400 dark:bg-green-500 hover:bg-green-300' : 'bg-gray-200 dark:bg-[#2e2e2e] hover:bg-gray-300'} ${i === 0 ? 'rounded-l-full' : ''} ${i === 9 ? 'rounded-r-full' : ''}`}
-                                        />
-                                      ))}
+                          const showRestGauge = REST_GAUGE_NAMES.has(item.name)
+                          if (showRestGauge) {
+                            return (
+                              <div key={item.id} className={`transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''}`}>
+                                <div
+                                  onClick={() => toggleCustomCheck(char.id, item.id)}
+                                  className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer ${
+                                    checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                                  }`}
+                                >
+                                  {item.image && <img src={item.image} alt="" className="custom-homework-icon w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-[10px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
+                                    <div className="flex items-center gap-1 mt-0.5">
+                                      <div className="flex-1 flex gap-px">
+                                        {Array.from({ length: 10 }).map((_, i) => (
+                                          <div
+                                            key={i}
+                                            onClick={e => { e.stopPropagation(); setRestGaugeValue(char.id, item.id, (i + 1) * 10) }}
+                                            className={`h-1.5 flex-1 cursor-pointer transition-colors ${gauge > i * 10 ? 'bg-green-400 dark:bg-green-500 hover:bg-green-300' : 'bg-gray-200 dark:bg-[#2e2e2e] hover:bg-gray-300'} ${i === 0 ? 'rounded-l-full' : ''} ${i === 9 ? 'rounded-r-full' : ''}`}
+                                          />
+                                        ))}
+                                      </div>
+                                      <span className="text-[9px] tabular-nums ns-bold text-green-500 dark:text-green-400 flex-shrink-0">{gauge}</span>
                                     </div>
-                                    <span className="text-[9px] tabular-nums ns-bold text-green-500 dark:text-green-400 flex-shrink-0">{gauge}</span>
+                                  </div>
+                                  <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                                    checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
+                                  }`}>
+                                    {checked && <IconCheck />}
                                   </div>
                                 </div>
-                                {/* 체크박스 — 오른쪽 */}
-                                <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
-                                  checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
-                                }`}>
-                                  {checked && <IconCheck />}
-                                </div>
+                              </div>
+                            )
+                          }
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => toggleCustomCheck(char.id, item.id)}
+                              className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
+                                checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                              }`}
+                            >
+                              {item.image && <img src={item.image} alt="" className="custom-homework-icon w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                              <p className={`flex-1 min-w-0 text-[10px] ns-bold truncate ${
+                                checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
+                              }`}>{item.name}</p>
+                              <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                                checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
+                              }`}>
+                                {checked && <IconCheck />}
                               </div>
                             </div>
                           )
@@ -1456,11 +1475,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {item.image && <img src={item.image} alt="" className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
-                              <span className={`flex-1 text-[11px] ns-bold truncate ${
+                              {item.image && <img src={item.image} alt="" className="custom-homework-icon w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                              <p className={`flex-1 min-w-0 text-[10px] ns-bold truncate ${
                                 checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
-                              }`}>{item.name}</span>
-                              {/* 체크박스 — 오른쪽 */}
+                              }`}>{item.name}</p>
                               <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
                               }`}>
@@ -1480,12 +1498,25 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         )
 
         // ── 테이블 뷰 ────────────────────────────────────────────────────────
-        const renderCustomRow = (name, charMap, meta, chars) => (
-          <tr key={name} className="group">
-            <td style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-2">
+        const renderCustomRow = (name, charMap, meta, chars, compact = false, colW = null) => {
+          const rw = colW?.raid ?? COL_RAID
+          const cw = colW?.char ?? COL_CHAR
+          const stretch = colW?.stretch ?? false
+          const charCellStyle = stretch
+            ? { width: cw, minWidth: 0, overflow: 'hidden' }
+            : { width: cw, maxWidth: cw, overflow: 'hidden' }
+          return (
+          <tr key={name} className={compact
+            ? 'group border-b border-gray-100 dark:border-[#2a2a2a]'
+            : 'group/row transition-colors border-b border-gray-100/90 dark:border-white/[0.05] hover:bg-gray-50/90 dark:hover:bg-white/[0.03]'
+          }>
+            <td style={{ width: rw, minWidth: stretch ? 0 : COL_RAID }} className={compact
+              ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-2'
+              : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/90 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.03] border-r border-gray-100/90 dark:border-white/[0.06] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
+            }>
               <div className="flex items-center gap-1.5">
-                {meta.image && <img src={meta.image} alt="" className="w-[18px] h-[18px] object-contain flex-shrink-0" />}
-                <span className="text-xs ns-bold text-gray-500 dark:text-gray-400 truncate">{name}</span>
+                {meta.image && <img src={meta.image} alt="" className="custom-homework-icon w-[18px] h-[18px] object-contain flex-shrink-0" />}
+                <span className={compact ? 'text-xs ns-bold text-gray-500 dark:text-gray-400 truncate' : 'text-[11px] ns-bold text-gray-600 dark:text-gray-300 truncate'}>{name}</span>
               </div>
             </td>
             {chars.map(char => {
@@ -1494,13 +1525,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               const gauge   = itemId ? (restGauge[char.id]?.[itemId] ?? 0) : 0
               const isRest  = REST_GAUGE_NAMES.has(name)
               return (
-                <td key={char.id} style={{ width: COL_CHAR, maxWidth: COL_CHAR }} className="border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1">
+                <td key={char.id} style={charCellStyle} className={compact
+                  ? 'border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1 align-middle'
+                  : 'border-r border-gray-100/90 dark:border-white/[0.06] last:border-r-0 p-1.5 align-middle transition-colors group-hover/row:bg-gray-50/50 dark:group-hover/row:bg-white/[0.02]'
+                }>
                   {itemId ? (
-                    <div className="flex flex-col gap-0.5">
-                      <div onClick={() => toggleCustomCheck(char.id, itemId)} className={`flex items-center justify-center h-7 rounded cursor-pointer transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
-                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'}`}>{checked && <IconCheck />}</div>
-                      </div>
-                      {isRest && (
+                    isRest ? (
+                      <div className="flex flex-col gap-0.5 min-h-[52px] justify-center">
+                        <div onClick={() => toggleCustomCheck(char.id, itemId)} className={`flex items-center justify-center h-7 rounded cursor-pointer transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'}`}>{checked && <IconCheck />}</div>
+                        </div>
                         <div className="px-1 pt-0.5">
                           <div className="flex gap-px mb-0.5">
                             {Array.from({ length: 10 }).map((_, i) => (
@@ -1512,21 +1546,37 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                             ))}
                           </div>
                           <div className="flex items-center justify-between">
-                            <button onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, itemId, -10) }} disabled={gauge <= 0} className="text-[8px] text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors">−</button>
+                            <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, itemId, -10) }} disabled={gauge <= 0} className="text-[8px] text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors">−</button>
                             <span className="text-[8px] tabular-nums ns-bold text-green-500 dark:text-green-400">{gauge}</span>
-                            <button onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, itemId, 10) }} disabled={gauge >= 100} className="text-[8px] text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors">+</button>
+                            <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, itemId, 10) }} disabled={gauge >= 100} className="text-[8px] text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors">+</button>
                           </div>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => toggleCustomCheck(char.id, itemId)}
+                        className={`w-full h-[52px] flex items-center justify-center rounded cursor-pointer transition-colors ${
+                          checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                        }`}
+                      >
+                        <div className={`h-[26px] w-[26px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${
+                          checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900 shadow-sm' : 'border-gray-200 dark:border-[#383838]'
+                        }`}>
+                          {checked && <IconCheck />}
+                        </div>
+                      </div>
+                    )
                   ) : (
-                    <div className="h-8 flex items-center justify-center"><span className="text-gray-200 dark:text-gray-700">—</span></div>
+                    <div className="w-full h-[52px] bg-gray-50/50 dark:bg-[#181818]/30 rounded flex items-center justify-center">
+                      <span className="text-gray-200 dark:text-gray-700">—</span>
+                    </div>
                   )}
                 </td>
               )
             })}
           </tr>
-        )
+          )
+        }
 
         const renderTable = (charSubset, isSplit = false) => {
           const filteredChars = selectedRaid
@@ -1545,26 +1595,87 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           if (chunkRaidRows.length === 0 && !hasCustom) return null
 
           const tableNaturalWidth = COL_RAID + COL_CHAR * filteredChars.length
-          const tableScale = (fitMode && tableContainerWidth > 0)
-            ? Math.min(1, tableContainerWidth / tableNaturalWidth)
-            : 1
+          /** 한눈에 보기: zoom 대신 100% 너비 + 비율 열로 카드 오른쪽 빈 여백 제거 */
+          const colW = fitMode
+            ? {
+                raid: `${(COL_RAID / tableNaturalWidth) * 100}%`,
+                char: `${(COL_CHAR / tableNaturalWidth) * 100}%`,
+                stretch: true,
+              }
+            : { raid: COL_RAID, char: COL_CHAR, stretch: false }
+
+          /** 뷰포트에 스크롤 없이 들어올 때: 이전처럼 한눈에 보기 우선(장식 최소화). fitMode는 항상 컨테이너 폭에 맞춤 */
+          const glanceSlack = 24
+          const glanceTable =
+            fitMode ||
+            (tableContainerWidth > 0
+              ? tableNaturalWidth <= tableContainerWidth + glanceSlack
+              : filteredChars.length <= 8)
+
+          const colSpan = filteredChars.length + 1
+          const restDailyMap = buildCustomHomeworkRowMap(filteredChars, customItems, (it) => REST_GAUGE_NAMES.has(it.name))
+          const otherDailyMap = buildCustomHomeworkRowMap(
+            filteredChars,
+            customItems,
+            (it) => it.type === 'daily' && !DAILY_PRESET_ORDER.includes(it.name)
+          )
+          const weeklyMap = buildCustomHomeworkRowMap(filteredChars, customItems, isWeeklyCustomItem)
+          const showDailyHeader = !selectedRaid && (
+            DAILY_PRESET_ORDER.some((n) => restDailyMap.has(n)) || otherDailyMap.size > 0
+          )
+          const raidsToRender = selectedRaid
+            ? chunkRaidRows.filter((row) => row.raidId === selectedRaid.raidId)
+            : chunkRaidRows
+          const showRaidHeader = raidsToRender.length > 0
+          const showWeeklyHeader = !selectedRaid && weeklyMap.size > 0
+          const raidSectionTitle = selectedRaid ? '레이드 숙제' : '주간 레이드'
+
+          const theadSticky = glanceTable
+            ? 'sticky left-0 z-30 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-[#2a2a2a]'
+            : 'sticky left-0 z-30 bg-gradient-to-b from-gray-50/95 to-gray-50 dark:from-[#1c1c1c] dark:to-[#181818] border-r border-gray-200/70 dark:border-white/[0.08] shadow-[2px_0_10px_-4px_rgba(0,0,0,0.08)] dark:shadow-[2px_0_10px_-4px_rgba(0,0,0,0.45)]'
+
+          const theadRow1 = glanceTable
+            ? 'border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]'
+            : 'border-b border-gray-200/75 dark:border-white/[0.08] bg-gradient-to-b from-gray-50/90 to-gray-50 dark:from-[#1c1c1c] dark:to-[#181818]'
+          const theadRow2 = glanceTable
+            ? 'border-b border-gray-200 dark:border-[#383838] bg-gray-50 dark:bg-[#181818]'
+            : 'border-b border-gray-200/80 dark:border-white/[0.1] bg-gradient-to-b from-gray-50/90 to-gray-50 dark:from-[#1c1c1c] dark:to-[#181818]'
+          const thCharPad = glanceTable ? 'px-2 py-2 border-r border-gray-100 dark:border-[#2a2a2a]' : 'px-2.5 py-2.5 border-r border-gray-200/55 dark:border-white/[0.06]'
+          const thGoldPad = glanceTable ? 'px-2 py-1.5 border-r border-gray-100 dark:border-[#2a2a2a]' : 'px-2 py-2 border-r border-gray-200/55 dark:border-white/[0.06]'
+
+          const wrapClass = glanceTable
+            ? 'rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden'
+            : 'rounded-xl border border-gray-200/90 dark:border-[#333] bg-white/95 dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.35)] overflow-hidden backdrop-blur-sm'
+
+          const renderSectionHeader = (id, label) => (
+            <tr key={`sec-${id}`} className="pointer-events-none">
+              <td
+                colSpan={colSpan}
+                className="sticky left-0 z-20 border-y border-amber-200/65 dark:border-yellow-800/35 bg-gradient-to-r from-amber-50/95 via-yellow-50/45 to-transparent dark:from-yellow-900/32 dark:via-yellow-900/12 dark:to-transparent px-3 py-2"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-0.5 h-3.5 shrink-0 rounded-full bg-yellow-500 dark:bg-yellow-400" aria-hidden />
+                  <span className="text-[11px] ns-bold text-yellow-900 dark:text-yellow-300 tracking-tight">{label}</span>
+                </div>
+              </td>
+            </tr>
+          )
 
           return (
           <div
-            className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden"
+            className={wrapClass}
             style={fitMode ? { width: '100%' } : isSplit ? { width: tableNaturalWidth } : { width: 'fit-content', maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto' }}
           >
-            <div
-              style={fitMode
-                ? { zoom: tableScale, transformOrigin: 'top left', width: `${tableNaturalWidth}px` }
-                : {}
-              }
-            >
-              <table className="border-collapse" style={{ tableLayout: 'fixed', width: COL_RAID + COL_CHAR * filteredChars.length }}>
+            <div style={fitMode ? { width: '100%' } : {}}>
+              <table className="border-collapse w-full text-left" style={{ tableLayout: 'fixed', width: fitMode ? '100%' : COL_RAID + COL_CHAR * filteredChars.length }}>
                 <thead>
                   {/* 1행: 캐릭터 이름 + 스탯 */}
-                  <tr className="border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
-                    <th style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-30 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-[#2a2a2a]"/>
+                  <tr className={theadRow1}>
+                    <th style={{ width: colW.raid, minWidth: colW.stretch ? 0 : COL_RAID }} className={`${theadSticky} ${glanceTable ? '' : 'align-middle px-2 py-2'}`}>
+                      {!glanceTable && (
+                        <span className="block text-center text-[10px] ns-bold tracking-tight text-gray-400 dark:text-gray-500">항목</span>
+                      )}
+                    </th>
                     {filteredChars.map(char => {
                       const isDragging = dragCharId === char.id
                       const isDragOver = dropCharId === char.id && dragCharId !== char.id
@@ -1576,15 +1687,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           onDragOver={(e) => handleCharDragOver(e, char.id)}
                           onDrop={(e) => handleCharDrop(e, char.id)}
                           onDragEnd={handleCharDragEnd}
-                          style={{ width: COL_CHAR, maxWidth: COL_CHAR, overflow: 'hidden' }}
-                          className={`px-2 py-2 border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 align-top select-none cursor-default transition-colors ${
+                          style={{ width: colW.char, maxWidth: colW.stretch ? undefined : COL_CHAR, minWidth: 0, overflow: 'hidden' }}
+                          className={`${thCharPad} last:border-r-0 align-top select-none cursor-default transition-colors ${
                             isDragging ? 'bg-yellow-100/80 dark:bg-yellow-900/25' :
                             isDragOver ? 'bg-yellow-50 dark:bg-yellow-900/10' :
                             dragCharId ? 'opacity-50' : ''
                           }`}
                         >
-                          <div className="flex flex-col items-center gap-0.5 w-full overflow-hidden">
-                            <span className="text-gray-300 dark:text-gray-600 mb-0.5"><IconGrip /></span>
+                          <div className={`flex flex-col items-center w-full overflow-hidden ${glanceTable ? 'gap-0.5' : 'gap-1'}`}>
+                            <span className={`text-gray-300 dark:text-gray-600 ${glanceTable ? 'mb-0.5' : ''}`}><IconGrip /></span>
                             {getClassIcon(char.class) && (
                               <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />
                             )}
@@ -1609,15 +1720,19 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     })}
                   </tr>
                   {/* 2행: 캐릭터별 획득 골드 */}
-                  <tr className="border-b border-gray-200 dark:border-[#383838] bg-gray-50 dark:bg-[#181818]">
-                    <th style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-30 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-[#2a2a2a]"/>
+                  <tr className={theadRow2}>
+                    <th style={{ width: colW.raid, minWidth: colW.stretch ? 0 : COL_RAID }} className={`${theadSticky} ${glanceTable ? 'px-2 py-1.5' : 'px-2 py-2'}`}>
+                      {!glanceTable && (
+                        <span className="block text-center text-[9px] ns-bold tracking-tight text-gray-400/90 dark:text-gray-500 uppercase">골드</span>
+                      )}
+                    </th>
                     {filteredChars.map(char => (
                       <th
                         key={char.id}
                         onDragOver={(e) => handleCharDragOver(e, char.id)}
                         onDrop={(e) => handleCharDrop(e, char.id)}
-                        style={{ width: COL_CHAR, maxWidth: COL_CHAR, overflow: 'hidden' }}
-                        className={`px-2 py-1.5 border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 transition-colors ${
+                        style={{ width: colW.char, maxWidth: colW.stretch ? undefined : COL_CHAR, minWidth: 0, overflow: 'hidden' }}
+                        className={`${thGoldPad} last:border-r-0 transition-colors ${
                           dragCharId === char.id     ? 'bg-yellow-100/70 dark:bg-yellow-900/20' :
                           dropCharId === char.id     ? 'bg-yellow-50 dark:bg-yellow-900/10' :
                           dragCharId                 ? 'opacity-50' : ''
@@ -1633,31 +1748,33 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-[#2a2a2a]">
-                  {/* 커스텀 항목 공통 헬퍼: byName 맵 생성 */}
-                  {!selectedRaid && (() => {
-                    const byName = new Map()
-                    filteredChars.forEach(char => {
-                      ;(customItems[char.id] || []).forEach(it => {
-                        if (!byName.has(it.name)) byName.set(it.name, { charMap: new Map(), meta: { image: it.image, type: it.type } })
-                        byName.get(it.name).charMap.set(char.id, it.id)
-                      })
-                    })
-                    // REST_GAUGE 행만 여기(레이드 앞)에 렌더링
-                    return [...byName.entries()]
-                      .filter(([name]) => REST_GAUGE_NAMES.has(name))
-                      .map(([name, { charMap, meta }]) => renderCustomRow(name, charMap, meta, filteredChars))
-                  })()}
-                  {(selectedRaid ? chunkRaidRows.filter(row => row.raidId === selectedRaid.raidId) : chunkRaidRows).map(row => {
+                <tbody>
+                  {showDailyHeader && renderSectionHeader('daily', '일일 숙제')}
+                  {!selectedRaid && DAILY_PRESET_ORDER.flatMap((name) => {
+                    const row = restDailyMap.get(name)
+                    if (!row) return []
+                    return [renderCustomRow(name, row.charMap, row.meta, filteredChars, glanceTable, colW)]
+                  })}
+                  {!selectedRaid && [...otherDailyMap.keys()]
+                    .sort((a, b) => a.localeCompare(b, 'ko'))
+                    .map((name) => {
+                      const { charMap, meta } = otherDailyMap.get(name)
+                      return renderCustomRow(name, charMap, meta, filteredChars, glanceTable, colW)
+                    })}
+                  {showRaidHeader && renderSectionHeader('raid', raidSectionTitle)}
+                  {raidsToRender.map(row => {
                     const raidData = RAIDS.find(r => r.id === row.raidId)
                     return (
-                      <tr key={row.key} className="group">
-                        <td style={{ width: COL_RAID, minWidth: COL_RAID }} className="sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-1.5">
+                      <tr key={row.key} className={glanceTable ? 'group border-b border-gray-100 dark:border-[#2a2a2a]' : 'group/row transition-colors border-b border-gray-100/90 dark:border-white/[0.05] hover:bg-gray-50/90 dark:hover:bg-white/[0.03]'}>
+                        <td style={{ width: colW.raid, minWidth: colW.stretch ? 0 : COL_RAID }} className={glanceTable
+                          ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-1.5'
+                          : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/90 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.03] border-r border-gray-100/90 dark:border-white/[0.06] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
+                        }>
                           <div className="flex items-center gap-1.5">
                             {raidData?.image && (
                               <img src={raidData.image} alt={row.raidName} className="w-[18px] h-[18px] object-contain flex-shrink-0" />
                             )}
-                            <span className="text-xs ns-bold text-gray-800 dark:text-gray-100 truncate">{row.raidName}</span>
+                            <span className={`ns-bold text-gray-800 dark:text-gray-100 truncate ${glanceTable ? 'text-xs' : 'text-[11px]'}`}>{row.raidName}</span>
                           </div>
                         </td>
                         {filteredChars.map(char => {
@@ -1668,8 +1785,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               key={char.id}
                               onDragOver={(e) => handleCharDragOver(e, char.id)}
                               onDrop={(e) => handleCharDrop(e, char.id)}
-                              style={{ width: COL_CHAR, maxWidth: COL_CHAR, overflow: 'hidden' }}
-                              className={`border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1 transition-colors ${
+                              style={{ width: colW.char, maxWidth: colW.stretch ? undefined : COL_CHAR, minWidth: 0, overflow: 'hidden' }}
+                              className={`${glanceTable ? 'border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1' : 'border-r border-gray-100/90 dark:border-white/[0.06] last:border-r-0 p-1.5 group-hover/row:bg-gray-50/50 dark:group-hover/row:bg-white/[0.02]'} transition-colors ${
                                 dragCharId === char.id ? 'bg-yellow-100/50 dark:bg-yellow-900/15' :
                                 dropCharId === char.id ? 'bg-yellow-50/70 dark:bg-yellow-900/8' :
                                 dragCharId            ? 'opacity-50' : ''
@@ -1689,23 +1806,19 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   })}
                   {chunkRaidRows.length === 0 && !filteredChars.some(c => (customItems[c.id] || []).length > 0) && (
                     <tr>
-                      <td colSpan={filteredChars.length + 1} className="py-16 text-center">
+                      <td colSpan={colSpan} className="py-16 text-center border-b border-gray-100/80 dark:border-white/[0.06]">
                         <p className="text-gray-400 dark:text-gray-600 text-sm mb-2">표시할 레이드가 없습니다</p>
                         <p className="text-xs text-gray-300 dark:text-gray-700">캐릭터를 추가하여 숙제를 관리해보세요!</p>
                       </td>
                     </tr>
                   )}
-                  {/* 커스텀 항목 행 (기타) — REST_GAUGE 제외, 레이드 필터 선택 시 숨김 */}
-                  {!selectedRaid && (() => {
-                    const byName = new Map()
-                    filteredChars.forEach(char => {
-                      ;(customItems[char.id] || []).filter(it => !REST_GAUGE_NAMES.has(it.name)).forEach(it => {
-                        if (!byName.has(it.name)) byName.set(it.name, { charMap: new Map(), meta: { image: it.image, type: it.type } })
-                        byName.get(it.name).charMap.set(char.id, it.id)
-                      })
-                    })
-                    return [...byName.entries()].map(([name, { charMap, meta }]) => renderCustomRow(name, charMap, meta, filteredChars))
-                  })()}
+                  {showWeeklyHeader && renderSectionHeader('weekly', '주간 숙제')}
+                  {!selectedRaid && [...weeklyMap.keys()]
+                    .sort((a, b) => a.localeCompare(b, 'ko'))
+                    .map((name) => {
+                      const { charMap, meta } = weeklyMap.get(name)
+                      return renderCustomRow(name, charMap, meta, filteredChars, glanceTable, colW)
+                    })}
                 </tbody>
               </table>
             </div>
@@ -1881,7 +1994,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             {activeChars.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-2">
                 <p className="text-sm text-gray-400 dark:text-gray-600">표시할 레이드가 없습니다</p>
-                <p className="text-xs text-gray-300 dark:text-gray-700">레이드 설정에서 캐릭터별로 참여할 레이드를 추가하세요</p>
+                <p className="text-xs text-gray-300 dark:text-gray-700">상단 레이드 · 커스텀 설정에서 원정대·캐릭터별 레이드와 커스텀 숙제를 추가하세요</p>
               </div>
             ) : (
               cardView ? renderCardView() : (() => {
@@ -1922,9 +2035,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {/* ── 모달 ── */}
       {showRaidSettings && (
         <RaidSettingsModal
-          chars={activeChars}
+          chars={chars}
           raids={raids}
           expPages={expPages}
+          customItems={customItems}
           onToggle={toggleCharRaid}
           onToggleGold={toggleCharRaidGold}
           onClose={() => { setShowRaidSettings(false); setRaidSettingsCharId(null) }}
@@ -1933,6 +2047,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           onClearExRaidError={() => setExRaidError(null)}
           onOpenCharAdd={() => { setCharEditOpenAdd(true); setShowCharEdit(true) }}
           initialCharId={raidSettingsCharId}
+          onCustomAdd={addCustomItem}
+          onCustomDelete={deleteCustomItem}
+          onCustomDeleteAll={deleteCustomItemAll}
+          onCustomReorder={reorderCustomItems}
         />
       )}
       {showNoChar && (
@@ -1973,19 +2091,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           onClose={() => setShowAutoSetup(false)}
           existingRaids={raids}
           existingChars={chars}
-        />
-      )}
-
-      {showCustomSettings && (
-        <CustomSettingsModal
-          chars={activeChars}
-          customItems={customItems}
-          onAdd={addCustomItem}
-          onDelete={deleteCustomItem}
-          onDeleteAll={deleteCustomItemAll}
-          onReorder={reorderCustomItems}
-          onClose={() => { setShowCustomSettings(false); setCustomSettingsCharId(null) }}
-          initialCharId={customSettingsCharId}
         />
       )}
 

@@ -75,6 +75,17 @@ body {
   filter: brightness(0) invert(1) opacity(0.6);
 }
 
+/* 커스텀 숙제 아이콘 — 노랑/핑크/다크 테마 톤을 직업 아이콘과 동일하게 */
+.custom-homework-icon {
+  filter: brightness(0) sepia(1) saturate(2) hue-rotate(5deg) brightness(0.6);
+}
+[data-theme="pink"] .custom-homework-icon {
+  filter: brightness(0) sepia(1) saturate(3) hue-rotate(280deg) brightness(0.65);
+}
+.dark .custom-homework-icon {
+  filter: brightness(0) invert(1) opacity(0.6);
+}
+
 
 /* ═══════════════════════════════════════════════════════════════
    핑크 테마  [data-theme="pink"]

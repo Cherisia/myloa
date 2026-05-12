@@ -76,32 +76,21 @@ export default function Navbar() {
   ]
   const isActive = (href) => pathname === href || pathname.startsWith(href + '/')
 
-  const TOOLTIP_STYLE = {
-    yellow: 'bg-amber-50   text-amber-600  border border-amber-200',
-    pink:   'bg-pink-50    text-pink-500   border border-pink-200',
-    dark:   'bg-zinc-800   text-zinc-400   border border-zinc-700',
-  }
-
   const ThemeDots = () => (
     <div className="flex items-center gap-2">
       {THEMES.map(t => (
-        <div key={t.key} className="relative group/dot">
-          <button
-            onClick={() => setTheme(t.key)}
-            className={`w-3.5 h-3.5 rounded-full transition-all duration-200 ${
-              theme === t.key
-                ? `ring-2 ring-offset-2 scale-110 ${s.dotRing}`
-                : 'opacity-40 hover:opacity-75 hover:scale-110'
-            }`}
-            style={{ backgroundColor: t.color }}
-          />
-          {/* 툴팁 */}
-          <div className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1 opacity-0 group-hover/dot:opacity-100 transition-opacity duration-150 whitespace-nowrap">
-            <div className={`px-2 py-1 rounded-md text-[10px] ns-bold shadow-sm ${TOOLTIP_STYLE[t.key]}`}>
-              {t.label}
-            </div>
-          </div>
-        </div>
+        <button
+          key={t.key}
+          type="button"
+          onClick={() => setTheme(t.key)}
+          className={`w-3.5 h-3.5 rounded-full transition-all duration-200 ${
+            theme === t.key
+              ? `ring-2 ring-offset-2 scale-110 ${s.dotRing}`
+              : 'opacity-40 hover:opacity-75 hover:scale-110'
+          }`}
+          style={{ backgroundColor: t.color }}
+          aria-label={t.label}
+        />
       ))}
     </div>
   )

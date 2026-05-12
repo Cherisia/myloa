@@ -73,4 +73,31 @@ export const getClassIcon = (cls) => CLASS_ICON[cls] ? `/class/${CLASS_ICON[cls]
 // 휴식 게이지가 적용되는 커스텀 숙제 항목 이름
 export const REST_GAUGE_NAMES = new Set(['쿠르잔 전선', '가디언 토벌'])
 
+/** 일일 숙제 카드·표에서 쿠르잔 → 가디언 고정 순서 */
+export const DAILY_PRESET_ORDER = ['쿠르잔 전선', '가디언 토벌']
+
+/** 캐릭터 커스텀 목록을 일일 섹션 표시 순으로 정렬 */
+export function orderedDailyCustomItems(list) {
+  if (!list?.length) return []
+  const byName = new Map(list.map((it) => [it.name, it]))
+  const out = []
+  for (const name of DAILY_PRESET_ORDER) {
+    const it = byName.get(name)
+    if (it) out.push(it)
+  }
+  for (const it of list) {
+    if (DAILY_PRESET_ORDER.includes(it.name)) continue
+    if (it.type === 'daily') out.push(it)
+  }
+  return out
+}
+
+/** 주간 숙제 섹션(및 표 하단)에 넣을 커스텀 여부 — 휴식·일일 타입 제외 */
+export function isWeeklyCustomItem(it) {
+  if (!it) return false
+  if (REST_GAUGE_NAMES.has(it.name)) return false
+  if (it.type === 'daily') return false
+  return true
+}
+
 export const CUSTOM_MAX = 10

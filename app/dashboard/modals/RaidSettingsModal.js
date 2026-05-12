@@ -1,25 +1,119 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react'
 import { RAIDS } from '@/lib/raidData'
-import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT } from '../_constants'
+import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, getClassIcon } from '../_constants'
+import { IconClass } from '../_icons'
+import CustomItemsEditor from './CustomItemsEditor'
 
-// ── 레이드 설정 모달 (캐릭터별) ───────────────────────────────────────────────
-export default function RaidSettingsModal({ chars, raids, expPages, onToggle, onToggleGold, onClose, onConfirm, exRaidError, onClearExRaidError, onOpenCharAdd, initialCharId }) {
-  const initialIdx = initialCharId ? Math.max(0, chars.findIndex(c => c.id === initialCharId)) : 0
-  const [selectedIdx, setSelectedIdx] = useState(initialIdx)
-  const selectedChar = chars[selectedIdx]
+// ── 레이드 + 커스텀 숙제 설정 모달 — 원정대(탭)별 캐릭터 그룹 ───────────────────
+export default function RaidSettingsModal({
+  chars,
+  raids,
+  expPages,
+  customItems,
+  onToggle,
+  onToggleGold,
+  onClose,
+  onConfirm,
+  exRaidError,
+  onClearExRaidError,
+  onOpenCharAdd,
+  initialCharId,
+  onCustomAdd,
+  onCustomDelete,
+  onCustomDeleteAll,
+  onCustomReorder,
+}) {
+  const expGroups = useMemo(() => {
+    if (!chars.length) return []
+    const byExp = new Map()
+    chars.forEach(c => {
+      const id = c.expeditionId || 'unknown'
+      if (!byExp.has(id)) byExp.set(id, [])
+      byExp.get(id).push(c)
+    })
+    const ordered = []
+    const used = new Set()
+    ;(expPages || []).forEach(p => {
+      const list = byExp.get(p.id)
+      if (list?.length) {
+        ordered.push({ id: p.id, label: p.name, chars: list })
+        used.add(p.id)
+      }
+    })
+    byExp.forEach((list, id) => {
+      if (!used.has(id)) {
+        ordered.push({
+          id,
+          label: list[0]?.accountRepChar || '원정대',
+          chars: list,
+        })
+      }
+    })
+    return ordered
+  }, [chars, expPages])
 
-  const [goldError, setGoldError]         = useState(null) // 캐릭터당 초과 목록
-  const [acctGoldError, setAcctGoldError] = useState(null) // 계정당 초과 목록
+  const [selectedCharId, setSelectedCharId] = useState('')
+  const appliedInitialRef = useRef(false)
+  const [settingsTab, setSettingsTab]       = useState('raid') // 'raid' | 'custom'
+  const [goldError, setGoldError]           = useState(null)
+  const [acctGoldError, setAcctGoldError]   = useState(null)
+  const bodyScrollRef                       = useRef(null)
 
-  const charRaidList    = selectedChar ? (raids[selectedChar.id] || []) : []
-  const activeKeys      = useMemo(() => new Set(charRaidList.map(e => `${e.raidId}_${e.difficulty}`)), [charRaidList])
+  useEffect(() => {
+    if (!expGroups.length || !chars.length) return
+
+    if (initialCharId && !appliedInitialRef.current) {
+      appliedInitialRef.current = true
+      if (chars.some(c => c.id === initialCharId)) {
+        setSelectedCharId(initialCharId)
+        return
+      }
+    }
+
+    setSelectedCharId(prev => {
+      if (prev && chars.some(c => c.id === prev)) return prev
+      return expGroups[0]?.chars[0]?.id ?? ''
+    })
+  }, [chars, expGroups, initialCharId])
+
+  const selectedGroup  = expGroups.find(g => g.chars.some(c => c.id === selectedCharId)) || expGroups[0]
+  const groupChars     = selectedGroup?.chars || []
+  const selectedChar   = chars.find(c => c.id === selectedCharId) || groupChars[0]
+  const selectedExpId  = selectedGroup?.id ?? ''
+
+  const setExpAndPickChar = (expId) => {
+    const g = expGroups.find(x => x.id === expId)
+    if (!g?.chars.length) return
+    const keep = g.chars.some(c => c.id === selectedCharId)
+    setSelectedCharId(keep ? selectedCharId : g.chars[0].id)
+  }
+
+  useLayoutEffect(() => {
+    const el = bodyScrollRef.current
+    if (el) el.scrollTop = 0
+  }, [selectedCharId, settingsTab, selectedExpId])
+
+  /** 캐릭터 아이템레벨로 입장 가능한 레이드·난이도만 */
+  const raidsForLevel = useMemo(() => {
+    if (!selectedChar) return []
+    const il = selectedChar.itemLevel
+    return RAIDS
+      .filter(raid => !HIDDEN_RAID_IDS.has(raid.id))
+      .filter(raid => il >= raid.minItemLevel)
+      .map(raid => {
+        const difficulties = raid.difficulties.filter(d => il >= d.minItemLevel)
+        return difficulties.length ? { raid, difficulties } : null
+      })
+      .filter(Boolean)
+  }, [selectedChar])
+
+  const charRaidList = selectedChar ? (raids[selectedChar.id] || []) : []
+  const activeKeys   = useMemo(() => new Set(charRaidList.map(e => `${e.raidId}_${e.difficulty}`)), [charRaidList])
   const normalGoldCount = charRaidList.filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)).length
   const exGoldCount     = charRaidList.filter(e => e.isGoldCheck &&  EX_RAID_IDS.has(e.raidId)).length
 
-  // 계정별 골드 캐릭터 현황 (chars 순서 = 계정 등록 순서)
-  // 대표캐릭터: accountRepChar(DB 저장값) > 아이템레벨 최고 캐릭터명 순으로 fallback
   const acctGoldMap = (() => {
     const seenKeys = []
     const map = {}
@@ -33,12 +127,11 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
     })
     return seenKeys.map(k => map[k])
   })()
-  const acctKey          = selectedChar ? (selectedChar.expeditionId || 'unknown') : null
+  const acctKey = selectedChar ? (selectedChar.expeditionId || 'unknown') : null
   const acctGoldCharCount = acctGoldMap.find(a => a.key === acctKey)?.count ?? 0
-  const charHasGold = charRaidList.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+  const charHasGold       = charRaidList.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
 
   const handleConfirm = () => {
-    // 캐릭터당 골드 레이드 3개 초과 검사
     const exceeded = chars
       .map(char => ({
         name:  char.name,
@@ -47,7 +140,6 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
       .filter(c => c.count > GOLD_RAID_LIMIT)
     if (exceeded.length > 0) { setGoldError(exceeded); return }
 
-    // 계정당 골드 캐릭터 6개 초과 검사
     const accountMap = {}
     chars.forEach(char => {
       const key = char.expeditionId || 'unknown'
@@ -61,14 +153,19 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
     onConfirm()
   }
 
+  const focusExceededChar = (name) => {
+    const ch = chars.find(c => c.name === name)
+    if (ch) setSelectedCharId(ch.id)
+  }
+
   if (!chars.length) {
     return (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={onClose}>
         <div className="relative w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl px-5 py-10 text-center" onClick={e => e.stopPropagation()}>
-          <button onClick={onClose} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
+          <button type="button" onClick={onClose} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
           <p className="text-sm text-gray-400 dark:text-gray-500 mb-1">등록된 캐릭터가 없습니다</p>
           <p className="text-xs text-gray-300 dark:text-gray-600">캐릭터를 먼저 추가해 주세요</p>
-          <button onClick={() => { onClose(); onOpenCharAdd() }} className="mt-6 px-4 py-2 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+          <button type="button" onClick={() => { onClose(); onOpenCharAdd() }} className="mt-6 px-4 py-2 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
             캐릭터 추가
           </button>
         </div>
@@ -78,37 +175,62 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={onClose}>
-      <div className="w-full max-w-2xl rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-3xl rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
 
-        {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
           <div>
-            <span className="ns-bold text-gray-900 dark:text-white">레이드 설정</span>
-            <span className="ml-2 text-xs text-gray-400">캐릭터별로 참여할 레이드를 선택하세요</span>
+            <span className="ns-bold text-gray-900 dark:text-white">레이드 · 커스텀 설정</span>
+            <span className="ml-2 text-xs text-gray-400">원정대와 캐릭터를 고른 뒤 레이드·커스텀을 설정하세요</span>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
         </div>
 
-        {/* 캐릭터 탭 */}
-        <div className="flex gap-1.5 px-5 py-3 overflow-x-auto border-b border-gray-100 dark:border-[#383838] flex-shrink-0 scrollbar-hide">
-          {chars.map((char, i) => {
+        {/* 원정대 탭 */}
+        <div className="flex gap-1.5 px-5 py-2.5 overflow-x-auto border-b border-gray-100 dark:border-[#383838] flex-shrink-0 scrollbar-hide">
+          {expGroups.map(g => (
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => setExpAndPickChar(g.id)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
+                g.id === selectedExpId
+                  ? 'bg-yellow-200 text-yellow-900'
+                  : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+              }`}
+            >
+              {g.label}
+              <span className={`ml-1 tabular-nums ${g.id === selectedExpId ? 'text-yellow-800' : 'text-gray-400'}`}>
+                ({g.chars.length})
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* 캐릭터 선택 (현재 원정대) */}
+        <div className="flex gap-1.5 px-5 py-2.5 overflow-x-auto border-b border-gray-100 dark:border-[#383838] flex-shrink-0 scrollbar-hide">
+          {groupChars.map(char => {
             const count = (raids[char.id] || []).length
+            const active = char.id === selectedCharId
+            const icon = getClassIcon(char.class)
             return (
               <button
                 key={char.id}
-                onClick={() => setSelectedIdx(i)}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
-                  i === selectedIdx
-                    ? 'bg-yellow-200 text-yellow-900'
-                    : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                type="button"
+                onClick={() => setSelectedCharId(char.id)}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs ns-bold transition-colors border ${
+                  active
+                    ? 'bg-yellow-200 border-yellow-300 text-yellow-900'
+                    : 'border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                 }`}
               >
-                {char.name}
+                {icon
+                  ? <img src={icon} alt="" className="class-icon w-3.5 h-3.5 object-contain flex-shrink-0" />
+                  : <span className="w-3.5 h-3.5 flex-shrink-0 text-gray-300"><IconClass /></span>
+                }
+                <span className="max-w-[7rem] truncate">{char.name}</span>
                 {count > 0 && (
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ns-bold ${
-                    i === selectedIdx
-                      ? 'bg-yellow-400/40 text-yellow-900'
-                      : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400'
+                  <span className={`text-[10px] px-1 rounded-full ns-bold ${
+                    active ? 'bg-yellow-400/40 text-yellow-900' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500'
                   }`}>
                     {count}
                   </span>
@@ -118,9 +240,40 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
           })}
         </div>
 
-        {/* 골드 현황 바 */}
-        <div className="px-5 pt-3 pb-0 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-          {/* 캐릭터당 골드 레이드 수 */}
+        {/* 레이드 / 커스텀 탭 */}
+        <div className="flex gap-2 px-5 pt-2 pb-0 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setSettingsTab('raid')}
+            className={`relative px-3 py-2 text-xs ns-bold transition-colors rounded-t-lg ${
+              settingsTab === 'raid'
+                ? 'text-yellow-900 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/15'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            레이드 설정
+            {settingsTab === 'raid' && (
+              <span className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-yellow-400 dark:bg-yellow-500" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSettingsTab('custom')}
+            className={`relative px-3 py-2 text-xs ns-bold transition-colors rounded-t-lg ${
+              settingsTab === 'custom'
+                ? 'text-yellow-900 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/15'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            커스텀 설정
+            {settingsTab === 'custom' && (
+              <span className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-yellow-400 dark:bg-yellow-500" />
+            )}
+          </button>
+        </div>
+
+        {settingsTab === 'raid' && (
+        <div className="px-5 pt-3 pb-0 flex flex-wrap items-center gap-x-4 gap-y-1.5 flex-shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-gray-400 dark:text-gray-500">골드 보상</span>
             <div className="flex gap-1">
@@ -139,7 +292,6 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
               </span>
             )}
           </div>
-          {/* 선택된 캐릭터의 계정 골드 캐릭터 수 */}
           {acctGoldMap.filter(({ key }) => key === acctKey).map(({ key, label, count }) => (
             <div key={key} className="flex items-center gap-2">
               <span className="text-[11px] text-gray-400 dark:text-gray-500">{label} 계정 골드 캐릭터</span>
@@ -156,101 +308,112 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
             </div>
           ))}
         </div>
+        )}
 
-        {/* 레이드 목록 */}
-        <div className="overflow-y-auto flex-1 px-5 py-3 space-y-1.5">
-          {RAIDS.filter(raid => !HIDDEN_RAID_IDS.has(raid.id)).map(raid => {
-            const isLevelOk = selectedChar && selectedChar.itemLevel >= raid.minItemLevel
-            return (
-              <div
-                key={raid.id}
-                className={`rounded-lg border px-4 py-2.5 transition-colors ${
-                  isLevelOk
-                    ? 'border-gray-200 dark:border-[#383838]'
-                    : 'border-gray-100 dark:border-[#2a2a2a] opacity-35'
-                }`}
-              >
-                <div className="grid items-center gap-3" style={{ gridTemplateColumns: '140px 56px auto 1fr' }}>
-                  {/* 레이드명 */}
-                  <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{raid.name}</span>
-                  {/* 입장 레벨 — 독립 열로 세로 정렬 */}
-                  <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">{raid.minItemLevel.toLocaleString()}+</span>
+        <div ref={bodyScrollRef} className="overflow-y-auto flex-1 px-5 py-3 min-h-0">
+          {settingsTab === 'raid' && (
+          <div className="space-y-1.5">
+            <p className="text-[11px] ns-bold text-gray-500 dark:text-gray-400">
+              레이드 <span className="font-normal text-gray-400">(아이템레벨 {selectedChar?.itemLevel?.toFixed(2) ?? '–'} 기준 입장 가능)</span>
+            </p>
+            {raidsForLevel.length === 0 ? (
+              <p className="text-xs text-gray-400 dark:text-gray-500 py-6 text-center">
+                현재 아이템레벨로 입장 가능한 레이드가 없습니다
+              </p>
+            ) : (
+            raidsForLevel.map(({ raid, difficulties }) => (
+                <div
+                  key={raid.id}
+                  className="rounded-lg border border-gray-200 dark:border-[#383838] px-4 py-2.5 transition-colors"
+                >
+                  <div className="grid items-center gap-3" style={{ gridTemplateColumns: 'minmax(0,140px) 56px auto 1fr' }}>
+                    <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{raid.name}</span>
+                    <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">{raid.minItemLevel.toLocaleString()}+</span>
 
-                  {/* 골드 토글 스위치 */}
-                  {(() => {
-                    const entry     = charRaidList.find(e => e.raidId === raid.id)
-                    const hasActive = !!entry
-                    const isGold    = hasActive && entry.isGoldCheck
-                    const isEx      = EX_RAID_IDS.has(raid.id)
-                    const canToggle = hasActive && !isEx && (
-                      isGold || (normalGoldCount < GOLD_RAID_LIMIT && (charHasGold || acctGoldCharCount < GOLD_CHAR_LIMIT))
-                    )
-                    const title     = !hasActive ? '레이드를 먼저 선택하세요'
-                                    : isEx       ? 'EX 레이드는 골드가 항상 지급됩니다'
-                                    : !canToggle && normalGoldCount >= GOLD_RAID_LIMIT ? `골드 보상 ${GOLD_RAID_LIMIT}개 초과`
-                                    : !canToggle ? `계정 내 골드 캐릭터 ${GOLD_CHAR_LIMIT}개 초과`
-                                    : ''
-                    return (
-                      <button
-                        onClick={() => canToggle && onToggleGold(selectedChar.id, raid.id, entry.difficulty)}
-                        disabled={!hasActive || isEx && !isGold}
-                        className="flex items-center gap-1.5 flex-shrink-0 disabled:cursor-not-allowed"
-                        title={title}
-                      >
-                        <span className={`text-[10px] ns-bold transition-colors ${
-                          isGold ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-300 dark:text-gray-600'
-                        }`}>골드</span>
-                        <span className={`relative inline-flex h-4 w-7 flex-shrink-0 items-center rounded-full transition-colors ${
-                          isGold    ? 'bg-yellow-400'
-                          : hasActive ? 'bg-gray-200 dark:bg-[#383838]'
-                          :             'bg-gray-100 dark:bg-[#2a2a2a] opacity-40'
-                        }`}>
-                          <span className={`inline-block h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${
-                            isGold ? 'translate-x-3.5' : 'translate-x-0.5'
-                          }`} />
-                        </span>
-                      </button>
-                    )
-                  })()}
-
-                  {/* 난이도 버튼들 */}
-                  <div className="flex gap-2 justify-end">
-                    {raid.difficulties.map(diff => {
-                      const key           = `${raid.id}_${diff.key}`
-                      const on            = activeKeys.has(key)
-                      const totalGold     = (diff.goldBound || []).reduce((s,g) => s+g, 0) + (diff.goldTrade || []).reduce((s,g) => s+g, 0)
-                      const isDiffLevelOk = selectedChar && selectedChar.itemLevel >= diff.minItemLevel
-                      const diffStyle = on
-                        ? diff.key === 'nightmare'
-                          ? 'border-purple-300 bg-purple-50 dark:bg-purple-900/15 text-purple-600 dark:text-purple-400'
-                          : diff.key === 'hard'
-                          ? 'border-red-300 bg-red-50 dark:bg-red-900/15 text-red-600 dark:text-red-400'
-                          : 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700 dark:text-yellow-400'
-                        : 'border-gray-200 dark:border-[#383838] text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-500'
+                    {(() => {
+                      const entry     = charRaidList.find(e => e.raidId === raid.id)
+                      const hasActive = !!entry
+                      const isGold    = hasActive && entry.isGoldCheck
+                      const isEx      = EX_RAID_IDS.has(raid.id)
+                      const canToggle = hasActive && !isEx && (
+                        isGold || (normalGoldCount < GOLD_RAID_LIMIT && (charHasGold || acctGoldCharCount < GOLD_CHAR_LIMIT))
+                      )
+                      const title     = !hasActive ? '레이드를 먼저 선택하세요'
+                                      : isEx       ? 'EX 레이드는 골드가 항상 지급됩니다'
+                                      : !canToggle && normalGoldCount >= GOLD_RAID_LIMIT ? `골드 보상 ${GOLD_RAID_LIMIT}개 초과`
+                                      : !canToggle ? `계정 내 골드 캐릭터 ${GOLD_CHAR_LIMIT}개 초과`
+                                      : ''
                       return (
                         <button
-                          key={key}
-                          disabled={!isDiffLevelOk}
-                          onClick={() => onToggle(selectedChar.id, raid.id, diff.key)}
-                          className={`flex flex-col items-center justify-center gap-0.5 px-4 py-1.5 rounded-lg border text-xs ns-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${diffStyle}`}
+                          type="button"
+                          onClick={() => canToggle && selectedChar && entry && onToggleGold(selectedChar.id, raid.id, entry.difficulty)}
+                          disabled={!hasActive || isEx && !isGold}
+                          className="flex items-center gap-1.5 flex-shrink-0 disabled:cursor-not-allowed"
+                          title={title}
                         >
-                          <span>{diff.label}</span>
-                          <span className={`text-[10px] ns-light ${on ? 'opacity-60' : 'text-gray-300 dark:text-gray-700'}`}>
-                            {totalGold.toLocaleString()}G
+                          <span className={`text-[10px] ns-bold transition-colors ${isGold ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}>골드</span>
+                          <span className={`relative inline-flex h-4 w-7 flex-shrink-0 items-center rounded-full transition-colors ${
+                            isGold    ? 'bg-yellow-400'
+                            : hasActive ? 'bg-gray-200 dark:bg-[#383838]'
+                            :             'bg-gray-100 dark:bg-[#2a2a2a] opacity-40'
+                          }`}>
+                            <span className={`inline-block h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${
+                              isGold ? 'translate-x-3.5' : 'translate-x-0.5'
+                            }`} />
                           </span>
                         </button>
                       )
-                    })}
+                    })()}
+
+                    <div className="flex gap-2 justify-end flex-wrap">
+                      {difficulties.map(diff => {
+                        const key           = `${raid.id}_${diff.key}`
+                        const on            = activeKeys.has(key)
+                        const totalGold     = (diff.goldBound || []).reduce((s,g) => s+g, 0) + (diff.goldTrade || []).reduce((s,g) => s+g, 0)
+                        const diffStyle = on
+                          ? diff.key === 'nightmare' ? 'border-purple-300 bg-purple-50 dark:bg-purple-900/15 text-purple-600 dark:text-purple-400'
+                            : diff.key === 'hard' ? 'border-red-300 bg-red-50 dark:bg-red-900/15 text-red-600 dark:text-red-400'
+                            : 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700 dark:text-yellow-400'
+                          : 'border-gray-200 dark:border-[#383838] text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-500'
+                        return (
+                          <button
+                            type="button"
+                            key={key}
+                            disabled={!selectedChar}
+                            onClick={() => selectedChar && onToggle(selectedChar.id, raid.id, diff.key)}
+                            className={`flex flex-col items-center justify-center gap-0.5 px-4 py-1.5 rounded-lg border text-xs ns-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${diffStyle}`}
+                          >
+                            <span>{diff.label}</span>
+                            <span className={`text-[10px] ns-light ${on ? 'opacity-60' : 'text-gray-300 dark:text-gray-700'}`}>
+                              {totalGold.toLocaleString()}G
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
+            ))
+            )}
+          </div>
+          )}
+
+          {settingsTab === 'custom' && selectedChar && (
+            <CustomItemsEditor
+              chars={chars}
+              selectedChar={selectedChar}
+              customItems={customItems}
+              onAdd={onCustomAdd}
+              onDelete={onCustomDelete}
+              onDeleteAll={onCustomDeleteAll}
+              onReorder={onCustomReorder}
+            />
+          )}
         </div>
 
-        {/* 푸터 */}
         <div className="px-5 py-4 border-t border-gray-100 dark:border-[#383838] flex-shrink-0">
           <button
+            type="button"
             onClick={handleConfirm}
             className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors"
           >
@@ -259,11 +422,10 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
         </div>
       </div>
 
-      {/* EX 레이드 계정 제한 에러 */}
       {exRaidError && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30" onClick={onClearExRaidError}>
           <div className="relative w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
-            <button onClick={onClearExRaidError} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
+            <button type="button" onClick={onClearExRaidError} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
             <div className="px-5 pt-6 pb-4">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/20 mx-auto mb-3">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-400">
@@ -278,24 +440,17 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
               </p>
             </div>
             <div className="px-5 pb-5">
-              <button
-                onClick={onClearExRaidError}
-                className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors"
-              >
-                확인
-              </button>
+              <button type="button" onClick={onClearExRaidError} className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors">확인</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 골드 초과 에러 모달 */}
       {goldError && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30" onClick={() => setGoldError(null)}>
           <div className="relative w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setGoldError(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
+            <button type="button" onClick={() => setGoldError(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
             <div className="px-5 pt-6 pb-4">
-              {/* 아이콘 */}
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/20 mx-auto mb-3">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-rose-400">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -307,7 +462,6 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
               <p className="text-xs text-gray-400 dark:text-gray-500 text-center mb-5">
                 캐릭터당 골드 획득 가능 레이드는 최대 {GOLD_RAID_LIMIT}개입니다
               </p>
-              {/* 초과 캐릭터 목록 */}
               <div className="space-y-1.5">
                 {goldError.map(c => (
                   <div key={c.name} className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#383838] px-3 py-2.5">
@@ -319,9 +473,9 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
             </div>
             <div className="px-5 pb-5">
               <button
+                type="button"
                 onClick={() => {
-                  const firstIdx = chars.findIndex(c => c.name === goldError[0].name)
-                  if (firstIdx >= 0) setSelectedIdx(firstIdx)
+                  if (goldError[0]?.name) focusExceededChar(goldError[0].name)
                   setGoldError(null)
                 }}
                 className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors"
@@ -333,11 +487,10 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
         </div>
       )}
 
-      {/* 계정당 골드 캐릭터 초과 에러 모달 */}
       {acctGoldError && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30" onClick={() => setAcctGoldError(null)}>
           <div className="relative w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setAcctGoldError(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
+            <button type="button" onClick={() => setAcctGoldError(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
             <div className="px-5 pt-6 pb-4">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/20 mx-auto mb-3">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-rose-400">
@@ -360,12 +513,7 @@ export default function RaidSettingsModal({ chars, raids, expPages, onToggle, on
               </div>
             </div>
             <div className="px-5 pb-5">
-              <button
-                onClick={() => setAcctGoldError(null)}
-                className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors"
-              >
-                수정하러 갈게요!
-              </button>
+              <button type="button" onClick={() => setAcctGoldError(null)} className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors">수정하러 갈게요!</button>
             </div>
           </div>
         </div>
