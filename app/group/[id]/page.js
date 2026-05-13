@@ -1,236 +1,139 @@
-import { auth }   from '@/lib/auth'
-import { prisma }  from '@/lib/db'
 import { redirect } from 'next/navigation'
+import { auth } from '@/lib/auth'
+import { prisma } from '@/lib/db'
+import { isResetPassed } from '@/lib/raidData'
 import GroupDetailClient from './GroupDetailClient'
+import { DEMO_GROUP } from '../_demoSampleData'
 
-// ── 데모 그룹 데이터 ─────────────────────────────────────────────────────────
-const DEMO_MEMBERS = [
-  {
-    id: 'dm-1', userId: 'du-1', role: 'leader', visibility: 'all', name: '팍지니', image: null,
-    repChar: { id: 'dc-1', name: '팍지니', class: '배틀마스터', itemLevel: 1773.33 },
-    characters: [
-      { id: 'dc-1', name: '팍지니', class: '배틀마스터', itemLevel: 1773.33, raids: [
-          { raidId: 'egir-ex',       difficulty: 'nightmare', gateClears: [true],         isGoldCheck: true, moreDone: true  },
-          { raidId: 'serca',         difficulty: 'nightmare', gateClears: [true, true],   isGoldCheck: true, moreDone: false },
-          { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [true, true],   isGoldCheck: true, moreDone: false },
-          { raidId: 'armocha',       difficulty: 'hard',      gateClears: [true, true],   isGoldCheck: true, moreDone: false },
-      ]},
-      { id: 'dc-2', name: '팍루아', class: '아르카나', itemLevel: 1755.00, raids: [
-          { raidId: 'serca',         difficulty: 'nightmare', gateClears: [true, false],  isGoldCheck: true, moreDone: false },
-          { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false], isGoldCheck: true, moreDone: false },
-      ]},
-    ],
-  },
-  {
-    id: 'dm-2', userId: 'du-2', role: 'member', visibility: 'all', name: '질풍노도훈수사', image: null,
-    repChar: { id: 'dc-3', name: '질풍노도훈수사', class: '스트라이커', itemLevel: 1750.00 },
-    characters: [
-      { id: 'dc-3', name: '질풍노도훈수사', class: '스트라이커', itemLevel: 1750.00, raids: [
-          { raidId: 'egir-ex',       difficulty: 'nightmare', gateClears: [false],        isGoldCheck: true, moreDone: false },
-          { raidId: 'serca',         difficulty: 'nightmare', gateClears: [true, true],   isGoldCheck: true, moreDone: false },
-          { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [true, false],  isGoldCheck: true, moreDone: false },
-      ]},
-      { id: 'dc-4', name: '훈수루아', class: '버서커', itemLevel: 1730.00, raids: [
-          { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false], isGoldCheck: true, moreDone: false },
-          { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false], isGoldCheck: true, moreDone: false },
-      ]},
-    ],
-  },
-  {
-    id: 'dm-3', userId: 'du-3', role: 'member', visibility: 'all', name: '로헨델카지노박마담', image: null,
-    repChar: { id: 'dc-5', name: '로헨델카지노박마담', class: '소서리스', itemLevel: 1740.00 },
-    characters: [
-      { id: 'dc-5', name: '로헨델카지노박마담', class: '소서리스', itemLevel: 1740.00, raids: [
-          { raidId: 'serca',         difficulty: 'nightmare', gateClears: [true, true],   isGoldCheck: true, moreDone: false },
-          { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [true, true],   isGoldCheck: true, moreDone: false },
-          { raidId: 'armocha',       difficulty: 'hard',      gateClears: [true, true],   isGoldCheck: true, moreDone: false },
-      ]},
-      { id: 'dc-6', name: '박마담부캐', class: '바드', itemLevel: 1730.00, raids: [
-          { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [true, true],   isGoldCheck: true, moreDone: false },
-          { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false], isGoldCheck: true, moreDone: false },
-      ]},
-    ],
-  },
-  {
-    id: 'dm-4', userId: 'du-4', role: 'member', visibility: 'all', name: '절구주는비치', image: null,
-    repChar: { id: 'dc-7', name: '절구주는비치', class: '바드', itemLevel: 1740.00 },
-    characters: [
-      { id: 'dc-7', name: '절구주는비치', class: '바드', itemLevel: 1740.00, raids: [
-          { raidId: 'serca',         difficulty: 'nightmare', gateClears: [false, false], isGoldCheck: true, moreDone: false },
-          { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false], isGoldCheck: true, moreDone: false },
-          { raidId: 'armocha',       difficulty: 'hard',      gateClears: [true, false],  isGoldCheck: true, moreDone: false },
-      ]},
-    ],
-  },
-  {
-    id: 'dm-5', userId: 'du-5', role: 'member', visibility: 'all', name: '다베어버릴거에요', image: null,
-    repChar: { id: 'dc-8', name: '다베어버릴거에요', class: '소울이터', itemLevel: 1730.00 },
-    characters: [
-      { id: 'dc-8', name: '다베어버릴거에요', class: '소울이터', itemLevel: 1730.00, raids: [
-          { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [true, true],   isGoldCheck: true, moreDone: false },
-          { raidId: 'armocha',       difficulty: 'hard',      gateClears: [true, true],   isGoldCheck: true, moreDone: false },
-      ]},
-    ],
-  },
-]
-
-const DEMO_GROUP = {
-  id: 'demo', name: '카제로스 원정단',
-  description: '함께 레이드 뛰는 친구들의 아늑한 모임이에요.',
-  notice: '이번주 토요일 밤 10시 에기르 공대 모집! 참여 희망자 댓글 달아주세요 🔥',
-  isPublic: false, inviteCode: null, maxMembers: 10, createdAt: new Date('2025-01-01'),
-  leader: { id: 'du-1', name: '팍지니', image: null },
-  members: DEMO_MEMBERS, requests: [],
-  myRole: 'member', isMember: true, myVisibility: 'all',
-}
-
-export default async function GroupDetailPage({ params }) {
-  const { id }    = await params
-  const session   = await auth()
-
-  // 데모 그룹 — 비로그인도 접근 가능
-  if (id === 'demo') {
-    return <GroupDetailClient group={DEMO_GROUP} userId={session?.user?.id ?? null} isDemo />
-  }
-
-  if (!session?.user?.id) redirect('/group')
-
-  const group = await prisma.group.findUnique({
-    where: { id },
-    include: {
-      leader:  { select: { id: true, name: true, image: true } },
-      members: {
-        orderBy: { joinedAt: 'asc' },
-        include: {
-          user: {
-            select: {
-              id: true, name: true, image: true,
-              repCharId: true,
-              loaExpeditions: {
-                include: {
-                  characters: {
-                    where:   { isActive: true },
-                    orderBy: [{ sortOrder: 'asc' }, { itemLevel: 'desc' }],
-                    include: { characterRaids: { orderBy: { createdAt: 'asc' } } },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      requests: {
-        where:   { status: 'pending' },
-        orderBy: { createdAt: 'asc' },
-        include: {
-          user: {
-            select: {
-              id: true, name: true, image: true,
-              loaExpeditions: {
-                include: {
-                  characters: {
-                    where:   { isActive: true },
-                    orderBy: [{ itemLevel: 'desc' }],
-                    take:    1,
-                    select:  { name: true, class: true, itemLevel: true },
-                  },
-                },
-              },
-            },
-          },
+const MEMBER_USER_SELECT = {
+  select: {
+    id: true, name: true, discordUsername: true, image: true,
+    loaExpeditions: {
+      orderBy: { createdAt: 'asc' },
+      include: {
+        characters: {
+          where: { isActive: true },
+          orderBy: [{ sortOrder: 'asc' }, { itemLevel: 'desc' }],
+          include: { characterRaids: { orderBy: { createdAt: 'asc' } } },
         },
       },
     },
+  },
+}
+
+function transformMember(dbMember) {
+  const u = dbMember.user
+  const displayName = u.discordUsername || u.name || '?'
+
+  const expeditions = u.loaExpeditions.map(exp => ({
+    id: exp.id,
+    name: exp.customName || exp.repCharName || exp.characters[0]?.name || '원정대',
+    characters: exp.characters.map(c => ({
+      id: c.id,
+      name: c.name,
+      class: c.class,
+      server: c.server,
+      itemLevel: c.itemLevel,
+      combatPower: c.combatPower ?? null,
+      raids: c.characterRaids.map(r => {
+        const expired = isResetPassed(r.resetAt)
+        return {
+          raidId: r.raidId,
+          difficulty: r.difficulty,
+          gateClears: expired ? [] : r.gateClears,
+          isGoldCheck: r.isGoldCheck,
+          moreDone: expired ? false : r.moreDone,
+        }
+      }),
+    })),
+  }))
+
+  const allChars = expeditions.flatMap(e => e.characters)
+  const topChar = allChars.sort((a, b) => b.itemLevel - a.itemLevel)[0] || null
+  const repChar = topChar ? {
+    id: topChar.id,
+    name: topChar.name,
+    class: topChar.class,
+    itemLevel: topChar.itemLevel,
+    combatPower: topChar.combatPower,
+  } : null
+
+  return {
+    id: dbMember.id,
+    userId: dbMember.userId,
+    role: dbMember.role,
+    status: dbMember.status,
+    visibility: dbMember.visibility,
+    joinedAt: dbMember.joinedAt,
+    name: displayName,
+    discordUsername: u.discordUsername || null,
+    image: u.image,
+    repChar,
+    expeditions,
+  }
+}
+
+export default async function GroupDetailPage({ params }) {
+  const { id } = await params
+
+  if (id === 'demo') {
+    return <GroupDetailClient group={DEMO_GROUP} isDemo />
+  }
+
+  const session = await auth()
+  if (!session?.user?.id) redirect('/group')
+
+  const userId = session.user.id
+
+  const expedition = await prisma.expedition.findUnique({
+    where: { id },
+    include: {
+      leader: { select: { id: true, name: true, discordUsername: true, image: true } },
+      members: {
+        include: { user: MEMBER_USER_SELECT },
+        orderBy: { joinedAt: 'asc' },
+      },
+      favorites: { where: { viewerUserId: userId } },
+    },
   })
 
-  if (!group) redirect('/group')
+  if (!expedition) redirect('/group')
 
-  const myMembership = group.members.find(m => m.userId === session.user.id)
+  const myMembership = expedition.members.find(m => m.userId === userId)
+  if (!myMembership || myMembership.status === 'rejected' || myMembership.status === 'left') {
+    redirect('/group')
+  }
 
-  // 비공개 그룹은 멤버만 접근 가능
-  if (!group.isPublic && !myMembership) redirect('/group')
-
-  const canManage = myMembership?.role === 'leader' || myMembership?.role === 'officer'
-
-  // 멤버 데이터 가공
-  const members = group.members.map(m => {
-    const allChars = m.user.loaExpeditions.flatMap(exp => exp.characters)
-    const chars = allChars.map(c => ({
-      id:          c.id,
-      name:        c.name,
-      class:       c.class,
-      server:      c.server,
-      itemLevel:   c.itemLevel,
-      combatPower: c.combatPower,
-      raids: c.characterRaids.map(r => ({
-        raidId:      r.raidId,
-        difficulty:  r.difficulty,
-        gateClears:  r.gateClears,
-        isGoldCheck: r.isGoldCheck,
-        moreDone:    r.moreDone,
-      })),
-    }))
-
-    // 대표 캐릭터 — 설정값 우선, 없으면 아이템레벨 최고 캐릭터
-    const repCharRaw = m.user.repCharId
-      ? allChars.find(c => c.id === m.user.repCharId)
-      : null
-    const repCharFallback = allChars.length > 0
-      ? allChars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b)
-      : null
-    const repCharSrc = repCharRaw ?? repCharFallback
-    const repChar = repCharSrc
-      ? { id: repCharSrc.id, name: repCharSrc.name, class: repCharSrc.class, itemLevel: repCharSrc.itemLevel }
-      : null
-
-    return {
-      id:         m.id,
-      userId:     m.userId,
-      role:       m.role,
-      visibility: m.visibility,
-      joinedAt:   m.joinedAt,
-      name:       m.user.name,
-      image:      m.user.image,
-      repChar,
-      characters: m.visibility === 'all' || m.userId === session.user.id ? chars : [],
-    }
-  })
-
-  const requests = canManage
-    ? group.requests.map(r => ({
-        id:        r.id,
-        userId:    r.userId,
-        name:      r.user.name,
-        image:     r.user.image,
-        message:   r.message,
-        createdAt: r.createdAt,
-        topChar:   r.user.loaExpeditions.flatMap(e => e.characters)[0] ?? null,
+  const isOfficer = myMembership.role === 'officer' || myMembership.role === 'leader'
+  const activeMembers  = expedition.members.filter(m => m.status === 'active').map(transformMember)
+  const pendingMembers = isOfficer
+    ? expedition.members.filter(m => m.status === 'pending').map(m => ({
+        id: m.id,
+        userId: m.userId,
+        createdAt: m.createdAt,
+        name: m.user.discordUsername || m.user.name || '?',
+        discordUsername: m.user.discordUsername || null,
+        image: m.user.image,
       }))
     : []
 
-  const myVisibility = myMembership?.visibility ?? 'all'
+  const group = {
+    id: expedition.id,
+    name: expedition.name,
+    description: expedition.description,
+    notice: expedition.notice,
+    inviteCode: expedition.inviteCode,
+    maxMembers: expedition.maxMembers,
+    createdAt: expedition.createdAt,
+    leaderId: expedition.leaderId,
+    leader: expedition.leader,
+    members: activeMembers,
+    pendingMembers,
+    myRole: myMembership.role,
+    isMember: true,
+    myVisibility: myMembership.visibility,
+    favoritedUserIds: expedition.favorites.map(f => f.targetUserId),
+  }
 
-  return (
-    <GroupDetailClient
-      group={{
-        id:                group.id,
-        name:              group.name,
-        description:       group.description,
-        notice:            group.notice,
-        isPublic:          group.isPublic,
-        inviteCode:        canManage ? group.inviteCode : null,
-        discordWebhook:    canManage ? group.discordWebhook : null,
-        hasDiscordWebhook: !!group.discordWebhook,
-        maxMembers:        group.maxMembers,
-        createdAt:         group.createdAt,
-        leader:            group.leader,
-        members,
-        requests,
-        myRole:            myMembership?.role ?? null,
-        isMember:          !!myMembership,
-        myVisibility,
-      }}
-      userId={session.user.id}
-    />
-  )
+  return <GroupDetailClient group={group} isDemo={false} userId={userId} />
 }

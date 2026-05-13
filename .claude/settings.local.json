@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx create-next-app@latest . --javascript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --no-turbopack)"
+      "Bash(npx create-next-app@latest . --javascript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --no-turbopack)",
+      "Bash(ls C:/Project/myloa/app/api/expedition/[id]/ && ls C:/Project/myloa/app/api/expeditions/[id]/ 2>/dev/null)",
+      "Bash(ls:*)",
+      "WebFetch(domain:developer-lostark.game.onstove.com)",
+      "Bash(curl:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)"
     ]
   }
 }

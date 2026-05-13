@@ -59,7 +59,7 @@ function buildCustomHomeworkRowMap(filteredChars, customItems, includeItem) {
   return byName
 }
 
-export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialCustomItems = {}, initialExpNames = {} }) {
+export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialCustomItems = {}, initialExpNames = {}, initialRepCharId = null }) {
   const isDemo = !isLoggedIn
   const [chars, setChars] = useState(initialChars)
   const [raids, setRaids] = useState(initialRaids)
@@ -330,11 +330,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: Math.max(0, Math.min(100, value)) } }))
   }
 
-  // 대표 캐릭터 — 아이템레벨 최고 캐릭터
-  const repCharId = useMemo(
-    () => chars.length === 0 ? null : chars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b).id,
-    [chars]
-  )
+  // 대표 캐릭터 — 로그인: DB 연동 전까지 아이템레벨 최고 / 데모: initialRepCharId 우선
+  const repCharId = useMemo(() => {
+    if (chars.length === 0) return null
+    if (initialRepCharId && chars.some(c => c.id === initialRepCharId)) return initialRepCharId
+    return chars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b).id
+  }, [chars, initialRepCharId])
 
   // ── 레이드 필터 — 활성 계정 캐릭터에 등록된 고유 레이드 목록 ──────────────
   const allRegisteredRaids = useMemo(() => {
@@ -1036,7 +1037,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               <p className="text-[10px] text-gray-300 dark:text-gray-600 text-center leading-relaxed">상단 캐릭터 설정 버튼으로<br/>원정대를 추가하세요</p>
             </div>
           )}
-          {isLoggedIn && activeChars.length > 0 && (() => {
+          {activeChars.length > 0 && (() => {
             const repChar = activeChars.find(c => c.id === repCharId)
               || activeChars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b)
             return (

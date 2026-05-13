@@ -11,25 +11,25 @@ datasource db {
 // ─── Auth ───────────────────────────────────────────────────────────────────
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  repCharId     String?   // 대표 캐릭터 ID (그룹에서 나를 대표하는 캐릭터)
-  apiKey        String?   // 로스트아크 API 키 (AES-256 암호화) — 계정당 하나
-  lastSyncedAt  DateTime? // 마지막 LoA API 동기화 시각
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  name            String?
+  /// Discord 로그인명 (@username)
+  discordUsername String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  repCharId       String? // 대표 캐릭터 ID
+  apiKey          String? // 로스트아크 API 키 (AES-256 암호화) — 계정당 하나
+  lastSyncedAt    DateTime? // 마지막 LoA API 동기화 시각
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  accounts           Account[]
-  sessions           Session[]
-  loaExpeditions     LoaExpedition[]
-  expeditionMember   ExpeditionMember[]
-  leadingExpeditions Expedition[]       @relation("ExpeditionLeader")
-  groupMemberships   GroupMember[]
-  leadingGroups      Group[]            @relation("GroupLeader")
-  joinRequests       JoinRequest[]
+  accounts            Account[]
+  sessions            Session[]
+  loaExpeditions      LoaExpedition[]
+  expeditionMember    ExpeditionMember[]
+  leadingExpeditions  Expedition[]                @relation("ExpeditionLeader")
+  expeditionFavorites ExpeditionMemberFavorite[]  @relation("FavoriteViewer")
 }
 
 model Account {
@@ -66,8 +66,8 @@ model Session {
 model LoaExpedition {
   id          String   @id @default(cuid())
   userId      String
-  repCharName String?  // 대표 캐릭터명 (변경 가능)
-  customName  String?  // 사용자 지정 탭 이름
+  repCharName String? // 대표 캐릭터명 (변경 가능)
+  customName  String? // 사용자 지정 탭 이름
   createdAt   DateTime @default(now())
 
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -78,7 +78,7 @@ model LoaExpedition {
 
 model Character {
   id           String   @id @default(cuid())
-  expeditionId String   // FK → LoaExpedition
+  expeditionId String // FK → LoaExpedition
   name         String
   class        String
   server       String
@@ -98,13 +98,13 @@ model Character {
 model CharacterRaid {
   id          String    @id @default(cuid())
   characterId String
-  raidId      String    // lib/raidData.js 의 raid id
-  difficulty  String    // "normal" | "hard" | "nightmare" 등
+  raidId      String // lib/raidData.js 의 raid id
+  difficulty  String // "normal" | "hard" | "nightmare" 등
   gateClears  Boolean[] // 관문별 클리어 여부 배열
   isGoldCheck Boolean   @default(true)
   moreDone    Boolean   @default(false)
   moreFrom    String    @default("bound") // "bound" | "trade"
-  resetAt     DateTime  // 다음 수요일 06:00 KST
+  resetAt     DateTime // 다음 수요일 06:00 KST
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -113,30 +113,33 @@ model CharacterRaid {
   @@unique([characterId, raidId, difficulty])
 }
 
-// ─── 그룹 파티 원정대 (그룹 기능용, LoA 원정대와 별개) ───────────────────────
+// ─── 그룹 (그룹 기능용, LoA 원정대와 별개) ──────────────────────────────────
 
 model Expedition {
-  id              String   @id @default(cuid())
-  name            String
-  leaderId        String
-  inviteCode      String   @unique @default(cuid())
-  inviteExpiresAt DateTime
-  maxMembers      Int      @default(8)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  description String?  // 그룹 소개
+  notice      String?  // 공지사항
+  leaderId    String
+  inviteCode  String   @unique @default(cuid())
+  maxMembers  Int      @default(8)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  leader  User               @relation("ExpeditionLeader", fields: [leaderId], references: [id])
-  members ExpeditionMember[]
+  leader    User                      @relation("ExpeditionLeader", fields: [leaderId], references: [id])
+  members   ExpeditionMember[]
+  favorites ExpeditionMemberFavorite[]
 }
 
 model ExpeditionMember {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   expeditionId String
   userId       String
-  status       String   @default("pending") // "pending" | "active" | "rejected" | "left"
-  visibility   String   @default("all")     // "all" | "leader_only" | "none"
+  role         String    @default("member") // "officer" | "member"
+  status       String    @default("pending") // "pending" | "active" | "rejected" | "left"
+  visibility   String    @default("all")    // "all" | "none"
   joinedAt     DateTime?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
 
   expedition Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -144,50 +147,14 @@ model ExpeditionMember {
   @@unique([expeditionId, userId])
 }
 
-// ─── 그룹 ────────────────────────────────────────────────────────────────────
+model ExpeditionMemberFavorite {
+  id           String @id @default(cuid())
+  expeditionId String
+  viewerUserId String
+  targetUserId String
 
-model Group {
-  id             String   @id @default(cuid())
-  name           String
-  description    String?
-  notice         String?
-  isPublic       Boolean  @default(true)
-  inviteCode     String   @unique @default(cuid())
-  discordWebhook String?
-  leaderId       String
-  maxMembers     Int      @default(30)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  expedition Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+  viewer     User       @relation("FavoriteViewer", fields: [viewerUserId], references: [id], onDelete: Cascade)
 
-  leader   User          @relation("GroupLeader", fields: [leaderId], references: [id])
-  members  GroupMember[]
-  requests JoinRequest[]
-}
-
-model GroupMember {
-  id         String   @id @default(cuid())
-  groupId    String
-  userId     String
-  role       String   @default("member") // "leader" | "officer" | "member"
-  visibility String   @default("all")   // "all" | "none"
-  joinedAt   DateTime @default(now())
-
-  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([groupId, userId])
-}
-
-model JoinRequest {
-  id        String   @id @default(cuid())
-  groupId   String
-  userId    String
-  message   String?
-  status    String   @default("pending") // "pending" | "accepted" | "rejected"
-  createdAt DateTime @default(now())
-
-  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([groupId, userId])
+  @@unique([expeditionId, viewerUserId, targetUserId])
 }

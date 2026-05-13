@@ -6,6 +6,7 @@ export function middleware(request) {
   if (pathname === '/api/auth/signin' && searchParams.has('error')) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
+  return NextResponse.next()
 }
 
 export const config = {

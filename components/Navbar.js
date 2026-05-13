@@ -70,10 +70,7 @@ export default function Navbar() {
 
   const s = THEME_STYLE[theme] || THEME_STYLE.yellow
 
-  const navLinks = [
-    { href: '/dashboard', label: '원정대' },
-    { href: '/group',     label: '그룹' },
-  ]
+  const navLinks = [{ href: '/dashboard', label: '원정대' }, { href: '/group', label: '그룹' }]
   const isActive = (href) => pathname === href || pathname.startsWith(href + '/')
 
   const ThemeDots = () => (

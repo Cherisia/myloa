@@ -17,8 +17,7 @@ export async function POST(request) {
   })
 
   if (!expedition) return NextResponse.json({ error: '유효하지 않은 초대 코드입니다' }, { status: 404 })
-  if (new Date() > expedition.inviteExpiresAt) return NextResponse.json({ error: '만료된 초대 코드입니다' }, { status: 400 })
-  if (expedition.members.length >= expedition.maxMembers) return NextResponse.json({ error: '원정대 인원이 가득 찼습니다' }, { status: 400 })
+  if (expedition.members.length >= expedition.maxMembers) return NextResponse.json({ error: '그룹 인원이 가득 찼습니다' }, { status: 400 })
 
   // 이미 멤버 여부 확인
   const existing = await prisma.expeditionMember.findUnique({

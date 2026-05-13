@@ -44,11 +44,11 @@ export async function POST(request) {
       name: name.trim(),
       leaderId: session.user.id,
       inviteCode: generateInviteCode(),
-      inviteExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일
       maxMembers: maxMembers || 8,
       members: {
         create: {
           userId: session.user.id,
+          role: 'leader',
           status: 'active',
           visibility: 'all',
           joinedAt: new Date(),

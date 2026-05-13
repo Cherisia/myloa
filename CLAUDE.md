@@ -15,7 +15,7 @@
 app/
   dashboard/
     page.js              # 서버 컴포넌트 — DB 조회 후 DashboardClient에 전달
-    DashboardClient.js   # 메인 대시보드 (import만 + 메인 함수, ~2100줄)
+    DashboardClient.js   # 메인 대시보드 (~2100줄)
     _constants.js        # EX_RAID_IDS, GOLD_RAID_LIMIT, CLASS_ICON, AUTO_PRESETS 등
     _icons.js            # IconCrown, IconPlus, IconCheck 등 SVG 아이콘 컴포넌트
     _raidHelpers.js      # saveRaid, deleteRaid, computeAutoRaids, autoSelect* 함수
@@ -31,18 +31,26 @@ app/
       CharGoldBadges.js  # 캐릭터별 골드 배지
       Confetti.js        # 100% 완료 폭죽
   group/
-    page.js            # 그룹 목록
+    page.js              # 서버 컴포넌트 — 내 그룹 목록
+    GroupClient.js       # 그룹 목록 UI (만들기/코드입력 모달)
+    _demoSampleData.js   # 비로그인 데모용 샘플 데이터 (실제 LoA API 기반)
     [id]/
-      page.js          # 서버 컴포넌트 — 그룹 상세 DB 조회
-      GroupDetailClient.js
+      page.js            # 서버 컴포넌트 — 그룹 상세 (demo id 지원)
+      GroupDetailClient.js  # 레이드현황·멤버·대기중·설정 탭
   api/
-    homework/route.js  # GET/POST/DELETE — 레이드 체크 저장
-    characters/route.js# GET/POST/DELETE/PATCH(순서) — 캐릭터 CRUD
-    characters/sync/   # POST — 로스트아크 API로 전투력 갱신
-    groups/            # 그룹 CRUD + 멤버/요청 관리
-    loa/route.js       # 로스트아크 OpenAPI 프록시
+    homework/route.js    # GET/POST/DELETE — 레이드 체크 저장
+    characters/route.js  # GET/POST/DELETE/PATCH(순서) — 캐릭터 CRUD
+    characters/sync/     # POST — 로스트아크 API로 전투력 갱신
+    expeditions/[id]/route.js  # PATCH — LoaExpedition 커스텀 탭 이름 저장
+    expedition/route.js        # GET(내 그룹 목록) / POST(그룹 생성)
+    expedition/join/route.js   # POST — 초대 코드로 가입 신청
+    expedition/[id]/route.js   # GET/PATCH/DELETE — 그룹 상세·수정·삭제/탈퇴
+    expedition/[id]/members/route.js   # PATCH — 수락/거절/역할변경/강퇴/공개설정
+    expedition/[id]/favorites/route.js # POST/DELETE — 즐겨찾기
+    loa/route.js         # 로스트아크 OpenAPI 프록시
 lib/
   raidData.js          # RAIDS 정의, CLASS_COLOR, calcGold* 함수
+  groupRaidShare.js    # 그룹 레이드 공유 유틸 (raidStatusOf, getMemberRaidStatus, getGroupRaidList)
   auth.js              # NextAuth 설정
   db.js                # Prisma 클라이언트
 components/

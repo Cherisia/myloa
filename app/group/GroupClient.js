@@ -1,420 +1,235 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
+import { useTheme } from '@/components/ThemeProvider'
 
-// ── 아이콘 ─────────────────────────────────────────────────────────────────────
-const IconPlus     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-const IconSearch   = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-const IconShield   = () => <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-const IconLock     = () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-const IconGlobe    = () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-const IconUsers    = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-const IconChevron  = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+const ROLE_BADGE = {
+  leader:  { label: '그룹장',   cls: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  officer: { label: '부그룹장', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  member:  { label: '멤버',     cls: 'bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400' },
+}
 
-// ── 그룹 만들기 모달 ───────────────────────────────────────────────────────────
-function CreateModal({ onClose, onCreate }) {
-  const [name,       setName]       = useState('')
-  const [desc,       setDesc]       = useState('')
-  const [isPublic,   setIsPublic]   = useState(true)
-  const [maxMembers, setMaxMembers] = useState(30)
-  const [loading,    setLoading]    = useState(false)
-  const [error,      setError]      = useState(null)
+function CreateModal({ onClose, onCreated }) {
+  const [name, setName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleCreate = async () => {
-    if (!name.trim()) { setError('그룹 이름을 입력하세요'); return }
-    setLoading(true); setError(null)
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!name.trim()) return
+    setLoading(true)
     try {
-      const res = await fetch('/api/groups', {
+      const res = await fetch('/api/expedition', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), description: desc.trim() || null, isPublic, maxMembers }),
+        body: JSON.stringify({ name }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error); return }
-      onCreate(data)
-      onClose()
-    } catch { setError('오류가 발생했습니다') } finally { setLoading(false) }
+      if (!res.ok) { setError(data.error || '오류가 발생했습니다'); return }
+      onCreated(data)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
-          <span className="ns-bold text-gray-900 dark:text-white">그룹 만들기</span>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <form
+        className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+        onClick={e => e.stopPropagation()}
+        onSubmit={handleSubmit}
+      >
+        <h3 className="text-sm font-bold text-gray-900 dark:text-white">새 그룹 만들기</h3>
+        <div>
+          <input
+            autoFocus
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="그룹 이름"
+            maxLength={40}
+            className="w-full border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-zinc-600 focus:outline-none focus:border-gray-400 dark:focus:border-zinc-500"
+          />
+          {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
         </div>
-        <div className="px-5 py-4 space-y-3">
-          {error && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-900/10 rounded px-3 py-2">{error}</p>}
-          <div>
-            <label className="block text-xs ns-bold text-gray-500 dark:text-gray-400 mb-1.5">그룹 이름 <span className="text-red-400">*</span></label>
-            <input
-              value={name} onChange={e => setName(e.target.value)} maxLength={30}
-              placeholder="예: 카제로스 주민들"
-              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-xs ns-bold text-gray-500 dark:text-gray-400 mb-1.5">그룹 소개</label>
-            <textarea
-              value={desc} onChange={e => setDesc(e.target.value)} maxLength={100} rows={2}
-              placeholder="그룹을 간단히 소개해주세요"
-              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors resize-none"
-            />
-          </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="block text-xs ns-bold text-gray-500 dark:text-gray-400 mb-1.5">최대 인원</label>
-              <select
-                value={maxMembers} onChange={e => setMaxMembers(Number(e.target.value))}
-                className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
-              >
-                {[8, 10, 15, 20, 30, 50].map(n => <option key={n} value={n}>{n}명</option>)}
-              </select>
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs ns-bold text-gray-500 dark:text-gray-400 mb-1.5">공개 설정</label>
-              <div className="flex rounded border border-gray-200 dark:border-[#383838] overflow-hidden">
-                {[['공개', true], ['비공개', false]].map(([label, val]) => (
-                  <button key={label} onClick={() => setIsPublic(val)}
-                    className={`flex-1 py-2 text-xs ns-bold transition-colors ${isPublic === val ? 'bg-yellow-400 text-gray-900' : 'bg-white dark:bg-[#181818] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#383838]">
-          <button onClick={onClose} className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">취소</button>
-          <button onClick={handleCreate} disabled={loading}
-            className="flex-1 rounded bg-yellow-400 hover:bg-yellow-300 py-2 text-sm ns-bold text-gray-900 disabled:opacity-60 transition-colors">
+        <div className="flex gap-2 justify-end">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-xs text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200">취소</button>
+          <button type="submit" disabled={loading || !name.trim()} className="px-4 py-2 text-xs bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-semibold disabled:opacity-40">
             {loading ? '만드는 중…' : '만들기'}
           </button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }
 
-// ── 초대 코드 참가 모달 ────────────────────────────────────────────────────────
-function JoinCodeModal({ onClose, onJoined }) {
-  const [code,    setCode]    = useState('')
+function JoinModal({ onClose, onJoined }) {
+  const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState(null)
-  const router = useRouter()
+  const [error, setError] = useState('')
 
-  const handleJoin = async () => {
-    if (code.length < 6) { setError('코드를 입력하세요'); return }
-    setLoading(true); setError(null)
-    // 모든 그룹에서 코드 매칭 — 서버에서 처리
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!code.trim()) return
+    setLoading(true)
     try {
-      const res = await fetch('/api/groups/join-by-code', {
+      const res = await fetch('/api/expedition/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inviteCode: code.trim().toUpperCase() }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error); return }
-      onClose()
-      router.push(`/group/${data.groupId}`)
-    } catch { setError('오류가 발생했습니다') } finally { setLoading(false) }
+      if (!res.ok) { setError(data.error || '오류가 발생했습니다'); return }
+      onJoined(data.expeditionName)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="w-full max-w-xs rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
-          <span className="ns-bold text-gray-900 dark:text-white">초대 코드로 참가</span>
-          <button onClick={onClose} className="text-gray-400 text-xl leading-none">×</button>
-        </div>
-        <div className="px-5 py-4 space-y-3">
-          {error && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-900/10 rounded px-3 py-2">{error}</p>}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <form
+        className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+        onClick={e => e.stopPropagation()}
+        onSubmit={handleSubmit}
+      >
+        <h3 className="text-sm font-bold text-gray-900 dark:text-white">초대 코드로 가입</h3>
+        <p className="text-xs text-gray-400 dark:text-zinc-500">그룹장에게 초대 코드를 받아 입력하세요.</p>
+        <div>
           <input
-            value={code} onChange={e => setCode(e.target.value.toUpperCase())}
-            onKeyDown={e => e.key === 'Enter' && handleJoin()}
-            maxLength={8} placeholder="초대 코드 입력"
-            className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-3 text-lg ns-extrabold text-center tracking-widest bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
+            autoFocus
+            value={code}
+            onChange={e => setCode(e.target.value.toUpperCase())}
+            placeholder="초대 코드 8자리"
+            maxLength={8}
+            className="w-full border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-zinc-600 focus:outline-none focus:border-gray-400 dark:focus:border-zinc-500 font-mono tracking-widest text-center uppercase"
           />
-          <p className="text-xs text-center text-gray-400">그룹장에게 초대 코드를 받아 입력하세요</p>
+          {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
         </div>
-        <div className="flex gap-2 px-5 py-4 border-t border-gray-100 dark:border-[#383838]">
-          <button onClick={onClose} className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">취소</button>
-          <button onClick={handleJoin} disabled={loading}
-            className="flex-1 rounded bg-yellow-400 hover:bg-yellow-300 py-2 text-sm ns-bold text-gray-900 disabled:opacity-60 transition-colors">
-            {loading ? '참가 중…' : '참가'}
+        <div className="flex gap-2 justify-end">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-xs text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200">취소</button>
+          <button type="submit" disabled={loading || code.length < 4} className="px-4 py-2 text-xs bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-semibold disabled:opacity-40">
+            {loading ? '신청 중…' : '가입 신청'}
           </button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }
 
-// ── 공개 그룹 카드 ─────────────────────────────────────────────────────────────
-function PublicGroupCard({ group, onApply, isDemo, onDemoAction }) {
-  const [applied, setApplied] = useState(group.hasPending)
-  const [loading, setLoading] = useState(false)
+export default function GroupClient({ groups: initialGroups, isLoggedIn }) {
   const router = useRouter()
+  const [groups, setGroups] = useState(initialGroups)
+  const [showCreate, setShowCreate] = useState(false)
+  const [showJoin, setShowJoin] = useState(false)
+  const [toast, setToast] = useState('')
 
-  const handleApply = async (e) => {
-    e.stopPropagation()
-    if (isDemo) { onDemoAction?.(); return }
-    if (applied || loading) return
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/groups/${group.id}/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      })
-      if (res.ok) { setApplied(true); onApply?.(group.id) }
-    } finally { setLoading(false) }
+  function showMsg(msg) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
   }
 
-  const handleClick = () => {
-    if (isDemo) { onDemoAction?.(); return }
-    router.push(`/group/${group.id}`)
+  function handleCreated(expedition) {
+    setShowCreate(false)
+    router.push(`/group/${expedition.id}`)
+  }
+
+  function handleJoined(expeditionName) {
+    setShowJoin(false)
+    showMsg(`「${expeditionName}」 가입 신청이 완료됐어요. 그룹장 수락을 기다려주세요.`)
   }
 
   return (
-    <div
-      onClick={handleClick}
-      className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] p-4 cursor-pointer hover:border-yellow-400/60 dark:hover:border-yellow-600/40 transition-colors"
-    >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center text-xl flex-shrink-0">🏰</div>
-          <div className="min-w-0">
-            <p className="ns-bold text-sm text-gray-800 dark:text-gray-100 truncate">{group.name}</p>
-            <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-400">
-              <span className="flex items-center gap-0.5">
-                {group.isPublic ? <IconGlobe /> : <IconLock />}
-                {group.isPublic ? '공개' : '비공개'}
-              </span>
-              <span>·</span>
-              <span className="flex items-center gap-0.5"><IconUsers /> {group.memberCount}/{group.maxMembers}명</span>
-              <span>·</span>
-              <span>{group.leader?.name || '—'}</span>
-            </div>
-          </div>
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-extrabold text-gray-900 dark:text-white">그룹</h1>
+          <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">멤버들의 주간 레이드 현황을 함께 관리해요</p>
         </div>
-        <button
-          onClick={handleApply}
-          disabled={!isDemo && (applied || loading || group.memberCount >= group.maxMembers)}
-          className={`flex-shrink-0 text-xs ns-bold px-3 py-1.5 rounded transition-colors ${
-            !isDemo && applied
-              ? 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 cursor-default'
-              : !isDemo && group.memberCount >= group.maxMembers
-                ? 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 cursor-default'
-                : 'bg-yellow-400 hover:bg-yellow-300 text-gray-900'
-          }`}
-        >
-          {!isDemo && loading ? '…' : !isDemo && applied ? '신청 중' : !isDemo && group.memberCount >= group.maxMembers ? '인원 마감' : '참가 신청'}
-        </button>
-      </div>
-      {group.description && (
-        <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">{group.description}</p>
-      )}
-    </div>
-  )
-}
-
-// ── 내 그룹 카드 ───────────────────────────────────────────────────────────────
-function MyGroupCard({ group }) {
-  const router = useRouter()
-  return (
-    <div
-      onClick={() => router.push(`/group/${group.id}`)}
-      className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] p-4 cursor-pointer hover:border-yellow-400/60 dark:hover:border-yellow-600/40 transition-colors"
-    >
-      <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center text-2xl flex-shrink-0">🏰</div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="ns-bold text-gray-800 dark:text-gray-100">{group.name}</span>
-            {group.myRole === 'leader' && (
-              <span className="inline-flex items-center gap-0.5 text-[10px] ns-bold bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 px-1.5 py-0.5 rounded-full">
-                <IconShield /> 그룹장
-              </span>
-            )}
-            {group.myRole === 'officer' && (
-              <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full">부그룹장</span>
-            )}
-            {group.pendingCount > 0 && (
-              <span className="text-[10px] ns-bold bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full">
-                신청 {group.pendingCount}
-              </span>
-            )}
+        {isLoggedIn && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowJoin(true)}
+              className="px-3 py-1.5 text-xs border border-gray-200 dark:border-white/10 text-gray-600 dark:text-zinc-300 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              코드 입력
+            </button>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="px-3 py-1.5 text-xs bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-semibold hover:bg-gray-700 dark:hover:bg-white transition-colors"
+            >
+              + 그룹 만들기
+            </button>
           </div>
-          <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1">
-            <IconUsers /> {group.memberCount}/{group.maxMembers}명
-            <span className="mx-1">·</span>
-            {group.isPublic ? <><IconGlobe /> 공개</> : <><IconLock /> 비공개</>}
-          </p>
-        </div>
-        <IconChevron />
+        )}
       </div>
-    </div>
-  )
-}
 
-// ── 데모 로그인 안내 모달 ──────────────────────────────────────────────────────
-function DemoLoginModal({ onClose }) {
-  const { signIn } = require('next-auth/react')
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="w-full max-w-xs rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl">
-        <div className="px-6 py-6 text-center space-y-3">
-          <p className="ns-bold text-gray-900 dark:text-white text-base">로그인이 필요해요</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-            지금 보이는 원정대는 샘플 데이터에요.<br />
-            디스코드 로그인 후 직접 그룹을 만들거나<br />
-            참가해 보세요!
-          </p>
-          <div className="flex flex-col gap-2 pt-1">
+      {/* 비로그인 배너 */}
+      {!isLoggedIn && (
+        <div className="mb-6 p-4 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 text-center">
+          <p className="text-sm text-gray-500 dark:text-zinc-400 mb-3">로그인하면 그룹을 만들거나 초대 코드로 가입할 수 있어요</p>
+          <div className="flex gap-2 justify-center flex-wrap">
             <button
               onClick={() => signIn('discord', { callbackUrl: '/group' })}
-              className="w-full rounded-lg py-2.5 text-sm ns-bold text-white transition-colors"
-              style={{ backgroundColor: '#5865F2' }}
+              className="px-4 py-2 text-xs bg-[#5865F2] text-white rounded-xl font-semibold"
             >
               디스코드 로그인
             </button>
-            <button onClick={onClose} className="w-full rounded-lg py-2.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-              닫기
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── 메인 ───────────────────────────────────────────────────────────────────────
-export default function GroupClient({ initialMyGroups, initialPublicGroups, userId, userName, isDemo = false }) {
-  const [myGroups,      setMyGroups]      = useState(initialMyGroups)
-  const [publicGroups,  setPublicGroups]  = useState(initialPublicGroups)
-  const [showCreate,    setShowCreate]    = useState(false)
-  const [showJoinCode,  setShowJoinCode]  = useState(false)
-  const [showDemoModal, setShowDemoModal] = useState(false)
-  const [browseMode,    setBrowseMode]    = useState(myGroups.length === 0)
-  const [searchQ,       setSearchQ]       = useState('')
-  const [sort,          setSort]          = useState('members')
-
-  const filteredPublic = publicGroups
-    .filter(g => !searchQ || g.name.toLowerCase().includes(searchQ.toLowerCase()) || g.description?.toLowerCase().includes(searchQ.toLowerCase()))
-    .sort((a, b) =>
-      sort === 'members' ? b.memberCount - a.memberCount :
-      sort === 'newest'  ? new Date(b.createdAt) - new Date(a.createdAt) :
-      a.name.localeCompare(b.name, 'ko')
-    )
-
-  const handleCreated = (group) => {
-    setMyGroups(prev => [group, ...prev])
-    setBrowseMode(false)
-  }
-
-  return (
-    <div className="space-y-5">
-      {/* 데모 배너 */}
-      {isDemo && (
-        <div className="flex items-center gap-3 rounded-lg border border-yellow-200 dark:border-yellow-900/30 bg-yellow-50 dark:bg-yellow-900/10 px-3.5 py-2.5 text-xs">
-          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-yellow-400" />
-          <span className="text-gray-500 dark:text-gray-400">
-            <span className="ns-bold text-gray-700 dark:text-gray-200">미리보기 모드</span>
-            {' '}· 샘플 그룹 데이터가 표시되고 있어요. 로그인하면 실제 그룹을 만들고 참가할 수 있어요.
-          </span>
-        </div>
-      )}
-
-      {/* 헤더 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="ns-extrabold text-lg text-gray-900 dark:text-white">그룹</h1>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {isDemo ? '샘플 그룹이 표시되고 있습니다' : myGroups.length > 0 ? `${myGroups.length}개 그룹 참여 중` : '아직 참여한 그룹이 없습니다'}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => isDemo ? setShowDemoModal(true) : setShowJoinCode(true)}
-            className="rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
-            코드로 참가
-          </button>
-          <button
-            onClick={() => isDemo ? setShowDemoModal(true) : setShowCreate(true)}
-            className="flex items-center gap-1 rounded bg-yellow-400 hover:bg-yellow-300 px-3 py-1.5 text-xs ns-bold text-gray-900 transition-colors">
-            <IconPlus /> 그룹 만들기
-          </button>
-        </div>
-      </div>
-
-      {/* 내 그룹 섹션 */}
-      {myGroups.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs ns-bold text-gray-500 dark:text-gray-400">내 그룹</p>
-            {!isDemo && (
-              <button
-                onClick={() => setBrowseMode(v => !v)}
-                className="text-xs text-yellow-500 dark:text-yellow-400 hover:underline">
-                {browseMode ? '탐색 닫기' : '공개 그룹 탐색'}
-              </button>
-            )}
-          </div>
-          <div className="grid sm:grid-cols-2 gap-2">
-            {myGroups.map(g => <MyGroupCard key={g.id} group={g} />)}
+            <Link
+              href="/group/demo"
+              className="px-4 py-2 text-xs border border-gray-200 dark:border-white/10 text-gray-600 dark:text-zinc-300 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              데모 미리보기
+            </Link>
           </div>
         </div>
       )}
 
-      {/* 공개 그룹 탐색 */}
-      {(browseMode || isDemo) && (
-        <div className="space-y-3">
-          {myGroups.length > 0 && <div className="border-t border-gray-100 dark:border-[#383838]" />}
-          <p className="text-xs ns-bold text-gray-500 dark:text-gray-400">공개 그룹 탐색</p>
-
-          {/* 검색 + 정렬 */}
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><IconSearch /></span>
-              <input
-                value={searchQ} onChange={e => setSearchQ(e.target.value)}
-                placeholder="그룹 이름 검색"
-                className="w-full pl-8 pr-3 py-2 rounded border border-gray-200 dark:border-[#383838] text-sm bg-white dark:bg-[#222222] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
-              />
-            </div>
-            <div className="flex rounded border border-gray-200 dark:border-[#383838] overflow-hidden">
-              {[['인원순','members'],['최신순','newest'],['이름순','name']].map(([label, val]) => (
-                <button key={val} onClick={() => setSort(val)}
-                  className={`px-2.5 py-2 text-xs ns-bold transition-colors ${sort === val ? 'bg-yellow-400 text-gray-900' : 'bg-white dark:bg-[#222222] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 그룹 목록 */}
-          {filteredPublic.length === 0 ? (
-            <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] py-14 text-center">
-              <p className="text-gray-400 dark:text-gray-500 text-sm">
-                {searchQ ? '검색 결과가 없습니다' : '공개 그룹이 없습니다'}
-              </p>
-              {!searchQ && <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">새 그룹을 만들어보세요!</p>}
-            </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 gap-2">
-              {filteredPublic.map(g => (
-                <PublicGroupCard key={g.id} group={g} onApply={() => {}} isDemo={isDemo} onDemoAction={() => setShowDemoModal(true)} />
-              ))}
-            </div>
-          )}
+      {/* 그룹 목록 */}
+      {isLoggedIn && groups.length === 0 ? (
+        <div className="text-center py-16 text-gray-400 dark:text-zinc-500">
+          <p className="text-sm mb-1">아직 가입한 그룹이 없어요</p>
+          <p className="text-xs">그룹을 만들거나 초대 코드로 가입해보세요</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {groups.map(g => {
+            const rb = ROLE_BADGE[g.myRole] || ROLE_BADGE.member
+            return (
+              <Link
+                key={g.id}
+                href={`/group/${g.id}`}
+                className="block p-4 bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-white/[0.06] rounded-2xl hover:shadow-md dark:hover:border-white/10 transition-all"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h2 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{g.name}</h2>
+                  <span className={`ml-2 flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded-full ${rb.cls}`}>{rb.label}</span>
+                </div>
+                {g.description && (
+                  <p className="text-xs text-gray-400 dark:text-zinc-500 mb-2 line-clamp-2">{g.description}</p>
+                )}
+                <div className="flex items-center justify-between text-xs text-gray-400 dark:text-zinc-500">
+                  <span>그룹장: {g.leader?.discordUsername || g.leader?.name}</span>
+                  <span>{g.memberCount}/{g.maxMembers}명</span>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       )}
 
-      {/* 모달 */}
-      {showCreate    && <CreateModal    onClose={() => setShowCreate(false)}    onCreate={handleCreated} />}
-      {showJoinCode  && <JoinCodeModal  onClose={() => setShowJoinCode(false)}  onJoined={() => {}} />}
-      {showDemoModal && <DemoLoginModal onClose={() => setShowDemoModal(false)} />}
+      {/* 토스트 */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs rounded-xl shadow-lg max-w-sm text-center">
+          {toast}
+        </div>
+      )}
+
+      {showCreate && <CreateModal onClose={() => setShowCreate(false)} onCreated={handleCreated} />}
+      {showJoin   && <JoinModal   onClose={() => setShowJoin(false)}   onJoined={handleJoined} />}
     </div>
   )
 }

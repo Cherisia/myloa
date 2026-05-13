@@ -1,4 +1,4 @@
-// PATCH /api/expedition/[id]/members → 멤버 수락/거절, 공개 설정 변경
+// PATCH /api/expedition/[id]/members → 멤버 수락/거절/역할변경/강퇴/공개설정
 
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
@@ -10,33 +10,61 @@ export async function PATCH(request, { params }) {
 
   const { id: expeditionId } = await params
   const { userId, action, visibility } = await request.json()
+  const myId = session.user.id
 
   const expedition = await prisma.expedition.findUnique({ where: { id: expeditionId } })
-  if (!expedition) return NextResponse.json({ error: '원정대를 찾을 수 없습니다' }, { status: 404 })
+  if (!expedition) return NextResponse.json({ error: '그룹을 찾을 수 없습니다' }, { status: 404 })
 
-  const isLeader = expedition.leaderId === session.user.id
-  const isSelf   = userId === session.user.id
+  const myMembership = await prisma.expeditionMember.findUnique({
+    where: { expeditionId_userId: { expeditionId, userId: myId } },
+  })
 
-  // 공개 설정 변경 (본인만)
+  const isLeader  = expedition.leaderId === myId
+  const isOfficer = isLeader || myMembership?.role === 'officer'
+  const isSelf    = userId === myId
+
+  // 내 공개 설정 변경
   if (visibility && isSelf) {
     const updated = await prisma.expeditionMember.update({
-      where: { expeditionId_userId: { expeditionId, userId: session.user.id } },
+      where: { expeditionId_userId: { expeditionId, userId: myId } },
       data: { visibility },
     })
     return NextResponse.json(updated)
   }
 
-  // 수락/거절 (원정대장만)
-  if (action && isLeader) {
-    if (!['accept', 'reject'].includes(action)) {
-      return NextResponse.json({ error: '잘못된 action' }, { status: 400 })
-    }
+  // 가입 수락 / 거절 (부그룹장+)
+  if ((action === 'accept' || action === 'reject') && isOfficer) {
     const updated = await prisma.expeditionMember.update({
       where: { expeditionId_userId: { expeditionId, userId } },
       data: {
         status: action === 'accept' ? 'active' : 'rejected',
         joinedAt: action === 'accept' ? new Date() : undefined,
       },
+    })
+    return NextResponse.json(updated)
+  }
+
+  // 강퇴 (부그룹장+, 자신 및 리더 제외)
+  if (action === 'kick' && isOfficer && !isSelf && expedition.leaderId !== userId) {
+    await prisma.expeditionMember.update({
+      where: { expeditionId_userId: { expeditionId, userId } },
+      data: { status: 'rejected' },
+    })
+    return NextResponse.json({ success: true })
+  }
+
+  // 역할 변경 (리더만)
+  if (action === 'promote' && isLeader) {
+    const updated = await prisma.expeditionMember.update({
+      where: { expeditionId_userId: { expeditionId, userId } },
+      data: { role: 'officer' },
+    })
+    return NextResponse.json(updated)
+  }
+  if (action === 'demote' && isLeader) {
+    const updated = await prisma.expeditionMember.update({
+      where: { expeditionId_userId: { expeditionId, userId } },
+      data: { role: 'member' },
     })
     return NextResponse.json(updated)
   }
