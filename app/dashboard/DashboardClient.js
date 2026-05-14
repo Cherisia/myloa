@@ -1407,8 +1407,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                   {item.image && <img src={item.image} alt="" className="custom-homework-icon w-[16px] h-[16px] object-contain flex-shrink-0" />}
                                   <div className="flex-1 min-w-0">
                                     <p className={`text-[10px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
-                                    <div className="flex items-center gap-1 mt-0.5">
-                                      <div className="flex-1 flex gap-px">
+                                    <div className="mt-0.5">
+                                      <div className="flex gap-px mb-0.5">
                                         {Array.from({ length: 10 }).map((_, i) => (
                                           <div
                                             key={i}
@@ -1417,7 +1417,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                           />
                                         ))}
                                       </div>
-                                      <span className="text-[9px] tabular-nums ns-bold text-green-500 dark:text-green-400 flex-shrink-0">{gauge}</span>
+                                      <div className="flex items-center justify-between">
+                                        <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, -10) }} disabled={gauge <= 0} className="text-[9px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors px-0.5">−</button>
+                                        <span className="text-[9px] tabular-nums ns-bold text-green-500 dark:text-green-400">{gauge}</span>
+                                        <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, 10) }} disabled={gauge >= 100} className="text-[9px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors px-0.5">+</button>
+                                      </div>
                                     </div>
                                   </div>
                                   <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
