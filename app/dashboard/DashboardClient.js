@@ -976,9 +976,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   }, [completedCount, totalCount])
 
   return (
-    <div className="space-y-5">
-      <Confetti active={showConfetti} />
-
+    <>
       {/* ── 캐릭터 추가 로딩 오버레이 ── */}
       {addingChars && (
         <>
@@ -988,7 +986,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               50%       { transform: scaleY(1);   opacity: 1;   }
             }
           `}</style>
-          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-white/70 dark:bg-[#181818]/80 backdrop-blur-[2px]">
+          <div className="fixed z-[200] flex items-center justify-center bg-white/70 dark:bg-[#181818]/80 backdrop-blur-[2px]"
+            style={{ top: 0, left: 0, right: 0, bottom: 0 }}>
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-end gap-1.5" style={{ height: 28 }}>
                 {[0, 0.15, 0.3, 0.15, 0].map((delay, i) => (
@@ -1008,6 +1007,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           </div>
         </>
       )}
+
+      <div className="space-y-5">
+      <Confetti active={showConfetti} />
 
       {/* ── 데모 모드 안내 배너 ── */}
       {isDemo && (
@@ -2398,6 +2400,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }

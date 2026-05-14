@@ -8,17 +8,9 @@ export default function DashboardLoading() {
         }
       `}</style>
 
-      {/* top/left/right/bottom + 100dvh: 모바일 주소창 등에서 inset-0만으로 남는 하단 여백 방지 */}
       <div
-        className="fixed z-[100] flex w-full max-w-none items-center justify-center overscroll-none bg-slate-50 dark:bg-[#181818]"
-        style={{
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          minHeight: '100dvh',
-          height: '100dvh',
-        }}
+        className="fixed inset-0 z-[100] flex items-center justify-center overscroll-none bg-slate-50 dark:bg-[#181818]"
+        style={{ minHeight: '-webkit-fill-available' }}
       >
         <div className="flex items-end gap-1.5" style={{ height: 28 }}>
           {[0, 0.15, 0.3, 0.15, 0].map((delay, i) => (
