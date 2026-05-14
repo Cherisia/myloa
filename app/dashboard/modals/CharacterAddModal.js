@@ -74,7 +74,7 @@ function ApiKeyGuideModal({ onClose }) {
 }
 
 // ── 캐릭터 추가 모달 ──────────────────────────────────────────────────────────
-export default function CharacterAddModal({ existingNames, onAdd, onClose, isLoggedIn = true, activeTabExpeditionId = null, getTargetTabName = null }) {
+export default function CharacterAddModal({ existingNames, onAdd, onClose, isLoggedIn = true, hasApiKey = true, onApiKeyRegistered, activeTabExpeditionId = null, getTargetTabName = null }) {
   const [charName,            setCharName]            = useState('')
   const [apiKey,              setApiKey]              = useState('')
   const [keySaved,            setKeySaved]            = useState(false)
@@ -88,25 +88,75 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
   const [isNewExpedition,      setIsNewExpedition]      = useState(false)
   const [matchedExpeditionId,  setMatchedExpeditionId]  = useState(null)
   const [targetTabName,        setTargetTabName]        = useState(null)   // 저장될 탭 이름 (null = 새 탭)
+  const [searchCooldownSec,    setSearchCooldownSec]    = useState(0)
 
+  // localStorage에서 API 키 복원 (계정 등록 여부와 무관하게 항상)
   useEffect(() => {
     const saved = localStorage.getItem(LOA_KEY_STORAGE)
     if (saved) { setApiKey(saved); setKeySaved(true) }
   }, [])
 
+  // 개인·DB 키 없이 검색(공용 키) 시 쿨다운 초기화 — 로그인 여부와 무관
+  useEffect(() => {
+    if (hasApiKey) return
+    try {
+      const lastAt = parseInt(localStorage.getItem('myloa_last_search_at') || '0', 10)
+      const remain = Math.ceil((60_000 - (Date.now() - lastAt)) / 1000)
+      if (remain > 0) setSearchCooldownSec(remain)
+    } catch {}
+  }, [hasApiKey])
+
+  // 검색 쿨다운 카운트다운
+  useEffect(() => {
+    if (searchCooldownSec <= 0) return
+    const t = setTimeout(() => setSearchCooldownSec(s => Math.max(0, s - 1)), 1000)
+    return () => clearTimeout(t)
+  }, [searchCooldownSec])
+
   const search = async () => {
     if (!charName.trim()) return setError('캐릭터명을 입력하세요')
-    if (!apiKey.trim())   return setError('API 키를 입력하세요')
+    // 입력/DB에 개인 키가 없을 때만(공용 키 검색) 1분 쿨다운 — 입력란에 키를 쓴 경우는 제한 없음
+    const usesSharedKeyOnly = !apiKey.trim() && !hasApiKey
+    if (usesSharedKeyOnly) {
+      const COOLDOWN = 60_000
+      try {
+        const lastAt = parseInt(localStorage.getItem('myloa_last_search_at') || '0', 10)
+        const remain = Math.ceil((COOLDOWN - (Date.now() - lastAt)) / 1000)
+        if (remain > 0) {
+          setSearchCooldownSec(remain)
+          return
+        }
+      } catch {}
+    }
     setLoading(true); setError(''); setResults(null); setSelected(new Set()); setIsNewExpedition(false); setMatchedExpeditionId(null); setTargetTabName(null)
     try {
-      const res  = await fetch(`/api/loa?characterName=${encodeURIComponent(charName.trim())}&apiKey=${encodeURIComponent(apiKey.trim())}`)
+      const loaParams = new URLSearchParams({ characterName: charName.trim() })
+      if (apiKey.trim()) loaParams.set('apiKey', apiKey.trim())
+      const res  = await fetch(`/api/loa?${loaParams}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '알 수 없는 오류')
-      localStorage.setItem(LOA_KEY_STORAGE, apiKey.trim())
-      setKeySaved(true)
+      if (usesSharedKeyOnly) {
+        try {
+          localStorage.setItem('myloa_last_search_at', String(Date.now()))
+          setSearchCooldownSec(60)
+        } catch {}
+      }
+      if (apiKey.trim()) {
+        localStorage.setItem(LOA_KEY_STORAGE, apiKey.trim())
+        setKeySaved(true)
+      }
+      // 검색 성공 시 DB에 API 키 저장
+      if (isLoggedIn && apiKey.trim()) {
+        fetch('/api/characters/apikey', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey: apiKey.trim() }),
+        }).then(r => { if (r.ok) onApiKeyRegistered?.() }).catch(() => {})
+      }
       setResults(data)
       setSelected(new Set())
-      // 계정 확인 (현재 탭에 캐릭터가 있을 때만 의미 있음)
+      setLoading(false)
+      // 계정 확인 (현재 탭에 캐릭터가 있을 때만 의미 있음) — 로딩 UI와 분리
       if (isLoggedIn) {
         try {
           // siblingNames: 검색 결과의 모든 캐릭터명 (같은 원정대)
@@ -344,13 +394,30 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
             />
           </div>
 
+          {!hasApiKey && !(apiKey.trim()) && (
+            <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700/30">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                <span className="ns-bold">API 키 미등록 상태입니다.</span> 캐릭터 검색과 갱신이 분당 1회로 제한됩니다.
+                {isLoggedIn && (
+                  <>
+                    <br />
+                    API 키 입력 후 원정대 캐릭터 검색을 진행하시면 키가 등록됩니다.
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+
           {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
 
-          <button onClick={search} disabled={loading}
+          <button onClick={search} disabled={loading || searchCooldownSec > 0}
             className="w-full rounded border border-gray-200 dark:border-[#383838] py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
             {loading ? (
               <><svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>검색 중…</>
-            ) : '원정대 캐릭터 검색'}
+            ) : searchCooldownSec > 0 ? `재검색 가능 (${searchCooldownSec}초)` : '원정대 캐릭터 검색'}
           </button>
         </div>
 
@@ -425,17 +492,6 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
         )}
 
         <div className="px-5 pb-4 border-t border-gray-100 dark:border-[#383838] mt-3">
-          {activeTabExpeditionId && newCount > 0 && (isNewExpedition || (matchedExpeditionId && matchedExpeditionId !== activeTabExpeditionId)) && (
-            <div className="flex items-start gap-2 mt-3 mb-3 px-3 py-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-              </svg>
-              <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                현재 원정대와 <span className="ns-bold">다른 계정</span>의 캐릭터입니다.<br/>
-                <span className="ns-bold">새 원정대 탭</span>에 자동으로 추가됩니다.
-              </p>
-            </div>
-          )}
           <div className="flex gap-2 pt-1">
             <button
               onClick={results !== null ? () => setResults(null) : onClose}

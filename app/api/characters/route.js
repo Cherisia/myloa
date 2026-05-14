@@ -6,7 +6,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { encrypt } from '@/lib/encrypt'
 
 export async function GET() {
   const session = await auth()
@@ -47,14 +46,6 @@ export async function POST(request) {
   const { apiKey, repCharName, characters, siblingNames } = await request.json()
   if (!characters?.length) {
     return NextResponse.json({ error: '추가할 캐릭터가 없습니다' }, { status: 400 })
-  }
-
-  // ── API 키를 User에 저장/갱신 ─────────────────────────────────────────────
-  if (apiKey) {
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data:  { apiKey: encrypt(apiKey), lastSyncedAt: new Date() },
-    })
   }
 
   // ── 원정대 매칭 ──────────────────────────────────────────────────────────────

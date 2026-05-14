@@ -74,7 +74,11 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id
-  const expeditionsRaw = await prisma.loaExpedition.findMany({ where: { userId }, orderBy: { createdAt: 'asc' }, include: EXPEDITION_INCLUDE })
+  const [expeditionsRaw, userRow] = await Promise.all([
+    prisma.loaExpedition.findMany({ where: { userId }, orderBy: { createdAt: 'asc' }, include: EXPEDITION_INCLUDE }),
+    prisma.user.findUnique({ where: { id: userId }, select: { apiKey: true } }),
+  ])
+  const hasApiKey = !!userRow?.apiKey
   let expeditions = expeditionsRaw
 
   // 리셋 만료된 항목 일괄 처리
@@ -122,5 +126,5 @@ export default async function DashboardPage() {
     })
   })
 
-  return <DashboardClient initialChars={initialChars} initialRaids={initialRaids} isLoggedIn initialExpNames={initialExpNames} />
+  return <DashboardClient initialChars={initialChars} initialRaids={initialRaids} isLoggedIn initialHasApiKey={hasApiKey} initialExpNames={initialExpNames} />
 }

@@ -59,7 +59,7 @@ function buildCustomHomeworkRowMap(filteredChars, customItems, includeItem) {
   return byName
 }
 
-export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialCustomItems = {}, initialExpNames = {}, initialRepCharId = null }) {
+export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialHasApiKey = false, initialCustomItems = {}, initialExpNames = {}, initialRepCharId = null }) {
   const isDemo = !isLoggedIn
   const [chars, setChars] = useState(initialChars)
   const [raids, setRaids] = useState(initialRaids)
@@ -74,6 +74,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [confirmDeletePageId, setConfirmDeletePageId] = useState(null) // 탭 삭제 확인
   const [syncing, setSyncing]                   = useState(false)
   const [addingChars, setAddingChars]           = useState(false)
+  const [hasApiKey, setHasApiKey]               = useState(initialHasApiKey)
+  const [syncCooldownSec, setSyncCooldownSec]   = useState(0)
   const [showConfetti, setShowConfetti]         = useState(false)
   const [exRaidError, setExRaidError]           = useState(null) // { raidName, conflictCharName }
   const [cardView, setCardView]                 = useState(true)
@@ -116,6 +118,23 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       name: expNames[id] || `원정대 ${i + 1}`,
     }))
   }, [chars, expNames])
+
+  // API 키 미등록 시 sync 쿨다운 초기화 (localStorage 기반)
+  useEffect(() => {
+    if (hasApiKey || !isLoggedIn) return
+    try {
+      const lastAt  = parseInt(localStorage.getItem('myloa_last_sync_at') || '0', 10)
+      const remain  = Math.ceil((60_000 - (Date.now() - lastAt)) / 1000)
+      if (remain > 0) setSyncCooldownSec(remain)
+    } catch {}
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // sync 쿨다운 카운트다운
+  useEffect(() => {
+    if (syncCooldownSec <= 0) return
+    const t = setTimeout(() => setSyncCooldownSec(s => Math.max(0, s - 1)), 1000)
+    return () => clearTimeout(t)
+  }, [syncCooldownSec])
 
   // 원정대 탭 초기화 — activePageId만 localStorage 복원 (expNames는 DB 우선)
   useEffect(() => {
@@ -868,6 +887,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   // 전체 캐릭터 갱신
   const syncChars = async () => {
     if (syncing) return
+    if (!hasApiKey) {
+      const COOLDOWN = 60_000
+      try {
+        const lastAt = parseInt(localStorage.getItem('myloa_last_sync_at') || '0', 10)
+        const remain = Math.ceil((COOLDOWN - (Date.now() - lastAt)) / 1000)
+        if (remain > 0) { setSyncCooldownSec(remain); return }
+        localStorage.setItem('myloa_last_sync_at', String(Date.now()))
+        setSyncCooldownSec(60)
+      } catch {}
+    }
     setSyncing(true)
     try {
       const res  = await fetch('/api/characters/sync', { method: 'POST' })
@@ -1128,7 +1157,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           </button>
           <button
             onClick={() => isLoggedIn ? (chars.length === 0 ? setShowNoChar(true) : syncChars()) : setShowLoginGuide(true)}
-            disabled={isLoggedIn && syncing}
+            disabled={isLoggedIn && (syncing || syncCooldownSec > 0)}
             className="flex items-center gap-1.5 rounded border border-gray-200 dark:hover:bg-[#2a2a2a] dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 transition-colors">
             <span className={isLoggedIn && syncing ? 'animate-spin' : ''}><IconRefresh /></span>
             {isLoggedIn && syncing ? '갱신 중…' : '캐릭터 갱신'}
@@ -2227,6 +2256,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           initialShowAdd={charEditOpenAdd}
           onClose={() => { setShowCharEdit(false); setCharEditOpenAdd(false) }}
           isDemo={isDemo}
+          hasApiKey={hasApiKey}
+          onApiKeyRegistered={() => setHasApiKey(true)}
           onLoginRequired={() => { setShowCharEdit(false); setShowLoginGuide(true) }}
           activeTabExpeditionId={activeChars[0]?.expeditionId ?? null}
           getTargetTabName={getTargetTabName}
