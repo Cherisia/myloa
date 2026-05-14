@@ -1068,7 +1068,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             <h1 className="ns-extrabold text-lg text-gray-900 dark:text-white">
               {activePageId === null ? '전체' : (expPages.find(p => p.id === activePageId)?.name || '원정대')}
             </h1>
-            <span className="text-xs text-gray-400 dark:text-gray-500">· 캐릭터 수 {activeChars.length}</span>
           </div>
         </div>
         <div className="flex gap-2">
@@ -1097,7 +1096,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       </div>
 
       {/* ── 요약 카드 ── */}
-      <div className="grid grid-cols-3 gap-3 max-w-[50%]">
+      <div className="grid grid-cols-3 gap-3 max-w-[50%] -mt-3">
         {/* 원정대 캐릭터 */}
         <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 flex flex-col">
           {isLoggedIn && activeChars.length === 0 && (
@@ -1137,7 +1136,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         )}
                       </div>
                     </div>
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-auto pt-3">원정대 캐릭터 <span className="ns-bold text-gray-600 dark:text-gray-300">{activeChars.length}개</span></p>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-auto pt-3">{activePageId === null ? '전체 캐릭터' : '원정대 캐릭터'} <span className="ns-bold text-gray-600 dark:text-gray-300">{activeChars.length}개</span></p>
                   </div>
                 ) : (
                   <p className="text-[11px] text-gray-400 dark:text-gray-500">미설정</p>
