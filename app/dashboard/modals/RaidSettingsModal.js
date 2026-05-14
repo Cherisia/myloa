@@ -179,8 +179,8 @@ export default function RaidSettingsModal({
 
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
           <div>
-            <span className="ns-bold text-gray-900 dark:text-white">레이드 · 커스텀 설정</span>
-            <span className="ml-2 text-xs text-gray-400">원정대와 캐릭터를 고른 뒤 레이드·커스텀을 설정하세요</span>
+            <span className="ns-bold text-gray-900 dark:text-white">숙제 설정</span>
+            <span className="ml-2 text-xs text-gray-400">원정대와 캐릭터 선택 후 숙제를 설정해주세요</span>
           </div>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
         </div>
