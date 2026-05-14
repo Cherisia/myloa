@@ -74,7 +74,7 @@ function ApiKeyGuideModal({ onClose }) {
 }
 
 // ── 캐릭터 추가 모달 ──────────────────────────────────────────────────────────
-export default function CharacterAddModal({ existingNames, onAdd, onClose, isLoggedIn = true, hasApiKey = true, onApiKeyRegistered, activeTabExpeditionId = null, getTargetTabName = null }) {
+export default function CharacterAddModal({ existingNames, onAdd, onClose, isLoggedIn = true, hasApiKey = true, onApiKeyRegistered, activeTabExpeditionId = null, getTargetTabName = null, expeditionHasExRaid = false }) {
   const [charName,            setCharName]            = useState('')
   const [apiKey,              setApiKey]              = useState('')
   const [keySaved,            setKeySaved]            = useState(false)
@@ -201,7 +201,7 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
         map[char.name] = normal.map(e => ({ ...e, isGoldCheck: false }))
       } else {
         const entries = [...normal]
-        if (idx === 0) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
+        if (idx === 0 && !expeditionHasExRaid) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
         map[char.name] = entries
       }
     })

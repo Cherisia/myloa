@@ -6,7 +6,7 @@ import { getClassIcon } from '../_constants'
 import CharacterAddModal from './CharacterAddModal'
 
 // ── 캐릭터 설정 모달 ──────────────────────────────────────────────────────────
-export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onClose, onReorder, initialShowAdd = false, isDemo = false, hasApiKey = true, onApiKeyRegistered, onLoginRequired, activeTabExpeditionId = null, getTargetTabName = null }) {
+export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onClose, onReorder, initialShowAdd = false, isDemo = false, hasApiKey = true, onApiKeyRegistered, onLoginRequired, activeTabExpeditionId = null, getTargetTabName = null, expeditionHasExRaid = false }) {
   const [showAddChar,      setShowAddChar]      = useState(initialShowAdd)
   const [selectedIds,      setSelectedIds]      = useState(new Set())
   const [showBatchConfirm, setShowBatchConfirm] = useState(false)
@@ -113,6 +113,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
         onApiKeyRegistered={onApiKeyRegistered}
         activeTabExpeditionId={activeTabExpeditionId}
         getTargetTabName={getTargetTabName}
+        expeditionHasExRaid={expeditionHasExRaid}
       />
     )
   }

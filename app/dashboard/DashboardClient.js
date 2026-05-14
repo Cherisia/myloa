@@ -2243,6 +2243,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           onLoginRequired={() => { setShowCharEdit(false); setShowLoginGuide(true) }}
           activeTabExpeditionId={activeChars[0]?.expeditionId ?? null}
           getTargetTabName={getTargetTabName}
+          expeditionHasExRaid={chars.some(c =>
+            (c.expeditionId || 'default') === (activeChars[0]?.expeditionId || 'default') &&
+            (raids[c.id] || []).some(e => EX_RAID_IDS.has(e.raidId))
+          )}
         />
       )}
       {showAutoSetup && (
