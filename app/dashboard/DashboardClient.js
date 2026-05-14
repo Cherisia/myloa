@@ -755,20 +755,26 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           if (entries.length > 0) demoRaids[dc.id] = entries
         })
       }
-      // 골드 캐릭터 한도 초과 시 isGoldCheck 해제
+      // 골드 캐릭터 한도 초과 시 isGoldCheck 해제 (배치 내 아이템레벨 순 적용)
       let demoGoldLimitHit = false
-      demoChars.forEach(dc => {
+      const demoBatchGoldByExp = {}
+      ;[...demoChars].sort((a, b) => b.itemLevel - a.itemLevel).forEach(dc => {
         if (!demoRaids[dc.id]) return
         const expId = dc.expeditionId || 'default'
-        const acctGoldChars = chars.filter(ch =>
-          (ch.expeditionId || 'default') === expId &&
-          (raids[ch.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
-        ).length
-        if (acctGoldChars >= GOLD_CHAR_LIMIT) {
+        if (!(expId in demoBatchGoldByExp)) {
+          demoBatchGoldByExp[expId] = chars.filter(ch =>
+            (ch.expeditionId || 'default') === expId &&
+            (raids[ch.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+          ).length
+        }
+        const hasGold = demoRaids[dc.id].some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+        if (demoBatchGoldByExp[expId] >= GOLD_CHAR_LIMIT && hasGold) {
           demoGoldLimitHit = true
           demoRaids[dc.id] = demoRaids[dc.id].map(e =>
             EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false }
           )
+        } else if (hasGold) {
+          demoBatchGoldByExp[expId]++
         }
       })
       if (demoGoldLimitHit) setShowGoldLimitNotice(true)
@@ -833,20 +839,26 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         })
       }
 
-      // 골드 캐릭터 한도 초과 시 isGoldCheck 해제
+      // 골드 캐릭터 한도 초과 시 isGoldCheck 해제 (배치 내 아이템레벨 순 적용)
       let goldLimitHit = false
-      addedChars.forEach(c => {
+      const batchGoldByExp = {}
+      ;[...addedChars].sort((a, b) => b.itemLevel - a.itemLevel).forEach(c => {
         if (!newRaids[c.id]) return
         const expId = c.expeditionId || 'default'
-        const acctGoldChars = chars.filter(ch =>
-          (ch.expeditionId || 'default') === expId &&
-          (raids[ch.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
-        ).length
-        if (acctGoldChars >= GOLD_CHAR_LIMIT) {
+        if (!(expId in batchGoldByExp)) {
+          batchGoldByExp[expId] = chars.filter(ch =>
+            (ch.expeditionId || 'default') === expId &&
+            (raids[ch.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+          ).length
+        }
+        const hasGold = newRaids[c.id].some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+        if (batchGoldByExp[expId] >= GOLD_CHAR_LIMIT && hasGold) {
           goldLimitHit = true
           newRaids[c.id] = newRaids[c.id].map(e =>
             EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false }
           )
+        } else if (hasGold) {
+          batchGoldByExp[expId]++
         }
       })
       if (goldLimitHit) setShowGoldLimitNotice(true)
@@ -2388,7 +2400,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                 이미 골드 획득 캐릭터 {GOLD_CHAR_LIMIT}개가 지정되어 있어<br/>
                 추가된 캐릭터의 골드 획득이 해제된 상태로 등록되었습니다.<br/>
-                레이드 설정에서 직접 변경할 수 있어요.
+                숙제 설정에서 직접 변경할 수 있어요.
               </p>
             </div>
             <button

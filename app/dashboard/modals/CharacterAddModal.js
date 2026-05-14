@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { RAIDS, CLASS_COLOR, calcGoldBound, calcGoldTrade } from '@/lib/raidData'
-import { LOA_KEY_STORAGE, DIFF_LABEL, DIFF_COLOR } from '../_constants'
+import { LOA_KEY_STORAGE, DIFF_LABEL, DIFF_COLOR, GOLD_CHAR_LIMIT } from '../_constants'
 import { getClassIcon } from '../_constants'
 import { IconInfo, IconItemLevel } from '../_icons'
 import { autoSelectNormalRaids, autoSelectExRaid } from '../_raidHelpers'
@@ -195,18 +195,26 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
   const raidsByName = useMemo(() => {
     const map = {}
     selectedChars.forEach((char, idx) => {
-      const strategy = strategies[char.name] || ('bound')
-      const normal   = autoSelectNormalRaids(char, strategy)
-      const entries  = [...normal]
-      if (idx === 0) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
-      map[char.name] = entries
+      const strategy = strategies[char.name] || 'bound'
+      const normal   = autoSelectNormalRaids(char, strategy === 'no_gold' ? 'bound' : strategy)
+      if (strategy === 'no_gold') {
+        map[char.name] = normal.map(e => ({ ...e, isGoldCheck: false }))
+      } else {
+        const entries = [...normal]
+        if (idx === 0) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
+        map[char.name] = entries
+      }
     })
     return map
   }, [selectedChars, strategies])
 
+  const goldCharCount = selectedChars.filter(c => strategies[c.name] !== 'no_gold').length
+
   const goSetup = () => {
     const init = {}
-    selectedChars.forEach(c => { init[c.name] = strategies[c.name] || 'bound' })
+    selectedChars.forEach((c, idx) => {
+      init[c.name] = strategies[c.name] || (idx < GOLD_CHAR_LIMIT ? 'bound' : 'no_gold')
+    })
     setStrategies(init)
     setStep('setup')
   }
@@ -274,12 +282,14 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
                     <span className="flex-1" />
                     {/* 전략 토글 */}
                     <div className="flex items-center gap-0.5 ml-1 rounded-md border border-gray-200 dark:border-[#383838] overflow-hidden flex-shrink-0">
-                      {[['trade','거래골드 우선'],['bound','전체골드 우선']].map(([key, label]) => (
+                      {[['no_gold','골드 미수령'],['trade','거래골드 우선'],['bound','전체골드 우선']].map(([key, label]) => (
                         <button key={key}
                           onClick={() => setStrategies(prev => ({ ...prev, [char.name]: key }))}
                           className={`px-2 py-1 text-[10px] ns-bold transition-colors
                             ${strategy === key
-                              ? 'bg-yellow-200 dark:bg-[#2e2e2e] text-yellow-800 dark:text-gray-200'
+                              ? key === 'no_gold'
+                                ? 'bg-gray-200 dark:bg-[#333] text-gray-500 dark:text-gray-400'
+                                : 'bg-yellow-200 dark:bg-[#2e2e2e] text-yellow-800 dark:text-gray-200'
                               : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'}`}>
                           {label}
                         </button>
@@ -309,8 +319,13 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px] tabular-nums text-gray-400 flex-shrink-0">
-                            {goldBound > 0 && <span className="text-orange-500 dark:text-orange-400">귀속 {goldBound.toLocaleString()}</span>}
-                            {goldTrade > 0 && <span className="text-blue-500 dark:text-blue-400">거래 {goldTrade.toLocaleString()}</span>}
+                            {strategy === 'no_gold'
+                              ? <span className="text-gray-400 dark:text-gray-500">미수령</span>
+                              : <>
+                                  {goldBound > 0 && <span className="text-orange-500 dark:text-orange-400">귀속 {goldBound.toLocaleString()}</span>}
+                                  {goldTrade > 0 && <span className="text-blue-500 dark:text-blue-400">거래 {goldTrade.toLocaleString()}</span>}
+                                </>
+                            }
                           </div>
                         </div>
                       )
@@ -323,6 +338,24 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
 
           {/* 푸터 */}
           <div className="px-5 pb-4 border-t border-gray-100 dark:border-[#383838] flex-shrink-0">
+            {/* 골드 수령 캐릭터 카운터 */}
+            <div className="flex items-center justify-between mt-3 mb-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                골드 수령 캐릭터
+                <span className={`ns-bold ml-1 ${goldCharCount > GOLD_CHAR_LIMIT ? 'text-red-500' : 'text-gray-700 dark:text-gray-200'}`}>
+                  {goldCharCount}
+                </span>
+                <span className="text-gray-400 dark:text-gray-500"> / {GOLD_CHAR_LIMIT}</span>
+              </span>
+              {goldCharCount > GOLD_CHAR_LIMIT && (
+                <span className="text-[11px] ns-bold text-red-500">골드 수령 {GOLD_CHAR_LIMIT}개 초과</span>
+              )}
+            </div>
+            {goldCharCount > GOLD_CHAR_LIMIT && (
+              <p className="text-[11px] text-red-400 mb-2 leading-relaxed">
+                골드 수령 캐릭터가 {GOLD_CHAR_LIMIT}개를 초과했습니다. 초과된 캐릭터를 골드 미수령으로 변경해 주세요.
+              </p>
+            )}
             {/* 현재 탭에 캐릭터가 있고, 검색한 계정이 다를 때만 안내 표시 */}
             {activeTabExpeditionId && (isNewExpedition || (matchedExpeditionId && matchedExpeditionId !== activeTabExpeditionId)) && (
               <div className="flex items-start gap-2 mt-3 mb-3 px-3 py-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
@@ -340,8 +373,8 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
                 className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
                 이전
               </button>
-              <button onClick={handleConfirm}
-                className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+              <button onClick={handleConfirm} disabled={goldCharCount > GOLD_CHAR_LIMIT}
+                className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                 {selectedChars.length}개 캐릭터 추가
               </button>
             </div>
