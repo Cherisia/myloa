@@ -79,7 +79,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [showConfetti, setShowConfetti]         = useState(false)
   const [exRaidError, setExRaidError]           = useState(null) // { raidName, conflictCharName }
   const [cardView, setCardView]                 = useState(true)
-  const [fitMode, setFitMode]                   = useState(false)
 
   const [dragCharId, setDragCharId]             = useState(null) // 드래그 중인 캐릭터 id
   const [dropCharId, setDropCharId]             = useState(null) // 드롭 대상 캐릭터 id
@@ -192,7 +191,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     try { localStorage.setItem('myloa_rest_gauge_deducted', JSON.stringify(restGaugeDeducted)) } catch {}
   }, [restGaugeDeducted, lsReady])
 
-  // 테이블 컨테이너 너비 추적 (한눈에 보기 스케일 계산용)
+  // 테이블 컨테이너 너비 추적 (청크 분할용)
   useEffect(() => {
     const el = tableWrapRef.current
     if (!el) return
@@ -1273,8 +1272,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {/* ── 숙제 테이블 / 카드 ── */}
       <div ref={tableWrapRef}>
       {(() => {
-        const COL_RAID = 140
-        const COL_CHAR = 148
+        const COL_RAID = 122
+        const COL_CHAR = 131
 
         const nameSize = (name) => {
           const korLen = [...name].filter(c => /[가-힣ᄀ-ᇿ㄰-㆏]/.test(c)).length
@@ -1414,7 +1413,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   }`}
                 >
                   {/* ── 캐릭터 헤더 ── */}
-                  <div className="flex items-center gap-1.5 px-2.5 bg-gray-50 dark:bg-[#181818] h-[52px] overflow-hidden">
+                  <div className="flex items-center gap-1.5 px-2.5 bg-gray-50 dark:bg-[#181818] h-[47px] overflow-hidden">
                     <span className="text-gray-300 dark:text-gray-600 flex-shrink-0 cursor-grab"><IconGrip /></span>
                     {getClassIcon(char.class)
                       ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-7 h-7 object-contain flex-shrink-0" />
@@ -1691,7 +1690,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 }>
                   {itemId ? (
                     isRest ? (
-                      <div className="flex flex-col gap-0.5 min-h-[52px] justify-center">
+                      <div className="flex flex-col gap-0.5 min-h-[47px] justify-center">
                         <div onClick={() => toggleCustomCheck(char.id, itemId)} className={`flex items-center justify-center h-7 rounded cursor-pointer transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
                           <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'}`}>{checked && <IconCheck />}</div>
                         </div>
@@ -1715,7 +1714,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     ) : (
                       <div
                         onClick={() => toggleCustomCheck(char.id, itemId)}
-                        className={`w-full h-[52px] flex items-center justify-center rounded cursor-pointer transition-colors ${
+                        className={`w-full h-[47px] flex items-center justify-center rounded cursor-pointer transition-colors ${
                           checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                         }`}
                       >
@@ -1727,7 +1726,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       </div>
                     )
                   ) : (
-                    <div className="w-full h-[52px] bg-gray-50/50 dark:bg-[#181818]/30 rounded flex items-center justify-center">
+                    <div className="w-full h-[47px] bg-gray-50/50 dark:bg-[#181818]/30 rounded flex items-center justify-center">
                       <span className="text-gray-200 dark:text-gray-700">—</span>
                     </div>
                   )}
@@ -1755,22 +1754,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           if (chunkRaidRows.length === 0 && !hasCustom) return null
 
           const tableNaturalWidth = COL_RAID + COL_CHAR * filteredChars.length
-          /** 한눈에 보기: zoom 대신 100% 너비 + 비율 열로 카드 오른쪽 빈 여백 제거 */
-          const colW = fitMode
-            ? {
-                raid: `${(COL_RAID / tableNaturalWidth) * 100}%`,
-                char: `${(COL_CHAR / tableNaturalWidth) * 100}%`,
-                stretch: true,
-              }
-            : { raid: COL_RAID, char: COL_CHAR, stretch: false }
+          const colW = { raid: COL_RAID, char: COL_CHAR, stretch: false }
 
-          /** 뷰포트에 스크롤 없이 들어올 때: 이전처럼 한눈에 보기 우선(장식 최소화). fitMode는 항상 컨테이너 폭에 맞춤 */
           const glanceSlack = 24
           const glanceTable =
-            fitMode ||
-            (tableContainerWidth > 0
+            tableContainerWidth > 0
               ? tableNaturalWidth <= tableContainerWidth + glanceSlack
-              : filteredChars.length <= 8)
+              : filteredChars.length <= 8
 
           const colSpan = filteredChars.length + 1
           const restDailyMap = buildCustomHomeworkRowMap(filteredChars, customItems, (it) => REST_GAUGE_NAMES.has(it.name))
@@ -1824,10 +1814,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           return (
           <div
             className={wrapClass}
-            style={fitMode ? { width: '100%' } : isSplit ? { width: tableNaturalWidth } : { width: 'fit-content', maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto' }}
+            style={isSplit ? { width: tableNaturalWidth } : { width: 'fit-content', maxWidth: '100%' }}
           >
-            <div style={fitMode ? { width: '100%' } : {}}>
-              <table className="border-collapse w-full text-left" style={{ tableLayout: 'fixed', width: fitMode ? '100%' : COL_RAID + COL_CHAR * filteredChars.length }}>
+            <div>
+              <table className="border-collapse w-full text-left" style={{ tableLayout: 'fixed', width: COL_RAID + COL_CHAR * filteredChars.length }}>
                 <thead>
                   {/* 1행: 캐릭터 이름 + 스탯 */}
                   <tr className={theadRow1}>
@@ -1856,9 +1846,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         >
                           <div className={`flex flex-col items-center w-full overflow-hidden ${glanceTable ? 'gap-0.5' : 'gap-1'}`}>
                             <span className={`text-gray-300 dark:text-gray-600 ${glanceTable ? 'mb-0.5' : ''}`}><IconGrip /></span>
-                            {getClassIcon(char.class) && (
-                              <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />
-                            )}
+                            {getClassIcon(char.class)
+                              ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />
+                              : <span className="w-5 h-5 flex items-center justify-center text-gray-400 dark:text-gray-500 flex-shrink-0"><IconClass /></span>
+                            }
                             <div className="flex items-center gap-0.5 w-full justify-center overflow-hidden">
                               <span className={`${nameSize(char.name)} ns-bold text-gray-800 dark:text-gray-100 leading-tight text-center truncate`}>{char.name}</span>
                             </div>
@@ -1990,7 +1981,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           <div className="space-y-2">
             {/* ── 레이드 필터 ── */}
             {allRegisteredRaids.length > 0 && (
-              <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden">
+              <div className={`rounded-lg border overflow-hidden transition-colors ${selectedRaid ? 'border-yellow-400/60 dark:border-yellow-600/40' : 'border-gray-200 dark:border-[#383838]'} bg-white dark:bg-[#222222]`}>
                 {/* 레이드 버튼 행 */}
                 {(() => {
                   const diffBg = (diffKey, isActive) =>
@@ -2054,26 +2045,27 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey)
                   )
                   return (
-                  <div className="border-t border-gray-100 dark:border-[#2a2a2a]">
-                    <div className="flex flex-wrap gap-x-1 gap-y-1 px-2.5 py-2">
-                      {relevantChars.map(char => {
-                        const incomplete = incompleteIds.has(char.id)
+                  <div className="border-t border-yellow-200/60 dark:border-yellow-700/30 bg-yellow-50/40 dark:bg-yellow-900/10">
+                    {(() => {
+                      const completeChars   = relevantChars.filter(c => !incompleteIds.has(c.id))
+                      const incompleteChars = relevantChars.filter(c =>  incompleteIds.has(c.id))
+                      const renderBadge = (char, incomplete) => {
                         const entry      = (raids[char.id] || []).find(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey)
                         const gateClears = entry?.gateClears || []
                         const partialCount = gateClears.filter(Boolean).length
                         const isPartial  = incomplete && partialCount > 0
                         return (
-                          <div key={char.id} className={`flex items-center gap-1 rounded-full px-2 py-1 ${
+                          <div key={char.id} className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 border ${
                             incomplete
-                              ? 'bg-gray-50 dark:bg-[#2a2a2a]'
-                              : 'bg-emerald-50 dark:bg-emerald-900/20'
+                              ? 'bg-white dark:bg-[#2a2a2a] border-gray-200 dark:border-[#3a3a3a]'
+                              : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200/70 dark:border-emerald-700/30'
                           }`}>
                             {incomplete ? (
                               getClassIcon(char.class)
                                 ? <img src={getClassIcon(char.class)} alt="" className="class-icon w-3.5 h-3.5 object-contain flex-shrink-0" />
                                 : <span className="w-3.5 h-3.5 text-gray-300 flex-shrink-0"><IconClass /></span>
                             ) : (
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-emerald-500 dark:text-emerald-400 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-emerald-500 dark:text-emerald-400 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
                             )}
                             <span className={`text-[10px] ns-bold ${incomplete ? 'text-gray-700 dark:text-gray-200' : 'text-emerald-600 dark:text-emerald-400'}`}>
                               {char.name}
@@ -2085,40 +2077,22 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                             )}
                           </div>
                         )
-                      })}
-                    </div>
+                      }
+                      return (
+                        <div className="flex flex-wrap gap-1.5 px-3 py-2.5">
+                          {incompleteChars.map(c => renderBadge(c, true))}
+                          {completeChars.map(c => renderBadge(c, false))}
+                        </div>
+                      )
+                    })()}
                   </div>
                   )
                 })()}
               </div>
             )}
 
-            {/* 카드 / 테이블 뷰 토글 + 한눈에 보기 — 캐릭터 있을 때만 */}
+            {/* 카드 / 테이블 뷰 토글 — 캐릭터 있을 때만 */}
             {activeChars.length > 0 && <div className="flex items-center justify-end gap-2">
-              {/* 한눈에 보기 — 테이블 모드에서만 표시 */}
-              {!cardView && (
-                <button
-                  onClick={() => setFitMode(v => !v)}
-                  title={fitMode ? '원래 크기로' : '한눈에 보기'}
-                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs ns-bold transition-colors ${
-                    fitMode
-                      ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/15 text-yellow-600 dark:text-yellow-400'
-                      : 'border-gray-200 dark:border-[#383838] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 bg-gray-50 dark:bg-[#181818]'
-                  }`}
-                >
-                  {fitMode ? (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-                    </svg>
-                  ) : (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>
-                    </svg>
-                  )}
-                  {fitMode ? '원래 크기' : '한눈에 보기'}
-                </button>
-              )}
-
               {activePageId === null && expPages.length > 1 && (
                 <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200/80 dark:border-[#282828] p-0.5">
                   <button
@@ -2188,28 +2162,22 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               </div>
             ) : (
               cardView ? renderCardView() : (() => {
-                if (fitMode) return renderTable(activeChars)
                 // 화면 너비에 맞춰 청크 분할 — 스크롤 없이 테이블 세로 적층
                 // tableContainerWidth가 0이면 적당한 기본값(6) 사용
                 const containerW   = tableContainerWidth > 0 ? tableContainerWidth : COL_RAID + COL_CHAR * 6
                 const charsPerTable = Math.max(1, Math.floor((containerW - COL_RAID) / COL_CHAR))
+                // selectedRaid 필터 활성 시 먼저 캐릭터를 필터링하여 청크 분산 방지
+                const charsToChunk = selectedRaid
+                  ? activeChars.filter(char => (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
+                  : activeChars
                 const chunks = []
-                for (let i = 0; i < activeChars.length; i += charsPerTable)
-                  chunks.push(activeChars.slice(i, i + charsPerTable))
+                for (let i = 0; i < charsToChunk.length; i += charsPerTable)
+                  chunks.push(charsToChunk.slice(i, i + charsPerTable))
                 if (chunks.length === 1) return renderTable(chunks[0])
-                // 첫 번째 테이블 너비로 좌측 여백 계산 (가운데 정렬 기준)
-                const topTableW  = COL_RAID + COL_CHAR * chunks[0].length
-                const leftOffset = Math.max(0, Math.floor((containerW - topTableW) / 2))
                 return (
-                  <div className="space-y-3">
+                  <div className="space-y-8">
                     {chunks.map((chunk, idx) => (
-                      <div
-                        key={idx}
-                        style={idx === 0
-                          ? { width: 'fit-content', margin: '0 auto' }
-                          : { marginLeft: leftOffset }
-                        }
-                      >
+                      <div key={idx}>
                         {renderTable(chunk, true)}
                       </div>
                     ))}

@@ -24,7 +24,7 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
   const hideTip = () => setTipPos(null)
 
   if (!entry || !diff) {
-    return <div className="w-full h-[52px] bg-gray-50/50 dark:bg-[#181818]/30 rounded" />
+    return <div className="w-full h-[47px] bg-gray-50/50 dark:bg-[#181818]/30 rounded" />
   }
 
   const diffBadge =
@@ -35,7 +35,7 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
   return (
     <div
       onClick={onToggle}
-      className={`w-full h-[52px] flex items-center gap-1.5 px-1.5 py-1.5 rounded cursor-pointer transition-colors
+      className={`w-full h-[47px] flex items-center gap-1.5 px-1.5 py-1.5 rounded cursor-pointer transition-colors
         ${moreDone
           ? 'bg-yellow-100 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
           : allDone
@@ -44,7 +44,7 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
         }`}
     >
       {/* 왼쪽: 체크박스 */}
-      <div className={`h-[26px] w-[26px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all
+      <div className={`h-[24px] w-[24px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all
         ${moreDone
           ? 'bg-yellow-500 border-yellow-500 text-yellow-900 shadow-sm'
           : allDone
