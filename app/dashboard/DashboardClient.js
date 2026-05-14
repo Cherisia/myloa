@@ -130,6 +130,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       setActivePageId(null)
     }
   }, [expPages]) // eslint-disable-line react-hooks/exhaustive-deps
+  // 탭 전환 시 선택된 레이드가 새 탭에 없으면 초기화
+  useEffect(() => {
+    if (!selectedRaid) return
+    const stillExists = activeChars.some(char =>
+      (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey)
+    )
+    if (!stillExists) setSelectedRaid(null)
+  }, [activePageId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 커스텀 항목 localStorage 로드 — useLayoutEffect로 첫 paint 전에 동기 실행
   useLayoutEffect(() => {
@@ -376,7 +384,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     return [...seen.values()].sort((a, b) =>
       RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId)
     )
-  }, [chars, raids])
+  }, [activeChars, raids])
 
   // 선택된 레이드에서 미완료 캐릭터 목록
   const raidIncompleteChars = useMemo(() => {
@@ -390,7 +398,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       if (clears.every(Boolean)) return [] // 전부 완료
       return [{ char, gateClears: clears }]
     })
-  }, [selectedRaid, chars, raids])
+  }, [selectedRaid, activeChars, raids])
 
   // 캐릭터가 있다가 0이 되면 빈 상태 모달 자동 표시 (초기 0은 제외)
   // CharacterEditModal을 완료로 닫은 직후에는 억제 (이미 빈 상태임을 알고 닫은 것)
