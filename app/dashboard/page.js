@@ -74,7 +74,7 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id
-  const expeditionsRaw = await prisma.loaExpedition.findMany({ where: { userId }, include: EXPEDITION_INCLUDE })
+  const expeditionsRaw = await prisma.loaExpedition.findMany({ where: { userId }, orderBy: { createdAt: 'asc' }, include: EXPEDITION_INCLUDE })
   let expeditions = expeditionsRaw
 
   // 리셋 만료된 항목 일괄 처리

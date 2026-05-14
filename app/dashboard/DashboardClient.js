@@ -80,6 +80,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
   const [dragCharId, setDragCharId]             = useState(null) // 드래그 중인 캐릭터 id
   const [dropCharId, setDropCharId]             = useState(null) // 드롭 대상 캐릭터 id
+  const [dragExpId,  setDragExpId]              = useState(null) // 드래그 중인 원정대 id
+  const [dropExpId,  setDropExpId]              = useState(null) // 드롭 대상 원정대 id
   const [selectedRaid, setSelectedRaid]         = useState(null) // { raidId, diffKey } — 레이드 필터
   const [gearMenuCharId, setGearMenuCharId]     = useState(null) // 카드 톱니바퀴 메뉴
   const [raidSettingsCharId, setRaidSettingsCharId] = useState(null)
@@ -330,12 +332,23 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: Math.max(0, Math.min(100, value)) } }))
   }
 
-  // 대표 캐릭터 — 로그인: DB 연동 전까지 아이템레벨 최고 / 데모: initialRepCharId 우선
+  // 대표 캐릭터 — 전체 탭: 첫 번째 원정대의 accountRepChar / 개별 탭: 해당 원정대의 accountRepChar / 데모: initialRepCharId 우선
   const repCharId = useMemo(() => {
     if (chars.length === 0) return null
     if (initialRepCharId && chars.some(c => c.id === initialRepCharId)) return initialRepCharId
+
+    const targetExpId = activePageId ?? expPages[0]?.id ?? null
+    if (targetExpId) {
+      const expRepName = chars.find(c => c.expeditionId === targetExpId)?.accountRepChar
+      if (expRepName) {
+        const repChar = chars.find(c => c.name === expRepName && c.expeditionId === targetExpId)
+        if (repChar) return repChar.id
+      }
+      const expChars = chars.filter(c => c.expeditionId === targetExpId)
+      if (expChars.length > 0) return expChars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b).id
+    }
     return chars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b).id
-  }, [chars, initialRepCharId])
+  }, [chars, initialRepCharId, activePageId, expPages])
 
   // ── 레이드 필터 — 활성 계정 캐릭터에 등록된 고유 레이드 목록 ──────────────
   const allRegisteredRaids = useMemo(() => {
@@ -616,25 +629,54 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     } catch {}
   }
 
+  // 원정대 탭 순서 변경 — 드래그앤드랍 후 chars 전체를 새 expedition 순서 기준으로 재정렬
+  const reorderExpeditions = (fromId, toId) => {
+    const fromIdx = expPages.findIndex(p => p.id === fromId)
+    const toIdx   = expPages.findIndex(p => p.id === toId)
+    if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return
+
+    const newOrder = [...expPages]
+    const [moved]  = newOrder.splice(fromIdx, 1)
+    newOrder.splice(toIdx, 0, moved)
+
+    // 새 원정대 순서 기준으로 chars 재배열 (원정대 내 순서는 유지)
+    const byExp = new Map()
+    chars.forEach(c => {
+      const id = c.expeditionId || 'unknown'
+      if (!byExp.has(id)) byExp.set(id, [])
+      byExp.get(id).push(c)
+    })
+    const reordered = []
+    newOrder.forEach(p => reordered.push(...(byExp.get(p.id) || [])))
+    chars.forEach(c => { if (!newOrder.some(p => p.id === c.expeditionId)) reordered.push(c) })
+
+    saveCharOrder(reordered)
+  }
+
   // 레이드 설정 모달 확인 (금지 초과 검사 통과 후 호출)
   const handleRaidSettingsConfirm = () => {
     setShowRaidSettings(false)
   }
 
-  // 캐릭터 정렬: 계정 등록 순서(sortOrder 최솟값) → 아이템레벨 내림차순 → 이름 가나다 순
+  // 캐릭터 정렬: 계정 등록 순서(sortOrder 최솟값) → 입력 배열 첫 등장 순서(생성일 순) → 아이템레벨 내림차순 → 이름 가나다 순
   const sortChars = (arr) => {
-    // 계정별 최소 sortOrder 계산 (tmp 캐릭터는 배열 인덱스를 fallback으로 사용)
+    // 계정별 최소 sortOrder + 첫 등장 인덱스 계산 (tmp 캐릭터는 배열 인덱스를 fallback으로 사용)
     const acctMinOrder = {}
+    const acctFirstIdx = {}
     arr.forEach((c, idx) => {
       const key   = c.expeditionId || 'unknown'
       const order = c.sortOrder != null ? c.sortOrder : 1_000_000 + idx
       if (!(key in acctMinOrder) || order < acctMinOrder[key]) acctMinOrder[key] = order
+      if (!(key in acctFirstIdx)) acctFirstIdx[key] = idx
     })
     return [...arr].sort((a, b) => {
       const aKey = a.expeditionId || 'unknown'
       const bKey = b.expeditionId || 'unknown'
       const acctDiff = (acctMinOrder[aKey] ?? 9_999_999) - (acctMinOrder[bKey] ?? 9_999_999)
       if (acctDiff !== 0) return acctDiff
+      // sortOrder 동률 시: 입력 배열의 첫 등장 순서(= expedition 생성일 순)로 타이 브레이킹
+      const idxDiff = (acctFirstIdx[aKey] ?? 9_999_999) - (acctFirstIdx[bKey] ?? 9_999_999)
+      if (idxDiff !== 0) return idxDiff
       if (b.itemLevel !== a.itemLevel) return b.itemLevel - a.itemLevel
       return a.name.localeCompare(b.name, 'ko-KR')
     })
@@ -923,12 +965,34 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               전체
             </button>
             {expPages.map(page => {
-              const isActive = page.id === activePageId
+              const isActive   = page.id === activePageId
+              const isDragging = dragExpId === page.id
+              const isDragOver = dropExpId === page.id && dragExpId !== page.id
               return (
                 <div
                   key={page.id}
-                  className="group/tab relative flex-shrink-0"
+                  draggable={expPages.length > 1}
+                  onDragStart={e => {
+                    setDragExpId(page.id)
+                    e.dataTransfer.effectAllowed = 'move'
+                  }}
+                  onDragOver={e => {
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = 'move'
+                    if (page.id !== dropExpId) setDropExpId(page.id)
+                  }}
+                  onDrop={e => {
+                    e.preventDefault()
+                    if (dragExpId && dragExpId !== page.id) reorderExpeditions(dragExpId, page.id)
+                    setDragExpId(null); setDropExpId(null)
+                  }}
+                  onDragEnd={() => { setDragExpId(null); setDropExpId(null) }}
+                  className={`group/tab relative flex-shrink-0 transition-all duration-150 ${isDragging ? 'opacity-20 scale-95' : ''}`}
                 >
+                  {/* 드롭 위치 인디케이터 — 타겟 탭 왼쪽에 세로선 표시 */}
+                  {isDragOver && (
+                    <span className="absolute -left-1 top-1 bottom-1 w-0.5 rounded-full bg-yellow-400 dark:bg-yellow-500 pointer-events-none" />
+                  )}
                   {editingPageId === page.id ? (
                     /* 이름 편집 중: input을 button 밖에 독립적으로 렌더 */
                     <input
@@ -945,11 +1009,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   ) : (
                     <button
                       onClick={() => { setActivePageId(page.id); setEditingPageId(null) }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-all duration-150 ${
                         isActive
                           ? 'bg-yellow-300 dark:bg-yellow-500/30 text-yellow-900 dark:text-yellow-300'
                           : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
-                      }`}
+                      } ${isDragOver ? 'translate-x-1' : ''}`}
                     >
                       <span>{page.name}</span>
                       {isActive && (

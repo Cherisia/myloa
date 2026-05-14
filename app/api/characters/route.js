@@ -13,7 +13,8 @@ export async function GET() {
   if (!session?.user?.id) return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 })
 
   const expeditions = await prisma.loaExpedition.findMany({
-    where: { userId: session.user.id },
+    where:   { userId: session.user.id },
+    orderBy: { createdAt: 'asc' },
     include: {
       characters: {
         where: { isActive: true },
@@ -97,6 +98,14 @@ export async function POST(request) {
 
   const newChars = characters.filter(c => !existingNames.has(c.name))
   if (newChars.length > 0) {
+    // 전역 최대 sortOrder 조회 → 새 캐릭터를 항상 맨 뒤에 배치
+    const globalMax = await prisma.character.findFirst({
+      where:   { expedition: { userId: session.user.id } },
+      orderBy: { sortOrder: 'desc' },
+      select:  { sortOrder: true },
+    })
+    const startOrder = (globalMax?.sortOrder ?? -1) + 1
+
     await prisma.character.createMany({
       data: newChars.map((c, i) => ({
         expeditionId: expedition.id,
@@ -105,7 +114,7 @@ export async function POST(request) {
         server:       c.server,
         itemLevel:    c.itemLevel,
         combatPower:  c.combatPower ?? null,
-        sortOrder:    existing.length + i,
+        sortOrder:    startOrder + i,
         isActive:     true,
       })),
     })
