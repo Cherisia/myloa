@@ -160,9 +160,9 @@ export default function RaidSettingsModal({
 
   if (!chars.length) {
     return (
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={onClose}>
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
         <div className="relative w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl px-5 py-10 text-center" onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={onClose} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
+          <button type="button" onClick={onClose} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
           <p className="text-sm text-gray-400 dark:text-gray-500 mb-1">등록된 캐릭터가 없습니다</p>
           <p className="text-xs text-gray-300 dark:text-gray-600">캐릭터를 먼저 추가해 주세요</p>
           <button type="button" onClick={() => { onClose(); onOpenCharAdd() }} className="mt-6 px-4 py-2 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
@@ -174,7 +174,7 @@ export default function RaidSettingsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
       <div className="w-full max-w-3xl rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
 
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
@@ -182,7 +182,7 @@ export default function RaidSettingsModal({
             <span className="ns-bold text-gray-900 dark:text-white">레이드 · 커스텀 설정</span>
             <span className="ml-2 text-xs text-gray-400">원정대와 캐릭터를 고른 뒤 레이드·커스텀을 설정하세요</span>
           </div>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
         </div>
 
         {/* 원정대 탭 */}
@@ -286,11 +286,9 @@ export default function RaidSettingsModal({
             <span className={`text-[11px] ns-bold transition-colors ${
               normalGoldCount > GOLD_RAID_LIMIT ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
             }`}>{normalGoldCount}/{GOLD_RAID_LIMIT}</span>
-            {exGoldCount > 0 && (
-              <span className="text-[10px] ns-bold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                EX +{exGoldCount}
-              </span>
-            )}
+            <span className={`text-[10px] ns-bold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 ${exGoldCount > 0 ? '' : 'invisible'}`}>
+              EX +{exGoldCount}
+            </span>
           </div>
           {acctGoldMap.filter(({ key }) => key === acctKey).map(({ key, label, count }) => (
             <div key={key} className="flex items-center gap-2">

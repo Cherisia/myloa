@@ -10,11 +10,11 @@ import { autoSelectNormalRaids, autoSelectExRaid } from '../_raidHelpers'
 // ── API 키 발급 가이드 모달 ────────────────────────────────────────────────────
 function ApiKeyGuideModal({ onClose }) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-black/30" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-black/30">
       <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">API 키 발급 가이드</span>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
         </div>
 
         <div className="px-5 py-5 space-y-4">
@@ -179,14 +179,14 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
   if (step === 'setup') {
     return (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-        <div className="w-full max-w-lg rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[88vh]" onClick={e => e.stopPropagation()}>
+        <div className="w-full max-w-2xl rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[88vh]" onClick={e => e.stopPropagation()}>
           {/* 헤더 */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
             <div>
               <span className="ns-bold text-gray-900 dark:text-white">레이드 자동 설정</span>
               <span className="ml-2 text-xs text-gray-400">캐릭터별 골드 전략을 선택하세요.</span>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
           </div>
 
           {/* 캐릭터별 미리보기 */}
@@ -199,13 +199,27 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
                 <div key={char.name} className="rounded-lg border border-gray-200 dark:border-[#383838] overflow-hidden">
                   {/* 캐릭터 헤더 */}
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#181818] border-b border-gray-100 dark:border-[#2a2a2a]">
+                    {/* 직업 아이콘 */}
                     {getClassIcon(char.class) && <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />}
-                    <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{char.name}</span>
-                    <span className="text-[10px] text-gray-400 flex-shrink-0">{char.itemLevel.toFixed(2)}</span>
+                    {/* 왕관 (대표 캐릭터) */}
                     {isRep && (
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0 text-yellow-400 dark:text-yellow-500">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0 text-yellow-400 dark:text-yellow-500">
                         <path d="M2 19h20v2H2v-2zm2-2l2-9 4 4 2-7 2 7 4-4 2 9H4z"/>
                       </svg>
+                    )}
+                    {/* 닉네임 */}
+                    <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate min-w-0">{char.name}</span>
+                    {/* 아이템레벨 */}
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+                      <IconItemLevel />
+                      <span className="text-[11px] tabular-nums text-gray-500 dark:text-gray-400">{char.itemLevel.toFixed(2)}</span>
+                    </div>
+                    {/* 전투력 */}
+                    {char.combatPower != null && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <img src="/combat-power.svg" alt="" className="w-[10px] h-[10px] object-contain flex-shrink-0" />
+                        <span className="text-[11px] tabular-nums text-gray-500 dark:text-gray-400">{Math.round(char.combatPower).toLocaleString()}</span>
+                      </div>
                     )}
                     <span className="flex-1" />
                     {/* 전략 토글 */}
@@ -237,10 +251,13 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
                       const goldTrade = calcGoldTrade(diff, allGates)
                       return (
                         <div key={i} className="flex items-center gap-2 px-3 py-2">
-                          <span className={`text-[8px] ns-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${DIFF_COLOR[entry.difficulty]}`}>
-                            {DIFF_LABEL[entry.difficulty]}
-                          </span>
-                          <span className="text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">{raid.name}</span>
+                          <img src={raid.image} alt="" className="w-4 h-4 object-contain flex-shrink-0 opacity-70" />
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                            <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{raid.name}</span>
+                            <span className={`text-[8px] ns-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${DIFF_COLOR[entry.difficulty]}`}>
+                              {DIFF_LABEL[entry.difficulty]}
+                            </span>
+                          </div>
                           <div className="flex items-center gap-2 text-[10px] tabular-nums text-gray-400 flex-shrink-0">
                             {goldBound > 0 && <span className="text-orange-500 dark:text-orange-400">귀속 {goldBound.toLocaleString()}</span>}
                             {goldTrade > 0 && <span className="text-blue-500 dark:text-blue-400">거래 {goldTrade.toLocaleString()}</span>}
@@ -290,7 +307,7 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
       <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">캐릭터 추가</span>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
         </div>
 
         <div className="px-5 pt-4 space-y-3">

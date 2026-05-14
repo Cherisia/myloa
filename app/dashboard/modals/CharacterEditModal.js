@@ -116,7 +116,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
       <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[80vh]" onClick={e => e.stopPropagation()}>
 
         {/* 헤더 */}
@@ -144,7 +144,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
               <span className="text-[11px] text-gray-400 dark:text-gray-500">{selectedIds.size}개 선택</span>
             )}
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none">×</button>
         </div>
 
         {/* 캐릭터 목록 */}

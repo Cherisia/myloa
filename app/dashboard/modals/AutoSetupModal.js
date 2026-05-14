@@ -2,8 +2,17 @@
 
 import { useState, useMemo } from 'react'
 import { RAIDS, calcGoldTrade, calcGoldBound } from '@/lib/raidData'
-import { LOA_KEY_STORAGE, EX_RAID_IDS } from '../_constants'
+import { LOA_KEY_STORAGE, EX_RAID_IDS, getClassIcon } from '../_constants'
 import { buildAutoRaids } from '../_raidHelpers'
+
+// 아이템레벨 아이콘 (인라인 SVG)
+function ItemLevelIcon({ size = 11 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" className="flex-shrink-0 opacity-60">
+      <path d="M8 1L10.5 5.5H13.5L11 8.5L12 13L8 10.5L4 13L5 8.5L2.5 5.5H5.5L8 1Z" fill="currentColor" className="text-yellow-500 dark:text-yellow-400" />
+    </svg>
+  )
+}
 
 // ── 자동 설정 모달 ────────────────────────────────────────────────────────────
 export default function AutoSetupModal({ onApply, onClose, existingRaids, existingChars }) {
@@ -60,8 +69,8 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={onClose}>
-      <div className="w-full max-w-2xl rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
+      <div className="w-full max-w-3xl rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
 
         {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
@@ -69,7 +78,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
             <span className="ns-bold text-gray-900 dark:text-gray-100">자동 설정</span>
             <span className="ml-2 text-xs text-gray-400">원정대 상위 6캐릭터를 자동으로 세팅합니다</span>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
         </div>
 
         {/* 설정 입력 */}
@@ -139,12 +148,31 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
                 <div key={char.name} className="rounded-lg border border-gray-200 dark:border-[#383838] overflow-hidden">
                   {/* 캐릭터 헤더 */}
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-[#383838]">
-                    {idx === 0 && (
-                      <span className="text-[9px] ns-bold px-1.5 py-0.5 rounded-full bg-yellow-100 dark:bg-gray-700 text-yellow-700 dark:text-gray-300">최고레벨</span>
+                    {/* 직업 아이콘 */}
+                    {getClassIcon(char.class) && (
+                      <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />
                     )}
-                    <span className="text-sm ns-bold text-gray-800 dark:text-gray-200">{char.name}</span>
-                    <span className="text-xs text-gray-400 dark:text-gray-500">{char.itemLevel.toFixed(2)}</span>
-                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">{entries.length}개 레이드</span>
+                    {/* 왕관 (최고레벨 캐릭터) */}
+                    {idx === 0 && (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0 text-yellow-500 dark:text-yellow-400">
+                        <path d="M2 19h20v2H2zM2 6l5 5 5-8 5 8 5-5v11H2z"/>
+                      </svg>
+                    )}
+                    {/* 닉네임 */}
+                    <span className="text-sm ns-bold text-gray-800 dark:text-gray-200 truncate min-w-0">{char.name}</span>
+                    {/* 아이템레벨 */}
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+                      <ItemLevelIcon />
+                      <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400">{char.itemLevel.toFixed(2)}</span>
+                    </div>
+                    {/* 전투력 */}
+                    {char.combatPower != null && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <img src="/combat-power.svg" alt="" className="w-[10px] h-[10px] object-contain flex-shrink-0" />
+                        <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400">{Math.round(char.combatPower).toLocaleString()}</span>
+                      </div>
+                    )}
+                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{entries.length}개 레이드</span>
                   </div>
                   {/* 레이드 목록 */}
                   <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
@@ -163,7 +191,8 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
                                                            'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                       return (
                         <div key={entry.raidId} className="flex items-center gap-2 px-3 py-1.5">
-                          <span className={`text-[8px] ns-bold px-1.5 py-0.5 rounded-full ${diffColor}`}>{diff.label}</span>
+                          <img src={raid.image} alt="" className="w-4 h-4 object-contain flex-shrink-0 opacity-70" />
+                          <span className={`text-[8px] ns-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${diffColor}`}>{diff.label}</span>
                           <span className="text-xs text-gray-700 dark:text-gray-300 flex-1">{raid.name}</span>
                           <div className="flex items-center gap-2 text-[10px] tabular-nums text-gray-500 dark:text-gray-400">
                             {goldBound > 0 && <span className="text-orange-500 dark:text-orange-400">귀속 {goldBound.toLocaleString()}</span>}

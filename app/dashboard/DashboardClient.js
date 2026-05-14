@@ -2055,11 +2055,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         />
       )}
       {showNoChar && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25" onClick={() => setShowNoChar(false)}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
           <div className="relative w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl px-5 py-10 text-center" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowNoChar(false)}
-              className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none"
+              className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none"
             >×</button>
             <p className="text-sm text-gray-400 dark:text-gray-500 mb-1">등록된 캐릭터가 없습니다</p>
             <p className="text-xs text-gray-300 dark:text-gray-600">캐릭터를 먼저 추가해 주세요</p>
@@ -2100,12 +2100,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {confirmDeleteCharId && (() => {
         const target = chars.find(c => c.id === confirmDeleteCharId)
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={() => setConfirmDeleteCharId(null)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
             <div
               className="relative w-full max-w-xs rounded-2xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
               onClick={e => e.stopPropagation()}
             >
-              <button onClick={() => setConfirmDeleteCharId(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
+              <button onClick={() => setConfirmDeleteCharId(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
               <div className="space-y-1.5">
                 <p className="text-sm ns-bold text-gray-900 dark:text-white">캐릭터 삭제</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -2133,12 +2133,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         const page = expPages.find(p => p.id === confirmDeletePageId)
         const pageChars = chars.filter(c => c.expeditionId === confirmDeletePageId)
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={() => setConfirmDeletePageId(null)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
             <div
               className="relative w-full max-w-xs rounded-2xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
               onClick={e => e.stopPropagation()}
             >
-              <button onClick={() => setConfirmDeletePageId(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
+              <button onClick={() => setConfirmDeletePageId(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
               <div className="space-y-1.5">
                 <p className="text-sm ns-bold text-gray-900 dark:text-white">원정대 삭제</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -2163,12 +2163,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       })()}
 
       {showLoginGuide && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={() => setShowLoginGuide(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
           <div
             className="relative w-full max-w-sm rounded-2xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
             onClick={e => e.stopPropagation()}
           >
-            <button onClick={() => setShowLoginGuide(false)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
+            <button onClick={() => setShowLoginGuide(false)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
             <div className="space-y-2">
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                 지금 보이는 원정대는 샘플 데이터에요.<br/>
