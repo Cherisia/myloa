@@ -69,6 +69,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [charEditOpenAdd,  setCharEditOpenAdd]  = useState(false)
   const [showNoChar,       setShowNoChar]       = useState(false)
   const [showLoginGuide,      setShowLoginGuide]      = useState(false)
+  const [showGoldLimitNotice, setShowGoldLimitNotice] = useState(false)
   const [confirmDeleteCharId, setConfirmDeleteCharId] = useState(null)
   const [confirmDeletePageId, setConfirmDeletePageId] = useState(null) // 탭 삭제 확인
   const [syncing, setSyncing]                   = useState(false)
@@ -85,6 +86,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [selectedRaid, setSelectedRaid]         = useState(null) // { raidId, diffKey } — 레이드 필터
   const [gearMenuCharId, setGearMenuCharId]     = useState(null) // 카드 톱니바퀴 메뉴
   const [raidSettingsCharId, setRaidSettingsCharId] = useState(null)
+  const [allTabSort, setAllTabSort]                 = useState('expedition') // 'expedition' | 'itemLevel'
   // 원정대 페이지
   const [activePageId, setActivePageId]         = useState(null)
   const [editingPageId, setEditingPageId]       = useState(null) // 이름 편집 중인 페이지 id
@@ -182,9 +184,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
   // 페이지별 캐릭터 필터링 — activePageId가 null이면 전체보기
   const activeChars = useMemo(() => {
-    if (!activePageId) return chars
+    if (!activePageId) {
+      if (allTabSort === 'itemLevel') return [...chars].sort((a, b) => b.itemLevel - a.itemLevel)
+      return chars
+    }
     return chars.filter(c => c.expeditionId === activePageId)
-  }, [chars, activePageId])
+  }, [chars, activePageId, allTabSort])
 
   // 탭 삭제 — 내부 캐릭터·레이드 모두 제거
   const deleteExpPage = (pageId) => {
@@ -731,6 +736,24 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           if (entries.length > 0) demoRaids[dc.id] = entries
         })
       }
+      // 골드 캐릭터 한도 초과 시 isGoldCheck 해제
+      let demoGoldLimitHit = false
+      demoChars.forEach(dc => {
+        if (!demoRaids[dc.id]) return
+        const expId = dc.expeditionId || 'default'
+        const acctGoldChars = chars.filter(ch =>
+          (ch.expeditionId || 'default') === expId &&
+          (raids[ch.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+        ).length
+        if (acctGoldChars >= GOLD_CHAR_LIMIT) {
+          demoGoldLimitHit = true
+          demoRaids[dc.id] = demoRaids[dc.id].map(e =>
+            EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false }
+          )
+        }
+      })
+      if (demoGoldLimitHit) setShowGoldLimitNotice(true)
+
       const demoCustom = {}
       demoChars.forEach(dc => {
         const existing    = customItems[dc.id] || []
@@ -790,6 +813,24 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           if (entries.length > 0) newRaids[c.id] = entries
         })
       }
+
+      // 골드 캐릭터 한도 초과 시 isGoldCheck 해제
+      let goldLimitHit = false
+      addedChars.forEach(c => {
+        if (!newRaids[c.id]) return
+        const expId = c.expeditionId || 'default'
+        const acctGoldChars = chars.filter(ch =>
+          (ch.expeditionId || 'default') === expId &&
+          (raids[ch.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+        ).length
+        if (acctGoldChars >= GOLD_CHAR_LIMIT) {
+          goldLimitHit = true
+          newRaids[c.id] = newRaids[c.id].map(e =>
+            EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false }
+          )
+        }
+      })
+      if (goldLimitHit) setShowGoldLimitNotice(true)
 
       // 커스텀 항목
       const newCustom = {}
@@ -1076,7 +1117,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
             </svg>
-            레이드 · 커스텀 설정
+            숙제 설정
           </button>
           <button onClick={() => setShowCharEdit(true)}
             className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
@@ -1356,7 +1397,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     {/* ⚙ 설정 버튼 */}
                     <button
                       onClick={e => { e.stopPropagation(); setRaidSettingsCharId(char.id); setShowRaidSettings(true) }}
-                      title="레이드 · 커스텀 설정"
+                      title="숙제 설정"
                       className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#2a2a2a] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0"
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2035,33 +2076,63 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 </button>
               )}
 
-              <div className="flex gap-1 rounded-lg border border-gray-200 dark:border-[#383838] p-0.5 w-fit bg-gray-50 dark:bg-[#181818]">
+              {activePageId === null && expPages.length > 1 && (
+                <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200/80 dark:border-[#282828] p-0.5">
+                  <button
+                    onClick={() => setAllTabSort('itemLevel')}
+                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
+                      allTabSort === 'itemLevel'
+                        ? 'bg-yellow-200 text-yellow-900 shadow-sm'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
+                    }`}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 4h13M3 8h9M3 12h5"/><path d="M17 4v16m0 0-4-4m4 4 4-4"/>
+                    </svg>
+                    레벨순
+                  </button>
+                  <button
+                    onClick={() => setAllTabSort('expedition')}
+                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
+                      allTabSort === 'expedition'
+                        ? 'bg-yellow-200 text-yellow-900 shadow-sm'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
+                    }`}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    원정대순
+                  </button>
+                </div>
+              )}
+
+              <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200/80 dark:border-[#282828] p-0.5">
                 <button
                   onClick={() => setCardView(false)}
-                  className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs ns-bold transition-colors ${
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                     !cardView
-                      ? 'bg-white dark:bg-[#222222] text-gray-700 dark:text-gray-200 shadow-sm'
-                      : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                      ? 'bg-yellow-200 text-yellow-900 shadow-sm'
+                      : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
                   }`}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <rect x="3" y="3" width="18" height="18" rx="1"/>
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
                     <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
-                    <line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>
+                    <line x1="9" y1="3" x2="9" y2="21"/>
                   </svg>
                   테이블
                 </button>
                 <button
                   onClick={() => setCardView(true)}
-                  className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs ns-bold transition-colors ${
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                     cardView
-                      ? 'bg-white dark:bg-[#222222] text-gray-700 dark:text-gray-200 shadow-sm'
-                      : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                      ? 'bg-yellow-200 text-yellow-900 shadow-sm'
+                      : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
                   }`}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <rect x="2" y="3" width="9" height="9" rx="1"/><rect x="13" y="3" width="9" height="9" rx="1"/>
-                    <rect x="2" y="14" width="9" height="7" rx="1"/><rect x="13" y="14" width="9" height="7" rx="1"/>
+                    <rect x="2" y="3" width="9" height="9" rx="1.5"/><rect x="13" y="3" width="9" height="9" rx="1.5"/>
+                    <rect x="2" y="14" width="9" height="7" rx="1.5"/><rect x="13" y="14" width="9" height="7" rx="1.5"/>
                   </svg>
                   카드
                 </button>
@@ -2070,7 +2141,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             {activeChars.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-2">
                 <p className="text-sm text-gray-400 dark:text-gray-600">표시할 레이드가 없습니다</p>
-                <p className="text-xs text-gray-300 dark:text-gray-700">상단 레이드 · 커스텀 설정에서 원정대·캐릭터별 레이드와 커스텀 숙제를 추가하세요</p>
+                <p className="text-xs text-gray-300 dark:text-gray-700">상단 숙제 설정에서 원정대·캐릭터별 레이드와 커스텀 숙제를 추가하세요</p>
               </div>
             ) : (
               cardView ? renderCardView() : (() => {
@@ -2262,6 +2333,36 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
             <button onClick={() => setShowLoginGuide(false)} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
               계속 둘러보기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showGoldLimitNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={() => setShowGoldLimitNotice(false)}>
+          <div
+            className="relative w-full max-w-sm rounded-2xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
+            onClick={e => e.stopPropagation()}
+          >
+            <button onClick={() => setShowGoldLimitNotice(false)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
+            <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center flex-shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow-500">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-sm ns-bold text-gray-800 dark:text-gray-100">골드 획득 캐릭터 {GOLD_CHAR_LIMIT}개 초과</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                이미 골드 획득 캐릭터 {GOLD_CHAR_LIMIT}개가 지정되어 있어<br/>
+                추가된 캐릭터의 골드 획득이 해제된 상태로 등록되었습니다.<br/>
+                레이드 설정에서 직접 변경할 수 있어요.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowGoldLimitNotice(false)}
+              className="w-full rounded border border-gray-200 dark:border-[#383838] py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
+            >
+              확인
             </button>
           </div>
         </div>
