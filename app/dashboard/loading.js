@@ -20,7 +20,7 @@ export default function DashboardLoading() {
                 width: 4,
                 height: '100%',
                 borderRadius: 9999,
-                backgroundColor: '#facc15',
+                backgroundColor: 'var(--accent-bar)',
                 transformOrigin: 'bottom',
                 animation: `bar-wave 0.9s ease-in-out infinite`,
                 animationDelay: `${delay}s`,

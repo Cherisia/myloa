@@ -151,7 +151,7 @@ export default function GroupDemoClient({ myGroups, publicGroups }) {
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">미리보기 — 실제 그룹 기능은 로그인 후 이용할 수 있어요.</p>
         </div>
 
-        <div className="rounded-xl border border-yellow-200 dark:border-yellow-900/30 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/5 px-4 py-3">
+        <div className="rounded-xl border border-yellow-200 dark:border-yellow-900/30 bg-yellow-50 dark:bg-yellow-900/10 px-4 py-3">
           <div className="flex items-start gap-3">
             <span className="text-xl flex-shrink-0 leading-none mt-0.5">🎮</span>
             <div className="min-w-0">

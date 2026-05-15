@@ -1100,7 +1100,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     key={i}
                     style={{
                       width: 4, height: '100%', borderRadius: 9999,
-                      backgroundColor: '#facc15', transformOrigin: 'bottom',
+                      backgroundColor: 'var(--accent-bar)', transformOrigin: 'bottom',
                       animation: 'bar-wave-add 0.9s ease-in-out infinite',
                       animationDelay: `${delay}s`,
                     }}
@@ -1407,15 +1407,20 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             .sort((a, b) => RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId))
 
           const isDark = document.documentElement.classList.contains('dark')
+          const _dTheme       = document.documentElement.dataset.theme || ''
+          const _accentBar    = _dTheme === 'pink' ? '#f9a8d4' : _dTheme === 'sky' ? '#7dd3fc' : isDark ? '#888888' : '#fbbf24'
+          const _doneBgLight  = _dTheme === 'pink' ? 'rgba(253,242,248,0.8)' : _dTheme === 'sky' ? 'rgba(240,249,255,0.8)' : 'rgba(254,252,232,0.7)'
+          const _doneBgDark   = _dTheme === 'pink' ? 'rgba(249,168,212,0.08)' : _dTheme === 'sky' ? 'rgba(125,211,252,0.08)' : 'rgba(253,224,71,0.08)'
+          const _doneText     = _dTheme === 'pink' ? '#be185d' : _dTheme === 'sky' ? '#0284c7' : isDark ? '#a0a0a0' : '#d97706'
           const col    = { bg: isDark ? '#222222' : '#ffffff', hdr: isDark ? '#181818' : '#f9fafb', bdr: isDark ? '#2a2a2a' : '#f0f0f0', txt: isDark ? '#e0e0e0' : '#111827', sub: isDark ? '#888' : '#6b7280' }
 
           const ghost = document.createElement('div')
           ghost.setAttribute('aria-hidden', 'true')
-          ghost.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${COL_CHAR}px;background:${col.bg};border:2px solid #fbbf24;border-radius:8px;box-shadow:0 24px 56px rgba(0,0,0,0.35),0 8px 20px rgba(0,0,0,0.2);overflow:hidden;font-family:NanumSquareR,sans-serif;pointer-events:none;`
+          ghost.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${COL_CHAR}px;background:${col.bg};border:2px solid ${_accentBar};border-radius:8px;box-shadow:0 24px 56px rgba(0,0,0,0.35),0 8px 20px rgba(0,0,0,0.2);overflow:hidden;font-family:NanumSquareR,sans-serif;pointer-events:none;`
 
           // 캐릭터 헤더
           const hdr = document.createElement('div')
-          hdr.style.cssText = `background:${col.hdr};padding:8px 6px 6px;text-align:center;border-bottom:2px solid #fbbf24;`
+          hdr.style.cssText = `background:${col.hdr};padding:8px 6px 6px;text-align:center;border-bottom:2px solid ${_accentBar};`
           hdr.innerHTML = `<div style="font-size:11px;font-weight:bold;color:${col.txt};line-height:1.4;">${char?.name || ''}</div><div style="font-size:10px;color:${col.sub};margin-top:1px;">${char?.itemLevel?.toFixed(2) || ''}</div>`
           ghost.appendChild(hdr)
 
@@ -1425,11 +1430,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             if (!raid) return
             const allDone = entry.gateClears.every(Boolean)
             const row = document.createElement('div')
-            row.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid ${col.bdr};background:${allDone ? (isDark ? 'rgba(253,224,71,0.08)' : 'rgba(254,252,232,0.7)') : col.bg};`
+            row.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid ${col.bdr};background:${allDone ? (isDark ? _doneBgDark : _doneBgLight) : col.bg};`
             const chk = document.createElement('div')
-            chk.style.cssText = `width:13px;height:13px;flex-shrink:0;border-radius:3px;border:2px solid ${allDone ? '#fbbf24' : (isDark ? '#444' : '#d1d5db')};background:${allDone ? '#fbbf24' : 'transparent'};`
+            chk.style.cssText = `width:13px;height:13px;flex-shrink:0;border-radius:3px;border:2px solid ${allDone ? _accentBar : (isDark ? '#444' : '#d1d5db')};background:${allDone ? _accentBar : 'transparent'};`
             const lbl = document.createElement('span')
-            lbl.style.cssText = `font-size:10px;color:${allDone ? '#d97706' : col.txt};`
+            lbl.style.cssText = `font-size:10px;color:${allDone ? _doneText : col.txt};`
             lbl.textContent = raid.name
             row.appendChild(chk)
             row.appendChild(lbl)
@@ -1902,7 +1907,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             <tr key={`sec-${id}`} className="pointer-events-none">
               <td
                 colSpan={colSpan}
-                className="sticky left-0 z-20 border-y border-amber-200/65 dark:border-yellow-800/35 bg-gradient-to-r from-amber-50/95 via-yellow-50/45 to-transparent dark:from-yellow-900/32 dark:via-yellow-900/12 dark:to-transparent px-3 py-2"
+                className="sticky left-0 z-20 border-y border-yellow-100 dark:border-yellow-800/35 bg-yellow-50 dark:bg-yellow-900/10 px-3 py-2"
               >
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-0.5 h-3.5 shrink-0 rounded-full bg-yellow-500 dark:bg-yellow-400" aria-hidden />
