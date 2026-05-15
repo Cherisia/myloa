@@ -66,29 +66,31 @@ body {
 .ns-bold      { font-family: 'NanumSquareB',  sans-serif; }
 .ns-extrabold { font-family: 'NanumSquareEB', sans-serif; }
 
-/* ── 직업 아이콘 테마별 필터 ────────────────────────────────── */
-/* 기본(노랑): 검정 아이콘을 노란빛 갈색 톤으로 */
+/* ── 직업 아이콘 — 검정 (테마 무관) ─────────────────────────── */
 .class-icon {
-  filter: brightness(0) sepia(1) saturate(2) hue-rotate(5deg) brightness(0.6);
+  filter: brightness(0);
 }
-/* 핑크: 검정 아이콘을 로즈 핑크 톤으로 */
 [data-theme="pink"] .class-icon {
-  filter: brightness(0) sepia(1) saturate(3) hue-rotate(280deg) brightness(0.65);
+  filter: brightness(0);
 }
-/* 다크: 완전히 흰색 계열로 */
+/* 다크: 흰색으로 반전 */
 .dark .class-icon {
-  filter: brightness(0) invert(1) opacity(0.6);
+  filter: brightness(0) invert(1) opacity(0.8);
 }
 
-/* 커스텀 숙제 아이콘 — 노랑/핑크/다크 테마 톤을 직업 아이콘과 동일하게 */
+/* 커스텀 숙제 아이콘 — 원래 이미지 그대로 (필터 없음) */
 .custom-homework-icon {
-  filter: brightness(0) sepia(1) saturate(2) hue-rotate(5deg) brightness(0.6);
+  /* 원본 색상 유지 */
 }
 [data-theme="pink"] .custom-homework-icon {
-  filter: brightness(0) sepia(1) saturate(3) hue-rotate(280deg) brightness(0.65);
+  filter: none;
 }
 .dark .custom-homework-icon {
-  filter: brightness(0) invert(1) opacity(0.6);
+  filter: none;
+}
+/* 다크: bynn SVG 아이콘만 — 검정을 밝은 회백색으로 반전 */
+.dark img.custom-homework-icon[src$=".svg"] {
+  filter: invert(1) opacity(0.75);
 }
 
 
@@ -180,12 +182,12 @@ body {
 /* ── body 배경 ── */
 [data-theme="sky"] body { background-color: #f0f9ff; }
 
-/* ── 직업·커스텀 아이콘: 검정 → 하늘빛 ── */
+/* ── 직업 아이콘: 검정 / 커스텀 아이콘: 원본 그대로 ── */
 [data-theme="sky"] .class-icon {
-  filter: brightness(0) sepia(1) saturate(3) hue-rotate(175deg) brightness(0.65);
+  filter: brightness(0);
 }
 [data-theme="sky"] .custom-homework-icon {
-  filter: brightness(0) sepia(1) saturate(3) hue-rotate(175deg) brightness(0.65);
+  filter: none;
 }
 
 /* ── 스크롤바 ── */
