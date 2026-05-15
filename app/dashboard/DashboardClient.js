@@ -794,7 +794,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   }
 
   // 캐릭터 추가
-  const addChars = async (newChars, apiKey, raidsByName = {}, repCharName = null, siblingNames = []) => {
+  const addChars = async (newChars, apiKey, raidsByName = {}, repCharName = null, siblingNames = [], existingGoldOverrides = {}) => {
     const isManual      = Object.keys(raidsByName).length === 0
     const existingNames = new Set(chars.map(c => c.name))
     const freshChars    = newChars.filter(c => !existingNames.has(c.name))
@@ -834,27 +834,37 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           if (entries.length > 0) demoRaids[dc.id] = entries
         })
       }
-      // 골드 캐릭터 한도 초과 시 isGoldCheck 해제 (배치 내 아이템레벨 순 적용)
+      // 사용자가 명시적으로 미수령 지정한 기존 캐릭터 먼저 처리
+      const demoExistingRevocations = {}
+      const demoUserOverriddenIds = new Set(Object.keys(existingGoldOverrides))
+      demoUserOverriddenIds.forEach(charId => {
+        demoExistingRevocations[charId] = (raids[charId] || []).map(e =>
+          EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false }
+        )
+      })
+
+      // 전체 원정대 기준 골드 재배분 — 아이템레벨 높은 순 GOLD_CHAR_LIMIT 캐릭터만 골드 수령
       let demoGoldLimitHit = false
-      const demoBatchGoldByExp = {}
-      ;[...demoChars].sort((a, b) => b.itemLevel - a.itemLevel).forEach(dc => {
-        if (!demoRaids[dc.id]) return
-        const expId = dc.expeditionId || 'default'
-        if (!(expId in demoBatchGoldByExp)) {
-          demoBatchGoldByExp[expId] = chars.filter(ch =>
-            (ch.expeditionId || 'default') === expId &&
-            (raids[ch.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
-          ).length
-        }
-        const hasGold = demoRaids[dc.id].some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
-        if (demoBatchGoldByExp[expId] >= GOLD_CHAR_LIMIT && hasGold) {
+      const demoExpIds = new Set(demoChars.filter(dc => demoRaids[dc.id]).map(dc => dc.expeditionId || 'default'))
+      demoExpIds.forEach(expId => {
+        const goldWanters = []
+        chars.filter(c => (c.expeditionId || 'default') === expId && !demoUserOverriddenIds.has(c.id)).forEach(c => {
+          if ((raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
+            goldWanters.push({ id: c.id, itemLevel: c.itemLevel, isNew: false })
+        })
+        demoChars.filter(dc => (dc.expeditionId || 'default') === expId && demoRaids[dc.id]).forEach(dc => {
+          if (demoRaids[dc.id].some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
+            goldWanters.push({ id: dc.id, itemLevel: dc.itemLevel, isNew: true })
+        })
+        goldWanters.sort((a, b) => b.itemLevel - a.itemLevel)
+        goldWanters.slice(GOLD_CHAR_LIMIT).forEach(c => {
           demoGoldLimitHit = true
-          demoRaids[dc.id] = demoRaids[dc.id].map(e =>
-            EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false }
-          )
-        } else if (hasGold) {
-          demoBatchGoldByExp[expId]++
-        }
+          if (c.isNew) {
+            demoRaids[c.id] = demoRaids[c.id].map(e => EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false })
+          } else {
+            demoExistingRevocations[c.id] = (raids[c.id] || []).map(e => EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false })
+          }
+        })
       })
       if (demoGoldLimitHit) setShowGoldLimitNotice(true)
 
@@ -871,7 +881,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       })
       await prefetchImageUrls(collectDashboardImageUrls(demoChars, demoRaids, demoCustom))
       setChars(prev => sortChars([...prev, ...demoChars]))
-      if (Object.keys(demoRaids).length  > 0) setRaids(prev      => ({ ...prev, ...demoRaids  }))
+      const demoRaidUpdates = { ...demoRaids, ...demoExistingRevocations }
+      if (Object.keys(demoRaidUpdates).length  > 0) setRaids(prev  => ({ ...prev, ...demoRaidUpdates  }))
       if (Object.keys(demoCustom).length > 0) setCustomItems(prev => ({ ...prev, ...demoCustom }))
       return
     }
@@ -918,27 +929,37 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         })
       }
 
-      // 골드 캐릭터 한도 초과 시 isGoldCheck 해제 (배치 내 아이템레벨 순 적용)
+      // 사용자가 명시적으로 미수령 지정한 기존 캐릭터 먼저 처리
+      const existingGoldRevocations = {}
+      const userOverriddenIds = new Set(Object.keys(existingGoldOverrides))
+      userOverriddenIds.forEach(charId => {
+        existingGoldRevocations[charId] = (raids[charId] || []).map(e =>
+          EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false }
+        )
+      })
+
+      // 전체 원정대 기준 골드 재배분 — 아이템레벨 높은 순 GOLD_CHAR_LIMIT 캐릭터만 골드 수령
       let goldLimitHit = false
-      const batchGoldByExp = {}
-      ;[...addedChars].sort((a, b) => b.itemLevel - a.itemLevel).forEach(c => {
-        if (!newRaids[c.id]) return
-        const expId = c.expeditionId || 'default'
-        if (!(expId in batchGoldByExp)) {
-          batchGoldByExp[expId] = chars.filter(ch =>
-            (ch.expeditionId || 'default') === expId &&
-            (raids[ch.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
-          ).length
-        }
-        const hasGold = newRaids[c.id].some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
-        if (batchGoldByExp[expId] >= GOLD_CHAR_LIMIT && hasGold) {
+      const expIds = new Set(addedChars.filter(c => newRaids[c.id]).map(c => c.expeditionId || 'default'))
+      expIds.forEach(expId => {
+        const goldWanters = []
+        chars.filter(c => (c.expeditionId || 'default') === expId && !userOverriddenIds.has(c.id)).forEach(c => {
+          if ((raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
+            goldWanters.push({ id: c.id, itemLevel: c.itemLevel, isNew: false })
+        })
+        addedChars.filter(c => (c.expeditionId || 'default') === expId && newRaids[c.id]).forEach(c => {
+          if (newRaids[c.id].some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
+            goldWanters.push({ id: c.id, itemLevel: c.itemLevel, isNew: true })
+        })
+        goldWanters.sort((a, b) => b.itemLevel - a.itemLevel)
+        goldWanters.slice(GOLD_CHAR_LIMIT).forEach(c => {
           goldLimitHit = true
-          newRaids[c.id] = newRaids[c.id].map(e =>
-            EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false }
-          )
-        } else if (hasGold) {
-          batchGoldByExp[expId]++
-        }
+          if (c.isNew) {
+            newRaids[c.id] = newRaids[c.id].map(e => EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false })
+          } else {
+            existingGoldRevocations[c.id] = (raids[c.id] || []).map(e => EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false })
+          }
+        })
       })
       if (goldLimitHit) setShowGoldLimitNotice(true)
 
@@ -979,10 +1000,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       Object.entries(newRaids).forEach(([charId, entries]) => {
         entries.forEach(entry => persistRaid(charId, entry))
       })
+      Object.entries(existingGoldRevocations).forEach(([charId, entries]) => {
+        entries.forEach(entry => persistRaid(charId, entry))
+      })
 
       // 상태 일괄 업데이트
       setChars(sortChars(data))
-      if (Object.keys(newRaids).length  > 0) setRaids(prev      => ({ ...prev, ...newRaids  }))
+      const allRaidUpdates = { ...newRaids, ...existingGoldRevocations }
+      if (Object.keys(allRaidUpdates).length  > 0) setRaids(prev  => ({ ...prev, ...allRaidUpdates  }))
       if (Object.keys(newCustom).length > 0) setCustomItems(prev => ({ ...prev, ...newCustom }))
     } catch {} finally {
       setAddingChars(false)

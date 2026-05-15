@@ -97,15 +97,24 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
     setShowBatchConfirm(false)
   }
 
-  const handleAdd = (newChars, apiKey, raidsByName, repCharName, siblingNames) => {
-    onAdd(newChars, apiKey, raidsByName, repCharName, siblingNames)
+  const handleAdd = (newChars, apiKey, raidsByName, repCharName, siblingNames, existingGoldOverrides = {}) => {
+    onAdd(newChars, apiKey, raidsByName, repCharName, siblingNames, existingGoldOverrides)
     onClose()
   }
 
   if (showAddChar) {
+    const existingGoldChars = chars
+      .filter(c => {
+        const expedition = c.expeditionId || 'default'
+        if (activeTabExpeditionId && expedition !== (activeTabExpeditionId || 'default')) return false
+        return raids?.[c.id]?.some(e => e.isGoldCheck) ?? false
+      })
+      .map(c => ({ ...c, raidEntries: raids?.[c.id] || [] }))
+
     return (
       <CharacterAddModal
         existingNames={new Set(chars.map(c => c.name))}
+        existingGoldChars={existingGoldChars}
         onAdd={handleAdd}
         onClose={() => setShowAddChar(false)}
         isLoggedIn={!isDemo}

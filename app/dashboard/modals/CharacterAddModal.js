@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { RAIDS, CLASS_COLOR, calcGoldBound, calcGoldTrade } from '@/lib/raidData'
-import { LOA_KEY_STORAGE, DIFF_LABEL, DIFF_COLOR, GOLD_CHAR_LIMIT } from '../_constants'
+import { LOA_KEY_STORAGE, DIFF_LABEL, DIFF_COLOR, GOLD_CHAR_LIMIT, EX_RAID_IDS } from '../_constants'
 import { getClassIcon } from '../_constants'
 import { IconInfo, IconItemLevel } from '../_icons'
 import { autoSelectNormalRaids, autoSelectExRaid } from '../_raidHelpers'
@@ -74,7 +74,7 @@ function ApiKeyGuideModal({ onClose }) {
 }
 
 // ── 캐릭터 추가 모달 ──────────────────────────────────────────────────────────
-export default function CharacterAddModal({ existingNames, onAdd, onClose, isLoggedIn = true, hasApiKey = true, onApiKeyRegistered, activeTabExpeditionId = null, getTargetTabName = null, expeditionHasExRaid = false }) {
+export default function CharacterAddModal({ existingNames, existingGoldChars = [], onAdd, onClose, isLoggedIn = true, hasApiKey = true, onApiKeyRegistered, activeTabExpeditionId = null, getTargetTabName = null, expeditionHasExRaid = false }) {
   const [charName,            setCharName]            = useState('')
   const [apiKey,              setApiKey]              = useState('')
   const [keySaved,            setKeySaved]            = useState(false)
@@ -84,7 +84,12 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
   const [selected,            setSelected]            = useState(new Set())
   const [showGuide,           setShowGuide]           = useState(false)
   const [step,                setStep]                = useState('search') // 'search' | 'choose' | 'setup'
-  const [strategies,          setStrategies]          = useState({})      // { [name]: 'trade'|'bound' }
+  const [strategies,          setStrategies]          = useState({})      // { [name]: 'trade'|'bound'|'no_gold' }
+  const [existingStrategies,   setExistingStrategies]   = useState(() => {  // { [name]: 'bound'|'trade'|'no_gold' }
+    const init = {}
+    existingGoldChars.forEach(c => { init[c.name] = 'bound' })
+    return init
+  })
   const [isNewExpedition,      setIsNewExpedition]      = useState(false)
   const [matchedExpeditionId,  setMatchedExpeditionId]  = useState(null)
   const [targetTabName,        setTargetTabName]        = useState(null)   // 저장될 탭 이름 (null = 새 탭)
@@ -197,23 +202,28 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
     selectedChars.forEach((char, idx) => {
       const strategy = strategies[char.name] || 'bound'
       const normal   = autoSelectNormalRaids(char, strategy === 'no_gold' ? 'bound' : strategy)
+      const entries  = [...normal]
+      // EX 레이드는 골드 전략과 무관하게 최고레벨 캐릭터(idx=0)에 배정
+      if (idx === 0 && !expeditionHasExRaid) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
       if (strategy === 'no_gold') {
-        map[char.name] = normal.map(e => ({ ...e, isGoldCheck: false }))
+        // EX 레이드는 골드 해제 불가 — 나머지만 미수령 처리
+        map[char.name] = entries.map(e => EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false })
       } else {
-        const entries = [...normal]
-        if (idx === 0 && !expeditionHasExRaid) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
         map[char.name] = entries
       }
     })
     return map
   }, [selectedChars, strategies])
 
-  const goldCharCount = selectedChars.filter(c => strategies[c.name] !== 'no_gold').length
+  const existingGoldCharCount = existingGoldChars.filter(c => existingStrategies[c.name] !== 'no_gold').length
+  const newGoldCharCount = selectedChars.filter(c => strategies[c.name] !== 'no_gold').length
+  const goldCharCount = existingGoldCharCount + newGoldCharCount
 
   const goSetup = () => {
+    const availableGoldSlots = Math.max(0, GOLD_CHAR_LIMIT - existingGoldCharCount)
     const init = {}
     selectedChars.forEach((c, idx) => {
-      init[c.name] = strategies[c.name] || (idx < GOLD_CHAR_LIMIT ? 'bound' : 'no_gold')
+      init[c.name] = strategies[c.name] || (idx < availableGoldSlots ? 'bound' : 'no_gold')
     })
     setStrategies(init)
     setStep('setup')
@@ -221,13 +231,21 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
 
   const handleConfirm = () => {
     const siblingNames = (results || []).map(c => c.name)
-    onAdd(selectedChars, apiKey.trim(), raidsByName, charName.trim(), siblingNames)
+    const existingGoldOverrides = {}
+    existingGoldChars.forEach(c => {
+      if (existingStrategies[c.name] === 'no_gold') existingGoldOverrides[c.id] = 'no_gold'
+    })
+    onAdd(selectedChars, apiKey.trim(), raidsByName, charName.trim(), siblingNames, existingGoldOverrides)
     onClose()
   }
 
   const handleManualSetup = () => {
     const siblingNames = (results || []).map(c => c.name)
-    onAdd(selectedChars, apiKey.trim(), {}, charName.trim(), siblingNames)
+    const existingGoldOverrides = {}
+    existingGoldChars.forEach(c => {
+      if (existingStrategies[c.name] === 'no_gold') existingGoldOverrides[c.id] = 'no_gold'
+    })
+    onAdd(selectedChars, apiKey.trim(), {}, charName.trim(), siblingNames, existingGoldOverrides)
     onClose()
   }
 
@@ -249,6 +267,82 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
 
           {/* 캐릭터별 미리보기 */}
           <div className="overflow-y-auto flex-1 px-4 py-3 space-y-3">
+            {/* 기존 골드 수령 캐릭터 */}
+            {existingGoldChars.length > 0 && (
+              <>
+                <p className="text-[11px] ns-bold text-gray-400 dark:text-gray-500 px-1">기존 골드 수령 캐릭터</p>
+                {existingGoldChars.map(char => {
+                  const exStrategy = existingStrategies[char.name] || 'gold'
+                  const isNoGold   = exStrategy === 'no_gold'
+                  return (
+                    <div key={char.id} className={`rounded-lg border overflow-hidden transition-opacity ${isNoGold ? 'border-gray-100 dark:border-[#2a2a2a] opacity-50' : 'border-gray-200 dark:border-[#383838]'}`}>
+                      {/* 캐릭터 헤더 */}
+                      <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#181818] border-b border-gray-100 dark:border-[#2a2a2a]">
+                        {getClassIcon(char.class) && <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />}
+                        <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate min-w-0">{char.name}</span>
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+                          <IconItemLevel />
+                          <span className="text-[11px] tabular-nums text-gray-500 dark:text-gray-400">{char.itemLevel?.toFixed(2)}</span>
+                        </div>
+                        <span className="flex-1" />
+                        {/* 골드 전략 토글 */}
+                        <div className="flex items-center gap-0.5 ml-1 rounded-md border border-gray-200 dark:border-[#383838] overflow-hidden flex-shrink-0">
+                          {[['no_gold','골드 미수령'],['trade','거래골드 우선'],['bound','전체골드 우선']].map(([key, label]) => (
+                            <button key={key}
+                              onClick={() => setExistingStrategies(prev => ({ ...prev, [char.name]: key }))}
+                              className={`px-2 py-1 text-[10px] ns-bold transition-colors
+                                ${exStrategy === key
+                                  ? key === 'no_gold'
+                                    ? 'bg-gray-200 dark:bg-[#333] text-gray-500 dark:text-gray-400'
+                                    : 'bg-yellow-200 dark:bg-[#2e2e2e] text-yellow-800 dark:text-gray-200'
+                                  : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'}`}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* 레이드 목록 */}
+                      <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
+                        {char.raidEntries.length === 0 ? (
+                          <p className="px-3 py-2.5 text-xs text-gray-400 dark:text-gray-600">설정된 레이드가 없습니다</p>
+                        ) : char.raidEntries.map((entry, i) => {
+                          const raid = RAIDS.find(r => r.id === entry.raidId)
+                          const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
+                          if (!raid || !diff) return null
+                          const allGates  = new Array(diff.gates).fill(true)
+                          const goldBound = calcGoldBound(diff, allGates)
+                          const goldTrade = calcGoldTrade(diff, allGates)
+                          return (
+                            <div key={i} className="flex items-center gap-2 px-3 py-2">
+                              <img src={raid.image} alt="" className="w-4 h-4 object-contain flex-shrink-0 opacity-70" />
+                              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{raid.name}</span>
+                                <span className={`text-[8px] ns-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${DIFF_COLOR[entry.difficulty]}`}>
+                                  {DIFF_LABEL[entry.difficulty]}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-[10px] tabular-nums text-gray-400 flex-shrink-0">
+                                {isNoGold
+                                  ? <span className="text-gray-400 dark:text-gray-500">미수령</span>
+                                  : <>
+                                      {goldBound > 0 && <span className="text-orange-500 dark:text-orange-400">귀속 {goldBound.toLocaleString()}</span>}
+                                      {goldTrade > 0 && <span className="text-blue-500 dark:text-blue-400">거래 {goldTrade.toLocaleString()}</span>}
+                                    </>
+                                }
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+                {selectedChars.length > 0 && (
+                  <p className="text-[11px] ns-bold text-gray-400 dark:text-gray-500 px-1 pt-1">새로 추가할 캐릭터</p>
+                )}
+              </>
+            )}
+
             {selectedChars.map((char, idx) => {
               const isRep     = idx === 0
               const strategy  = strategies[char.name] || ('bound')
@@ -342,6 +436,12 @@ export default function CharacterAddModal({ existingNames, onAdd, onClose, isLog
             <div className="flex items-center justify-between mt-3 mb-1">
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 골드 수령 캐릭터
+                {existingGoldCharCount > 0 && (
+                  <span className="text-gray-400 dark:text-gray-500 ml-1">
+                    ({existingGoldCharCount} 기존
+                    {newGoldCharCount > 0 && ` + ${newGoldCharCount} 신규`})
+                  </span>
+                )}
                 <span className={`ns-bold ml-1 ${goldCharCount > GOLD_CHAR_LIMIT ? 'text-red-500' : 'text-gray-700 dark:text-gray-200'}`}>
                   {goldCharCount}
                 </span>
