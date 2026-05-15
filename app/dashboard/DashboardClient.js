@@ -1373,7 +1373,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       <div ref={tableWrapRef}>
       {(() => {
         const COL_RAID = 122
-        const COL_CHAR = 131
+        const COL_CHAR = 150
 
         const nameSize = (name) => {
           const korLen = [...name].filter(c => /[가-힣ᄀ-ᇿ㄰-㆏]/.test(c)).length
@@ -1519,8 +1519,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   }`}
                 >
                   {/* ── 캐릭터 헤더 ── */}
-                  <div className="flex items-center gap-1.5 px-2.5 bg-gray-50 dark:bg-[#181818] h-[47px] 2xl:h-[56px] overflow-hidden">
-                    <span className="text-gray-300 dark:text-gray-600 flex-shrink-0 cursor-grab hidden md:inline-flex"><IconGrip /></span>
+                  <div className="flex items-center gap-1.5 pl-2.5 pr-1 bg-gray-50 dark:bg-[#181818] h-[47px] 2xl:h-[56px] overflow-hidden">
                     {getClassIcon(char.class)
                       ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-7 h-7 2xl:w-9 2xl:h-9 object-contain flex-shrink-0" />
                       : <span className="w-7 h-7 2xl:w-9 2xl:h-9 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
@@ -1546,7 +1545,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     <button
                       onClick={e => { e.stopPropagation(); setRaidSettingsCharId(char.id); setShowRaidSettings(true) }}
                       title="숙제 설정"
-                      className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#2a2a2a] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0"
+                      className="p-1 rounded text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0"
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="3"/>
@@ -1557,7 +1556,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     <button
                       onClick={e => { e.stopPropagation(); setConfirmDeleteCharId(char.id) }}
                       title="캐릭터 삭제"
-                      className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors flex-shrink-0 text-base leading-none"
+                      className="p-1 rounded text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors flex-shrink-0 text-base leading-none"
                     >×</button>
                   </div>
 
@@ -1592,7 +1591,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                     checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                                   }`}
                                 >
-                                  {item.image && <img src={item.image} alt="" className="custom-homework-icon w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                                  {item.image && <img src={item.image} alt="" className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
                                   <div className="flex-1 min-w-0">
                                     <p className={`text-[10px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
                                     <div className="mt-0.5">
@@ -1629,7 +1628,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {item.image && <img src={item.image} alt="" className="custom-homework-icon w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                              {item.image && <img src={item.image} alt="" className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] ns-bold truncate ${
                                 checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
@@ -1740,7 +1739,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {item.image && <img src={item.image} alt="" className="custom-homework-icon w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                              {item.image && <img src={item.image} alt="" className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] ns-bold truncate ${
                                 checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
@@ -1780,7 +1779,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/90 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.03] border-r border-gray-100/90 dark:border-white/[0.06] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
             }>
               <div className="flex items-center gap-1.5">
-                {meta.image && <img src={meta.image} alt="" className="custom-homework-icon w-[18px] h-[18px] object-contain flex-shrink-0" />}
+                {meta.image && <img src={meta.image} alt="" className="w-[18px] h-[18px] object-contain flex-shrink-0" />}
                 <span className={compact ? 'text-xs ns-bold text-gray-500 dark:text-gray-400 truncate' : 'text-[11px] ns-bold text-gray-600 dark:text-gray-300 truncate'}>{name}</span>
               </div>
             </td>
@@ -1951,7 +1950,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           }`}
                         >
                           <div className={`flex flex-col items-center w-full overflow-hidden ${glanceTable ? 'gap-0.5' : 'gap-1'}`}>
-                            <span className={`text-gray-300 dark:text-gray-600 ${glanceTable ? 'mb-0.5' : ''}`}><IconGrip /></span>
                             {getClassIcon(char.class)
                               ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />
                               : <span className="w-5 h-5 flex items-center justify-center text-gray-400 dark:text-gray-500 flex-shrink-0"><IconClass /></span>
