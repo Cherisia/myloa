@@ -873,7 +873,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       demoChars.forEach(dc => {
         const existing    = customItems[dc.id] || []
         const existingSet = new Set(existing.map(it => it.name))
-        const toAdd       = AUTO_PRESETS.filter(p => !existingSet.has(p.name))
+        const toAdd       = AUTO_PRESETS.filter(p => !existingSet.has(p.name) && (p.name !== '할의 모래시계' || dc.itemLevel >= 1730))
         if (toAdd.length > 0)
           demoCustom[dc.id] = [
             ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${dc.id}`, ...p })),
@@ -972,7 +972,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       for (const c of addedChars) {
         const existing    = customItems[c.id] || []
         const existingSet = new Set(existing.map(it => it.name))
-        const toAdd       = AUTO_PRESETS.filter(p => !existingSet.has(p.name))
+        const toAdd       = AUTO_PRESETS.filter(p => !existingSet.has(p.name) && (p.name !== '할의 모래시계' || c.itemLevel >= 1730))
         if (toAdd.length > 0) {
           if (!isLoggedIn) {
             newCustom[c.id] = [

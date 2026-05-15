@@ -18,6 +18,9 @@ export const DIFF_COLOR  = {
   stage1:    'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400',
 }
 
+// 할의 모래시계 아이템 레벨 제한
+export const HAL_MIN_LEVEL = 1730
+
 // 캐릭터 추가 시 자동으로 붙는 프리셋
 export const AUTO_PRESETS = [
   { name: '쿠르잔 전선',  type: 'daily',  image: '/schedule/kurzan.png'   },

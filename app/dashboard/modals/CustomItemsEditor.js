@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { CUSTOM_MAX } from '../_constants'
+import { CUSTOM_MAX, HAL_MIN_LEVEL } from '../_constants'
 import { BYNN_ARK_ICONS } from '../_bynnArkIcons'
 import { IconPlus, IconGrip } from '../_icons'
 import BynnArkIconPicker from './BynnArkIconPicker'
@@ -77,12 +77,16 @@ export default function CustomItemsEditor({
 
   const handlePreset = (preset) => {
     if (!selectedChar || isFull || charItemNames.has(preset.name)) return
+    if (preset.name === '할의 모래시계' && (selectedChar.itemLevel || 0) < HAL_MIN_LEVEL) return
     onAdd(selectedChar.id, preset.name, preset.type, preset.image)
     inputRef.current?.focus()
   }
   const handlePresetAll = (e, preset) => {
     e.stopPropagation()
-    chars.forEach(char => onAdd(char.id, preset.name, preset.type, preset.image))
+    const eligible = preset.name === '할의 모래시계'
+      ? chars.filter(char => (char.itemLevel || 0) >= HAL_MIN_LEVEL)
+      : chars
+    eligible.forEach(char => onAdd(char.id, preset.name, preset.type, preset.image))
     inputRef.current?.focus()
   }
 
@@ -165,14 +169,16 @@ export default function CustomItemsEditor({
         <div className="flex items-center gap-1.5 flex-wrap">
           {PRESET_ITEMS.map(preset => {
             const already = charItemNames.has(preset.name)
+            const levelLocked = preset.name === '할의 모래시계' && (selectedChar?.itemLevel || 0) < HAL_MIN_LEVEL
             return (
               <div key={preset.name} className="flex items-center rounded-full border border-gray-200 dark:border-[#383838] overflow-hidden">
                 <button
                   type="button"
                   onClick={() => handlePreset(preset)}
-                  disabled={already || isFull}
+                  disabled={already || isFull || levelLocked}
+                  title={levelLocked ? `아이템 레벨 ${HAL_MIN_LEVEL} 이상 캐릭터만 추가 가능` : undefined}
                       className={`flex items-center gap-1 pl-2 pr-1.5 py-0.5 text-[10px] transition-colors ${
-                    already || isFull
+                    already || isFull || levelLocked
                       ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
                       : 'text-gray-500 dark:text-gray-400 hover:text-yellow-700 dark:hover:text-yellow-300 hover:bg-yellow-50/50 dark:hover:bg-transparent'
                   }`}
