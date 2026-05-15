@@ -14,6 +14,7 @@ import AnimatedGold from './components/AnimatedGold'
 import CharGoldBadges from './components/CharGoldBadges'
 import RaidCell from './components/RaidCell'
 import Confetti from './components/Confetti'
+import AdSense from '@/components/AdSense'
 
 /** 카드 레이어보다 나중에 깜박이는 img 아이콘을 줄이기 위해 브라우저 캐시에 선적재한다. */
 function collectDashboardImageUrls(chars, raidsByCharId, customByCharId = {}) {
@@ -98,6 +99,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [restGauge, setRestGauge]               = useState(initialRestGauge)   // {charId: {itemId: 0-100}}
   const [restGaugeDeducted, setRestGaugeDeducted] = useState(initialRestGaugeDeducted) // {charId: {itemId: bool}} — 체크 시 실제 차감 여부
   const [lsReady, setLsReady]                   = useState(false) // localStorage 로드 완료 여부
+  const [isMobile, setIsMobile]                 = useState(false) // 모바일 여부 (< 768px)
   const wasCompleteRef                          = useRef(false)
   const tableWrapRef                            = useRef(null)
   const [tableContainerWidth, setTableContainerWidth] = useState(0)
@@ -158,6 +160,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     )
     if (!stillExists) setSelectedRaid(null)
   }, [activePageId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 모바일 감지 (< 768px)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // 커스텀 항목 로드/마이그레이션
   // - 비로그인(데모): localStorage에서 로드
@@ -1237,16 +1247,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             </h1>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button onClick={() => setShowRaidSettings(true)}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors whitespace-nowrap flex-shrink-0">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
             </svg>
             숙제 설정
           </button>
           <button onClick={() => setShowCharEdit(true)}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors whitespace-nowrap flex-shrink-0">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
             </svg>
@@ -1255,15 +1265,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           <button
             onClick={() => isLoggedIn ? (chars.length === 0 ? setShowNoChar(true) : syncChars()) : setShowLoginGuide(true)}
             disabled={isLoggedIn && (syncing || syncCooldownSec > 0)}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:hover:bg-[#2a2a2a] dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+            className="flex items-center gap-1.5 rounded border border-gray-200 dark:hover:bg-[#2a2a2a] dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 transition-colors whitespace-nowrap flex-shrink-0">
             <span className={isLoggedIn && syncing ? 'animate-spin' : ''}><IconRefresh /></span>
             {isLoggedIn && syncing ? '갱신 중…' : '캐릭터 갱신'}
           </button>
         </div>
       </div>
 
-      {/* ── 요약 카드 ── */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 -mt-3 sm:max-w-[50%]">
+      {/* ── 요약 카드 + 광고 배너 ── */}
+      <div className="flex items-stretch gap-3 -mt-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 sm:max-w-[50%]">
         {/* 원정대 캐릭터 */}
         <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 flex flex-col">
           {isLoggedIn && activeChars.length === 0 && (
@@ -1352,6 +1363,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           </p>
         </div>
       </div>
+      {/* 노트북/데스크탑 광고 — md 이상에서 요약카드 오른쪽 빈 공간 */}
+      <div className="hidden md:flex flex-1 min-w-0 overflow-hidden">
+        <AdSense slot="XXXXXXXXXX" client="ca-pub-XXXXXXXXXXXXXXXX" />
+      </div>
+      </div>
 
       {/* ── 숙제 테이블 / 카드 ── */}
       <div ref={tableWrapRef}>
@@ -1362,7 +1378,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         const nameSize = (name) => {
           const korLen = [...name].filter(c => /[가-힣ᄀ-ᇿ㄰-㆏]/.test(c)).length
           if (korLen <= 5) return 'text-sm'
-          if (korLen <= 7) return 'text-xs'
+          if (korLen <= 8) return 'text-xs'
+          if (korLen <= 12) return 'text-[11px]'
           return 'text-[10px]'
         }
 
@@ -1460,7 +1477,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
         // ── 카드 뷰 ────────────────────────────────────────────────────────
         const renderCardView = () => (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 2xl:gap-4">
             {activeChars.map(char => {
               const charRaids = [...(raids[char.id] || [])]
                 .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
@@ -1485,11 +1502,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               return (
                 <div
                   key={char.id}
-                  draggable
-                  onDragStart={(e) => handleCharDragStart(e, char.id)}
-                  onDragOver={(e) => handleCharDragOver(e, char.id)}
-                  onDrop={(e) => handleCharDrop(e, char.id)}
-                  onDragEnd={handleCharDragEnd}
+                  draggable={!isMobile}
+                  onDragStart={!isMobile ? (e) => handleCharDragStart(e, char.id) : undefined}
+                  onDragOver={!isMobile ? (e) => handleCharDragOver(e, char.id) : undefined}
+                  onDrop={!isMobile ? (e) => handleCharDrop(e, char.id) : undefined}
+                  onDragEnd={!isMobile ? handleCharDragEnd : undefined}
                   className={`relative rounded-xl border bg-white dark:bg-[#222222] overflow-hidden transition-all select-none flex flex-col ${
                     isDragging  ? 'opacity-40 border-gray-200 dark:border-[#383838]' :
                     isDragOver  ? 'border-yellow-400 dark:border-yellow-600 ring-2 ring-yellow-300/50 dark:ring-yellow-700/30' :
@@ -1497,25 +1514,25 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   }`}
                 >
                   {/* ── 캐릭터 헤더 ── */}
-                  <div className="flex items-center gap-1.5 px-2.5 bg-gray-50 dark:bg-[#181818] h-[47px] overflow-hidden">
-                    <span className="text-gray-300 dark:text-gray-600 flex-shrink-0 cursor-grab"><IconGrip /></span>
+                  <div className="flex items-center gap-1.5 px-2.5 bg-gray-50 dark:bg-[#181818] h-[47px] 2xl:h-[56px] overflow-hidden">
+                    <span className="text-gray-300 dark:text-gray-600 flex-shrink-0 cursor-grab hidden md:inline-flex"><IconGrip /></span>
                     {getClassIcon(char.class)
-                      ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-7 h-7 object-contain flex-shrink-0" />
-                      : <span className="w-7 h-7 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
+                      ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-7 h-7 2xl:w-9 2xl:h-9 object-contain flex-shrink-0" />
+                      : <span className="w-7 h-7 2xl:w-9 2xl:h-9 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
                     }
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-0.5">
-                        <p className={`${nameSize(char.name)} ns-bold text-gray-900 dark:text-white truncate`}>{char.name}</p>
+                        <p className={`${nameSize(char.name)} ns-bold text-gray-900 dark:text-white whitespace-nowrap`}>{char.name}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500 overflow-hidden">
+                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
                         <span className="flex items-center gap-0.5 flex-shrink-0 text-gray-400 dark:text-gray-500">
                           <IconItemLevel />
                           <span className="tabular-nums ns-bold text-gray-600 dark:text-gray-300">{char.itemLevel.toFixed(2)}</span>
                         </span>
                         {char.combatPower != null && (
-                          <span className="flex items-center gap-0.5 min-w-0 truncate">
+                          <span className="flex items-center gap-0.5 flex-shrink-0">
                             <IconPower />
-                            <span className="tabular-nums truncate">{Math.round(char.combatPower).toLocaleString()}</span>
+                            <span className="tabular-nums">{Math.round(char.combatPower).toLocaleString()}</span>
                           </span>
                         )}
                       </div>
@@ -2176,7 +2193,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             )}
 
             {/* 카드 / 테이블 뷰 토글 — 캐릭터 있을 때만 */}
-            {activeChars.length > 0 && <div className="flex items-center justify-end gap-2">
+            {activeChars.length > 0 && <div className="hidden md:flex items-center justify-end gap-2">
               {activePageId === null && expPages.length > 1 && (
                 <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200/80 dark:border-[#282828] p-0.5">
                   <button
@@ -2245,7 +2262,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 <p className="text-xs text-gray-300 dark:text-gray-700">상단 숙제 설정에서 원정대·캐릭터별 레이드와 커스텀 숙제를 추가하세요</p>
               </div>
             ) : (
-              cardView ? renderCardView() : (() => {
+              (isMobile || cardView) ? renderCardView() : (() => {
                 // 화면 너비에 맞춰 청크 분할 — 스크롤 없이 테이블 세로 적층
                 // tableContainerWidth가 0이면 적당한 기본값(6) 사용
                 const containerW   = tableContainerWidth > 0 ? tableContainerWidth : COL_RAID + COL_CHAR * 6

@@ -28,21 +28,20 @@ export default async function RootLayout({ children }) {
         <SessionProvider session={session}>
           <ThemeProvider>
             <Navbar />
-            {/* 외부 컨테이너: lg(1024px+)에서 우측 광고 슬롯 포함 최대 1600px */}
-            <div className="mx-auto max-w-[1600px]">
-              <div className="flex items-start">
-                {/* 본문: 모바일 전체폭 / lg 이상에서 사이드바 확보 후 남은 영역 */}
-                <main className="flex-1 min-w-0 px-4 py-6">
-                  {children}
-                </main>
-
-                {/* 우측 광고 슬롯 — lg(1024px) 이상에서만 표시, 300px 고정 */}
-                <aside className="hidden lg:flex lg:w-[300px] flex-shrink-0 flex-col items-center sticky top-[50px] pt-6 px-3 min-h-[calc(100vh-50px)]">
-                  <div className="w-full max-w-[280px]">
-                    <AdSense slot="XXXXXXXXXX" client="ca-pub-XXXXXXXXXXXXXXXX" />
-                  </div>
-                </aside>
-              </div>
+            {/* 전체 레이아웃: 2xl(1536px+)에서 좌우 사이드바 포함 데스크탑 레이아웃 */}
+            <div className="2xl:flex 2xl:items-start 2xl:gap-4 2xl:px-4">
+              {/* 좌측 사이드바 — 2xl only (160×600 sticky) */}
+              <aside className="hidden 2xl:block w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden" style={{ minHeight: '600px' }}>
+                <AdSense slot="XXXXXXXXXX" client="ca-pub-XXXXXXXXXXXXXXXX" />
+              </aside>
+              {/* 본문 */}
+              <main className="flex-1 min-w-0 px-4 py-6">
+                {children}
+              </main>
+              {/* 우측 사이드바 — 2xl only (160×600 sticky) */}
+              <aside className="hidden 2xl:block w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden" style={{ minHeight: '600px' }}>
+                <AdSense slot="XXXXXXXXXX" client="ca-pub-XXXXXXXXXXXXXXXX" />
+              </aside>
             </div>
           </ThemeProvider>
         </SessionProvider>

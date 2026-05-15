@@ -3,6 +3,11 @@
 /* Tailwind v4 — dark: 클래스 전략 (.dark 클래스 기반) */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ── 커스텀 브레이크포인트 ────────────────────────────────────── */
+@theme {
+  --breakpoint-xs: 480px;
+}
+
 /* ── 나눔스퀘어 폰트 ─────────────────────────────────────────── */
 @font-face {
   font-family: NanumSquareL;
