@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { IconCheck, IconGrip, IconPlus } from '../_icons'
-import { getClassIcon } from '../_constants'
+import { getClassIcon, EX_RAID_IDS } from '../_constants'
 import CharacterAddModal from './CharacterAddModal'
 
 // ── 캐릭터 설정 모달 ──────────────────────────────────────────────────────────
@@ -217,6 +217,9 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{char.name}</span>
+                      {(raids?.[char.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)) && (
+                        <img src="/bynn-ark-icons/coin.png" alt="골드 획득 캐릭터" className="w-3 h-3 object-contain flex-shrink-0" />
+                      )}
                       {!hasRaids && (
                         <span className="text-[9px] ns-bold px-1 py-0.5 rounded bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 dark:text-gray-500 flex-shrink-0">
                           레이드 미설정

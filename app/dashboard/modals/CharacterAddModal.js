@@ -215,7 +215,8 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
     return map
   }, [selectedChars, strategies])
 
-  const existingGoldCharCount = existingGoldChars.filter(c => existingStrategies[c.name] !== 'no_gold').length
+  const isDifferentExpedition = !!(activeTabExpeditionId && (isNewExpedition || (matchedExpeditionId && matchedExpeditionId !== activeTabExpeditionId)))
+  const existingGoldCharCount = isDifferentExpedition ? 0 : existingGoldChars.filter(c => existingStrategies[c.name] !== 'no_gold').length
   const newGoldCharCount = selectedChars.filter(c => strategies[c.name] !== 'no_gold').length
   const goldCharCount = existingGoldCharCount + newGoldCharCount
 
@@ -268,7 +269,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
           {/* 캐릭터별 미리보기 */}
           <div className="overflow-y-auto flex-1 px-4 py-3 space-y-3">
             {/* 기존 골드 수령 캐릭터 */}
-            {existingGoldChars.length > 0 && (
+            {existingGoldChars.length > 0 && !isDifferentExpedition && (
               <>
                 <p className="text-[11px] ns-bold text-gray-400 dark:text-gray-500 px-1">기존 골드 수령 캐릭터</p>
                 {existingGoldChars.map(char => {
@@ -344,7 +345,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
             )}
 
             {selectedChars.map((char, idx) => {
-              const isRep     = idx === 0
+              const isRep     = char.isMainCharacter === true
               const strategy  = strategies[char.name] || ('bound')
               const entries   = raidsByName[char.name] || []
               return (

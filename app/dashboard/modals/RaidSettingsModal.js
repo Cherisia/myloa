@@ -228,6 +228,9 @@ export default function RaidSettingsModal({
                   : <span className="w-3.5 h-3.5 flex-shrink-0 text-gray-300"><IconClass /></span>
                 }
                 <span className="max-w-[7rem] truncate">{char.name}</span>
+                {(raids[char.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)) && (
+                  <img src="/bynn-ark-icons/coin.png" alt="골드 획득 캐릭터" className="w-3 h-3 object-contain flex-shrink-0" />
+                )}
                 {count > 0 && (
                   <span className={`text-[10px] px-1 rounded-full ns-bold ${
                     active ? 'bg-yellow-400/40 text-yellow-900' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500'
@@ -325,7 +328,12 @@ export default function RaidSettingsModal({
                   className="rounded-lg border border-gray-200 dark:border-[#383838] px-4 py-2.5 transition-colors"
                 >
                   <div className="grid items-center gap-3" style={{ gridTemplateColumns: 'minmax(0,140px) 56px auto 1fr' }}>
-                    <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{raid.name}</span>
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{raid.name}</span>
+                      {charRaidList.find(e => e.raidId === raid.id)?.isGoldCheck && (
+                        <img src="/bynn-ark-icons/gold.png" alt="골드" className="w-3 h-3 object-contain flex-shrink-0" />
+                      )}
+                    </div>
                     <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">{raid.minItemLevel.toLocaleString()}+</span>
 
                     {(() => {

@@ -167,10 +167,11 @@ export async function GET(request) {
       .map(c => {
         const raw = c.ItemMaxLevel ?? c.ItemAvgLevel ?? '0'
         return {
-          name:      c.CharacterName,
-          class:     c.CharacterClassName,
-          server:    c.ServerName,
-          itemLevel: parseFloat(String(raw).replace(/,/g, '')) || 0,
+          name:            c.CharacterName,
+          class:           c.CharacterClassName,
+          server:          c.ServerName,
+          itemLevel:       parseFloat(String(raw).replace(/,/g, '')) || 0,
+          isMainCharacter: c.IsMainCharacter ?? false,
         }
       })
       .sort((a, b) => b.itemLevel - a.itemLevel)

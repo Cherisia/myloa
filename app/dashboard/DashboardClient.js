@@ -1037,19 +1037,19 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
   // 캐릭터별 획득 골드 맵 (더보기 차감 반영)
   // 골드 수령 캐릭터(1~6번째): 골드 미수령 레이드도 더보기 시 귀속/거래 골드 차감
-  // 초과 캐릭터(7번째~): 앞 GOLD_RAID_LIMIT개 비-EX 레이드는 더보기 차감 없음, 이후부터 차감
+  // 초과 캐릭터(7번째~): 더보기 체크 GOLD_RAID_LIMIT개까지는 차감 없음, 초과분부터 차감
   const charGoldMap = useMemo(() => {
     const map = {}
     chars.forEach(char => {
       let bound = 0, trade = 0, boundTotal = 0, tradeTotal = 0
       const charRaids = raids[char.id] || []
       const isGoldChar = charRaids.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
-      let nonExRaidIdx = 0
+      let moreDoneCount = 0
       charRaids.forEach(entry => {
         const isEX = EX_RAID_IDS.has(entry.raidId)
         const raid = RAIDS.find(r => r.id === entry.raidId)
         const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
-        if (!diff) { if (!isEX) nonExRaidIdx++; return }
+        if (!diff) return
         const allGates = new Array(diff.gates).fill(true)
         const moreDone = entry.moreDone || false
         const moreFrom = entry.moreFrom || 'bound'
@@ -1057,11 +1057,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         if (moreDone) {
           if (isGoldChar || isEX) {
             shouldDeductMore = true
-          } else if (nonExRaidIdx >= GOLD_RAID_LIMIT) {
-            shouldDeductMore = true
+          } else {
+            if (moreDoneCount >= GOLD_RAID_LIMIT) shouldDeductMore = true
+            moreDoneCount++
           }
         }
-        if (!isEX) nonExRaidIdx++
         const moreDeduct = shouldDeductMore ? calcGoldMore(diff, allGates) : 0
         if (entry.isGoldCheck) {
           bound      += calcGoldBound(diff, entry.gateClears) - (shouldDeductMore && moreFrom === 'bound' ? moreDeduct : 0)
@@ -1073,7 +1073,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           trade -= shouldDeductMore && moreFrom === 'trade' ? moreDeduct : 0
         }
       })
-      map[char.id] = { bound, trade, boundTotal, tradeTotal }
+      map[char.id] = { bound, trade, boundTotal, tradeTotal, isGoldChar }
     })
     return map
   }, [chars, raids])
@@ -1571,6 +1571,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-0.5">
                         <p className={`${nameSize(char.name)} ns-bold text-gray-900 dark:text-white whitespace-nowrap`}>{char.name}</p>
+                        {charGoldMap[char.id]?.isGoldChar && (
+                          <img src="/bynn-ark-icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" className="w-2.5 h-2.5 object-contain flex-shrink-0" />
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
                         <span className="flex items-center gap-0.5 flex-shrink-0 text-gray-400 dark:text-gray-500">
@@ -1724,7 +1727,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                             >
                               {raid.image && <img src={raid.image} alt={raid.name} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
                               <div className="flex-1 min-w-0">
-                                <p className={`text-[10px] ns-bold truncate ${allDone ? 'text-yellow-700 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
+                                <div className="flex items-center gap-0.5">
+                                  <p className={`text-[10px] ns-bold truncate ${allDone ? 'text-yellow-700 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
+                                  {entry.isGoldCheck && <img src="/bynn-ark-icons/gold.png" alt="골드" className="w-2.5 h-2.5 object-contain flex-shrink-0" />}
+                                </div>
                                 <div className="flex items-center gap-1">
                                   <span className={`text-[8px] ns-bold px-1 py-px rounded leading-tight ${diffBadge}`}>{diff.label}</span>
                                   {entry.isGoldCheck && (
@@ -2000,6 +2006,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                             }
                             <div className="flex items-center gap-0.5 w-full justify-center overflow-hidden">
                               <span className={`${nameSize(char.name)} ns-bold text-gray-800 dark:text-gray-100 leading-tight text-center truncate`}>{char.name}</span>
+                              {charGoldMap[char.id]?.isGoldChar && (
+                                <img src="/bynn-ark-icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" className="w-2 h-2 object-contain flex-shrink-0" />
+                              )}
                             </div>
                             <div className="flex flex-col items-start gap-0.5">
                               <div className="flex items-center gap-1">
@@ -2074,6 +2083,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               <img src={raidData.image} alt={row.raidName} className="w-[18px] h-[18px] object-contain flex-shrink-0" />
                             )}
                             <span className={`ns-bold text-gray-800 dark:text-gray-100 truncate ${glanceTable ? 'text-xs' : 'text-[11px]'}`}>{row.raidName}</span>
+                            {filteredChars.some(c => (raids[c.id] || []).some(e => e.raidId === row.raidId && e.isGoldCheck)) && (
+                              <img src="/bynn-ark-icons/gold.png" alt="골드" className="w-2.5 h-2.5 object-contain flex-shrink-0" />
+                            )}
                           </div>
                         </td>
                         {filteredChars.map(char => {
