@@ -1263,7 +1263,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       </div>
 
       {/* ── 요약 카드 ── */}
-      <div className="grid grid-cols-3 gap-3 max-w-[50%] -mt-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 -mt-3 sm:max-w-[50%]">
         {/* 원정대 캐릭터 */}
         <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 flex flex-col">
           {isLoggedIn && activeChars.length === 0 && (
