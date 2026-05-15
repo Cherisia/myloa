@@ -1035,24 +1035,43 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     } catch {} finally { setSyncing(false) }
   }
 
-  // 캐릭터별 획득 골드 맵 (isGoldCheck인 레이드만, 더보기 차감 반영)
+  // 캐릭터별 획득 골드 맵 (더보기 차감 반영)
+  // 골드 수령 캐릭터(1~6번째): 골드 미수령 레이드도 더보기 시 귀속/거래 골드 차감
+  // 초과 캐릭터(7번째~): 앞 GOLD_RAID_LIMIT개 비-EX 레이드는 더보기 차감 없음, 이후부터 차감
   const charGoldMap = useMemo(() => {
     const map = {}
     chars.forEach(char => {
       let bound = 0, trade = 0, boundTotal = 0, tradeTotal = 0
-      ;(raids[char.id] || []).forEach(entry => {
-        if (!entry.isGoldCheck) return
+      const charRaids = raids[char.id] || []
+      const isGoldChar = charRaids.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+      let nonExRaidIdx = 0
+      charRaids.forEach(entry => {
+        const isEX = EX_RAID_IDS.has(entry.raidId)
         const raid = RAIDS.find(r => r.id === entry.raidId)
         const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
-        if (!diff) return
-        const allGates   = new Array(diff.gates).fill(true)
-        const moreDone   = entry.moreDone || false
-        const moreFrom   = entry.moreFrom || 'bound'
-        const moreDeduct = moreDone ? calcGoldMore(diff, allGates) : 0
-        bound      += calcGoldBound(diff, entry.gateClears) - (moreDone && moreFrom === 'bound' ? moreDeduct : 0)
-        trade      += calcGoldTrade(diff, entry.gateClears) - (moreDone && moreFrom === 'trade' ? moreDeduct : 0)
-        boundTotal += calcGoldBound(diff, allGates)
-        tradeTotal += calcGoldTrade(diff, allGates)
+        if (!diff) { if (!isEX) nonExRaidIdx++; return }
+        const allGates = new Array(diff.gates).fill(true)
+        const moreDone = entry.moreDone || false
+        const moreFrom = entry.moreFrom || 'bound'
+        let shouldDeductMore = false
+        if (moreDone) {
+          if (isGoldChar || isEX) {
+            shouldDeductMore = true
+          } else if (nonExRaidIdx >= GOLD_RAID_LIMIT) {
+            shouldDeductMore = true
+          }
+        }
+        if (!isEX) nonExRaidIdx++
+        const moreDeduct = shouldDeductMore ? calcGoldMore(diff, allGates) : 0
+        if (entry.isGoldCheck) {
+          bound      += calcGoldBound(diff, entry.gateClears) - (shouldDeductMore && moreFrom === 'bound' ? moreDeduct : 0)
+          trade      += calcGoldTrade(diff, entry.gateClears) - (shouldDeductMore && moreFrom === 'trade' ? moreDeduct : 0)
+          boundTotal += calcGoldBound(diff, allGates)
+          tradeTotal += calcGoldTrade(diff, allGates)
+        } else {
+          bound -= shouldDeductMore && moreFrom === 'bound' ? moreDeduct : 0
+          trade -= shouldDeductMore && moreFrom === 'trade' ? moreDeduct : 0
+        }
       })
       map[char.id] = { bound, trade, boundTotal, tradeTotal }
     })
