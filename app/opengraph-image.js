@@ -51,7 +51,7 @@ export default function Image() {
             fontWeight: 400,
           }}
         >
-          로스트아크 레이드 숙제 관리
+          로스트아크 레이드 숙제 관리 & 공유
         </p>
       </div>
     ),
