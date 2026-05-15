@@ -113,25 +113,58 @@ export function computeAutoRaids(char, isTopChar) {
   return qualifying
 }
 
-// ── DB 저장 헬퍼 (optimistic — fire & forget) ─────────────────────────────────
-export function saveRaid(characterId, entry) {
-  fetch('/api/homework', {
+// ── DB 저장 헬퍼 (배치 큐 — 1.5s 디바운스 후 일괄 전송) ──────────────────────────
+
+// key: `${characterId}:${raidId}:${difficulty}` — 같은 키의 op는 최신 것이 덮어씀
+const _pendingOps = new Map()
+let _flushTimer = null
+let _beaconRegistered = false
+
+function _scheduleFlush() {
+  if (_flushTimer) clearTimeout(_flushTimer)
+  _flushTimer = setTimeout(_flushOps, 1500)
+}
+
+async function _flushOps() {
+  if (_pendingOps.size === 0) return
+  const ops = [..._pendingOps.values()]
+  _pendingOps.clear()
+  _flushTimer = null
+  await fetch('/api/homework/batch', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      characterId,
-      raidId:      entry.raidId,
-      difficulty:  entry.difficulty,
-      gateClears:  entry.gateClears,
-      isGoldCheck: entry.isGoldCheck,
-      moreDone:    entry.moreDone  ?? false,
-      moreFrom:    entry.moreFrom  ?? 'bound',
-    }),
-  }).catch(() => {}) // 실패 시 무시 (optimistic)
+    body: JSON.stringify({ ops }),
+  }).catch(() => {})
+}
+
+// 페이지 이탈 직전 미전송 op를 sendBeacon으로 보장 전송
+function _registerBeacon() {
+  if (_beaconRegistered || typeof window === 'undefined') return
+  _beaconRegistered = true
+  window.addEventListener('beforeunload', () => {
+    if (_pendingOps.size === 0) return
+    const ops = [..._pendingOps.values()]
+    _pendingOps.clear()
+    if (_flushTimer) { clearTimeout(_flushTimer); _flushTimer = null }
+    try {
+      navigator.sendBeacon(
+        '/api/homework/batch',
+        new Blob([JSON.stringify({ ops })], { type: 'application/json' }),
+      )
+    } catch {}
+  })
+}
+
+export function saveRaid(characterId, entry) {
+  _registerBeacon()
+  const key = `${characterId}:${entry.raidId}:${entry.difficulty}`
+  _pendingOps.set(key, { type: 'upsert', characterId, entry: { ...entry } })
+  _scheduleFlush()
 }
 
 export function deleteRaid(characterId, raidId, difficulty) {
-  fetch(`/api/homework?characterId=${characterId}&raidId=${raidId}&difficulty=${difficulty}`, {
-    method: 'DELETE',
-  }).catch(() => {})
+  _registerBeacon()
+  const key = `${characterId}:${raidId}:${difficulty}`
+  _pendingOps.set(key, { type: 'delete', characterId, raidId, difficulty })
+  _scheduleFlush()
 }
