@@ -3,10 +3,13 @@ import { useEffect, useRef } from 'react'
 
 export default function AdSense({ slot = 'XXXXXXXXXX', client = 'ca-pub-XXXXXXXXXXXXXXXX' }) {
   const insRef = useRef(null)
+  const pushedRef = useRef(false)
 
   useEffect(() => {
+    if (pushedRef.current) return
     const ins = insRef.current
-    if (!ins || ins.getAttribute('data-adsbygoogle-status')) return
+    if (!ins) return
+    pushedRef.current = true
     try {
       ;(window.adsbygoogle = window.adsbygoogle || []).push({})
     } catch (_) {}
