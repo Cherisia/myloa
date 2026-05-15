@@ -158,8 +158,9 @@ export async function DELETE(request) {
   await prisma.character.delete({ where: { id } })
 
   // 마지막 캐릭터 삭제 시 빈 expedition도 제거 (고아 레코드 방지)
+  // deleteMany: 병렬 삭제 시 이미 삭제된 경우 P2025 방지
   const remaining = await prisma.character.count({ where: { expeditionId: char.expeditionId } })
-  if (remaining === 0) await prisma.loaExpedition.delete({ where: { id: char.expeditionId } })
+  if (remaining === 0) await prisma.loaExpedition.deleteMany({ where: { id: char.expeditionId } })
 
   return NextResponse.json({ success: true })
 }

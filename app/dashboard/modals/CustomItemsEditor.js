@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { CUSTOM_MAX } from '../_constants'
 import { BYNN_ARK_ICONS } from '../_bynnArkIcons'
@@ -11,7 +12,7 @@ const PRESET_ITEMS = [
   { name: '가디언 토벌', type: 'daily',  image: '/schedule/guardian.png' },
   { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
   { name: '낙원',        type: 'weekly', image: '/schedule/paradise.png'  },
-  { name: '큐브',        type: 'weekly', image: '/schedule/cube.png'      },
+  { name: '큐브',        type: 'weekly', image: '/schedule/cube.webp'      },
 ]
 
 /**
@@ -47,19 +48,6 @@ export default function CustomItemsEditor({
     })
     return new Set([...counts.entries()].filter(([, n]) => n > 1).map(([name]) => name))
   }, [chars, customItems])
-
-  const otherItems = useMemo(() => {
-    if (!selectedChar) return []
-    const seen = new Set(charItemNames)
-    const result = []
-    chars.forEach(char => {
-      if (char.id === selectedChar.id) return
-      ;(customItems[char.id] || []).forEach(it => {
-        if (!seen.has(it.name)) { seen.add(it.name); result.push(it) }
-      })
-    })
-    return result
-  }, [chars, customItems, selectedChar, charItemNames])
 
   const isFull      = charItems.length >= CUSTOM_MAX
   const isDuplicate = !!input.trim() && charItemNames.has(input.trim())
@@ -189,7 +177,7 @@ export default function CustomItemsEditor({
                       : 'text-gray-500 dark:text-gray-400 hover:text-yellow-700 dark:hover:text-yellow-300 hover:bg-yellow-50/50 dark:hover:bg-transparent'
                   }`}
                 >
-                  <img src={preset.image} alt="" className="custom-homework-icon w-3 h-3 object-contain flex-shrink-0" />
+                  <Image src={preset.image} alt="" width={12} height={12} className="custom-homework-icon w-3 h-3 object-contain flex-shrink-0" />
                   {preset.name}
                   <span className={`text-[9px] ${preset.type === 'daily' ? 'text-blue-400' : 'text-purple-400'}`}>
                     {preset.type === 'daily' ? '일' : '주'}
@@ -210,89 +198,56 @@ export default function CustomItemsEditor({
       </div>
 
       <div className="max-h-[220px] overflow-y-auto rounded-lg border border-gray-100 dark:border-[#383838]">
-        {charItems.length === 0 && otherItems.length === 0 ? (
+        {charItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 gap-1">
             <p className="text-xs text-gray-400 dark:text-gray-600">아직 추가된 숙제가 없어요</p>
           </div>
         ) : (
-          <>
-            {charItems.length > 0 && (
-              <ul>
-                {charItems.map((item, idx) => {
-                  const isDragging = dragIdx === idx
-                  const isOver    = dropIdx === idx && dragIdx !== idx
-                  return (
-                    <li
-                      key={item.id}
-                      draggable
-                      onDragStart={e => handleDragStart(e, idx)}
-                      onDragOver={e => handleDragOver(e, idx)}
-                      onDrop={e => handleDrop(e, idx)}
-                      onDragEnd={handleDragEnd}
-                      className={`flex items-center gap-2 px-3 py-2 border-b border-gray-50 dark:border-[#2a2a2a] last:border-b-0 select-none transition-colors ${
-                        isDragging ? 'opacity-40' : isOver ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''
-                      }`}
+          <ul>
+            {charItems.map((item, idx) => {
+              const isDragging = dragIdx === idx
+              const isOver    = dropIdx === idx && dragIdx !== idx
+              return (
+                <li
+                  key={item.id}
+                  draggable
+                  onDragStart={e => handleDragStart(e, idx)}
+                  onDragOver={e => handleDragOver(e, idx)}
+                  onDrop={e => handleDrop(e, idx)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-2 px-3 py-2 border-b border-gray-50 dark:border-[#2a2a2a] last:border-b-0 select-none transition-colors ${
+                    isDragging ? 'opacity-40' : isOver ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''
+                  }`}
+                >
+                  <span className="cursor-default text-gray-300 dark:text-gray-600 flex-shrink-0"><IconGrip /></span>
+                  <span className="text-[10px] text-gray-300 dark:text-gray-700 w-4 text-center tabular-nums flex-shrink-0">{idx + 1}</span>
+                  <div className="flex-1 flex items-center gap-1.5 min-w-0">
+                    {item.image && <Image src={item.image} alt="" width={18} height={18} className="custom-homework-icon w-[18px] h-[18px] object-contain flex-shrink-0" />}
+                    <span className="text-xs ns-bold text-gray-700 dark:text-gray-200 truncate">{item.name}</span>
+                    {item.type && (
+                      <span className={`text-[9px] ns-bold flex-shrink-0 ${item.type === 'daily' ? 'text-blue-400' : 'text-purple-400'}`}>
+                        {item.type === 'daily' ? '일일' : '주간'}
+                      </span>
+                    )}
+                  </div>
+                  {multiCharNames.has(item.name) && (
+                    <button type="button"
+                      onClick={() => onDeleteAll(item.name)}
+                      className="text-[9px] ns-bold text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition-colors flex-shrink-0 whitespace-nowrap"
                     >
-                      <span className="cursor-default text-gray-300 dark:text-gray-600 flex-shrink-0"><IconGrip /></span>
-                      <span className="text-[10px] text-gray-300 dark:text-gray-700 w-4 text-center tabular-nums flex-shrink-0">{idx + 1}</span>
-                      <div className="flex-1 flex items-center gap-1.5 min-w-0">
-                        {item.image && <img src={item.image} alt="" className="custom-homework-icon w-[18px] h-[18px] object-contain flex-shrink-0" />}
-                        <span className="text-xs ns-bold text-gray-700 dark:text-gray-200 truncate">{item.name}</span>
-                        {item.type && (
-                          <span className={`text-[9px] ns-bold flex-shrink-0 ${item.type === 'daily' ? 'text-blue-400' : 'text-purple-400'}`}>
-                            {item.type === 'daily' ? '일일' : '주간'}
-                          </span>
-                        )}
-                      </div>
-                      {multiCharNames.has(item.name) && (
-                        <button type="button"
-                          onClick={() => onDeleteAll(item.name)}
-                          className="text-[9px] ns-bold text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition-colors flex-shrink-0 whitespace-nowrap"
-                        >
-                          원정대삭제
-                        </button>
-                      )}
-                      <button type="button"
-                        onClick={() => onDelete(selectedChar.id, item.id)}
-                        className="text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition-colors flex-shrink-0"
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-            {otherItems.length > 0 && (
-              <div className={charItems.length > 0 ? 'border-t border-gray-100 dark:border-[#2a2a2a]' : ''}>
-                <p className="px-3 py-2 text-[10px] ns-bold text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#1c1c1c]">
-                  다른 캐릭터 숙제에서 추가
-                </p>
-                <ul>
-                  {otherItems.map(it => (
-                    <li
-                      key={it.name}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => !isFull && onAdd(selectedChar.id, it.name, it.type, it.image)}
-                      onKeyDown={e => e.key === 'Enter' && !isFull && onAdd(selectedChar.id, it.name, it.type, it.image)}
-                      className={`flex items-center gap-2.5 px-3 py-2 border-b border-gray-50 dark:border-[#2a2a2a] last:border-b-0 transition-colors ${
-                        isFull ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-yellow-50/70 dark:hover:bg-[#282828]'
-                      }`}
-                    >
-                      <div className="w-4 h-4 rounded border-2 border-gray-300 dark:border-[#555] flex-shrink-0" />
-                      <span className="flex-1 text-xs text-gray-500 dark:text-gray-400">{it.name}</span>
-                      {it.type && (
-                        <span className={`text-[9px] ns-bold ${it.type === 'daily' ? 'text-blue-400' : 'text-purple-400'}`}>
-                          {it.type === 'daily' ? '일일' : '주간'}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </>
+                      원정대삭제
+                    </button>
+                  )}
+                  <button type="button"
+                    onClick={() => onDelete(selectedChar.id, item.id)}
+                    className="text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition-colors flex-shrink-0"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
         )}
       </div>
     </div>

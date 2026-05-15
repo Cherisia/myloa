@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 // ── 아이콘 ────────────────────────────────────────────────────────────────────
 export const IconCrown = () => (
   <svg width="12" height="11" viewBox="0 0 24 22" fill="currentColor">
@@ -41,7 +43,7 @@ export const IconItemLevel = () => (
   </svg>
 )
 export const IconPower = () => (
-  <img src="/combat-power.svg" alt="전투력" style={{ width: 10, height: 10 }} />
+  <Image src="/combat-power.svg" alt="전투력" width={10} height={10} unoptimized />
 )
 export const IconGrip = () => (
   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">

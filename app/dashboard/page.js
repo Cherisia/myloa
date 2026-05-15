@@ -52,7 +52,7 @@ const mkPresets = (id) => [
   { id: `d-guardian-${id}`,name: '가디언 토벌',   type: 'daily',  image: '/schedule/guardian.png' },
   { id: `d-hal-${id}`,     name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
   { id: `d-paradise-${id}`,name: '낙원',          type: 'weekly', image: '/schedule/paradise.png' },
-  { id: `d-cube-${id}`,    name: '큐브',          type: 'weekly', image: '/schedule/cube.png'     },
+  { id: `d-cube-${id}`,    name: '큐브',          type: 'weekly', image: '/schedule/cube.webp'     },
 ]
 const DEMO_CUSTOM_ITEMS = Object.fromEntries(
   ['demo-1','demo-2','demo-3','demo-4','demo-5','demo-6'].map(id => [id, mkPresets(id)])

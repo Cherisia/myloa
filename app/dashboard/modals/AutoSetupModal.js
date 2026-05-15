@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useMemo } from 'react'
 import { RAIDS, calcGoldTrade, calcGoldBound } from '@/lib/raidData'
 import { LOA_KEY_STORAGE, EX_RAID_IDS, getClassIcon } from '../_constants'
@@ -150,7 +151,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-[#383838]">
                     {/* 직업 아이콘 */}
                     {getClassIcon(char.class) && (
-                      <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />
+                      <Image src={getClassIcon(char.class)} alt={char.class} width={20} height={20} unoptimized className="class-icon w-5 h-5 object-contain flex-shrink-0" />
                     )}
                     {/* 왕관 (최고레벨 캐릭터) */}
                     {idx === 0 && (
@@ -168,7 +169,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
                     {/* 전투력 */}
                     {char.combatPower != null && (
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <img src="/combat-power.svg" alt="" className="w-[10px] h-[10px] object-contain flex-shrink-0" />
+                        <Image src="/combat-power.svg" alt="" width={10} height={10} unoptimized className="w-[10px] h-[10px] object-contain flex-shrink-0" />
                         <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400">{Math.round(char.combatPower).toLocaleString()}</span>
                       </div>
                     )}
@@ -191,7 +192,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
                                                            'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                       return (
                         <div key={entry.raidId} className="flex items-center gap-2 px-3 py-1.5">
-                          <img src={raid.image} alt="" className="w-4 h-4 object-contain flex-shrink-0 opacity-70" />
+                          <Image src={raid.image} alt="" width={16} height={16} className="w-4 h-4 object-contain flex-shrink-0 opacity-70" />
                           <span className={`text-[8px] ns-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${diffColor}`}>{diff.label}</span>
                           <span className="text-xs text-gray-700 dark:text-gray-300 flex-1">{raid.name}</span>
                           <div className="flex items-center gap-2 text-[10px] tabular-nums text-gray-500 dark:text-gray-400">

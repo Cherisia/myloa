@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import Image from 'next/image'
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import DiscordIcon from '@/components/DiscordIcon'
@@ -39,7 +40,7 @@ function prefetchImageUrls(rawUrls, timeoutMs = 12_000) {
   const deadline = new Promise(resolve => setTimeout(resolve, timeoutMs))
   const loadAll = Promise.all(
     uniq.map(src => new Promise(resolve => {
-      const img = new Image()
+      const img = document.createElement('img')
       img.onload = () => resolve()
       img.onerror = () => resolve()
       img.src = src
@@ -890,10 +891,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     // ── 로그인: 로딩 오버레이 표시 후 실제 저장 ───────────────────────────────
     setAddingChars(true)
     try {
-      await fetch('/api/characters', {
+      const postRes = await fetch('/api/characters', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey, repCharName, characters: newChars, siblingNames }),
       })
+      const postData = postRes.ok ? await postRes.json() : null
 
       const res = await fetch('/api/characters')
       if (!res.ok) return
@@ -901,7 +903,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       if (!Array.isArray(data)) return
 
       const newNames    = new Set(freshChars.map(c => c.name))
-      const addedChars  = data.filter(d => newNames.has(d.name))
+      const prevIds     = new Set(chars.map(c => c.id))
+      // ID 기반 비교: 이름 매칭만으로는 기존 캐릭터와 구분이 안 될 수 있음
+      const addedChars  = data.filter(d => !prevIds.has(d.id) && newNames.has(d.name))
 
       // 레이드 계산 (실제 ID 기준)
       const newRaids = {}
@@ -990,8 +994,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         }
       }
 
-      // 탭 라우팅: 추가된 캐릭터의 expeditionId 탭으로 이동 (expPages는 chars useMemo로 자동 갱신)
-      const addedExpId = addedChars[0]?.expeditionId
+      // 탭 라우팅: addedChars에서 가져오거나 POST 응답의 expeditionId를 fallback으로 사용
+      const addedExpId = addedChars[0]?.expeditionId ?? postData?.expeditionId
       if (addedExpId && addedExpId !== activePageId) setActivePageId(addedExpId)
 
       // 레이드 DB 저장 (실제 ID 확정 후)
@@ -1009,7 +1013,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       const allRaidUpdates = { ...newRaids, ...existingGoldRevocations }
       if (Object.keys(allRaidUpdates).length  > 0) setRaids(prev  => ({ ...prev, ...allRaidUpdates  }))
       if (Object.keys(newCustom).length > 0) setCustomItems(prev => ({ ...prev, ...newCustom }))
-    } catch {} finally {
+    } catch (e) { console.error('[addChars]', e) } finally {
       setAddingChars(false)
     }
   }
@@ -1352,7 +1356,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         )}
                         {repChar.combatPower != null && (
                           <span className="flex items-center gap-0.5">
-                            <img src="/combat-power.svg" alt="" className="w-[10px] h-[10px] object-contain flex-shrink-0" />
+                            <Image src="/combat-power.svg" alt="" width={10} height={10} unoptimized className="w-[10px] h-[10px] object-contain flex-shrink-0" />
                             <span className="text-[10px] text-gray-500 dark:text-gray-400">{Math.round(repChar.combatPower).toLocaleString()}</span>
                           </span>
                         )}
@@ -1565,14 +1569,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {/* ── 캐릭터 헤더 ── */}
                   <div className="flex items-center gap-1.5 pl-2.5 pr-1 bg-gray-50 dark:bg-[#181818] h-[47px] 2xl:h-[56px] overflow-hidden">
                     {getClassIcon(char.class)
-                      ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-7 h-7 2xl:w-9 2xl:h-9 object-contain flex-shrink-0" />
+                      ? <Image src={getClassIcon(char.class)} alt={char.class} width={28} height={28} unoptimized className="class-icon w-7 h-7 2xl:w-9 2xl:h-9 object-contain flex-shrink-0" />
                       : <span className="w-7 h-7 2xl:w-9 2xl:h-9 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
                     }
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-0.5">
                         <p className={`${nameSize(char.name)} ns-bold text-gray-900 dark:text-white whitespace-nowrap`}>{char.name}</p>
                         {charGoldMap[char.id]?.isGoldChar && (
-                          <img src="/bynn-ark-icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" className="w-2.5 h-2.5 object-contain flex-shrink-0" />
+                          <Image src="/icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" width={10} height={10} className="w-2.5 h-2.5 object-contain flex-shrink-0" />
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
@@ -1638,7 +1642,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                     checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                                   }`}
                                 >
-                                  {item.image && <img src={item.image} alt="" className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                                  {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
                                   <div className="flex-1 min-w-0">
                                     <p className={`text-[10px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
                                     <div className="mt-0.5">
@@ -1675,7 +1679,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {item.image && <img src={item.image} alt="" className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                              {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] ns-bold truncate ${
                                 checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
@@ -1725,11 +1729,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {raid.image && <img src={raid.image} alt={raid.name} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                              {raid.image && <Image src={raid.image} alt={raid.name} width={16} height={16} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-0.5">
                                   <p className={`text-[10px] ns-bold truncate ${allDone ? 'text-yellow-700 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
-                                  {entry.isGoldCheck && <img src="/bynn-ark-icons/gold.png" alt="골드" className="w-2.5 h-2.5 object-contain flex-shrink-0" />}
+                                  {entry.isGoldCheck && <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-2.5 h-2.5 object-contain flex-shrink-0" />}
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <span className={`text-[8px] ns-bold px-1 py-px rounded leading-tight ${diffBadge}`}>{diff.label}</span>
@@ -1789,7 +1793,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {item.image && <img src={item.image} alt="" className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                              {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] ns-bold truncate ${
                                 checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
@@ -1829,7 +1833,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/90 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.03] border-r border-gray-100/90 dark:border-white/[0.06] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
             }>
               <div className="flex items-center gap-1.5">
-                {meta.image && <img src={meta.image} alt="" className="w-[18px] h-[18px] object-contain flex-shrink-0" />}
+                {meta.image && <Image src={meta.image} alt="" width={18} height={18} className="w-[18px] h-[18px] object-contain flex-shrink-0" />}
                 <span className={compact ? 'text-xs ns-bold text-gray-500 dark:text-gray-400 truncate' : 'text-[11px] ns-bold text-gray-600 dark:text-gray-300 truncate'}>{name}</span>
               </div>
             </td>
@@ -2001,13 +2005,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         >
                           <div className={`flex flex-col items-center w-full overflow-hidden ${glanceTable ? 'gap-0.5' : 'gap-1'}`}>
                             {getClassIcon(char.class)
-                              ? <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />
+                              ? <Image src={getClassIcon(char.class)} alt={char.class} width={20} height={20} unoptimized className="class-icon w-5 h-5 object-contain flex-shrink-0" />
                               : <span className="w-5 h-5 flex items-center justify-center text-gray-400 dark:text-gray-500 flex-shrink-0"><IconClass /></span>
                             }
                             <div className="flex items-center gap-0.5 w-full justify-center overflow-hidden">
                               <span className={`${nameSize(char.name)} ns-bold text-gray-800 dark:text-gray-100 leading-tight text-center truncate`}>{char.name}</span>
                               {charGoldMap[char.id]?.isGoldChar && (
-                                <img src="/bynn-ark-icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" className="w-2 h-2 object-contain flex-shrink-0" />
+                                <Image src="/icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" width={8} height={8} className="w-2 h-2 object-contain flex-shrink-0" />
                               )}
                             </div>
                             <div className="flex flex-col items-start gap-0.5">
@@ -2016,7 +2020,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 <span className="text-[10px] ns-bold text-gray-600 dark:text-gray-300">{char.itemLevel.toFixed(2)}</span>
                               </div>
                               <div className="flex items-center gap-1">
-                                <img src="/combat-power.svg" alt="전투력" className="w-[11px] h-[11px] object-contain flex-shrink-0" />
+                                <Image src="/combat-power.svg" alt="전투력" width={11} height={11} unoptimized className="w-[11px] h-[11px] object-contain flex-shrink-0" />
                                 <span className="text-[10px] text-gray-500 dark:text-gray-400">
                                   {char.combatPower != null ? char.combatPower.toFixed(2) : '—'}
                                 </span>
@@ -2080,11 +2084,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         }>
                           <div className="flex items-center gap-1.5">
                             {raidData?.image && (
-                              <img src={raidData.image} alt={row.raidName} className="w-[18px] h-[18px] object-contain flex-shrink-0" />
+                              <Image src={raidData.image} alt={row.raidName} width={18} height={18} className="w-[18px] h-[18px] object-contain flex-shrink-0" />
                             )}
                             <span className={`ns-bold text-gray-800 dark:text-gray-100 truncate ${glanceTable ? 'text-xs' : 'text-[11px]'}`}>{row.raidName}</span>
                             {filteredChars.some(c => (raids[c.id] || []).some(e => e.raidId === row.raidId && e.isGoldCheck)) && (
-                              <img src="/bynn-ark-icons/gold.png" alt="골드" className="w-2.5 h-2.5 object-contain flex-shrink-0" />
+                              <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-2.5 h-2.5 object-contain flex-shrink-0" />
                             )}
                           </div>
                         </td>
@@ -2222,7 +2226,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           }`}>
                             {incomplete ? (
                               getClassIcon(char.class)
-                                ? <img src={getClassIcon(char.class)} alt="" className="class-icon w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                ? <Image src={getClassIcon(char.class)} alt="" width={14} height={14} unoptimized className="class-icon w-3.5 h-3.5 object-contain flex-shrink-0" />
                                 : <span className="w-3.5 h-3.5 text-gray-300 flex-shrink-0"><IconClass /></span>
                             ) : (
                               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-emerald-500 dark:text-emerald-400 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>

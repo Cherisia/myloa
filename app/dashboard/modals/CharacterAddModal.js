@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useMemo, useEffect } from 'react'
 import { RAIDS, CLASS_COLOR, calcGoldBound, calcGoldTrade } from '@/lib/raidData'
 import { LOA_KEY_STORAGE, DIFF_LABEL, DIFF_COLOR, GOLD_CHAR_LIMIT, EX_RAID_IDS } from '../_constants'
@@ -279,7 +280,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                     <div key={char.id} className={`rounded-lg border overflow-hidden transition-opacity ${isNoGold ? 'border-gray-100 dark:border-[#2a2a2a] opacity-50' : 'border-gray-200 dark:border-[#383838]'}`}>
                       {/* 캐릭터 헤더 */}
                       <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#181818] border-b border-gray-100 dark:border-[#2a2a2a]">
-                        {getClassIcon(char.class) && <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />}
+                        {getClassIcon(char.class) && <Image src={getClassIcon(char.class)} alt={char.class} width={20} height={20} unoptimized className="class-icon w-5 h-5 object-contain flex-shrink-0" />}
                         <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate min-w-0">{char.name}</span>
                         <div className="flex items-center gap-1 flex-shrink-0 ml-1">
                           <IconItemLevel />
@@ -315,7 +316,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                           const goldTrade = calcGoldTrade(diff, allGates)
                           return (
                             <div key={i} className="flex items-center gap-2 px-3 py-2">
-                              <img src={raid.image} alt="" className="w-4 h-4 object-contain flex-shrink-0 opacity-70" />
+                              <Image src={raid.image} alt="" width={16} height={16} className="w-4 h-4 object-contain flex-shrink-0 opacity-70" />
                               <div className="flex items-center gap-1.5 flex-1 min-w-0">
                                 <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{raid.name}</span>
                                 <span className={`text-[8px] ns-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${DIFF_COLOR[entry.difficulty]}`}>
@@ -353,7 +354,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                   {/* 캐릭터 헤더 */}
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#181818] border-b border-gray-100 dark:border-[#2a2a2a]">
                     {/* 직업 아이콘 */}
-                    {getClassIcon(char.class) && <img src={getClassIcon(char.class)} alt={char.class} className="class-icon w-5 h-5 object-contain flex-shrink-0" />}
+                    {getClassIcon(char.class) && <Image src={getClassIcon(char.class)} alt={char.class} width={20} height={20} unoptimized className="class-icon w-5 h-5 object-contain flex-shrink-0" />}
                     {/* 왕관 (대표 캐릭터) */}
                     {isRep && (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0 text-yellow-400 dark:text-yellow-500">
@@ -370,7 +371,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                     {/* 전투력 */}
                     {char.combatPower != null && (
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <img src="/combat-power.svg" alt="" className="w-[10px] h-[10px] object-contain flex-shrink-0" />
+                        <Image src="/combat-power.svg" alt="" width={10} height={10} unoptimized className="w-[10px] h-[10px] object-contain flex-shrink-0" />
                         <span className="text-[11px] tabular-nums text-gray-500 dark:text-gray-400">{Math.round(char.combatPower).toLocaleString()}</span>
                       </div>
                     )}
@@ -406,7 +407,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                       const goldTrade = calcGoldTrade(diff, allGates)
                       return (
                         <div key={i} className="flex items-center gap-2 px-3 py-2">
-                          <img src={raid.image} alt="" className="w-4 h-4 object-contain flex-shrink-0 opacity-70" />
+                          <Image src={raid.image} alt="" width={16} height={16} className="w-4 h-4 object-contain flex-shrink-0 opacity-70" />
                           <div className="flex items-center gap-1.5 flex-1 min-w-0">
                             <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{raid.name}</span>
                             <span className={`text-[8px] ns-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${DIFF_COLOR[entry.difficulty]}`}>
@@ -607,7 +608,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                       onChange={() => !already && toggleSelect(c.name)}
                       className="accent-yellow-500 w-3.5 h-3.5 flex-shrink-0"/>
                     {(() => { const icon = getClassIcon(c.class); return icon
-                      ? <img src={icon} alt={c.class} title={c.class} className="class-icon w-5 h-5 flex-shrink-0 object-contain" />
+                      ? <Image src={icon} alt={c.class} title={c.class} width={20} height={20} unoptimized className="class-icon w-5 h-5 flex-shrink-0 object-contain" />
                       : <span className={`text-[10px] px-1.5 py-0.5 rounded ns-bold leading-tight flex-shrink-0 ${CLASS_COLOR[c.class] || 'bg-gray-100 text-gray-600'}`}>{c.class}</span>
                     })()}
                     <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 flex-1 min-w-0 truncate">{c.name}</span>

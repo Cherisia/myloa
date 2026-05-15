@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react'
 import { RAIDS } from '@/lib/raidData'
 import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, getClassIcon } from '../_constants'
@@ -224,12 +225,12 @@ export default function RaidSettingsModal({
                 }`}
               >
                 {icon
-                  ? <img src={icon} alt="" className="class-icon w-3.5 h-3.5 object-contain flex-shrink-0" />
+                  ? <Image src={icon} alt="" width={14} height={14} unoptimized className="class-icon w-3.5 h-3.5 object-contain flex-shrink-0" />
                   : <span className="w-3.5 h-3.5 flex-shrink-0 text-gray-300"><IconClass /></span>
                 }
                 <span className="max-w-[7rem] truncate">{char.name}</span>
                 {(raids[char.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)) && (
-                  <img src="/bynn-ark-icons/coin.png" alt="골드 획득 캐릭터" className="w-3 h-3 object-contain flex-shrink-0" />
+                  <Image src="/icons/coin.png" alt="골드 획득 캐릭터" width={12} height={12} className="w-3 h-3 object-contain flex-shrink-0" />
                 )}
                 {count > 0 && (
                   <span className={`text-[10px] px-1 rounded-full ns-bold ${
@@ -331,7 +332,7 @@ export default function RaidSettingsModal({
                     <div className="flex items-center gap-1 min-w-0">
                       <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{raid.name}</span>
                       {charRaidList.find(e => e.raidId === raid.id)?.isGoldCheck && (
-                        <img src="/bynn-ark-icons/gold.png" alt="골드" className="w-3 h-3 object-contain flex-shrink-0" />
+                        <Image src="/icons/gold.png" alt="골드" width={12} height={12} className="w-3 h-3 object-contain flex-shrink-0" />
                       )}
                     </div>
                     <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">{raid.minItemLevel.toLocaleString()}+</span>

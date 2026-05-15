@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 import { useTheme } from './ThemeProvider'
@@ -127,8 +128,9 @@ export default function Navbar() {
     <div className={`flex items-center gap-3 ${mobile ? 'w-full justify-between' : ''}`}>
       <div className="flex items-center gap-2.5">
         {session.user?.image ? (
-          <img
+          <Image
             src={session.user.image} alt=""
+            width={24} height={24}
             className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10"
           />
         ) : (

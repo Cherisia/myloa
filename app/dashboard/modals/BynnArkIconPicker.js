@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -86,7 +87,6 @@ export default function BynnArkIconPicker({
                 <button
                   key={ic.id}
                   type="button"
-                  title={ic.label}
                   onClick={() => selectIcon(ic.src)}
                   className={`group aspect-square rounded-xl border flex items-center justify-center p-1.5 transition-all ${
                     selected
@@ -94,11 +94,12 @@ export default function BynnArkIconPicker({
                       : 'border-gray-200/90 bg-gray-50 hover:border-gray-300 hover:bg-white hover:shadow-sm dark:border-[#353535] dark:bg-[#2a2a2a] dark:hover:border-[#484848] dark:hover:bg-[#303030]'
                   }`}
                 >
-                  <img
+                  <Image
                     src={ic.src}
                     alt=""
+                    width={28} height={28}
                     className="custom-homework-icon w-7 h-7 object-contain opacity-95 group-hover:opacity-100 transition-opacity"
-                    loading="lazy"
+                    style={ic.imgStyle}
                   />
                 </button>
               )
@@ -133,7 +134,7 @@ export default function BynnArkIconPicker({
         {value != null && value !== '' && (
           <div className="flex items-center gap-1">
             <div className="w-8 h-8 rounded-lg border border-gray-200 dark:border-[#404040] bg-white dark:bg-[#1c1c1c] flex items-center justify-center overflow-hidden p-0.5 shadow-sm shadow-black/[0.04] dark:shadow-none ring-0 transition-shadow hover:ring-2 hover:ring-yellow-400/25 dark:hover:ring-yellow-500/20">
-              <img src={value} alt="" className="custom-homework-icon w-full h-full object-contain" />
+              <Image src={value} alt="" width={32} height={32} className="custom-homework-icon w-full h-full object-contain" />
             </div>
             <button
               type="button"
