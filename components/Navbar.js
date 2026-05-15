@@ -1,11 +1,23 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 import { useTheme } from './ThemeProvider'
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import DiscordIcon from './DiscordIcon'
+
+function GroupWipTrigger({ onOpen }) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  useEffect(() => {
+    if (searchParams.get('group') === '1') {
+      onOpen()
+      router.replace('/dashboard', { scroll: false })
+    }
+  }, [])
+  return null
+}
 
 // Discord 공식 브랜드 컬러
 const DISCORD_BG   = '#5865F2'
@@ -81,15 +93,16 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme()
   const pathname            = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [wip, setWip]               = useState(false)
   const { data: session }   = useSession()
 
   const s = THEME_STYLE[theme] || THEME_STYLE.yellow
 
   const navLinks = [
     { href: '/dashboard', label: '원정대' },
-    ...(session ? [] : [{ href: '/group', label: '그룹' }]),
+    { href: null, label: '그룹', onClick: () => setWip(true) },
   ]
-  const isActive = (href) => pathname === href || pathname.startsWith(href + '/')
+  const isActive = (href) => href && (pathname === href || pathname.startsWith(href + '/'))
 
   const ThemeDots = () => (
     <div className="flex items-center gap-2">
@@ -150,6 +163,7 @@ export default function Navbar() {
   )
 
   return (
+    <>
     <header className={`sticky top-0 z-50 border-b backdrop-blur-md ${s.header}`}>
       <div className="mx-auto max-w-[1600px] px-5 flex items-center gap-6" style={{ height: 50 }}>
 
@@ -166,7 +180,16 @@ export default function Navbar() {
 
         {/* 데스크탑 Nav */}
         <nav className="hidden sm:flex items-center gap-1">
-          {navLinks.map(({ href, label }) => (
+          {navLinks.map(({ href, label, onClick }) => onClick ? (
+            <button
+              key={label}
+              type="button"
+              onClick={onClick}
+              className={`relative px-2.5 py-1 text-xs transition-colors duration-150 ${s.navBase}`}
+            >
+              {label}
+            </button>
+          ) : (
             <Link
               key={href}
               href={href}
@@ -213,7 +236,16 @@ export default function Navbar() {
         <div className={`sm:hidden border-t px-4 py-3 space-y-0.5 ${s.header.replace('bg-white/90', 'bg-white').replace('bg-\\[#111111\\]\\/95', 'bg-[#111111]')}`}
           style={theme === 'dark' ? { backgroundColor: '#111111' } : { backgroundColor: '#ffffff' }}
         >
-          {navLinks.map(({ href, label }) => (
+          {navLinks.map(({ href, label, onClick }) => onClick ? (
+            <button
+              key={label}
+              type="button"
+              onClick={() => { setMobileOpen(false); onClick() }}
+              className={`block w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${s.navBase}`}
+            >
+              {label}
+            </button>
+          ) : (
             <Link
               key={href}
               href={href}
@@ -232,5 +264,33 @@ export default function Navbar() {
         </div>
       )}
     </header>
+
+    <Suspense fallback={null}>
+      <GroupWipTrigger onOpen={() => setWip(true)} />
+    </Suspense>
+
+    {/* WIP 모달 */}
+    {wip && (
+      <div
+        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40"
+        onClick={() => setWip(false)}
+      >
+        <div
+          className="bg-white dark:bg-zinc-800 rounded-2xl px-8 py-7 shadow-xl flex flex-col items-center gap-4 max-w-xs w-full mx-4"
+          onClick={e => e.stopPropagation()}
+        >
+          <p className="text-sm ns-bold text-gray-700 dark:text-zinc-200 text-center leading-relaxed">
+            아직 작업중입니다 ㅎㅎ...
+          </p>
+          <button
+            onClick={() => setWip(false)}
+            className="mt-1 px-5 py-1.5 rounded-lg text-xs ns-bold bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-600 transition-colors"
+          >
+            닫기
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
