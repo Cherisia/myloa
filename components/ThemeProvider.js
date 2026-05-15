@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-// theme: 'yellow' | 'pink' | 'dark'
+// theme: 'yellow' | 'pink' | 'sky' | 'dark'
 const ThemeContext = createContext({ theme: 'yellow', setTheme: () => {} })
 
 function applyTheme(theme) {
@@ -14,7 +14,7 @@ function applyTheme(theme) {
   if (theme === 'dark') {
     html.classList.add('dark')
   } else {
-    html.setAttribute('data-theme', theme) // 'yellow' | 'pink'
+    html.setAttribute('data-theme', theme) // 'yellow' | 'pink' | 'sky'
   }
 }
 

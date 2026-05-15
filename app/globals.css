@@ -166,6 +166,97 @@ body {
 
 
 /* ═══════════════════════════════════════════════════════════════
+   하늘 테마  [data-theme="sky"]
+   ─ 노랑(완료·액센트) → 스카이  (sky-300 / sky-400 기반)
+   ─ 오렌지(귀속)      → 시안
+   ─ 블루·스카이 Tailwind(거래) → 인디고  (indigo-400 기반, 색 역할 혼동 방지)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── body 배경 ── */
+[data-theme="sky"] body { background-color: #f0f9ff; }
+
+/* ── 직업·커스텀 아이콘: 검정 → 하늘빛 ── */
+[data-theme="sky"] .class-icon {
+  filter: brightness(0) sepia(1) saturate(3) hue-rotate(175deg) brightness(0.65);
+}
+[data-theme="sky"] .custom-homework-icon {
+  filter: brightness(0) sepia(1) saturate(3) hue-rotate(175deg) brightness(0.65);
+}
+
+/* ── 스크롤바 ── */
+[data-theme="sky"] ::-webkit-scrollbar-thumb { background: #bae6fd; } /* sky-200 */
+
+/* ── 액센트: 노랑 → 스카이 ── */
+[data-theme="sky"] .bg-yellow-200         { background-color: #bae6fd !important; } /* sky-200 */
+[data-theme="sky"] .bg-yellow-500         { background-color: #38bdf8 !important; } /* sky-400: 더보기 */
+[data-theme="sky"] .bg-yellow-400         { background-color: #7dd3fc !important; } /* sky-300 */
+[data-theme="sky"] .bg-yellow-300         { background-color: #7dd3fc !important; } /* sky-300 */
+[data-theme="sky"] .bg-yellow-50          { background-color: #f0f9ff !important; } /* sky-50  */
+[data-theme="sky"] .bg-yellow-100         { background-color: #e0f2fe !important; } /* sky-100 */
+[data-theme="sky"] .bg-yellow-50\/50      { background-color: rgba(224,242,254,0.5) !important; }
+[data-theme="sky"] .bg-yellow-50\/40      { background-color: rgba(240,249,255,0.4) !important; }
+[data-theme="sky"] .bg-yellow-900\/10     { background-color: rgba(8,47,73,0.1)    !important; }
+[data-theme="sky"] .bg-yellow-400\/40     { background-color: rgba(125,211,252,0.4) !important; }
+
+[data-theme="sky"] .hover\:bg-yellow-400:hover  { background-color: #7dd3fc !important; }
+[data-theme="sky"] .hover\:bg-yellow-300:hover  { background-color: #bae6fd !important; }
+[data-theme="sky"] .hover\:bg-yellow-100:hover  { background-color: #e0f2fe !important; }
+[data-theme="sky"] .hover\:bg-yellow-50:hover   { background-color: #f0f9ff !important; }
+[data-theme="sky"] .focus\:border-yellow-400:focus { border-color: #7dd3fc !important; }
+[data-theme="sky"] .hover\:text-yellow-600:hover   { color: #0284c7 !important; }
+
+[data-theme="sky"] .text-yellow-400  { color: #38bdf8 !important; } /* sky-400 */
+[data-theme="sky"] .text-yellow-500  { color: #0ea5e9 !important; } /* sky-500 */
+[data-theme="sky"] .text-yellow-600  { color: #0284c7 !important; } /* sky-600 */
+[data-theme="sky"] .text-yellow-700  { color: #0369a1 !important; } /* sky-700 */
+[data-theme="sky"] .text-yellow-900  { color: #0c4a6e !important; } /* sky-900 */
+
+[data-theme="sky"] .border-yellow-500      { border-color: #38bdf8 !important; } /* 더보기 */
+[data-theme="sky"] .border-yellow-400      { border-color: #7dd3fc !important; }
+[data-theme="sky"] .border-yellow-400\/60  { border-color: rgba(125,211,252,0.6) !important; }
+[data-theme="sky"] .border-yellow-200\/60  { border-color: rgba(186,230,253,0.6) !important; } /* sky-200/60 */
+[data-theme="sky"] .border-yellow-100      { border-color: #e0f2fe !important; } /* sky-100 */
+[data-theme="sky"] .ring-yellow-400        { --tw-ring-color: #7dd3fc !important; }
+[data-theme="sky"] .accent-yellow-500      { accent-color: #0ea5e9 !important; }
+
+/* ── 귀속: 오렌지 → 시안 ── */
+[data-theme="sky"] .bg-orange-100         { background-color: #cffafe !important; } /* cyan-100 */
+[data-theme="sky"] .bg-orange-50          { background-color: #ecfeff !important; } /* cyan-50  */
+[data-theme="sky"] .bg-orange-300         { background-color: #67e8f9 !important; } /* cyan-300 */
+[data-theme="sky"] .hover\:bg-orange-100:hover { background-color: #cffafe !important; }
+
+[data-theme="sky"] .border-orange-300     { border-color: #67e8f9 !important; } /* cyan-300 */
+[data-theme="sky"] .border-orange-200     { border-color: #a5f3fc !important; } /* cyan-200 */
+
+[data-theme="sky"] .text-orange-300       { color: #67e8f9 !important; } /* cyan-300 */
+[data-theme="sky"] .text-orange-400       { color: #22d3ee !important; } /* cyan-400 */
+[data-theme="sky"] .text-orange-500       { color: #06b6d4 !important; } /* cyan-500 */
+[data-theme="sky"] .text-orange-600       { color: #0891b2 !important; } /* cyan-600 */
+
+/* ── 거래: 블루 Tailwind → 인디고 ── */
+[data-theme="sky"] .bg-blue-400           { background-color: #818cf8 !important; } /* indigo-400 */
+[data-theme="sky"] .bg-blue-100           { background-color: #e0e7ff !important; } /* indigo-100 */
+[data-theme="sky"] .bg-blue-50            { background-color: #eef2ff !important; } /* indigo-50  */
+[data-theme="sky"] .hover\:bg-blue-100:hover { background-color: #e0e7ff !important; }
+
+[data-theme="sky"] .border-blue-400       { border-color: #818cf8 !important; } /* indigo-400 */
+[data-theme="sky"] .border-blue-300       { border-color: #a5b4fc !important; } /* indigo-300 */
+[data-theme="sky"] .border-blue-200       { border-color: #c7d2fe !important; } /* indigo-200 */
+
+[data-theme="sky"] .text-blue-300         { color: #a5b4fc !important; } /* indigo-300 */
+[data-theme="sky"] .text-blue-400         { color: #818cf8 !important; } /* indigo-400 */
+[data-theme="sky"] .text-blue-500         { color: #6366f1 !important; } /* indigo-500 */
+[data-theme="sky"] .text-blue-600         { color: #4f46e5 !important; } /* indigo-600 */
+
+/* ── 거래 iOS 토글: 스카이 Tailwind → 인디고 (역할 혼동 방지) ── */
+[data-theme="sky"] .bg-sky-300            { background-color: #a5b4fc !important; } /* indigo-300 */
+[data-theme="sky"] .bg-sky-50             { background-color: #eef2ff !important; } /* indigo-50  */
+[data-theme="sky"] .border-sky-200        { border-color: #c7d2fe !important; }     /* indigo-200 */
+[data-theme="sky"] .text-sky-300          { color: #a5b4fc !important; }            /* indigo-300 */
+[data-theme="sky"] .text-sky-600          { color: #4f46e5 !important; }            /* indigo-600 */
+
+
+/* ═══════════════════════════════════════════════════════════════
    다크 테마 (.dark)
    ─ 노란색 액센트 → 흰색/밝은 중립
    ─ 버튼/배경/텍스트 전반 재정의

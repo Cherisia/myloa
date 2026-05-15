@@ -14,6 +14,7 @@ const DISCORD_HOVER= '#4752C4'
 const THEMES = [
   { key: 'yellow', label: '오후의 햇살', color: '#fbbf24' },
   { key: 'pink',   label: '벚꽃 왈츠',  color: '#f472b6' },
+  { key: 'sky',    label: '맑은 하늘',  color: '#38bdf8' },
   { key: 'dark',   label: '별 헤는 밤', color: '#52525b' },
 ]
 
@@ -43,6 +44,20 @@ const THEME_STYLE = {
     navUnderline: 'bg-pink-400',
     divider:      'bg-pink-100',
     dotRing:      'ring-pink-400 ring-offset-white',
+    userText:     'text-gray-600',
+    logoutText:   'text-gray-400 hover:text-gray-700',
+  },
+  sky: {
+    header:       'bg-white/90 border-sky-100',
+    logo:         'text-gray-900',
+    logoMy:       'text-gray-400',
+    logoAccent:   'text-sky-500',
+    logoMark:     'bg-sky-400',
+    navBase:      'text-gray-500 hover:text-sky-600',
+    navActive:    'text-sky-500 ns-bold',
+    navUnderline: 'bg-sky-400',
+    divider:      'bg-sky-100',
+    dotRing:      'ring-sky-400 ring-offset-white',
     userText:     'text-gray-600',
     logoutText:   'text-gray-400 hover:text-gray-700',
   },
