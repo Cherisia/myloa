@@ -59,7 +59,7 @@ function buildCustomHomeworkRowMap(filteredChars, customItems, includeItem) {
   return byName
 }
 
-export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialHasApiKey = false, initialCustomItems = {}, initialExpNames = {}, initialRepCharId = null }) {
+export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialHasApiKey = false, initialCustomItems = {}, initialCustomChecks = {}, initialRestGauge = {}, initialRestGaugeDeducted = {}, initialExpNames = {}, initialRepCharId = null }) {
   const isDemo = !isLoggedIn
   const [chars, setChars] = useState(initialChars)
   const [raids, setRaids] = useState(initialRaids)
@@ -94,9 +94,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [editingPageName, setEditingPageName]   = useState('')
   const [expNames, setExpNames]                 = useState(initialExpNames)   // expeditionId -> 사용자 지정 탭 이름
   const [customItems, setCustomItems]           = useState(initialCustomItems) // {charId: [{id, name, type, image}]}
-  const [customChecks, setCustomChecks]         = useState({})   // {charId: {itemId: bool}}
-  const [restGauge, setRestGauge]               = useState({})   // {charId: {itemId: 0-100}}
-  const [restGaugeDeducted, setRestGaugeDeducted] = useState({}) // {charId: {itemId: bool}} — 체크 시 실제 차감 여부
+  const [customChecks, setCustomChecks]         = useState(initialCustomChecks)   // {charId: {itemId: bool}}
+  const [restGauge, setRestGauge]               = useState(initialRestGauge)   // {charId: {itemId: 0-100}}
+  const [restGaugeDeducted, setRestGaugeDeducted] = useState(initialRestGaugeDeducted) // {charId: {itemId: bool}} — 체크 시 실제 차감 여부
   const [lsReady, setLsReady]                   = useState(false) // localStorage 로드 완료 여부
   const wasCompleteRef                          = useRef(false)
   const tableWrapRef                            = useRef(null)
@@ -159,35 +159,93 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     if (!stillExists) setSelectedRaid(null)
   }, [activePageId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 커스텀 항목 localStorage 로드 — useLayoutEffect로 첫 paint 전에 동기 실행
+  // 커스텀 항목 로드/마이그레이션
+  // - 비로그인(데모): localStorage에서 로드
+  // - 로그인 + DB 비어있음: localStorage에서 DB로 마이그레이션
+  // - 로그인 + DB 있음: initialCustomItems 등 props 그대로 사용 (이미 state 초기값으로 설정됨)
   useLayoutEffect(() => {
-    try {
-      const items    = localStorage.getItem('myloa_custom_items')
-      const checks   = localStorage.getItem('myloa_custom_checks')
-      const gauge    = localStorage.getItem('myloa_rest_gauge')
-      const deducted = localStorage.getItem('myloa_rest_gauge_deducted')
-      if (items)    setCustomItems(JSON.parse(items))
-      if (checks)   setCustomChecks(JSON.parse(checks))
-      if (gauge)    setRestGauge(JSON.parse(gauge))
-      if (deducted) setRestGaugeDeducted(JSON.parse(deducted))
-    } catch {}
+    if (!isLoggedIn) {
+      // 데모 모드: localStorage에서 로드
+      try {
+        const items    = localStorage.getItem('myloa_custom_items')
+        const checks   = localStorage.getItem('myloa_custom_checks')
+        const gauge    = localStorage.getItem('myloa_rest_gauge')
+        const deducted = localStorage.getItem('myloa_rest_gauge_deducted')
+        if (items)    setCustomItems(JSON.parse(items))
+        if (checks)   setCustomChecks(JSON.parse(checks))
+        if (gauge)    setRestGauge(JSON.parse(gauge))
+        if (deducted) setRestGaugeDeducted(JSON.parse(deducted))
+      } catch {}
+    } else if (Object.keys(initialCustomItems).length === 0) {
+      // 로그인 상태이지만 DB가 비어있음: localStorage → DB 마이그레이션
+      try {
+        const lsItems = localStorage.getItem('myloa_custom_items')
+        if (lsItems) {
+          const items  = JSON.parse(lsItems)
+          const checks = JSON.parse(localStorage.getItem('myloa_custom_checks') || '{}')
+          const gauge  = JSON.parse(localStorage.getItem('myloa_rest_gauge') || '{}')
+          const ded    = JSON.parse(localStorage.getItem('myloa_rest_gauge_deducted') || '{}')
+
+          // 임시 ID로 state 즉시 반영 (마이그레이션 중 UI 유지)
+          setCustomItems(items)
+          setCustomChecks(checks)
+          setRestGauge(gauge)
+          setRestGaugeDeducted(ded)
+
+          // DB에 비동기 저장 후 실제 ID로 교체
+          ;(async () => {
+            const newCI = {}, newCC = {}, newRG = {}, newRGD = {}
+            for (const [charId, charItems] of Object.entries(items)) {
+              newCI[charId] = []
+              for (let i = 0; i < charItems.length; i++) {
+                const it = charItems[i]
+                try {
+                  const res = await fetch('/api/custom-items', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      characterId: charId, name: it.name, type: it.type, image: it.image, sortOrder: i,
+                      done:      checks[charId]?.[it.id] ?? false,
+                      restGauge: gauge[charId]?.[it.id]  ?? 0,
+                      deducted:  ded[charId]?.[it.id]    ?? false,
+                    }),
+                  })
+                  if (res.ok) {
+                    const d = await res.json()
+                    newCI[charId].push({ id: d.id, name: d.name, type: d.type, image: d.image })
+                    if (d.done)      { if (!newCC[charId]) newCC[charId] = {};  newCC[charId][d.id]  = true }
+                    if (d.restGauge) { if (!newRG[charId]) newRG[charId] = {};  newRG[charId][d.id]  = d.restGauge }
+                    if (d.deducted)  { if (!newRGD[charId]) newRGD[charId] = {}; newRGD[charId][d.id] = true }
+                  }
+                } catch {}
+              }
+            }
+            setCustomItems(newCI)
+            setCustomChecks(newCC)
+            setRestGauge(newRG)
+            setRestGaugeDeducted(newRGD)
+            ;['myloa_custom_items', 'myloa_custom_checks', 'myloa_rest_gauge', 'myloa_rest_gauge_deducted']
+              .forEach(k => { try { localStorage.removeItem(k) } catch {} })
+          })()
+        }
+      } catch {}
+    }
     setLsReady(true)
-  }, [])
-  // 저장 — lsReady 이전엔 실행하지 않아 초기 {} 로 덮어쓰는 버그 방지
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // 저장 — 데모 모드에서만 localStorage 사용, lsReady 이전엔 실행 안 함
   useEffect(() => {
-    if (!lsReady) return
+    if (!lsReady || isLoggedIn) return
     try { localStorage.setItem('myloa_custom_items', JSON.stringify(customItems)) } catch {}
   }, [customItems, lsReady])
   useEffect(() => {
-    if (!lsReady) return
+    if (!lsReady || isLoggedIn) return
     try { localStorage.setItem('myloa_custom_checks', JSON.stringify(customChecks)) } catch {}
   }, [customChecks, lsReady])
   useEffect(() => {
-    if (!lsReady) return
+    if (!lsReady || isLoggedIn) return
     try { localStorage.setItem('myloa_rest_gauge', JSON.stringify(restGauge)) } catch {}
   }, [restGauge, lsReady])
   useEffect(() => {
-    if (!lsReady) return
+    if (!lsReady || isLoggedIn) return
     try { localStorage.setItem('myloa_rest_gauge_deducted', JSON.stringify(restGaugeDeducted)) } catch {}
   }, [restGaugeDeducted, lsReady])
 
@@ -285,15 +343,25 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const persistDelete = (charId, raidId, diffKey) => { if (isLoggedIn) deleteRaid(charId, raidId, diffKey) }
 
   // 커스텀 항목 CRUD
-  const addCustomItem = (charId, name, type = 'weekly', image) => {
-    setCustomItems(prev => {
-      const list = prev[charId] || []
-      if (list.length >= CUSTOM_MAX) return prev
-      if (list.some(it => it.name === name)) return prev
+  const addCustomItem = async (charId, name, type = 'weekly', image) => {
+    const list = customItems[charId] || []
+    if (list.length >= CUSTOM_MAX) return
+    if (list.some(it => it.name === name)) return
+    if (!isLoggedIn) {
       const item = { id: `c-${Date.now()}`, name, type }
       if (image) item.image = image
-      return { ...prev, [charId]: [...list, item] }
-    })
+      setCustomItems(prev => ({ ...prev, [charId]: [...(prev[charId] || []), item] }))
+      return
+    }
+    try {
+      const res = await fetch('/api/custom-items', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ characterId: charId, name, type, image, sortOrder: list.length }),
+      })
+      if (!res.ok) return
+      const d = await res.json()
+      setCustomItems(prev => ({ ...prev, [charId]: [...(prev[charId] || []), { id: d.id, name: d.name, type: d.type, image: d.image }] }))
+    } catch {}
   }
   const deleteCustomItem = (charId, itemId) => {
     setCustomItems(prev => ({ ...prev, [charId]: (prev[charId] || []).filter(it => it.id !== itemId) }))
@@ -301,8 +369,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       const { [itemId]: _, ...rest } = prev[charId] || {}
       return { ...prev, [charId]: rest }
     })
+    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'DELETE' })
   }
   const deleteCustomItemAll = (name) => {
+    const itemIds = []
+    Object.values(customItems).forEach(items => items.filter(it => it.name === name).forEach(it => itemIds.push(it.id)))
     setCustomItems(prev => {
       const next = { ...prev }
       Object.keys(next).forEach(cid => { next[cid] = (next[cid] || []).filter(it => it.name !== name) })
@@ -311,56 +382,55 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     setCustomChecks(prev => {
       const next = { ...prev }
       Object.keys(next).forEach(cid => {
-        const itemIds = (customItems[cid] || []).filter(it => it.name === name).map(it => it.id)
-        if (!itemIds.length) return
         const charChecks = { ...next[cid] }
         itemIds.forEach(id => { delete charChecks[id] })
         next[cid] = charChecks
       })
       return next
     })
+    if (isLoggedIn) itemIds.forEach(id => fetch(`/api/custom-items/${id}`, { method: 'DELETE' }))
   }
   const reorderCustomItems = (charId, newItems) => {
     setCustomItems(prev => ({ ...prev, [charId]: newItems }))
+    if (isLoggedIn) newItems.forEach((it, i) => fetch(`/api/custom-items/${it.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sortOrder: i }) }))
   }
   const toggleCustomCheck = (charId, itemId) => {
     const item = (customItems[charId] || []).find(it => it.id === itemId)
     const currentChecked = !!(customChecks[charId]?.[itemId])
     const newChecked = !currentChecked
+    let newRestGaugeVal = restGauge[charId]?.[itemId] ?? 0
+    let newDeducted = false
 
     if (item && REST_GAUGE_NAMES.has(item.name)) {
-      const cur = restGauge[charId]?.[itemId] ?? 0
+      const cur = newRestGaugeVal
       if (newChecked) {
         // 체크: 게이지 20 이상일 때만 차감, 차감 여부 기록
         const didDeduct = cur >= 20
-        setRestGaugeDeducted(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: didDeduct } }))
-        if (didDeduct) {
-          setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: cur - 20 } }))
-        }
+        newDeducted = didDeduct
+        if (didDeduct) newRestGaugeVal = cur - 20
       } else {
         // 체크 해제: 이전에 실제로 차감했을 때만 복원
         const wasDeducted = restGaugeDeducted[charId]?.[itemId] ?? false
-        setRestGaugeDeducted(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: false } }))
-        if (wasDeducted) {
-          setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: Math.min(100, cur + 20) } }))
-        }
+        if (wasDeducted) newRestGaugeVal = Math.min(100, cur + 20)
+        newDeducted = false
       }
+      setRestGaugeDeducted(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: newDeducted } }))
+      setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: newRestGaugeVal } }))
     }
 
-    setCustomChecks(prev => {
-      const charChecks = prev[charId] || {}
-      return { ...prev, [charId]: { ...charChecks, [itemId]: newChecked } }
-    })
+    setCustomChecks(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: newChecked } }))
+    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done: newChecked, restGauge: newRestGaugeVal, deducted: newDeducted }) })
   }
   const adjustRestGauge = (charId, itemId, delta) => {
-    setRestGauge(prev => {
-      const cur = prev[charId]?.[itemId] ?? 0
-      const next = Math.max(0, Math.min(100, cur + delta))
-      return { ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: next } }
-    })
+    const cur = restGauge[charId]?.[itemId] ?? 0
+    const next = Math.max(0, Math.min(100, cur + delta))
+    setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: next } }))
+    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restGauge: next }) })
   }
   const setRestGaugeValue = (charId, itemId, value) => {
-    setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: Math.max(0, Math.min(100, value)) } }))
+    const next = Math.max(0, Math.min(100, value))
+    setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: next } }))
+    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restGauge: next }) })
   }
 
   // 대표 캐릭터 — 전체 탭: 첫 번째 원정대의 accountRepChar / 개별 탭: 해당 원정대의 accountRepChar / 데모: initialRepCharId 우선
@@ -862,18 +932,32 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       })
       if (goldLimitHit) setShowGoldLimitNotice(true)
 
-      // 커스텀 항목
+      // 커스텀 항목 DB 저장
       const newCustom = {}
-      addedChars.forEach(c => {
+      for (const c of addedChars) {
         const existing    = customItems[c.id] || []
         const existingSet = new Set(existing.map(it => it.name))
         const toAdd       = AUTO_PRESETS.filter(p => !existingSet.has(p.name))
-        if (toAdd.length > 0)
-          newCustom[c.id] = [
-            ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${c.id}`, ...p })),
-            ...existing,
-          ]
-      })
+        if (toAdd.length > 0) {
+          if (!isLoggedIn) {
+            newCustom[c.id] = [
+              ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${c.id}`, ...p })),
+              ...existing,
+            ]
+          } else {
+            const savedItems = await Promise.all(toAdd.map((p, i) =>
+              fetch('/api/custom-items', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ characterId: c.id, name: p.name, type: p.type, image: p.image, sortOrder: existing.length + i }),
+              }).then(r => r.ok ? r.json() : null).catch(() => null)
+            ))
+            newCustom[c.id] = [
+              ...savedItems.filter(Boolean).map(d => ({ id: d.id, name: d.name, type: d.type, image: d.image })),
+              ...existing,
+            ]
+          }
+        }
+      }
 
       // 탭 라우팅: 추가된 캐릭터의 expeditionId 탭으로 이동 (expPages는 chars useMemo로 자동 갱신)
       const addedExpId = addedChars[0]?.expeditionId

@@ -1,7 +1,7 @@
 // 서버 컴포넌트 — DB에서 캐릭터 + 숙제를 미리 불러와 클라이언트에 전달
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { isResetPassed, getNextResetAt } from '@/lib/raidData'
+import { isResetPassed, getNextResetAt, getNextDailyResetAt } from '@/lib/raidData'
 import DashboardClient from './DashboardClient'
 
 // ── 비로그인 미리보기용 더미 데이터 ───────────────────────────────────────────
@@ -74,9 +74,13 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id
-  const [expeditionsRaw, userRow] = await Promise.all([
+  const [expeditionsRaw, userRow, customItemsRaw] = await Promise.all([
     prisma.loaExpedition.findMany({ where: { userId }, orderBy: { createdAt: 'asc' }, include: EXPEDITION_INCLUDE }),
     prisma.user.findUnique({ where: { id: userId }, select: { apiKey: true } }),
+    prisma.characterCustomItem.findMany({
+      where: { character: { expedition: { userId } } },
+      orderBy: [{ characterId: 'asc' }, { sortOrder: 'asc' }],
+    }),
   ])
   const hasApiKey = !!userRow?.apiKey
   let expeditions = expeditionsRaw
@@ -96,6 +100,34 @@ export default async function DashboardPage() {
       }))
     )
     expeditions = await prisma.loaExpedition.findMany({ where: { userId }, include: EXPEDITION_INCLUDE })
+  }
+
+  // 일일 커스텀 숙제 리셋 만료 항목 처리
+  const now = new Date()
+  const expiredCustomIds = customItemsRaw.filter(it => it.type === 'daily' && it.resetAt && it.resetAt < now).map(it => it.id)
+  if (expiredCustomIds.length > 0) {
+    const REST_GAUGE_NAMES = new Set(['쿠르잔 전선', '가디언 토벌'])
+    const nextDaily = getNextDailyResetAt()
+    await prisma.$transaction(
+      customItemsRaw
+        .filter(it => expiredCustomIds.includes(it.id))
+        .map(it => {
+          const data = { deducted: false, resetAt: nextDaily }
+          if (it.done) {
+            data.done = false
+          } else if (REST_GAUGE_NAMES.has(it.name)) {
+            data.restGauge = Math.min(it.restGauge + 10, 100)
+          }
+          return prisma.characterCustomItem.update({ where: { id: it.id }, data })
+        })
+    )
+    // 리셋 후 다시 조회
+    const refreshed = await prisma.characterCustomItem.findMany({
+      where: { character: { expedition: { userId } } },
+      orderBy: [{ characterId: 'asc' }, { sortOrder: 'asc' }],
+    })
+    customItemsRaw.length = 0
+    refreshed.forEach(it => customItemsRaw.push(it))
   }
 
   const initialChars = []
@@ -126,5 +158,32 @@ export default async function DashboardPage() {
     })
   })
 
-  return <DashboardClient initialChars={initialChars} initialRaids={initialRaids} isLoggedIn initialHasApiKey={hasApiKey} initialExpNames={initialExpNames} />
+  // 커스텀 숙제 4개의 맵으로 변환
+  const initialCustomItems         = {}
+  const initialCustomChecks        = {}
+  const initialRestGauge           = {}
+  const initialRestGaugeDeducted   = {}
+  customItemsRaw.forEach(it => {
+    if (!initialCustomItems[it.characterId])       initialCustomItems[it.characterId]       = []
+    if (!initialCustomChecks[it.characterId])      initialCustomChecks[it.characterId]      = {}
+    if (!initialRestGauge[it.characterId])         initialRestGauge[it.characterId]         = {}
+    if (!initialRestGaugeDeducted[it.characterId]) initialRestGaugeDeducted[it.characterId] = {}
+
+    initialCustomItems[it.characterId].push({ id: it.id, name: it.name, type: it.type, image: it.image })
+    if (it.done)      initialCustomChecks[it.characterId][it.id]      = true
+    if (it.restGauge) initialRestGauge[it.characterId][it.id]         = it.restGauge
+    if (it.deducted)  initialRestGaugeDeducted[it.characterId][it.id] = true
+  })
+
+  return <DashboardClient
+    initialChars={initialChars}
+    initialRaids={initialRaids}
+    isLoggedIn
+    initialHasApiKey={hasApiKey}
+    initialExpNames={initialExpNames}
+    initialCustomItems={initialCustomItems}
+    initialCustomChecks={initialCustomChecks}
+    initialRestGauge={initialRestGauge}
+    initialRestGaugeDeducted={initialRestGaugeDeducted}
+  />
 }

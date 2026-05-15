@@ -1,0 +1,57 @@
+name: Daily/Weekly Reset
+
+on:
+  schedule:
+    - cron: '0 21 * * *'   # 매일 06:00 KST (일일 초기화)
+    - cron: '0 21 * * 2'   # 화요일 21:00 UTC = 수요일 06:00 KST (주간 초기화)
+  workflow_dispatch:        # 수동 실행 (테스트용)
+    inputs:
+      target:
+        description: '실행 대상'
+        required: true
+        default: 'both'
+        type: choice
+        options: [both, prod, dev]
+      job:
+        description: '실행할 배치'
+        required: true
+        default: 'daily'
+        type: choice
+        options: [daily, weekly]
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine job type
+        id: job_type
+        run: |
+          # schedule 이벤트: cron 표현식으로 구분
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            DAY=$(date -u +%u)  # 1=Mon ... 7=Sun
+            if [ "$DAY" = "2" ]; then
+              echo "job=weekly" >> $GITHUB_OUTPUT
+            else
+              echo "job=daily" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "job=${{ inputs.job }}" >> $GITHUB_OUTPUT
+          fi
+
+      # ── 운영 ──────────────────────────────────────────────────
+      - name: Reset (운영)
+        if: github.event_name == 'schedule' || inputs.target == 'prod' || inputs.target == 'both'
+        run: |
+          JOB="${{ steps.job_type.outputs.job }}"
+          curl -sf -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET_PROD }}" \
+            "${{ secrets.PROD_URL }}/api/cron/${JOB}-reset"
+
+      # ── Dev ───────────────────────────────────────────────────
+      - name: Reset (Dev)
+        if: inputs.target == 'dev' || inputs.target == 'both'
+        run: |
+          JOB="${{ steps.job_type.outputs.job }}"
+          curl -sf -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET_DEV }}" \
+            "${{ secrets.DEV_URL }}/api/cron/${JOB}-reset"

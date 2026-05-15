@@ -89,8 +89,9 @@ model Character {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  expedition     LoaExpedition   @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+  expedition     LoaExpedition      @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
   characterRaids CharacterRaid[]
+  customItems    CharacterCustomItem[]
 }
 
 // ─── 숙제 ─────────────────────────────────────────────────────────────────────
@@ -111,6 +112,27 @@ model CharacterRaid {
   character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@unique([characterId, raidId, difficulty])
+}
+
+// ─── 커스텀 숙제 ──────────────────────────────────────────────────────────────
+
+model CharacterCustomItem {
+  id          String    @id @default(cuid())
+  characterId String
+  name        String
+  type        String    // 'daily' | 'weekly'
+  image       String?
+  sortOrder   Int       @default(0)
+  done        Boolean   @default(false)
+  restGauge   Int       @default(0)
+  deducted    Boolean   @default(false)
+  resetAt     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, name])
 }
 
 // ─── 그룹 (그룹 기능용, LoA 원정대와 별개) ──────────────────────────────────
