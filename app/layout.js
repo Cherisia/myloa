@@ -1,5 +1,4 @@
 import './globals.css'
-import Script from 'next/script'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import SessionProvider from '@/components/SessionProvider'
 import Navbar from '@/components/Navbar'
@@ -17,17 +16,18 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="ko" suppressHydrationWarning>
+      <head>
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body>
         <SessionProvider session={session}>
           <ThemeProvider>
             <Navbar />
-            {/* adsbygoogle 스크립트 — lg 이상에서만 실질 광고 노출되지만 스크립트는 전역 로드 */}
-            <Script
-              async
-              src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-              crossOrigin="anonymous"
-              strategy="afterInteractive"
-            />
             {/* 외부 컨테이너: lg(1024px+)에서 우측 광고 슬롯 포함 최대 1600px */}
             <div className="mx-auto max-w-[1600px]">
               <div className="flex items-start">

@@ -1,14 +1,12 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
-/**
- * AdSense unit — renders a single <ins> and calls adsbygoogle.push once mounted.
- * Wrap this in a `hidden lg:block` container so it only appears on desktop.
- *
- * Replace data-ad-client / data-ad-slot with your real values before going live.
- */
 export default function AdSense({ slot = 'XXXXXXXXXX', client = 'ca-pub-XXXXXXXXXXXXXXXX' }) {
+  const insRef = useRef(null)
+
   useEffect(() => {
+    const ins = insRef.current
+    if (!ins || ins.getAttribute('data-adsbygoogle-status')) return
     try {
       ;(window.adsbygoogle = window.adsbygoogle || []).push({})
     } catch (_) {}
@@ -16,6 +14,7 @@ export default function AdSense({ slot = 'XXXXXXXXXX', client = 'ca-pub-XXXXXXXX
 
   return (
     <ins
+      ref={insRef}
       className="adsbygoogle"
       style={{ display: 'block' }}
       data-ad-client={client}
