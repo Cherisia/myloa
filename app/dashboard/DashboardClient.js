@@ -2144,9 +2144,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               <Image src={raidData.image} alt={row.raidName} width={18} height={18} className="w-[22px] h-[22px] object-contain flex-shrink-0" />
                             )}
                             <span className={`ns-bold text-gray-900 dark:text-white truncate ${glanceTable ? 'text-[14px] min-[1920px]:text-[14px]' : 'text-[13px] min-[1920px]:text-[13px]'}`}>{row.raidName}</span>
-                            {filteredChars.some(c => (raids[c.id] || []).some(e => e.raidId === row.raidId && e.isGoldCheck)) && (
-                              <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-3 h-3 object-contain flex-shrink-0" />
-                            )}
                           </div>
                         </td>
                         {filteredChars.map(char => {

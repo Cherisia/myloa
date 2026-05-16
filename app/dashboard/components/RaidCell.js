@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { calcGold, calcGoldMore } from '@/lib/raidData'
 import { IconCheck } from '../_icons'
 
@@ -108,6 +109,9 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
             ${moreDone ? 'text-yellow-700 dark:text-yellow-500' : allDone ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-500'}`}>
             {totalGold.toLocaleString()}G
           </span>
+          {entry.isGoldCheck && (
+            <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-3 h-3 object-contain flex-shrink-0" />
+          )}
         </div>
       </div>
     </div>
