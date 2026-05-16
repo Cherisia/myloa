@@ -164,12 +164,15 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
   // 캐릭터별 레이드 자동 배정 미리보기
   const raidsByName = useMemo(() => {
     const map = {}
+    // 같은 원정대에 이미 EX 레이드가 있으면 신규 캐릭터에 배정하지 않음
+    const diffExp = !!(activeTabExpeditionId && (isNewExpedition || (matchedExpeditionId && matchedExpeditionId !== activeTabExpeditionId)))
+    const alreadyHasEx = expeditionHasExRaid && !diffExp
     selectedChars.forEach((char, idx) => {
       const strategy = strategies[char.name] || 'bound'
       const normal   = autoSelectNormalRaids(char, strategy === 'no_gold' ? 'bound' : strategy)
       const entries  = [...normal]
-      // EX 레이드는 골드 전략과 무관하게 최고레벨 캐릭터(idx=0)에 배정
-      if (idx === 0) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
+      // EX 레이드는 원정대 전체에서 1개만 — 기존에 없고 최고레벨 캐릭터(idx=0)일 때만 배정
+      if (idx === 0 && !alreadyHasEx) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
       if (strategy === 'no_gold') {
         // EX 레이드는 골드 해제 불가 — 나머지만 미수령 처리
         map[char.name] = entries.map(e => EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false })
@@ -178,7 +181,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
       }
     })
     return map
-  }, [selectedChars, strategies])
+  }, [selectedChars, strategies, expeditionHasExRaid, activeTabExpeditionId, isNewExpedition, matchedExpeditionId])
 
   const isDifferentExpedition = !!(activeTabExpeditionId && (isNewExpedition || (matchedExpeditionId && matchedExpeditionId !== activeTabExpeditionId)))
   const existingGoldCharCount = isDifferentExpedition ? 0 : existingGoldChars.filter(c => existingStrategies[c.name] !== 'no_gold').length

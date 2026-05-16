@@ -14,7 +14,7 @@ import AutoSetupModal from './modals/AutoSetupModal'
 import AnimatedGold from './components/AnimatedGold'
 import CharGoldBadges from './components/CharGoldBadges'
 import RaidCell from './components/RaidCell'
-import Confetti from './components/Confetti'
+import Confetti, { GoldConfetti } from './components/Confetti'
 
 /** 카드 레이어보다 나중에 깜박이는 img 아이콘을 줄이기 위해 브라우저 캐시에 선적재한다. */
 function collectDashboardImageUrls(chars, raidsByCharId, customByCharId = {}) {
@@ -78,6 +78,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [hasApiKey, setHasApiKey]               = useState(initialHasApiKey)
   const [syncCooldownSec, setSyncCooldownSec]   = useState(0)
   const [showConfetti, setShowConfetti]         = useState(false)
+  const [showGoldConfetti, setShowGoldConfetti] = useState(false)
   const [exRaidError, setExRaidError]           = useState(null) // { raidName, conflictCharName }
   const [cardView, setCardView]                 = useState(true)
 
@@ -101,6 +102,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [lsReady, setLsReady]                   = useState(false) // localStorage 로드 완료 여부
   const [isMobile, setIsMobile]                 = useState(false) // 모바일 여부 (< 768px)
   const wasCompleteRef                          = useRef(false)
+  const wasGoldCompleteRef                      = useRef(false)
+  const confettiInitRef                         = useRef(false)
+  const goldConfettiInitRef                     = useRef(false)
   const tableWrapRef                            = useRef(null)
   const [tableContainerWidth, setTableContainerWidth] = useState(0)
 
@@ -1117,20 +1121,23 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   }, [raids])
 
   // 요약 통계 — activeChars 기준 (계정 탭에 따라 필터링)
-  const { earnedBound, earnedTrade, totalBound, totalTrade, completedCount, totalCount } = useMemo(() => {
+  const { earnedBound, earnedTrade, totalBound, totalTrade, completedCount, totalCount, allCompletedCount, allTotalCount } = useMemo(() => {
     const activeIds = new Set(activeChars.map(c => c.id))
     let earnedBound = 0, earnedTrade = 0
     Object.entries(charGoldMap).forEach(([id, { bound, trade }]) => {
       if (activeIds.has(id)) { earnedBound += bound; earnedTrade += trade }
     })
     let totalBound = 0, totalTrade = 0, completedCount = 0, totalCount = 0
+    let allCompletedCount = 0, allTotalCount = 0
     Object.entries(raids).forEach(([charId, list]) => {
       if (!activeIds.has(charId)) return
       list.forEach(entry => {
-        if (!entry.isGoldCheck) return
         const raid = RAIDS.find(r => r.id === entry.raidId)
         const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
         if (!diff) return
+        allTotalCount++
+        if (entry.gateClears.every(Boolean)) allCompletedCount++
+        if (!entry.isGoldCheck) return
         const allGates = new Array(diff.gates).fill(true)
         totalBound += calcGoldBound(diff, allGates)
         totalTrade += calcGoldTrade(diff, allGates)
@@ -1138,18 +1145,39 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         if (entry.gateClears.every(Boolean)) completedCount++
       })
     })
-    return { earnedBound, earnedTrade, totalBound, totalTrade, completedCount, totalCount }
+    return { earnedBound, earnedTrade, totalBound, totalTrade, completedCount, totalCount, allCompletedCount, allTotalCount }
   }, [charGoldMap, raids, activeChars])
 
-  // 100% 달성 시 폭죽 트리거 (처음 완료되는 순간에만)
+  // 전체 레이드 100% 달성 시 폭죽 트리거 (처음 완료되는 순간에만, 마운트 시 스킵)
   useEffect(() => {
-    const isComplete = totalCount > 0 && completedCount === totalCount
+    const isComplete = allTotalCount > 0 && allCompletedCount === allTotalCount
+    if (!confettiInitRef.current) {
+      confettiInitRef.current = true
+      wasCompleteRef.current = isComplete
+      return
+    }
     if (isComplete && !wasCompleteRef.current) {
       setShowConfetti(true)
       setTimeout(() => setShowConfetti(false), 4000)
     }
     wasCompleteRef.current = isComplete
-  }, [completedCount, totalCount])
+  }, [allCompletedCount, allTotalCount])
+
+  // 골드 레이드 100% 달성 시 골드 폭죽 트리거 (두 바 모드일 때만, 마운트 시 스킵)
+  useEffect(() => {
+    const isTwoBarMode = allTotalCount > totalCount
+    const isGoldComplete = isTwoBarMode && totalCount > 0 && completedCount === totalCount
+    if (!goldConfettiInitRef.current) {
+      goldConfettiInitRef.current = true
+      wasGoldCompleteRef.current = isGoldComplete
+      return
+    }
+    if (isGoldComplete && !wasGoldCompleteRef.current) {
+      setShowGoldConfetti(true)
+      setTimeout(() => setShowGoldConfetti(false), 4000)
+    }
+    wasGoldCompleteRef.current = isGoldComplete
+  }, [completedCount, totalCount, allTotalCount])
 
   return (
     <>
@@ -1186,6 +1214,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
       <div className="space-y-5">
       <Confetti active={showConfetti} />
+      <GoldConfetti active={showGoldConfetti} />
 
       {/* ── 데모 모드 안내 배너 ── */}
       {isDemo && (
@@ -1417,22 +1446,57 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
         {/* 완료 레이드 */}
         <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400">완료 레이드</p>
-            <span className="text-xs min-[1920px]:text-sm ns-bold text-gray-700 dark:text-gray-300">
-              {completedCount} / {totalCount}
-            </span>
-          </div>
-          {/* 프로그레스 바 */}
-          <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden mb-1.5">
-            <div
-              className="h-full rounded-full bg-yellow-400 transition-all duration-500"
-              style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
-            />
-          </div>
-          <p className="ns-extrabold text-xl min-[1920px]:text-2xl text-gray-900 dark:text-white">
-            {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
-          </p>
+          {allTotalCount <= totalCount ? (
+            /* 모든 레이드가 골드 레이드 — 기존 단일 바 */
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400">완료 레이드</p>
+                <span className="text-xs min-[1920px]:text-sm ns-bold text-gray-700 dark:text-gray-300">
+                  {completedCount} / {totalCount}
+                </span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden mb-1.5">
+                <div
+                  className="h-full rounded-full bg-yellow-400 transition-all duration-500"
+                  style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
+                />
+              </div>
+              <p className="ns-extrabold text-xl min-[1920px]:text-2xl text-gray-900 dark:text-white">
+                {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
+              </p>
+            </>
+          ) : (
+            /* 골드 + 전체 두 개 바 */
+            <>
+              <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 mb-2">완료 레이드</p>
+              {/* 골드 레이드 바 */}
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[10px] min-[1920px]:text-xs ns-bold text-yellow-500 dark:text-yellow-400 shrink-0 tabular-nums">골드&nbsp;&nbsp;{completedCount} / {totalCount}</span>
+                <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-yellow-400 transition-all duration-500"
+                    style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
+                  />
+                </div>
+                <span className="text-[10px] min-[1920px]:text-xs text-yellow-500 dark:text-yellow-400 tabular-nums w-7 text-right shrink-0">
+                  {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
+                </span>
+              </div>
+              {/* 전체 레이드 바 */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] min-[1920px]:text-xs ns-bold text-blue-400 shrink-0 tabular-nums">전체&nbsp;&nbsp;{allCompletedCount} / {allTotalCount}</span>
+                <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-blue-400 transition-all duration-500"
+                    style={{ width: allTotalCount > 0 ? `${(allCompletedCount / allTotalCount) * 100}%` : '0%' }}
+                  />
+                </div>
+                <span className="text-[10px] min-[1920px]:text-xs text-blue-400 tabular-nums w-7 text-right shrink-0">
+                  {allTotalCount > 0 ? Math.round((allCompletedCount / allTotalCount) * 100) : 0}%
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </div>
       {/* 노트북/데스크탑 광고 — md 이상에서 요약카드 오른쪽 빈 공간 */}
