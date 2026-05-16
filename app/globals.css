@@ -8,28 +8,28 @@
   --breakpoint-xs: 480px;
 }
 
-/* ── 나눔스퀘어 폰트 ─────────────────────────────────────────── */
+/* ── Pretendard 폰트 ─────────────────────────────────────────── */
 @font-face {
-  font-family: NanumSquareL;
-  src: url('/fonts/NanumSquareL.woff2') format('woff2');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-Light.woff2') format('woff2');
   font-weight: 300;
   font-display: swap;
 }
 @font-face {
-  font-family: NanumSquareR;
-  src: url('/fonts/NanumSquareR.woff2') format('woff2');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-Regular.woff2') format('woff2');
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
-  font-family: NanumSquareB;
-  src: url('/fonts/NanumSquareB.woff2') format('woff2');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-Bold.woff2') format('woff2');
   font-weight: 700;
   font-display: swap;
 }
 @font-face {
-  font-family: NanumSquareEB;
-  src: url('/fonts/NanumSquareEB.woff2') format('woff2');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-ExtraBold.woff2') format('woff2');
   font-weight: 800;
   font-display: swap;
 }
@@ -37,7 +37,7 @@
 /* ── 기본 설정 ───────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
-  font-family: 'NanumSquareR', 'Nanum Gothic', sans-serif;
+  font-family: 'Pretendard', sans-serif;
 }
 
 html {
@@ -49,6 +49,8 @@ body {
   background-color: #f8fafc;
   color: #111827;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .dark body {
@@ -64,10 +66,10 @@ body {
 .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-/* ── 나눔스퀘어 weight 헬퍼 ─────────────────────────────────── */
-.ns-light     { font-family: 'NanumSquareL',  sans-serif; }
-.ns-bold      { font-family: 'NanumSquareB',  sans-serif; }
-.ns-extrabold { font-family: 'NanumSquareEB', sans-serif; }
+/* ── Pretendard weight 헬퍼 ─────────────────────────────────── */
+.ns-light     { font-weight: 300; }
+.ns-bold      { font-weight: 700; }
+.ns-extrabold { font-weight: 800; }
 
 /* ── 직업 아이콘 — 검정 (테마 무관) ─────────────────────────── */
 .class-icon {
