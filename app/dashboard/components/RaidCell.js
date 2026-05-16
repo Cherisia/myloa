@@ -71,16 +71,16 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
               moreFrom === 'bound'
                 ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800/40'
                 : 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800/40'
-            }`} style={{ height: 14, padding: 1.5, gap: 2 }}>
+            }`} style={{ height: 17, padding: 2, gap: 2 }}>
               {moreFrom === 'bound' ? (
                 <>
-                  <span className="text-[7px] ns-bold select-none leading-none pl-1.5 text-orange-500 dark:text-orange-400 whitespace-nowrap">귀속</span>
-                  <div className="flex-shrink-0 rounded-full bg-orange-400 dark:bg-orange-500 shadow" style={{ width: 11, height: 11 }} />
+                  <span className="text-[9px] ns-bold select-none leading-none pl-1.5 text-orange-500 dark:text-orange-400 whitespace-nowrap">귀속</span>
+                  <div className="flex-shrink-0 rounded-full bg-orange-400 dark:bg-orange-500 shadow" style={{ width: 13, height: 13 }} />
                 </>
               ) : (
                 <>
-                  <div className="flex-shrink-0 rounded-full bg-blue-400 dark:bg-blue-500 shadow" style={{ width: 11, height: 11 }} />
-                  <span className="text-[7px] ns-bold select-none leading-none pr-1.5 text-blue-500 dark:text-blue-400 whitespace-nowrap">거래</span>
+                  <div className="flex-shrink-0 rounded-full bg-blue-400 dark:bg-blue-500 shadow" style={{ width: 13, height: 13 }} />
+                  <span className="text-[9px] ns-bold select-none leading-none pr-1.5 text-blue-500 dark:text-blue-400 whitespace-nowrap">거래</span>
                 </>
               )}
             </div>
@@ -101,11 +101,11 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
 
         {/* 난이도 + 골드 행 */}
         <div className="flex items-center gap-0.5">
-          <span className={`text-[8px] ns-bold px-1 py-0.5 rounded-full leading-none tracking-tight flex-shrink-0 ${diffBadge}`}>
+          <span className={`text-[10px] min-[1920px]:text-[10px] ns-bold px-1 py-0.5 rounded-full leading-none tracking-tight flex-shrink-0 ${diffBadge}`}>
             {diff.label}
           </span>
-          <span className={`text-[9px] ns-bold leading-none tabular-nums tracking-tight
-            ${moreDone ? 'text-yellow-700 dark:text-yellow-500' : allDone ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-300 dark:text-gray-700'}`}>
+          <span className={`text-[11px] min-[1920px]:text-[11px] ns-bold leading-none tabular-nums tracking-tight
+            ${moreDone ? 'text-yellow-700 dark:text-yellow-500' : allDone ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-500'}`}>
             {totalGold.toLocaleString()}G
           </span>
         </div>

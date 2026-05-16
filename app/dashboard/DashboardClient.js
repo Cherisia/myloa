@@ -1343,25 +1343,25 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   <div className="min-w-0 flex-1 flex flex-col justify-between h-full">
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <p className="text-xs ns-bold text-gray-800 dark:text-gray-100 truncate">{repChar.name}</p>
+                        <p className="text-xs min-[1920px]:text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{repChar.name}</p>
                       </div>
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500">{repChar.class}</span>
+                        <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-400">{repChar.class}</span>
                         {repChar.itemLevel != null && (
                           <span className="flex items-center gap-0.5">
                             <span className="flex items-center justify-center text-gray-400 dark:text-gray-500"><IconItemLevel /></span>
-                            <span className="text-[10px] ns-bold text-gray-600 dark:text-gray-300">{repChar.itemLevel.toFixed(2)}</span>
+                            <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-200">{repChar.itemLevel.toFixed(2)}</span>
                           </span>
                         )}
                         {repChar.combatPower != null && (
                           <span className="flex items-center gap-0.5">
                             <Image src="/combat-power.svg" alt="" width={10} height={10} unoptimized className="w-[10px] h-[10px] object-contain flex-shrink-0" />
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400">{Math.round(repChar.combatPower).toLocaleString()}</span>
+                            <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-300">{Math.round(repChar.combatPower).toLocaleString()}</span>
                           </span>
                         )}
                       </div>
                     </div>
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-auto pt-3">{activePageId === null ? '전체 캐릭터' : '원정대 캐릭터'} <span className="ns-bold text-gray-600 dark:text-gray-300">{activeChars.length}개</span></p>
+                    <p className="text-[11px] min-[1920px]:text-[13px] text-gray-600 dark:text-gray-400 mt-auto pt-3">{activePageId === null ? '전체 캐릭터' : '원정대 캐릭터'} <span className="ns-bold text-gray-700 dark:text-gray-200">{activeChars.length}개</span></p>
                   </div>
                 ) : (
                   <p className="text-[11px] text-gray-400 dark:text-gray-500">미설정</p>
@@ -1373,28 +1373,28 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
         {/* 이번 주 획득 골드 */}
         <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3">
-          <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">이번 주 획득</p>
+          <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 mb-2">이번 주 획득</p>
           {/* 그리드로 두 행 컬럼 정렬: [뱃지] [spacer] [획득량] [/] [합계G] */}
           <div className="grid items-baseline gap-y-1.5" style={{ gridTemplateColumns: 'auto 1fr auto auto auto', columnGap: '4px' }}>
-            <span className="text-[10px] ns-bold px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400">귀속</span>
+            <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400">귀속</span>
             <span />
-            <AnimatedGold value={earnedBound} className="ns-bold text-sm text-yellow-600 dark:text-yellow-400 tabular-nums text-right" />
-            <span className="text-[10px] text-gray-400 dark:text-gray-500">/</span>
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums text-right">{totalBound.toLocaleString()}G</span>
+            <AnimatedGold value={earnedBound} className="ns-bold text-sm min-[1920px]:text-base text-yellow-600 dark:text-yellow-400 tabular-nums text-right" />
+            <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-400">/</span>
+            <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-400 tabular-nums text-right">{totalBound.toLocaleString()}G</span>
 
-            <span className="text-[10px] ns-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400">거래</span>
+            <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400">거래</span>
             <span />
-            <AnimatedGold value={earnedTrade} className="ns-bold text-sm text-yellow-600 dark:text-yellow-400 tabular-nums text-right" />
-            <span className="text-[10px] text-gray-400 dark:text-gray-500">/</span>
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums text-right">{totalTrade.toLocaleString()}G</span>
+            <AnimatedGold value={earnedTrade} className="ns-bold text-sm min-[1920px]:text-base text-yellow-600 dark:text-yellow-400 tabular-nums text-right" />
+            <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-400">/</span>
+            <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-400 tabular-nums text-right">{totalTrade.toLocaleString()}G</span>
           </div>
         </div>
 
         {/* 완료 레이드 */}
         <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-gray-400 dark:text-gray-500">완료 레이드</p>
-            <span className="text-xs ns-bold text-gray-500 dark:text-gray-400">
+            <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400">완료 레이드</p>
+            <span className="text-xs min-[1920px]:text-sm ns-bold text-gray-700 dark:text-gray-300">
               {completedCount} / {totalCount}
             </span>
           </div>
@@ -1405,7 +1405,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
             />
           </div>
-          <p className="ns-extrabold text-xl text-gray-800 dark:text-gray-100">
+          <p className="ns-extrabold text-xl min-[1920px]:text-2xl text-gray-900 dark:text-white">
             {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
           </p>
         </div>
@@ -1417,7 +1417,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {/* ── 숙제 테이블 / 카드 ── */}
       <div ref={tableWrapRef}>
       {(() => {
-        const COL_RAID = 122
+        const COL_RAID = 160
         const COL_CHAR = 150
 
         const nameSize = (name) => {
@@ -1426,6 +1426,20 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           if (korLen <= 8) return 'text-xs'
           if (korLen <= 12) return 'text-[11px]'
           return 'text-[10px]'
+        }
+        const nameSizeMd = (name) => {
+          const korLen = [...name].filter(c => /[가-힣ᄀ-ᇿ㄰-㆏]/.test(c)).length
+          if (korLen <= 5) return 'md:max-[1920px]:text-[14px]'
+          if (korLen <= 8) return 'md:max-[1920px]:text-[12px]'
+          if (korLen <= 12) return 'md:max-[1920px]:text-[11px]'
+          return 'md:max-[1920px]:text-[10px]'
+        }
+        const nameSizeXl = (name) => {
+          const korLen = [...name].filter(c => /[가-힣ᄀ-ᇿ㄰-㆏]/.test(c)).length
+          if (korLen <= 5) return 'min-[1920px]:text-base'
+          if (korLen <= 8) return 'min-[1920px]:text-[14px]'
+          if (korLen <= 12) return 'min-[1920px]:text-[13px]'
+          return 'min-[1920px]:text-[12px]'
         }
 
         // ── 드래그앤드랍 순서 변경 ────────────────────────────────────────
@@ -1571,19 +1585,19 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     }
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-0.5">
-                        <p className={`${nameSize(char.name)} ns-bold text-gray-900 dark:text-white whitespace-nowrap`}>{char.name}</p>
+                        <p className={`${nameSize(char.name)} ${nameSizeMd(char.name)} ${nameSizeXl(char.name)} ns-bold text-gray-900 dark:text-white whitespace-nowrap`}>{char.name}</p>
                         {charGoldMap[char.id]?.isGoldChar && (
-                          <Image src="/icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" width={10} height={10} className="w-2.5 h-2.5 object-contain flex-shrink-0" />
+                          <Image src="/icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" width={10} height={10} className="w-2.5 h-2.5 md:w-[13px] md:h-[13px] object-contain flex-shrink-0" />
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
+                      <div className="flex items-center gap-1.5 text-[10px] min-[1920px]:text-[12px] text-gray-400 dark:text-gray-500">
                         <span className="flex items-center gap-0.5 flex-shrink-0 text-gray-400 dark:text-gray-500">
-                          <IconItemLevel />
+                          <IconItemLevel className="md:w-4 md:h-4" />
                           <span className="tabular-nums ns-bold text-gray-600 dark:text-gray-300">{char.itemLevel.toFixed(2)}</span>
                         </span>
                         {char.combatPower != null && (
                           <span className="flex items-center gap-0.5 flex-shrink-0">
-                            <IconPower />
+                            <IconPower className="md:w-[13px] md:h-[13px]" />
                             <span className="tabular-nums">{Math.round(char.combatPower).toLocaleString()}</span>
                           </span>
                         )}
@@ -1622,8 +1636,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {orderedDaily.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
-                        <span className="text-[10px] ns-bold text-yellow-700 dark:text-yellow-400">일일 숙제</span>
-                        <span className="text-[10px] text-yellow-500 dark:text-yellow-500">({dailyDoneCount}/{orderedDaily.length})</span>
+                        <span className="text-[10px] md:text-[12px] ns-bold text-yellow-700 dark:text-yellow-400">일일 숙제</span>
+                        <span className="text-[10px] md:text-[12px] text-yellow-500 dark:text-yellow-500">({dailyDoneCount}/{orderedDaily.length})</span>
                       </div>
                       <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
                         {orderedDaily.map(item => {
@@ -1639,9 +1653,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                     checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                                   }`}
                                 >
-                                  {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                                  {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                                   <div className="flex-1 min-w-0">
-                                    <p className={`text-[10px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
+                                    <p className={`text-[10px] md:text-[12px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
                                     <div className="mt-0.5">
                                       <div className="flex gap-px mb-0.5">
                                         {Array.from({ length: 10 }).map((_, i) => (
@@ -1653,13 +1667,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                         ))}
                                       </div>
                                       <div className="flex items-center justify-between">
-                                        <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, -10) }} disabled={gauge <= 0} className="text-[9px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors px-0.5">−</button>
-                                        <span className="text-[9px] tabular-nums ns-bold text-green-500 dark:text-green-400">{gauge}</span>
-                                        <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, 10) }} disabled={gauge >= 100} className="text-[9px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors px-0.5">+</button>
+                                        <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, -10) }} disabled={gauge <= 0} className="text-[9px] md:text-[11px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors px-0.5">−</button>
+                                        <span className="text-[9px] md:text-[11px] tabular-nums ns-bold text-green-500 dark:text-green-400">{gauge}</span>
+                                        <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, item.id, 10) }} disabled={gauge >= 100} className="text-[9px] md:text-[11px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 transition-colors px-0.5">+</button>
                                       </div>
                                     </div>
                                   </div>
-                                  <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                                  <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                     checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
                                   }`}>
                                     {checked && <IconCheck />}
@@ -1676,11 +1690,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
-                              <p className={`flex-1 min-w-0 text-[10px] ns-bold truncate ${
+                              {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
+                              <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
                                 checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
-                              <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                              <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
                               }`}>
                                 {checked && <IconCheck />}
@@ -1695,11 +1709,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {/* ── 주간 레이드 섹션 ── */}
                   <div className="flex-1 flex flex-col">
                     <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
-                      <span className="text-[10px] ns-bold text-yellow-700 dark:text-yellow-400">주간 레이드</span>
-                      <span className="text-[10px] text-yellow-500 dark:text-yellow-500">({raidDoneCount}/{charRaids.length})</span>
+                      <span className="text-[10px] md:text-[12px] ns-bold text-yellow-700 dark:text-yellow-400">주간 레이드</span>
+                      <span className="text-[10px] md:text-[12px] text-yellow-500 dark:text-yellow-500">({raidDoneCount}/{charRaids.length})</span>
                     </div>
                     {charRaids.length === 0 ? (
-                      <div className="py-3 text-center text-[10px] text-gray-300 dark:text-gray-600">레이드 미설정</div>
+                      <div className="py-3 text-center text-[10px] md:text-[12px] text-gray-300 dark:text-gray-600">레이드 미설정</div>
                     ) : (
                       <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
                         {charRaids.map(entry => {
@@ -1726,26 +1740,26 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {raid.image && <Image src={raid.image} alt={raid.name} width={16} height={16} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
+                              {raid.image && <Image src={raid.image} alt={raid.name} width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-0.5">
-                                  <p className={`text-[10px] ns-bold truncate ${allDone ? 'text-yellow-700 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
-                                  {entry.isGoldCheck && <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-2.5 h-2.5 object-contain flex-shrink-0" />}
+                                  <p className={`text-[10px] md:text-[12px] ns-bold truncate ${allDone ? 'text-yellow-700 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
+                                  {entry.isGoldCheck && <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-2.5 h-2.5 md:w-[13px] md:h-[13px] object-contain flex-shrink-0" />}
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  <span className={`text-[8px] ns-bold px-1 py-px rounded leading-tight ${diffBadge}`}>{diff.label}</span>
+                                  <span className={`text-[8px] md:text-[10px] ns-bold px-1 py-px rounded leading-tight ${diffBadge}`}>{diff.label}</span>
                                   {entry.isGoldCheck && (
-                                    <span className={`text-[9px] ns-bold tabular-nums ${
+                                    <span className={`text-[9px] md:text-[11px] ns-bold tabular-nums ${
                                       moreDone ? 'text-yellow-600 dark:text-yellow-500'
                                       : allDone ? 'text-yellow-500 dark:text-yellow-400'
-                                      : 'text-gray-300 dark:text-gray-600'
+                                      : 'text-gray-500 dark:text-gray-400'
                                     }`}>{totalGold.toLocaleString()}G</span>
                                   )}
                                   {/* 더보기 토글 */}
                                   {moreDone && (
                                     <button
                                       onClick={e => { e.stopPropagation(); toggleMoreFrom(char.id, entry.raidId, entry.difficulty) }}
-                                      className={`text-[7px] ns-bold px-1 py-px rounded-full border leading-none ${
+                                      className={`text-[7px] md:text-[9px] ns-bold px-1 py-px rounded-full border leading-none ${
                                         moreFrom === 'bound'
                                           ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800/40 text-orange-500 dark:text-orange-400'
                                           : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/40 text-blue-500 dark:text-blue-400'
@@ -1758,7 +1772,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 </div>
                               </div>
                               {/* 체크박스 — 오른쪽 */}
-                              <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                              <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 moreDone ? 'bg-yellow-500 border-yellow-500 text-yellow-900'
                                 : allDone ? 'bg-yellow-400 border-yellow-400 text-yellow-900'
                                 : 'border-gray-300 dark:border-[#383838]'
@@ -1776,8 +1790,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {weeklyItems.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
-                        <span className="text-[10px] ns-bold text-yellow-700 dark:text-yellow-400">주간 숙제</span>
-                        <span className="text-[10px] text-yellow-500 dark:text-yellow-500">({weeklyDoneCount}/{weeklyItems.length})</span>
+                        <span className="text-[10px] md:text-[12px] ns-bold text-yellow-700 dark:text-yellow-400">주간 숙제</span>
+                        <span className="text-[10px] md:text-[12px] text-yellow-500 dark:text-yellow-500">({weeklyDoneCount}/{weeklyItems.length})</span>
                       </div>
                       <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
                         {weeklyItems.map(item => {
@@ -1790,11 +1804,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] object-contain flex-shrink-0" />}
-                              <p className={`flex-1 min-w-0 text-[10px] ns-bold truncate ${
+                              {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
+                              <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
                                 checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
-                              <div className={`h-4 w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                              <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
                               }`}>
                                 {checked && <IconCheck />}
@@ -1830,8 +1844,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/90 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.03] border-r border-gray-100/90 dark:border-white/[0.06] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
             }>
               <div className="flex items-center gap-1.5">
-                {meta.image && <Image src={meta.image} alt="" width={18} height={18} className="w-[18px] h-[18px] object-contain flex-shrink-0" />}
-                <span className={compact ? 'text-xs ns-bold text-gray-500 dark:text-gray-400 truncate' : 'text-[11px] ns-bold text-gray-600 dark:text-gray-300 truncate'}>{name}</span>
+                {meta.image && <Image src={meta.image} alt="" width={18} height={18} className="w-[22px] h-[22px] object-contain flex-shrink-0" />}
+                <span className={compact ? 'text-[14px] min-[1920px]:text-[14px] ns-bold text-gray-600 dark:text-gray-300 truncate' : 'text-[13px] min-[1920px]:text-[13px] ns-bold text-gray-700 dark:text-gray-200 truncate'}>{name}</span>
               </div>
             </td>
             {chars.map(char => {
@@ -1861,9 +1875,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                             ))}
                           </div>
                           <div className="flex items-center justify-between">
-                            <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, itemId, -10) }} disabled={gauge <= 0} className="text-[8px] text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors">−</button>
-                            <span className="text-[8px] tabular-nums ns-bold text-green-500 dark:text-green-400">{gauge}</span>
-                            <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, itemId, 10) }} disabled={gauge >= 100} className="text-[8px] text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors">+</button>
+                            <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, itemId, -10) }} disabled={gauge <= 0} className="text-[10px] text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors">−</button>
+                            <span className="text-[10px] tabular-nums ns-bold text-green-500 dark:text-green-400">{gauge}</span>
+                            <button type="button" onClick={e => { e.stopPropagation(); adjustRestGauge(char.id, itemId, 10) }} disabled={gauge >= 100} className="text-[10px] text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors">+</button>
                           </div>
                         </div>
                       </div>
@@ -1961,7 +1975,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               >
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-0.5 h-3.5 shrink-0 rounded-full bg-yellow-500 dark:bg-yellow-400" aria-hidden />
-                  <span className="text-[11px] ns-bold text-yellow-900 dark:text-yellow-300 tracking-tight">{label}</span>
+                  <span className="text-[11px] min-[1920px]:text-[11px] ns-bold text-yellow-800 dark:text-yellow-200 tracking-tight">{label}</span>
                 </div>
               </td>
             </tr>
@@ -2008,17 +2022,17 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                             <div className="flex items-center gap-0.5 w-full justify-center overflow-hidden">
                               <span className={`${nameSize(char.name)} ns-bold text-gray-800 dark:text-gray-100 leading-tight text-center truncate`}>{char.name}</span>
                               {charGoldMap[char.id]?.isGoldChar && (
-                                <Image src="/icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" width={8} height={8} className="w-2 h-2 object-contain flex-shrink-0" />
+                                <Image src="/icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" width={8} height={8} className="w-[10px] h-[10px] object-contain flex-shrink-0" />
                               )}
                             </div>
                             <div className="flex flex-col items-start gap-0.5">
                               <div className="flex items-center gap-1">
                                 <span className="flex items-center justify-center flex-shrink-0 text-gray-400 dark:text-gray-500"><IconItemLevel /></span>
-                                <span className="text-[10px] ns-bold text-gray-600 dark:text-gray-300">{char.itemLevel.toFixed(2)}</span>
+                                <span className="text-[10px] min-[1920px]:text-[12px] ns-bold text-gray-700 dark:text-gray-200">{char.itemLevel.toFixed(2)}</span>
                               </div>
                               <div className="flex items-center gap-1">
                                 <Image src="/combat-power.svg" alt="전투력" width={11} height={11} unoptimized className="w-[11px] h-[11px] object-contain flex-shrink-0" />
-                                <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                <span className="text-[10px] min-[1920px]:text-[12px] text-gray-600 dark:text-gray-300">
                                   {char.combatPower != null ? char.combatPower.toFixed(2) : '—'}
                                 </span>
                               </div>
@@ -2081,11 +2095,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         }>
                           <div className="flex items-center gap-1.5">
                             {raidData?.image && (
-                              <Image src={raidData.image} alt={row.raidName} width={18} height={18} className="w-[18px] h-[18px] object-contain flex-shrink-0" />
+                              <Image src={raidData.image} alt={row.raidName} width={18} height={18} className="w-[22px] h-[22px] object-contain flex-shrink-0" />
                             )}
-                            <span className={`ns-bold text-gray-800 dark:text-gray-100 truncate ${glanceTable ? 'text-xs' : 'text-[11px]'}`}>{row.raidName}</span>
+                            <span className={`ns-bold text-gray-900 dark:text-white truncate ${glanceTable ? 'text-[14px] min-[1920px]:text-[14px]' : 'text-[13px] min-[1920px]:text-[13px]'}`}>{row.raidName}</span>
                             {filteredChars.some(c => (raids[c.id] || []).some(e => e.raidId === row.raidId && e.isGoldCheck)) && (
-                              <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-2.5 h-2.5 object-contain flex-shrink-0" />
+                              <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-3 h-3 object-contain flex-shrink-0" />
                             )}
                           </div>
                         </td>
@@ -2168,7 +2182,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       {raidGroups.map((group, gi) => (
                         <div key={group.raidId} className="flex items-center gap-2">
                           {gi > 0 && <div className="w-px h-4 bg-gray-200 dark:bg-[#383838] mx-2 flex-shrink-0" />}
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap mr-0.5">{group.raidName}</span>
+                          <span className="text-[10px] min-[1920px]:text-[12px] text-gray-400 min-[1920px]:text-gray-600 dark:text-gray-500 dark:min-[1920px]:text-gray-300 whitespace-nowrap mr-0.5">{group.raidName}</span>
                           <div className="flex items-center gap-1">
                             {group.diffs.map(r => {
                               const isActive = selectedRaid?.raidId === r.raidId && selectedRaid?.diffKey === r.diffKey
@@ -2176,12 +2190,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 <button
                                   key={r.diffKey}
                                   onClick={() => setSelectedRaid(isActive ? null : { raidId: r.raidId, diffKey: r.diffKey })}
-                                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] ns-bold transition-all ${diffBg(r.diffKey, isActive)}`}
+                                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] min-[1920px]:text-[12px] ns-bold min-[1920px]:font-extrabold transition-all ${diffBg(r.diffKey, isActive)}`}
                                 >
                                   <span>{r.diffLabel}</span>
                                   <span className="inline-flex items-center justify-center w-4">
                                     {r.incomplete > 0 ? (
-                                      <span className={`tabular-nums text-[9px] ns-bold ${isActive ? 'opacity-70' : 'text-gray-400 dark:text-gray-500'}`}>
+                                      <span className={`tabular-nums text-[9px] min-[1920px]:text-[11px] ns-bold ${isActive ? 'opacity-70' : 'text-gray-400 dark:text-gray-500'}`}>
                                         {r.incomplete}
                                       </span>
                                     ) : (
