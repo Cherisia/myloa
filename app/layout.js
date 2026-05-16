@@ -2,7 +2,6 @@ import './globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import SessionProvider from '@/components/SessionProvider'
 import Navbar from '@/components/Navbar'
-import AdSense from '@/components/AdSense'
 import { auth } from '@/lib/auth'
 
 export const metadata = {
@@ -17,12 +16,6 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-          crossOrigin="anonymous"
-        />
       </head>
       <body>
         <SessionProvider session={session}>
@@ -32,7 +25,7 @@ export default async function RootLayout({ children }) {
             <div className="2xl:flex 2xl:items-start 2xl:gap-4 2xl:px-4">
               {/* 좌측 사이드바 — 2xl only (160×600 sticky) */}
               <aside className="hidden 2xl:block w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden" style={{ minHeight: '600px' }}>
-                <AdSense slot="XXXXXXXXXX" client="ca-pub-XXXXXXXXXXXXXXXX" />
+                <div style={{ width: '160px', minHeight: '600px' }} />
               </aside>
               {/* 본문 */}
               <main className="flex-1 min-w-0 px-4 py-6">
@@ -40,7 +33,7 @@ export default async function RootLayout({ children }) {
               </main>
               {/* 우측 사이드바 — 2xl only (160×600 sticky) */}
               <aside className="hidden 2xl:block w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden" style={{ minHeight: '600px' }}>
-                <AdSense slot="XXXXXXXXXX" client="ca-pub-XXXXXXXXXXXXXXXX" />
+                <div style={{ width: '160px', minHeight: '600px' }} />
               </aside>
             </div>
           </ThemeProvider>

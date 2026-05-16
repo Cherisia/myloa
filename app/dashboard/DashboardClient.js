@@ -15,7 +15,6 @@ import AnimatedGold from './components/AnimatedGold'
 import CharGoldBadges from './components/CharGoldBadges'
 import RaidCell from './components/RaidCell'
 import Confetti from './components/Confetti'
-import AdSense from '@/components/AdSense'
 
 /** 카드 레이어보다 나중에 깜박이는 img 아이콘을 줄이기 위해 브라우저 캐시에 선적재한다. */
 function collectDashboardImageUrls(chars, raidsByCharId, customByCharId = {}) {
@@ -1412,9 +1411,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
       </div>
       {/* 노트북/데스크탑 광고 — md 이상에서 요약카드 오른쪽 빈 공간 */}
-      <div className="hidden md:flex flex-1 min-w-0 overflow-hidden">
-        <AdSense slot="XXXXXXXXXX" client="ca-pub-XXXXXXXXXXXXXXXX" />
-      </div>
+      <div className="hidden md:flex flex-1 min-w-0 overflow-hidden" />
       </div>
 
       {/* ── 숙제 테이블 / 카드 ── */}
