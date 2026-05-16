@@ -932,6 +932,24 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         })
       }
 
+      // EX 레이드 중복 해소: 새 캐릭터가 EX를 받으면 같은 원정대 기존 캐릭터의 EX 제거
+      const exRemovals = {}
+      if (!isManual) {
+        addedChars.forEach(c => {
+          if (!(newRaids[c.id] || []).some(e => EX_RAID_IDS.has(e.raidId))) return
+          const expId = c.expeditionId || 'default'
+          chars.filter(existing =>
+            (existing.expeditionId || 'default') === expId &&
+            (raids[existing.id] || []).some(e => EX_RAID_IDS.has(e.raidId))
+          ).forEach(existing => {
+            ;(raids[existing.id] || [])
+              .filter(e => EX_RAID_IDS.has(e.raidId))
+              .forEach(e => deleteRaid(existing.id, e.raidId, e.difficulty))
+            exRemovals[existing.id] = (raids[existing.id] || []).filter(e => !EX_RAID_IDS.has(e.raidId))
+          })
+        })
+      }
+
       // 사용자가 명시적으로 미수령 지정한 기존 캐릭터 먼저 처리
       const existingGoldRevocations = {}
       const userOverriddenIds = new Set(Object.keys(existingGoldOverrides))
@@ -1004,12 +1022,20 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         entries.forEach(entry => persistRaid(charId, entry))
       })
       Object.entries(existingGoldRevocations).forEach(([charId, entries]) => {
-        entries.forEach(entry => persistRaid(charId, entry))
+        entries.forEach(entry => {
+          if (exRemovals[charId] && EX_RAID_IDS.has(entry.raidId)) return
+          persistRaid(charId, entry)
+        })
       })
 
       // 상태 일괄 업데이트
       setChars(sortChars(data))
       const allRaidUpdates = { ...newRaids, ...existingGoldRevocations }
+      Object.entries(exRemovals).forEach(([charId, entriesWithoutEx]) => {
+        allRaidUpdates[charId] = allRaidUpdates[charId]
+          ? allRaidUpdates[charId].filter(e => !EX_RAID_IDS.has(e.raidId))
+          : entriesWithoutEx
+      })
       if (Object.keys(allRaidUpdates).length  > 0) setRaids(prev  => ({ ...prev, ...allRaidUpdates  }))
       if (Object.keys(newCustom).length > 0) setCustomItems(prev => ({ ...prev, ...newCustom }))
     } catch (e) { console.error('[addChars]', e) } finally {

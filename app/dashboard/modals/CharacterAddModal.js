@@ -205,7 +205,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
       const normal   = autoSelectNormalRaids(char, strategy === 'no_gold' ? 'bound' : strategy)
       const entries  = [...normal]
       // EX 레이드는 골드 전략과 무관하게 최고레벨 캐릭터(idx=0)에 배정
-      if (idx === 0 && !expeditionHasExRaid) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
+      if (idx === 0) { const ex = autoSelectExRaid(char); if (ex) entries.unshift(ex) }
       if (strategy === 'no_gold') {
         // EX 레이드는 골드 해제 불가 — 나머지만 미수령 처리
         map[char.name] = entries.map(e => EX_RAID_IDS.has(e.raidId) ? e : { ...e, isGoldCheck: false })
