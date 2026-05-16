@@ -61,6 +61,9 @@ body {
 ::-webkit-scrollbar-thumb { border-radius: 9999px; background: #d1d5db; }
 .dark ::-webkit-scrollbar-thumb { background: #444444; }
 
+.scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
 /* ── 나눔스퀘어 weight 헬퍼 ─────────────────────────────────── */
 .ns-light     { font-family: 'NanumSquareL',  sans-serif; }
 .ns-bold      { font-family: 'NanumSquareB',  sans-serif; }

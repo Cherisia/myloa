@@ -1181,10 +1181,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       )}
 
       {/* ── 헤더 ── */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
           {/* 원정대 페이지 탭 */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5 flex-nowrap md:flex-wrap"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {/* 전체보기 탭 */}
             <button
               onClick={() => { setActivePageId(null); setEditingPageId(null) }}
@@ -1294,16 +1295,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             </h1>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 gap-1.5 md:flex md:flex-wrap md:gap-2">
           <button onClick={() => setShowRaidSettings(true)}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors whitespace-nowrap flex-shrink-0">
+            className="flex items-center justify-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-2.5 md:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
             </svg>
             숙제 설정
           </button>
           <button onClick={() => setShowCharEdit(true)}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors whitespace-nowrap flex-shrink-0">
+            className="flex items-center justify-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-2.5 md:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
             </svg>
@@ -1312,7 +1313,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           <button
             onClick={() => isLoggedIn ? (chars.length === 0 ? setShowNoChar(true) : syncChars()) : setShowLoginGuide(true)}
             disabled={isLoggedIn && (syncing || syncCooldownSec > 0)}
-            className="flex items-center gap-1.5 rounded border border-gray-200 dark:hover:bg-[#2a2a2a] dark:border-[#383838] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 transition-colors whitespace-nowrap flex-shrink-0">
+            className="flex items-center justify-center gap-1.5 rounded border border-gray-200 dark:hover:bg-[#2a2a2a] dark:border-[#383838] px-3 py-2.5 md:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 active:scale-95 transition-all whitespace-nowrap">
             <span className={isLoggedIn && syncing ? 'animate-spin' : ''}><IconRefresh /></span>
             {isLoggedIn && syncing ? '갱신 중…' : '캐릭터 갱신'}
           </button>
@@ -1321,9 +1322,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
       {/* ── 요약 카드 + 광고 배너 ── */}
       <div className="flex items-stretch gap-3 -mt-3">
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 sm:max-w-[50%]">
+      <div className="grid grid-cols-1 gap-2 w-full md:grid-cols-3 md:gap-3 md:max-w-[50%]">
         {/* 원정대 캐릭터 */}
-        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 flex flex-col">
+        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 flex flex-col min-h-[80px] md:min-h-0">
           {isLoggedIn && activeChars.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full gap-1.5 py-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600">
@@ -1415,7 +1416,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       </div>
 
       {/* ── 숙제 테이블 / 카드 ── */}
-      <div ref={tableWrapRef}>
+      <div ref={tableWrapRef} className="overflow-x-auto scrollbar-hide md:overflow-x-visible">
       {(() => {
         const COL_RAID = 160
         const COL_CHAR = 150
@@ -2178,7 +2179,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     return acc
                   }, [])
                   return (
-                    <div className="flex flex-wrap items-center gap-y-2 px-3 py-2.5">
+                    <div className="flex items-center gap-y-2 px-3 py-2.5 flex-wrap">
                       {raidGroups.map((group, gi) => (
                         <div key={group.raidId} className="flex items-center gap-2">
                           {gi > 0 && <div className="w-px h-4 bg-gray-200 dark:bg-[#383838] mx-2 flex-shrink-0" />}
@@ -2190,7 +2191,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 <button
                                   key={r.diffKey}
                                   onClick={() => setSelectedRaid(isActive ? null : { raidId: r.raidId, diffKey: r.diffKey })}
-                                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] min-[1920px]:text-[12px] ns-bold min-[1920px]:font-extrabold transition-all ${diffBg(r.diffKey, isActive)}`}
+                                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] min-[1920px]:text-[12px] ns-bold min-[1920px]:font-extrabold transition-all whitespace-nowrap ${diffBg(r.diffKey, isActive)}`}
                                 >
                                   <span>{r.diffLabel}</span>
                                   <span className="inline-flex items-center justify-center w-4">

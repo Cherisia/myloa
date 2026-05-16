@@ -33,9 +33,9 @@ const IconSearch = () => (
 
 function DemoLoginModal({ onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40">
       <div
-        className="w-full max-w-xs rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl"
+        className="w-full max-w-xs rounded-t-2xl sm:rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl"
         onClick={e => e.stopPropagation()}
       >
         <div className="px-6 py-6 text-center space-y-3">

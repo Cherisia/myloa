@@ -12,7 +12,7 @@ import { autoSelectNormalRaids, autoSelectExRaid } from '../_raidHelpers'
 function ApiKeyGuideModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-black/30">
-      <div className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-sm rounded-t-2xl sm:rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">API 키 발급 가이드</span>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
@@ -257,7 +257,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
   if (step === 'setup') {
     return (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-        <div className="w-full max-w-2xl rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[88vh]" onClick={e => e.stopPropagation()}>
+        <div className="w-full max-w-2xl rounded-t-2xl sm:rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90dvh]" onClick={e => e.stopPropagation()}>
           {/* 헤더 */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
             <div>
@@ -489,7 +489,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
   // ── 스텝 1: 캐릭터 검색 ────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-      <div className="w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-t-2xl sm:rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">캐릭터 추가</span>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
@@ -499,7 +499,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
           <div>
             <label className="block text-xs ns-bold text-gray-500 dark:text-gray-400 mb-1.5">캐릭터명</label>
             <input
-              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
+              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-[16px] bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
               value={charName} onChange={e => setCharName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && search()}
               placeholder="보유 캐릭터명 아무거나 입력" autoFocus
@@ -523,7 +523,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
             </div>
             <input
               type="text"
-              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-sm font-mono bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
+              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-[16px] font-mono bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
               value={apiKey} onChange={e => { setApiKey(e.target.value); setKeySaved(false) }}
               onKeyDown={e => e.key === 'Enter' && search()}
             />
