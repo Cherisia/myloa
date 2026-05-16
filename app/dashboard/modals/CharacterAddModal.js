@@ -94,7 +94,6 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
   const [isNewExpedition,      setIsNewExpedition]      = useState(false)
   const [matchedExpeditionId,  setMatchedExpeditionId]  = useState(null)
   const [targetTabName,        setTargetTabName]        = useState(null)   // 저장될 탭 이름 (null = 새 탭)
-  const [searchCooldownSec,    setSearchCooldownSec]    = useState(0)
 
   // localStorage에서 API 키 복원 (계정 등록 여부와 무관하게 항상)
   useEffect(() => {
@@ -102,38 +101,9 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
     if (saved) { setApiKey(saved); setKeySaved(true) }
   }, [])
 
-  // 개인·DB 키 없이 검색(공용 키) 시 쿨다운 초기화 — 로그인 여부와 무관
-  useEffect(() => {
-    if (hasApiKey) return
-    try {
-      const lastAt = parseInt(localStorage.getItem('myloa_last_search_at') || '0', 10)
-      const remain = Math.ceil((60_000 - (Date.now() - lastAt)) / 1000)
-      if (remain > 0) setSearchCooldownSec(remain)
-    } catch {}
-  }, [hasApiKey])
-
-  // 검색 쿨다운 카운트다운
-  useEffect(() => {
-    if (searchCooldownSec <= 0) return
-    const t = setTimeout(() => setSearchCooldownSec(s => Math.max(0, s - 1)), 1000)
-    return () => clearTimeout(t)
-  }, [searchCooldownSec])
-
   const search = async () => {
     if (!charName.trim()) return setError('캐릭터명을 입력하세요')
-    // 입력/DB에 개인 키가 없을 때만(공용 키 검색) 1분 쿨다운 — 입력란에 키를 쓴 경우는 제한 없음
-    const usesSharedKeyOnly = !apiKey.trim() && !hasApiKey
-    if (usesSharedKeyOnly) {
-      const COOLDOWN = 60_000
-      try {
-        const lastAt = parseInt(localStorage.getItem('myloa_last_search_at') || '0', 10)
-        const remain = Math.ceil((COOLDOWN - (Date.now() - lastAt)) / 1000)
-        if (remain > 0) {
-          setSearchCooldownSec(remain)
-          return
-        }
-      } catch {}
-    }
+    if (!apiKey.trim() && !hasApiKey) return setError('로스트아크 API 키를 입력해주세요')
     setLoading(true); setError(''); setResults(null); setSelected(new Set()); setIsNewExpedition(false); setMatchedExpeditionId(null); setTargetTabName(null)
     try {
       const loaParams = new URLSearchParams({ characterName: charName.trim() })
@@ -141,12 +111,6 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
       const res  = await fetch(`/api/loa?${loaParams}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '알 수 없는 오류')
-      if (usesSharedKeyOnly) {
-        try {
-          localStorage.setItem('myloa_last_search_at', String(Date.now()))
-          setSearchCooldownSec(60)
-        } catch {}
-      }
       if (apiKey.trim()) {
         localStorage.setItem(LOA_KEY_STORAGE, apiKey.trim())
         setKeySaved(true)
@@ -535,7 +499,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
               <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                <span className="ns-bold">API 키 미등록 상태입니다.</span> 캐릭터 검색과 갱신이 분당 1회로 제한됩니다.
+                <span className="ns-bold">API 키를 입력해야 캐릭터 검색을 사용할 수 있습니다.</span>
                 {isLoggedIn && (
                   <>
                     <br />
@@ -548,11 +512,11 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
 
           {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
 
-          <button onClick={search} disabled={loading || searchCooldownSec > 0}
+          <button onClick={search} disabled={loading}
             className="w-full rounded border border-gray-200 dark:border-[#383838] py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
             {loading ? (
               <><svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>검색 중…</>
-            ) : searchCooldownSec > 0 ? `재검색 가능 (${searchCooldownSec}초)` : '원정대 캐릭터 검색'}
+            ) : '원정대 캐릭터 검색'}
           </button>
         </div>
 

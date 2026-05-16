@@ -120,9 +120,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     }))
   }, [chars, expNames])
 
-  // API 키 미등록 시 sync 쿨다운 초기화 (localStorage 기반)
+  // sync 쿨다운 초기화 (localStorage 기반)
   useEffect(() => {
-    if (hasApiKey || !isLoggedIn) return
+    if (!isLoggedIn) return
     try {
       const lastAt  = parseInt(localStorage.getItem('myloa_last_sync_at') || '0', 10)
       const remain  = Math.ceil((60_000 - (Date.now() - lastAt)) / 1000)
@@ -1046,16 +1046,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   // 전체 캐릭터 갱신
   const syncChars = async () => {
     if (syncing) return
-    if (!hasApiKey) {
-      const COOLDOWN = 60_000
-      try {
-        const lastAt = parseInt(localStorage.getItem('myloa_last_sync_at') || '0', 10)
-        const remain = Math.ceil((COOLDOWN - (Date.now() - lastAt)) / 1000)
-        if (remain > 0) { setSyncCooldownSec(remain); return }
-        localStorage.setItem('myloa_last_sync_at', String(Date.now()))
-        setSyncCooldownSec(60)
-      } catch {}
-    }
+    const COOLDOWN = 60_000
+    try {
+      const lastAt = parseInt(localStorage.getItem('myloa_last_sync_at') || '0', 10)
+      const remain = Math.ceil((COOLDOWN - (Date.now() - lastAt)) / 1000)
+      if (remain > 0) { setSyncCooldownSec(remain); return }
+      localStorage.setItem('myloa_last_sync_at', String(Date.now()))
+      setSyncCooldownSec(60)
+    } catch {}
     setSyncing(true)
     try {
       const res  = await fetch('/api/characters/sync', { method: 'POST' })
