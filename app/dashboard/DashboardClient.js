@@ -1564,7 +1564,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
           const ghost = document.createElement('div')
           ghost.setAttribute('aria-hidden', 'true')
-          ghost.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${COL_CHAR}px;background:${col.bg};border:2px solid ${_accentBar};border-radius:8px;box-shadow:0 24px 56px rgba(0,0,0,0.35),0 8px 20px rgba(0,0,0,0.2);overflow:hidden;font-family:NanumSquareR,sans-serif;pointer-events:none;`
+          ghost.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${COL_CHAR}px;background:${col.bg};border:2px solid ${_accentBar};border-radius:8px;box-shadow:0 24px 56px rgba(0,0,0,0.35),0 8px 20px rgba(0,0,0,0.2);overflow:hidden;font-family:Pretendard,sans-serif;pointer-events:none;`
 
           // 캐릭터 헤더
           const hdr = document.createElement('div')
