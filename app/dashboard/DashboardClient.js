@@ -1630,6 +1630,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       trade={charGoldMap[char.id]?.trade ?? 0}
                       boundTotal={charGoldMap[char.id]?.boundTotal ?? 0}
                       tradeTotal={charGoldMap[char.id]?.tradeTotal ?? 0}
+                      cardMode
                     />
                   </div>
 
