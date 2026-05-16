@@ -66,7 +66,7 @@ body {
 .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-/* ── Pretendard weight 헬퍼 (.ns-* 는 기존 네이밍 유지) ──────── */
+/* ── Pretendard weight 헬퍼 ─────────────────────────────────── */
 .ns-light     { font-weight: 300; }
 .ns-bold      { font-weight: 700; }
 .ns-extrabold { font-weight: 800; }
