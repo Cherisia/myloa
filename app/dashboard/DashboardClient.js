@@ -1785,17 +1785,38 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                   )}
                                   {/* 더보기 토글 */}
                                   {moreDone && (
-                                    <button
-                                      onClick={e => { e.stopPropagation(); toggleMoreFrom(char.id, entry.raidId, entry.difficulty) }}
-                                      className={`text-[7px] md:text-[9px] ns-bold px-1 py-px rounded-full border leading-none ${
+                                    <div className="relative group/moretip">
+                                      <button
+                                        onClick={e => { e.stopPropagation(); toggleMoreFrom(char.id, entry.raidId, entry.difficulty) }}
+                                        className="active:scale-95 transition-transform block"
+                                        style={{ WebkitTapHighlightColor: 'transparent' }}
+                                      >
+                                        <div className={`flex items-center rounded-full border transition-colors duration-300 ${
+                                          moreFrom === 'bound'
+                                            ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800/40'
+                                            : 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800/40'
+                                        }`} style={{ height: 17, padding: 2, gap: 2 }}>
+                                          {moreFrom === 'bound' ? (
+                                            <>
+                                              <span className="text-[9px] ns-bold select-none leading-none pl-1.5 text-orange-500 dark:text-orange-400 whitespace-nowrap">귀속</span>
+                                              <div className="flex-shrink-0 rounded-full bg-orange-400 dark:bg-orange-500 shadow" style={{ width: 13, height: 13 }} />
+                                            </>
+                                          ) : (
+                                            <>
+                                              <div className="flex-shrink-0 rounded-full bg-blue-400 dark:bg-blue-500 shadow" style={{ width: 13, height: 13 }} />
+                                              <span className="text-[9px] ns-bold select-none leading-none pr-1.5 text-blue-500 dark:text-blue-400 whitespace-nowrap">거래</span>
+                                            </>
+                                          )}
+                                        </div>
+                                      </button>
+                                      <div className={`pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-[8px] ns-bold shadow-md opacity-0 group-hover/moretip:opacity-100 transition-opacity z-10 ${
                                         moreFrom === 'bound'
-                                          ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800/40 text-orange-500 dark:text-orange-400'
-                                          : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/40 text-blue-500 dark:text-blue-400'
-                                      }`}
-                                      title={`더보기 -${moreGold.toLocaleString()}G`}
-                                    >
-                                      {moreFrom === 'bound' ? '귀속' : '거래'}더보기
-                                    </button>
+                                          ? 'bg-orange-50 dark:bg-orange-950/60 border-orange-200 dark:border-orange-800/50 text-orange-600 dark:text-orange-300'
+                                          : 'bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800/50 text-sky-600 dark:text-sky-300'
+                                      }`}>
+                                        더보기 -{moreGold.toLocaleString()}G
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
                               </div>
