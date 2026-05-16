@@ -2,17 +2,16 @@
 
 import Image from 'next/image'
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { CUSTOM_MAX, HAL_MIN_LEVEL } from '../_constants'
+import { CUSTOM_MAX, HAL_MIN_LEVEL, KURZAN_NAMES, getKurzanPreset } from '../_constants'
 import { BYNN_ARK_ICONS } from '../_bynnArkIcons'
 import { IconPlus, IconGrip } from '../_icons'
 import BynnArkIconPicker from './BynnArkIconPicker'
 
-const PRESET_ITEMS = [
-  { name: '쿠르잔 전선', type: 'daily',  image: '/schedule/kurzan.png'   },
-  { name: '가디언 토벌', type: 'daily',  image: '/schedule/guardian.png' },
+const NON_KURZAN_PRESETS = [
+  { name: '가디언 토벌',   type: 'daily',  image: '/schedule/guardian.png' },
   { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
-  { name: '낙원',        type: 'weekly', image: '/schedule/paradise.png'  },
-  { name: '큐브',        type: 'weekly', image: '/schedule/cube.webp'      },
+  { name: '낙원',          type: 'weekly', image: '/schedule/paradise.png'  },
+  { name: '큐브',          type: 'weekly', image: '/schedule/cube.webp'     },
 ]
 
 /**
@@ -40,6 +39,9 @@ export default function CustomItemsEditor({
 
   const charItems     = (selectedChar ? customItems[selectedChar.id] : null) || []
   const charItemNames = useMemo(() => new Set(charItems.map(it => it.name)), [charItems])
+
+  const kurzanPreset = getKurzanPreset(selectedChar?.itemLevel)
+  const presetItems  = [kurzanPreset, ...NON_KURZAN_PRESETS]
 
   const multiCharNames = useMemo(() => {
     const counts = new Map()
@@ -83,10 +85,18 @@ export default function CustomItemsEditor({
   }
   const handlePresetAll = (e, preset) => {
     e.stopPropagation()
+    const isKurzan = KURZAN_NAMES.has(preset.name)
     const eligible = preset.name === '할의 모래시계'
       ? chars.filter(char => (char.itemLevel || 0) >= HAL_MIN_LEVEL)
       : chars
-    eligible.forEach(char => onAdd(char.id, preset.name, preset.type, preset.image))
+    eligible.forEach(char => {
+      if (isKurzan) {
+        const cp = getKurzanPreset(char.itemLevel)
+        onAdd(char.id, cp.name, cp.type, cp.image)
+      } else {
+        onAdd(char.id, preset.name, preset.type, preset.image)
+      }
+    })
     inputRef.current?.focus()
   }
 
@@ -167,7 +177,7 @@ export default function CustomItemsEditor({
           </div>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
-          {PRESET_ITEMS.map(preset => {
+          {presetItems.map(preset => {
             const already = charItemNames.has(preset.name)
             const levelLocked = preset.name === '할의 모래시계' && (selectedChar?.itemLevel || 0) < HAL_MIN_LEVEL
             return (

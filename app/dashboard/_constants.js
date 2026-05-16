@@ -21,9 +21,20 @@ export const DIFF_COLOR  = {
 // 할의 모래시계 아이템 레벨 제한
 export const HAL_MIN_LEVEL = 1730
 
-// 캐릭터 추가 시 자동으로 붙는 프리셋
+// 쿠르잔 전선 계열 아이템 레벨 기준
+export const CHAOS_RIFT_MIN  = 1730  // 혼돈의 균열
+export const KURZAN_FRONT_MIN = 1640 // 쿠르잔 전선
+
+/** 아이템 레벨에 따라 알맞은 쿠르잔 전선 계열 프리셋 반환 */
+export function getKurzanPreset(itemLevel) {
+  const lv = itemLevel || 0
+  if (lv >= CHAOS_RIFT_MIN)   return { name: '혼돈의 균열', type: 'daily', image: '/schedule/chaosrift.png' }
+  if (lv >= KURZAN_FRONT_MIN) return { name: '쿠르잔 전선', type: 'daily', image: '/schedule/kurzan.png'    }
+  return                              { name: '카오스 던전', type: 'daily', image: '/icons/misc16.png'       }
+}
+
+// 캐릭터 추가 시 자동으로 붙는 프리셋 (쿠르잔 계열은 getKurzanPreset으로 별도 처리)
 export const AUTO_PRESETS = [
-  { name: '쿠르잔 전선',  type: 'daily',  image: '/schedule/kurzan.png'   },
   { name: '가디언 토벌',  type: 'daily',  image: '/schedule/guardian.png' },
   { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
   { name: '낙원',         type: 'weekly', image: '/schedule/paradise.png'  },
@@ -73,11 +84,14 @@ export const CLASS_ICON = {
 }
 export const getClassIcon = (cls) => CLASS_ICON[cls] ? `/class/${CLASS_ICON[cls]}.svg` : null
 
-// 휴식 게이지가 적용되는 커스텀 숙제 항목 이름
-export const REST_GAUGE_NAMES = new Set(['쿠르잔 전선', '가디언 토벌'])
+/** 쿠르잔 전선 계열 항목 이름 집합 */
+export const KURZAN_NAMES = new Set(['혼돈의 균열', '쿠르잔 전선', '카오스 던전'])
 
-/** 일일 숙제 카드·표에서 쿠르잔 → 가디언 고정 순서 */
-export const DAILY_PRESET_ORDER = ['쿠르잔 전선', '가디언 토벌']
+// 휴식 게이지가 적용되는 커스텀 숙제 항목 이름 (쿠르잔 전선 계열 포함)
+export const REST_GAUGE_NAMES = new Set(['혼돈의 균열', '쿠르잔 전선', '카오스 던전', '가디언 토벌'])
+
+/** 일일 숙제 카드·표에서 쿠르잔 계열 → 가디언 고정 순서 */
+export const DAILY_PRESET_ORDER = ['혼돈의 균열', '쿠르잔 전선', '카오스 던전', '가디언 토벌']
 
 /** 캐릭터 커스텀 목록을 일일 섹션 표시 순으로 정렬 */
 export function orderedDailyCustomItems(list) {

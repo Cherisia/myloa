@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import DiscordIcon from '@/components/DiscordIcon'
 import { RAIDS, CLASS_COLOR, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
-import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, DAILY_PRESET_ORDER, orderedDailyCustomItems, isWeeklyCustomItem, getClassIcon, CUSTOM_MAX } from './_constants'
+import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, KURZAN_NAMES, DAILY_PRESET_ORDER, orderedDailyCustomItems, isWeeklyCustomItem, getClassIcon, getKurzanPreset, CUSTOM_MAX } from './_constants'
 import { IconCrown, IconPlus, IconCheck, IconRefresh, IconInfo, IconClass, IconItemLevel, IconPower, IconGrip } from './_icons'
 import { saveRaid, deleteRaid, computeAutoRaids } from './_raidHelpers'
 import RaidSettingsModal from './modals/RaidSettingsModal'
@@ -872,7 +872,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       demoChars.forEach(dc => {
         const existing    = customItems[dc.id] || []
         const existingSet = new Set(existing.map(it => it.name))
-        const toAdd       = AUTO_PRESETS.filter(p => !existingSet.has(p.name) && (p.name !== '할의 모래시계' || dc.itemLevel >= 1730))
+        const toAdd       = [getKurzanPreset(dc.itemLevel), ...AUTO_PRESETS].filter(p => !existingSet.has(p.name) && (p.name !== '할의 모래시계' || dc.itemLevel >= 1730))
         if (toAdd.length > 0)
           demoCustom[dc.id] = [
             ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${dc.id}`, ...p })),
@@ -989,7 +989,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       for (const c of addedChars) {
         const existing    = customItems[c.id] || []
         const existingSet = new Set(existing.map(it => it.name))
-        const toAdd       = AUTO_PRESETS.filter(p => !existingSet.has(p.name) && (p.name !== '할의 모래시계' || c.itemLevel >= 1730))
+        const toAdd       = [getKurzanPreset(c.itemLevel), ...AUTO_PRESETS].filter(p => !existingSet.has(p.name) && (p.name !== '할의 모래시계' || c.itemLevel >= 1730))
         if (toAdd.length > 0) {
           if (!isLoggedIn) {
             newCustom[c.id] = [
@@ -1962,6 +1962,24 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
           const colSpan = filteredChars.length + 1
           const restDailyMap = buildCustomHomeworkRowMap(filteredChars, customItems, (it) => REST_GAUGE_NAMES.has(it.name))
+          // 쿠르잔 계열(혼돈의 균열·쿠르잔 전선·카오스 던전)을 한 행으로 병합 — 맨 앞 캐릭터의 이름·아이콘 대표 사용
+          {
+            let primaryKey = null
+            const toDelete = []
+            for (const [key] of restDailyMap) {
+              if (KURZAN_NAMES.has(key)) {
+                if (!primaryKey) primaryKey = key
+                else toDelete.push(key)
+              }
+            }
+            if (primaryKey) {
+              const primary = restDailyMap.get(primaryKey)
+              for (const key of toDelete) {
+                restDailyMap.get(key).charMap.forEach((id, cid) => primary.charMap.set(cid, id))
+                restDailyMap.delete(key)
+              }
+            }
+          }
           const otherDailyMap = buildCustomHomeworkRowMap(
             filteredChars,
             customItems,
