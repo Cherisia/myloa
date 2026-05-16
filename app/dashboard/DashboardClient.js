@@ -1210,7 +1210,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           {/* 원정대 페이지 탭 */}
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5 flex-nowrap md:flex-wrap"
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1.5 pr-2 flex-nowrap md:flex-wrap"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {/* 전체보기 탭 */}
             <button
