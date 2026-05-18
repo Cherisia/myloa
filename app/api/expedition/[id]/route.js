@@ -1,10 +1,15 @@
-// GET    /api/expedition/[id] → 그룹 상세
-// PATCH  /api/expedition/[id] → 그룹 설정 변경 (리더)
-// DELETE /api/expedition/[id] → 그룹 삭제(리더) or 탈퇴(멤버)
+// GET    /api/expedition/[id] → 공격대 상세
+// PATCH  /api/expedition/[id] → 공격대 설정 변경 (리더)
+// DELETE /api/expedition/[id] → 공격대 삭제(리더) or 탈퇴(멤버)
 
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { randomBytes } from 'crypto'
+
+function generateInviteCode() {
+  return randomBytes(4).toString('hex').toUpperCase()
+}
 
 const MEMBER_USER_SELECT = {
   select: {
@@ -41,7 +46,7 @@ export async function GET(request, { params }) {
     },
   })
 
-  if (!expedition) return NextResponse.json({ error: '그룹을 찾을 수 없습니다' }, { status: 404 })
+  if (!expedition) return NextResponse.json({ error: '공격대를 찾을 수 없습니다' }, { status: 404 })
 
   const myMembership = expedition.members.find(m => m.userId === userId)
   if (!myMembership || myMembership.status === 'rejected' || myMembership.status === 'left') {
@@ -60,10 +65,10 @@ export async function PATCH(request, { params }) {
 
   const { id } = await params
   const userId = session.user.id
-  const { name, description, notice, maxMembers } = await request.json()
+  const { name, description, notice, autoAccept, regenerateCode } = await request.json()
 
   const expedition = await prisma.expedition.findUnique({ where: { id } })
-  if (!expedition) return NextResponse.json({ error: '그룹을 찾을 수 없습니다' }, { status: 404 })
+  if (!expedition) return NextResponse.json({ error: '공격대를 찾을 수 없습니다' }, { status: 404 })
   if (expedition.leaderId !== userId) return NextResponse.json({ error: '권한이 없습니다' }, { status: 403 })
 
   const updated = await prisma.expedition.update({
@@ -72,7 +77,8 @@ export async function PATCH(request, { params }) {
       ...(name?.trim() && { name: name.trim() }),
       ...(description !== undefined && { description: description?.trim() || null }),
       ...(notice !== undefined && { notice: notice?.trim() || null }),
-      ...(maxMembers && { maxMembers: Number(maxMembers) }),
+      ...(autoAccept !== undefined && { autoAccept: Boolean(autoAccept) }),
+      ...(regenerateCode && { inviteCode: generateInviteCode() }),
     },
   })
   return NextResponse.json(updated)
@@ -87,7 +93,7 @@ export async function DELETE(request, { params }) {
   const body = await request.json().catch(() => ({}))
 
   const expedition = await prisma.expedition.findUnique({ where: { id } })
-  if (!expedition) return NextResponse.json({ error: '그룹을 찾을 수 없습니다' }, { status: 404 })
+  if (!expedition) return NextResponse.json({ error: '공격대를 찾을 수 없습니다' }, { status: 404 })
 
   if (expedition.leaderId === userId && body.action !== 'leave') {
     await prisma.expedition.delete({ where: { id } })

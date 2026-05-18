@@ -2,23 +2,11 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname, useSearchParams, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useTheme } from './ThemeProvider'
-import { useState, useEffect, Suspense } from 'react'
+import { useState } from 'react'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import DiscordIcon from './DiscordIcon'
-
-function GroupWipTrigger({ onOpen }) {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  useEffect(() => {
-    if (searchParams.get('group') === '1') {
-      onOpen()
-      router.replace('/dashboard', { scroll: false })
-    }
-  }, [])
-  return null
-}
 
 // Discord 공식 브랜드 컬러
 const DISCORD_BG   = '#5865F2'
@@ -94,14 +82,13 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme()
   const pathname            = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [wip, setWip]               = useState(false)
   const { data: session }   = useSession()
 
   const s = THEME_STYLE[theme] || THEME_STYLE.yellow
 
   const navLinks = [
     { href: '/dashboard', label: '원정대' },
-    { href: null, label: '그룹', onClick: () => setWip(true) },
+    ...(session ? [{ href: '/group', label: '공격대' }] : []),
   ]
   const isActive = (href) => href && (pathname === href || pathname.startsWith(href + '/'))
 
@@ -267,32 +254,6 @@ export default function Navbar() {
       )}
     </header>
 
-    <Suspense fallback={null}>
-      <GroupWipTrigger onOpen={() => setWip(true)} />
-    </Suspense>
-
-    {/* WIP 모달 */}
-    {wip && (
-      <div
-        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40"
-        onClick={() => setWip(false)}
-      >
-        <div
-          className="bg-white dark:bg-zinc-800 rounded-2xl px-8 py-7 shadow-xl flex flex-col items-center gap-4 max-w-xs w-full mx-4"
-          onClick={e => e.stopPropagation()}
-        >
-          <p className="text-sm ns-bold text-gray-700 dark:text-zinc-200 text-center leading-relaxed">
-            아직 작업중입니다 ㅎㅎ...
-          </p>
-          <button
-            onClick={() => setWip(false)}
-            className="mt-1 px-5 py-1.5 rounded-lg text-xs ns-bold bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-600 transition-colors"
-          >
-            닫기
-          </button>
-        </div>
-      </div>
-    )}
-    </>
+</>
   )
 }

@@ -13,7 +13,7 @@ export async function PATCH(request, { params }) {
   const myId = session.user.id
 
   const expedition = await prisma.expedition.findUnique({ where: { id: expeditionId } })
-  if (!expedition) return NextResponse.json({ error: '그룹을 찾을 수 없습니다' }, { status: 404 })
+  if (!expedition) return NextResponse.json({ error: '공격대를 찾을 수 없습니다' }, { status: 404 })
 
   const myMembership = await prisma.expeditionMember.findUnique({
     where: { expeditionId_userId: { expeditionId, userId: myId } },
@@ -32,7 +32,7 @@ export async function PATCH(request, { params }) {
     return NextResponse.json(updated)
   }
 
-  // 가입 수락 / 거절 (부그룹장+)
+  // 가입 수락 / 거절 (부공격대장+)
   if ((action === 'accept' || action === 'reject') && isOfficer) {
     const updated = await prisma.expeditionMember.update({
       where: { expeditionId_userId: { expeditionId, userId } },
@@ -44,7 +44,7 @@ export async function PATCH(request, { params }) {
     return NextResponse.json(updated)
   }
 
-  // 강퇴 (부그룹장+, 자신 및 리더 제외)
+  // 강퇴 (부공격대장+, 자신 및 리더 제외)
   if (action === 'kick' && isOfficer && !isSelf && expedition.leaderId !== userId) {
     await prisma.expeditionMember.update({
       where: { expeditionId_userId: { expeditionId, userId } },

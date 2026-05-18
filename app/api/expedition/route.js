@@ -36,7 +36,7 @@ export async function POST(request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
 
-  const { name, maxMembers } = await request.json()
+  const { name } = await request.json()
   if (!name?.trim()) return NextResponse.json({ error: '원정대 이름을 입력하세요' }, { status: 400 })
 
   const expedition = await prisma.expedition.create({
@@ -44,7 +44,7 @@ export async function POST(request) {
       name: name.trim(),
       leaderId: session.user.id,
       inviteCode: generateInviteCode(),
-      maxMembers: maxMembers || 8,
+      maxMembers: 100,
       members: {
         create: {
           userId: session.user.id,
