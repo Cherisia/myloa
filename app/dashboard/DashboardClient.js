@@ -1428,26 +1428,30 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
 
         {/* 이번 주 획득 골드 */}
-        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3">
+        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 overflow-hidden flex flex-col justify-center">
           <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 mb-2">이번 주 획득</p>
-          {/* 그리드로 두 행 컬럼 정렬: [뱃지] [spacer] [획득량] [/] [합계G] */}
-          <div className="grid items-baseline gap-y-1.5" style={{ gridTemplateColumns: 'auto 1fr auto auto auto', columnGap: '4px' }}>
-            <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400">귀속</span>
-            <span />
-            <AnimatedGold value={earnedBound} className="ns-bold text-sm min-[1920px]:text-base text-yellow-600 dark:text-yellow-400 tabular-nums text-right" />
-            <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-400">/</span>
-            <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-400 tabular-nums text-right">{totalBound.toLocaleString()}G</span>
-
-            <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400">거래</span>
-            <span />
-            <AnimatedGold value={earnedTrade} className="ns-bold text-sm min-[1920px]:text-base text-yellow-600 dark:text-yellow-400 tabular-nums text-right" />
-            <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-400">/</span>
-            <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-400 tabular-nums text-right">{totalTrade.toLocaleString()}G</span>
+          <div className="flex flex-col gap-1.5">
+            {/* 귀속 행 */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">귀속</span>
+              <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 min-w-0">
+                <AnimatedGold value={earnedBound} className="ns-bold text-xs min-[1920px]:text-sm text-yellow-600 dark:text-yellow-400 tabular-nums whitespace-nowrap shrink-0" />
+                <span className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0">/ {totalBound.toLocaleString()}G</span>
+              </div>
+            </div>
+            {/* 거래 행 */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">거래</span>
+              <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 min-w-0">
+                <AnimatedGold value={earnedTrade} className="ns-bold text-xs min-[1920px]:text-sm text-yellow-600 dark:text-yellow-400 tabular-nums whitespace-nowrap shrink-0" />
+                <span className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0">/ {totalTrade.toLocaleString()}G</span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* 완료 레이드 */}
-        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3">
+        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 overflow-hidden flex flex-col justify-center">
           {allTotalCount <= totalCount ? (
             /* 모든 레이드가 골드 레이드 — 기존 단일 바 */
             <>
@@ -1471,35 +1475,40 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             /* 골드 + 전체 두 개 바 */
             <>
               <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 mb-2">완료 레이드</p>
-              {/* 골드 레이드 바 */}
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-[10px] min-[1920px]:text-xs ns-bold text-yellow-500 dark:text-yellow-400 shrink-0 tabular-nums">골드&nbsp;&nbsp;{completedCount} / {totalCount}</span>
-                <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-yellow-400 transition-all duration-500"
-                    style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
-                  />
+              <div className="flex flex-col gap-1.5">
+                {/* 골드 행 */}
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">골드</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden min-w-0">
+                    <div
+                      className="h-full rounded-full bg-yellow-400 transition-all duration-500"
+                      style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
+                    />
+                  </div>
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-300 tabular-nums whitespace-nowrap shrink-0">{completedCount} / {totalCount}</span>
+                  <span className="text-[14px] min-[1920px]:text-base ns-bold text-yellow-500 dark:text-yellow-400 tabular-nums whitespace-nowrap shrink-0 w-8 text-right">
+                    {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
+                  </span>
                 </div>
-                <span className="text-[10px] min-[1920px]:text-xs text-yellow-500 dark:text-yellow-400 tabular-nums w-7 text-right shrink-0">
-                  {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
-                </span>
-              </div>
-              {/* 전체 레이드 바 */}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] min-[1920px]:text-xs ns-bold text-blue-400 shrink-0 tabular-nums">전체&nbsp;&nbsp;{allCompletedCount} / {allTotalCount}</span>
-                <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-blue-400 transition-all duration-500"
-                    style={{ width: allTotalCount > 0 ? `${(allCompletedCount / allTotalCount) * 100}%` : '0%' }}
-                  />
+                {/* 전체 행 */}
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">전체</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden min-w-0">
+                    <div
+                      className="h-full rounded-full bg-blue-400 transition-all duration-500"
+                      style={{ width: allTotalCount > 0 ? `${(allCompletedCount / allTotalCount) * 100}%` : '0%' }}
+                    />
+                  </div>
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-300 tabular-nums whitespace-nowrap shrink-0">{allCompletedCount} / {allTotalCount}</span>
+                  <span className="text-[14px] min-[1920px]:text-base ns-bold text-blue-400 tabular-nums whitespace-nowrap shrink-0 w-8 text-right">
+                    {allTotalCount > 0 ? Math.round((allCompletedCount / allTotalCount) * 100) : 0}%
+                  </span>
                 </div>
-                <span className="text-[10px] min-[1920px]:text-xs text-blue-400 tabular-nums w-7 text-right shrink-0">
-                  {allTotalCount > 0 ? Math.round((allCompletedCount / allTotalCount) * 100) : 0}%
-                </span>
               </div>
             </>
           )}
         </div>
+
       </div>
       {/* 노트북/데스크탑 광고 — md 이상에서 요약카드 오른쪽 빈 공간 */}
       <div className="hidden md:flex flex-1 min-w-0 overflow-hidden" />
