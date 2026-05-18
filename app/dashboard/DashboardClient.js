@@ -1433,7 +1433,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             {/* 귀속 행 */}
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">귀속</span>
-              <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 min-w-0">
+              <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 ml-auto justify-end">
                 <AnimatedGold value={earnedBound} className="ns-bold text-xs min-[1920px]:text-sm text-yellow-600 dark:text-yellow-400 tabular-nums whitespace-nowrap shrink-0" />
                 <span className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0">/ {totalBound.toLocaleString()}G</span>
               </div>
@@ -1441,7 +1441,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             {/* 거래 행 */}
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">거래</span>
-              <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 min-w-0">
+              <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 ml-auto justify-end">
                 <AnimatedGold value={earnedTrade} className="ns-bold text-xs min-[1920px]:text-sm text-yellow-600 dark:text-yellow-400 tabular-nums whitespace-nowrap shrink-0" />
                 <span className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0">/ {totalTrade.toLocaleString()}G</span>
               </div>
@@ -1484,8 +1484,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
                     />
                   </div>
-                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-300 tabular-nums whitespace-nowrap shrink-0">{completedCount} / {totalCount}</span>
-                  <span className="text-[14px] min-[1920px]:text-base ns-bold text-yellow-500 dark:text-yellow-400 tabular-nums whitespace-nowrap shrink-0 w-8 text-right">
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-300 tabular-nums whitespace-nowrap shrink-0 min-w-[2.75rem] text-right">{completedCount} / {totalCount}</span>
+                  <span className="text-[14px] min-[1920px]:text-base ns-bold text-yellow-500 dark:text-yellow-400 tabular-nums whitespace-nowrap shrink-0 min-w-[2.5rem] text-right">
                     {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
                   </span>
                 </div>
@@ -1498,8 +1498,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       style={{ width: allTotalCount > 0 ? `${(allCompletedCount / allTotalCount) * 100}%` : '0%' }}
                     />
                   </div>
-                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-300 tabular-nums whitespace-nowrap shrink-0">{allCompletedCount} / {allTotalCount}</span>
-                  <span className="text-[14px] min-[1920px]:text-base ns-bold text-blue-400 tabular-nums whitespace-nowrap shrink-0 w-8 text-right">
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-300 tabular-nums whitespace-nowrap shrink-0 min-w-[2.75rem] text-right">{allCompletedCount} / {allTotalCount}</span>
+                  <span className="text-[14px] min-[1920px]:text-base ns-bold text-blue-400 tabular-nums whitespace-nowrap shrink-0 min-w-[2.5rem] text-right">
                     {allTotalCount > 0 ? Math.round((allCompletedCount / allTotalCount) * 100) : 0}%
                   </span>
                 </div>
