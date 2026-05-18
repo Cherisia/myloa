@@ -134,29 +134,34 @@ export default async function DashboardPage() {
   const initialChars = []
   const initialRaids = {}
   const initialExpNames = {}
-  expeditions.forEach(exp => {
-    if (exp.customName) initialExpNames[exp.id] = exp.customName
-    exp.characters.forEach(char => {
-      initialChars.push({
-        id:             char.id,
-        name:           char.name,
-        class:          char.class,
-        server:         char.server,
-        itemLevel:      char.itemLevel,
-        combatPower:    char.combatPower ?? null,
-        sortOrder:      char.sortOrder,
-        expeditionId:   exp.id,
-        accountRepChar: exp.repCharName ?? null,
-      })
-      initialRaids[char.id] = char.characterRaids.map(r => ({
-        raidId:      r.raidId,
-        difficulty:  r.difficulty,
-        gateClears:  r.gateClears,
-        isGoldCheck: r.isGoldCheck,
-        moreDone:    r.moreDone,
-        moreFrom:    r.moreFrom,
-      }))
+  expeditions.forEach((exp, i) => {
+    initialExpNames[exp.id] = exp.customName || `원정대 ${i + 1}`
+  })
+
+  // 원정대 탭 순서를 sortOrder 기준으로 결정하기 위해 전체 캐릭터를 전역 sortOrder 순으로 정렬
+  const allCharsWithExp = expeditions.flatMap(exp => exp.characters.map(char => ({ char, exp })))
+  allCharsWithExp.sort((a, b) => a.char.sortOrder - b.char.sortOrder || b.char.itemLevel - a.char.itemLevel)
+
+  allCharsWithExp.forEach(({ char, exp }) => {
+    initialChars.push({
+      id:             char.id,
+      name:           char.name,
+      class:          char.class,
+      server:         char.server,
+      itemLevel:      char.itemLevel,
+      combatPower:    char.combatPower ?? null,
+      sortOrder:      char.sortOrder,
+      expeditionId:   exp.id,
+      accountRepChar: exp.repCharName ?? null,
     })
+    initialRaids[char.id] = char.characterRaids.map(r => ({
+      raidId:      r.raidId,
+      difficulty:  r.difficulty,
+      gateClears:  r.gateClears,
+      isGoldCheck: r.isGoldCheck,
+      moreDone:    r.moreDone,
+      moreFrom:    r.moreFrom,
+    }))
   })
 
   // 커스텀 숙제 4개의 맵으로 변환

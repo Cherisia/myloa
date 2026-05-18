@@ -142,7 +142,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   }, [syncCooldownSec])
 
   // 원정대 탭 초기화 — activePageId만 localStorage 복원 (expNames는 DB 우선)
-  useEffect(() => {
+  // useLayoutEffect: paint 전에 동기 실행 → 전체→저장탭 플래시 없음
+  useLayoutEffect(() => {
     try {
       setActivePageId(localStorage.getItem('myloa_active_page') || null) // 빈 문자열·null → 전체보기
     } catch {}
@@ -703,7 +704,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     })
     await prefetchImageUrls(collectDashboardImageUrls(affectedChars, raidsForPrefetch, {}))
 
-    if (didFetchChars) setChars(updatedChars)
+    if (didFetchChars) setChars(sortChars(updatedChars))
     setRaids(newRaids)
   }
 
@@ -765,7 +766,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     newOrder.forEach(p => reordered.push(...(byExp.get(p.id) || [])))
     chars.forEach(c => { if (!newOrder.some(p => p.id === c.expeditionId)) reordered.push(c) })
 
-    saveCharOrder(reordered)
+    saveCharOrder(reordered.map((c, i) => ({ ...c, sortOrder: i })))
   }
 
   // 레이드 설정 모달 확인 (금지 초과 검사 통과 후 호출)
@@ -1261,6 +1262,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onDragStart={e => {
                     setDragExpId(page.id)
                     e.dataTransfer.effectAllowed = 'move'
+                    e.dataTransfer.setData('text/plain', page.id)
                   }}
                   onDragOver={e => {
                     e.preventDefault()
