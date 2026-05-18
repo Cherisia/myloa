@@ -1331,8 +1331,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         }
                       }}
                       title="원정대 삭제"
-                      className={`absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gray-200 dark:bg-[#444] text-gray-500 dark:text-gray-400 hover:bg-red-400 dark:hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors
-                        ${isActive ? 'opacity-100' : 'opacity-0 group-hover/tab:opacity-100'}`}
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gray-200 dark:bg-[#444] text-gray-500 dark:text-gray-400 hover:bg-red-400 dark:hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors opacity-0 group-hover/tab:opacity-100"
                     >
                       <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
