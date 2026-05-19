@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import DiscordIcon from '@/components/DiscordIcon'
+import AdSense from '@/components/AdSense'
 import { RAIDS, CLASS_COLOR, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
 import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, KURZAN_NAMES, DAILY_PRESET_ORDER, orderedDailyCustomItems, isWeeklyCustomItem, getClassIcon, getKurzanPreset, CUSTOM_MAX } from './_constants'
 import { IconCrown, IconPlus, IconCheck, IconRefresh, IconInfo, IconClass, IconItemLevel, IconPower, IconGrip } from './_icons'
@@ -1515,7 +1516,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
       </div>
       {/* 노트북/데스크탑 광고 — md 이상에서 요약카드 오른쪽 빈 공간 */}
-      <div className="hidden md:flex flex-1 min-w-0 overflow-hidden" />
+      <div className="hidden md:flex flex-1 min-w-0 overflow-hidden items-center">
+        <AdSense slot="5883193399" />
+      </div>
       </div>
 
       {/* ── 숙제 테이블 / 카드 ── */}
