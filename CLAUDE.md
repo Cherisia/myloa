@@ -192,7 +192,9 @@ const ACCOUNT_INCLUDE = {
 
 ### DB 마이그레이션 규칙
 
-마이그레이션 파일을 추가하거나 `prisma migrate` 명령을 실행할 때는 **반드시 로컬과 운영 DB 모두 적용**한다.
+`prisma migrate deploy`는 **빌드 스크립트에 포함하지 않는다.** (Vercel 빌드 서버 → Neon DB 연결 시 advisory lock 타임아웃 발생)
+
+마이그레이션 파일을 추가했을 때는 **배포 전에 반드시 수동으로 직접 적용**한다.
 
 **로컬 dev DB 적용:**
 ```bash
@@ -204,7 +206,7 @@ npx prisma migrate deploy
 - `mcp__Neon__run_sql_transaction` 툴로 migration.sql의 SQL 구문을 직접 실행
 - 적용 전 `mcp__Neon__run_sql` 로 컬럼/테이블 존재 여부를 먼저 확인하고, 이미 존재하면 스킵
 
-**순서:** 로컬 migrate deploy → Neon MCP로 운영 SQL 실행 → 두 곳 모두 완료 확인
+**순서:** 로컬 migrate deploy → Neon MCP로 운영 SQL 실행 → 두 곳 모두 완료 확인 → git push(배포)
 
 ## 알려진 제약
 - `AutoSetupModal`: `raidsByName`은 `previewBase`(chars+apiKey) + `strategy`에서 `useMemo`로 파생 — effect로 관리하지 않음
