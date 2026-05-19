@@ -143,14 +143,19 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
   // 원정대 탭 초기화 — activePageId만 localStorage 복원 (expNames는 DB 우선)
   // useLayoutEffect: paint 전에 동기 실행 → 전체→저장탭 플래시 없음
+  // 비로그인(데모) 모드: 항상 전체보기(null)로 시작 / 로그인 상태: 저장된 탭 복원
   useLayoutEffect(() => {
     try {
-      setActivePageId(localStorage.getItem('myloa_active_page') || null) // 빈 문자열·null → 전체보기
+      if (isLoggedIn) {
+        setActivePageId(localStorage.getItem('myloa_active_page') || null) // 빈 문자열·null → 전체보기
+      }
+      // 데모 모드는 null(전체보기) 초기값 유지
     } catch {}
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
+    if (!isLoggedIn) return // 데모 모드에서는 로그인 탭 상태 덮어쓰지 않음
     try { localStorage.setItem('myloa_active_page', activePageId ?? '') } catch {}
-  }, [activePageId])
+  }, [activePageId]) // eslint-disable-line react-hooks/exhaustive-deps
   // activePageId가 더 이상 유효하지 않으면 전체보기(null)로 조정
   useEffect(() => {
     if (activePageId && !expPages.find(p => p.id === activePageId)) {
