@@ -15,15 +15,14 @@ export async function GET(request) {
 
   const nextResetAt = getNextResetAt()
 
-  // 1. CharacterRaid 전체 리셋
-  const raidReset = await prisma.characterRaid.updateMany({
-    data: {
-      gateClears: [],
-      moreDone:   false,
-      moreFrom:   'bound',
-      resetAt:    nextResetAt,
-    },
-  })
+  // 1. CharacterRaid 전체 리셋 (raw SQL — updateMany로 Boolean[] 빈 배열 설정 시 미동작 방지)
+  const raidsReset = await prisma.$executeRaw`
+    UPDATE "CharacterRaid"
+    SET "gateClears" = '{}'::boolean[],
+        "moreDone"   = false,
+        "moreFrom"   = 'bound',
+        "resetAt"    = ${nextResetAt}
+  `
 
   // 2. CharacterCustomItem type='weekly' 리셋
   const customReset = await prisma.characterCustomItem.updateMany({
@@ -36,7 +35,7 @@ export async function GET(request) {
   })
 
   return NextResponse.json({
-    raidsReset:  raidReset.count,
+    raidsReset,
     customReset: customReset.count,
   })
 }
