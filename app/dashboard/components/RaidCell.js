@@ -11,7 +11,7 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
   const toggleRef             = useRef(null)
 
   const allGates  = entry && diff ? new Array(diff.gates).fill(true) : []
-  const allDone   = entry ? entry.gateClears.every(Boolean) : false
+  const allDone   = entry ? (entry.gateClears.length > 0 && entry.gateClears.every(Boolean)) : false
   const moreDone  = entry ? (entry.moreDone || false) : false
   const moreFrom  = entry ? (entry.moreFrom || 'bound') : 'bound'
   const totalGold = entry && diff ? calcGold(diff, allGates) : 0

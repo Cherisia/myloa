@@ -627,7 +627,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       const idx  = list.findIndex(e => e.raidId === raidId && e.difficulty === diffKey)
       if (idx === -1) return prev
       const entry    = { ...list[idx] }
-      const allDone  = entry.gateClears.every(Boolean)
+      const allDone  = entry.gateClears.length > 0 && entry.gateClears.every(Boolean)
       const moreDone = entry.moreDone || false
 
       const raid     = RAIDS.find(r => r.id === raidId)
@@ -636,7 +636,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       const hasMore  = diff ? calcGoldMore(diff, allGates) > 0 : false
 
       if (!allDone) {
-        entry.gateClears = new Array(entry.gateClears.length).fill(true)
+        entry.gateClears = new Array(diff?.gates ?? entry.gateClears.length).fill(true)
         entry.moreDone   = false
       } else if (!moreDone && hasMore) {
         entry.moreDone  = true
@@ -1143,13 +1143,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
         if (!diff) return
         allTotalCount++
-        if (entry.gateClears.every(Boolean)) allCompletedCount++
+        if (entry.gateClears.length > 0 && entry.gateClears.every(Boolean)) allCompletedCount++
         if (!entry.isGoldCheck) return
         const allGates = new Array(diff.gates).fill(true)
         totalBound += calcGoldBound(diff, allGates)
         totalTrade += calcGoldTrade(diff, allGates)
         totalCount++
-        if (entry.gateClears.every(Boolean)) completedCount++
+        if (entry.gateClears.length > 0 && entry.gateClears.every(Boolean)) completedCount++
       })
     })
     return { earnedBound, earnedTrade, totalBound, totalTrade, completedCount, totalCount, allCompletedCount, allTotalCount }
@@ -1594,7 +1594,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           charRaids.forEach(entry => {
             const raid   = RAIDS.find(r => r.id === entry.raidId)
             if (!raid) return
-            const allDone = entry.gateClears.every(Boolean)
+            const allDone = entry.gateClears.length > 0 && entry.gateClears.every(Boolean)
             const row = document.createElement('div')
             row.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid ${col.bdr};background:${allDone ? (isDark ? _doneBgDark : _doneBgLight) : col.bg};`
             const chk = document.createElement('div')
@@ -1663,7 +1663,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               // 일일 숙제: 쿠르잔·가디언 고정 순 + type==='daily' 기타
               const orderedDaily = !selectedRaid ? orderedDailyCustomItems(charCustomList) : []
               // 주간 레이드 완료 카운트
-              const raidDoneCount = charRaids.filter(e => e.gateClears.every(Boolean)).length
+              const raidDoneCount = charRaids.filter(e => e.gateClears.length > 0 && e.gateClears.every(Boolean)).length
               // 일일 숙제 완료 카운트
               const dailyDoneCount = orderedDaily.filter(it => !!(customChecks[char.id]?.[it.id])).length
               // 주간 숙제 항목
@@ -1829,7 +1829,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
                           if (!raid || !diff) return null
                           const allGates  = new Array(diff.gates).fill(true)
-                          const allDone   = entry.gateClears.every(Boolean)
+                          const allDone   = entry.gateClears.length > 0 && entry.gateClears.every(Boolean)
                           const moreDone  = entry.moreDone || false
                           const moreFrom  = entry.moreFrom || 'bound'
                           const totalGold = calcGold(diff, allGates)
