@@ -3,11 +3,9 @@ import { prisma } from '@/lib/db'
 import { notFound, redirect } from 'next/navigation'
 import GroupDetailClient from './GroupDetailClient'
 
-const GROUP_ALLOWED_EMAILS = ['be_the_hero@naver.com', 'yhc920923@gmail.com']
-
 export default async function GroupDetailPage({ params }) {
   const session = await auth()
-  if (!session?.user?.id || !GROUP_ALLOWED_EMAILS.includes(session.user.email)) redirect('/dashboard')
+  if (!session?.user?.id) redirect('/dashboard')
 
   const { id } = await params
 
