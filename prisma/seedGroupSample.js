@@ -14,7 +14,6 @@ const prisma = new PrismaClient()
 
 // ── 레이드 정의 (lib/raidData.js 와 동일) ────────────────────────────────────
 const RAIDS = [
-  { id: 'egir-ex',       gates: 1, difficulties: ['nightmare', 'hard', 'normal'], minIlv: { nightmare: 1770, hard: 1750, normal: 1720 } },
   { id: 'abrel-ex',      gates: 1, difficulties: ['nightmare', 'hard', 'normal'], minIlv: { nightmare: 1770, hard: 1750, normal: 1720 } },
   { id: 'serca',         gates: 2, difficulties: ['nightmare', 'hard', 'normal'], minIlv: { nightmare: 1740, hard: 1730, normal: 1710 } },
   { id: 'cathedral',     gates: 2, difficulties: ['stage3', 'stage2', 'stage1'], minIlv: { stage3: 1750, stage2: 1720, stage1: 1700 } },
@@ -100,7 +99,7 @@ function pickRaidsForChar(itemLevel) {
   const result = []
   // EX 레이드는 최고 캐릭에만 1개 (무작위로 스킵하기 위해 별도 처리)
   for (const raid of RAIDS) {
-    if (raid.id === 'egir-ex' || raid.id === 'abrel-ex') continue // EX는 따로
+    if (raid.id === 'abrel-ex') continue // EX는 따로
 
     const eligibleDiffs = raid.difficulties.filter(d => itemLevel >= raid.minIlv[d])
     if (eligibleDiffs.length === 0) continue

@@ -118,7 +118,7 @@ components/
 { raidId, difficulty, gateClears: boolean[], isGoldCheck, moreDone, moreFrom: 'bound'|'trade' }
 
 // 주간 초기화: 매주 수요일 06:00 KST
-// EX 레이드(egir-ex, abrel-ex): 계정당 1캐릭터만 선택 가능
+// EX 레이드(abrel-ex): 계정당 1캐릭터만 선택 가능
 // HIDDEN_RAID_IDS: UI에 노출하지 않는 레이드 (데이터는 유지)
 ```
 

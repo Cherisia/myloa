@@ -4,7 +4,7 @@ export const DEMO_MY_GROUPS = [
   {
     id: 'demo',
     name: '원정대',
-    description: '에기르 EX·세르카 나메 정기 공대. 멤버 숙제 현황 공유 모임.',
+    description: '아브렐슈드 EX·세르카 나메 정기 공대. 멤버 숙제 현황 공유 모임.',
     isPublic: true,
     maxMembers: 16,
     memberCount: 7,

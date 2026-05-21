@@ -37,7 +37,7 @@ export function autoSelectNormalRaids(char, strategy) {
 }
 
 export function autoSelectExRaid(char) {
-  const exRaid = RAIDS.find(r => r.id === 'egir-ex')
+  const exRaid = RAIDS.find(r => EX_RAID_IDS.has(r.id) && !HIDDEN_RAID_IDS.has(r.id))
   if (!exRaid) return null
   const bestDiff = [...exRaid.difficulties]
     .sort((a, b) => b.minItemLevel - a.minItemLevel)

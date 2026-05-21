@@ -15,7 +15,7 @@ const DEMO_CHARS = [
 ]
 const DEMO_RAIDS = {
   'demo-1': [
-    { raidId: 'egir-ex',       difficulty: 'nightmare', gateClears: [false],         isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
+    { raidId: 'abrel-ex',      difficulty: 'nightmare', gateClears: [false],         isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'serca',         difficulty: 'nightmare', gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
     { raidId: 'cathedral',     difficulty: 'stage3',    gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },

@@ -1,7 +1,7 @@
 // ── 계정당 1캐릭터만 선택 가능한 EX 레이드
-export const EX_RAID_IDS = new Set(['egir-ex', 'abrel-ex'])
+export const EX_RAID_IDS = new Set(['abrel-ex'])
 // 아직 출시되지 않아 UI에서 숨기는 레이드 (데이터는 유지)
-export const HIDDEN_RAID_IDS = new Set(['abrel-ex'])
+export const HIDDEN_RAID_IDS = new Set([])
 
 export const GOLD_RAID_LIMIT = 3  // 캐릭터당 골드 획득 레이드 최대 수
 export const GOLD_CHAR_LIMIT = 6  // 계정당 골드 수령 캐릭터 최대 수
