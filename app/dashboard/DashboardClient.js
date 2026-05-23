@@ -492,7 +492,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           })
         }
         const clears = r.gateClears
-        if (!Array.isArray(clears) || !clears.every(Boolean)) seen.get(key).incomplete++
+        if (!Array.isArray(clears) || clears.length === 0 || !clears.every(Boolean)) seen.get(key).incomplete++
       }
     }
     return [...seen.values()].sort((a, b) =>
