@@ -18,6 +18,7 @@ model User {
   email           String?   @unique
   emailVerified   DateTime?
   image           String?
+  nickname        String? // 공격대에서 남들에게 보이는 닉네임
   repCharId       String? // 대표 캐릭터 ID
   apiKey          String? // 로스트아크 API 키 (AES-256 암호화) — 계정당 하나
   lastSyncedAt    DateTime? // 마지막 LoA API 동기화 시각

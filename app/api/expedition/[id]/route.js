@@ -13,7 +13,7 @@ function generateInviteCode() {
 
 const MEMBER_USER_SELECT = {
   select: {
-    id: true, name: true, discordUsername: true, image: true,
+    id: true, name: true, nickname: true, discordUsername: true, image: true,
     loaExpeditions: {
       orderBy: { createdAt: 'asc' },
       include: {
@@ -37,7 +37,7 @@ export async function GET(request, { params }) {
   const expedition = await prisma.expedition.findUnique({
     where: { id },
     include: {
-      leader: { select: { id: true, name: true, discordUsername: true, image: true } },
+      leader: { select: { id: true, name: true, nickname: true, discordUsername: true, image: true } },
       members: {
         include: { user: MEMBER_USER_SELECT },
         orderBy: { joinedAt: 'asc' },

@@ -19,6 +19,7 @@ export default async function GroupDetailPage({ params }) {
             select: {
               id: true,
               name: true,
+              nickname: true,
               discordUsername: true,
               image: true,
               loaExpeditions: {

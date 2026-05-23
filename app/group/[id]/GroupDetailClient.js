@@ -62,7 +62,7 @@ const IconRegen = () => (
 function adaptMember(m) {
   return {
     ...m,
-    displayName: m.user?.name || m.user?.discordUsername || '알 수 없음',
+    displayName: m.user?.nickname || m.user?.name || m.user?.discordUsername || '알 수 없음',
     expeditions: (m.user?.loaExpeditions || []).map(exp => ({
       characters: (exp.characters || []).map(c => ({
         name: c.name,
@@ -121,7 +121,7 @@ const DIFF_COLORS = {
 const DIFF_COLOR_DEFAULT = { badge: 'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400', bar: 'from-gray-400 to-gray-300', pct: 'text-gray-700 dark:text-gray-200' }
 
 function Avatar({ user, size = 28 }) {
-  const name    = user?.name || user?.discordUsername || '?'
+  const name    = user?.nickname || user?.name || user?.discordUsername || '?'
   const initial = name[0].toUpperCase()
   const sz      = { width: size, height: size, fontSize: Math.round(size * 0.42) }
   if (user?.image) {
@@ -281,7 +281,7 @@ function MemberDetailModal({ member, role, myMember, raidList, onClose }) {
           <Avatar user={member.user} size={44} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-base ns-bold text-gray-900 dark:text-white truncate">{member.user?.name || '알 수 없음'}</span>
+              <span className="text-base ns-bold text-gray-900 dark:text-white truncate">{member.user?.nickname || member.user?.name || '알 수 없음'}</span>
               {role === 'leader'  && <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">공격대장</span>}
               {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부공격대장</span>}
             </div>
@@ -735,7 +735,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
                   <Avatar user={m.user} size={40} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[15px] ns-bold text-gray-900 dark:text-white truncate">{m.user?.name || '알 수 없음'}</span>
+                      <span className="text-[15px] ns-bold text-gray-900 dark:text-white truncate">{m.user?.nickname || m.user?.name || '알 수 없음'}</span>
                       {role === 'leader'  && <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">공격대장</span>}
                       {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부공격대장</span>}
                     </div>
@@ -801,7 +801,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
           <div key={m.userId} className="rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm px-5 py-4 flex items-center gap-3">
             <Avatar user={m.user} size={36} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm ns-bold text-gray-900 dark:text-white truncate">{m.user?.name || '알 수 없음'}</p>
+              <p className="text-sm ns-bold text-gray-900 dark:text-white truncate">{m.user?.nickname || m.user?.name || '알 수 없음'}</p>
               {m.user?.discordUsername && <p className="text-xs text-gray-400">@{m.user.discordUsername}</p>}
             </div>
             <div className="flex gap-2 flex-shrink-0">

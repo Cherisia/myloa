@@ -10,7 +10,15 @@
       "Bash(grep:*)",
       "Bash(wc:*)",
       "Bash(npx prisma:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(cd:*)",
+      "Bash(cd /c/Project/myloa && echo \"SELECT \\\\\"raidId\\\\\", difficulty, COUNT\\(*\\) FROM \\\\\"CharacterRaid\\\\\" WHERE \\\\\"raidId\\\\\" = 'egir-ex' GROUP BY \\\\\"raidId\\\\\", difficulty;\" | npx prisma db execute --stdin 2>&1)",
+      "Bash(cd /c/Project/myloa && echo \"SELECT \\\\\"raidId\\\\\", difficulty, COUNT\\(*\\) FROM \\\\\"CharacterRaid\\\\\" WHERE \\\\\"raidId\\\\\" = 'egir-ex' GROUP BY \\\\\"raidId\\\\\", difficulty;\" | npx prisma db execute --schema=prisma/schema.prisma --stdin 2>&1)",
+      "mcp__Neon__run_sql",
+      "mcp__Neon__list_projects",
+      "mcp__Neon__describe_branch",
+      "mcp__Neon__list_branch_computes",
+      "mcp__Neon__run_sql_transaction"
     ]
   }
 }
