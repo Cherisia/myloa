@@ -121,24 +121,15 @@ const DIFF_COLORS = {
 const DIFF_COLOR_DEFAULT = { badge: 'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400', bar: 'from-gray-400 to-gray-300', pct: 'text-gray-700 dark:text-gray-200' }
 
 function Avatar({ user, size = 28 }) {
-  const name    = user?.nickname || user?.name || user?.discordUsername || '?'
-  const initial = name[0].toUpperCase()
-  const sz      = { width: size, height: size, fontSize: Math.round(size * 0.42) }
-  if (user?.image) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={user.image} alt={name} style={sz}
-        className="rounded-full flex-shrink-0 object-cover"
-        onError={e => { e.target.style.display = 'none' }}
-      />
-    )
-  }
+  const name = user?.nickname || user?.name || user?.discordUsername || '?'
+  const sz   = { width: size, height: size }
+  const src  = user?.image || '/default-avatar.svg'
   return (
-    <div style={sz}
-      className="rounded-full flex-shrink-0 bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] flex items-center justify-center ns-bold"
-    >
-      {initial}
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt={name} style={sz}
+      className="rounded-full flex-shrink-0 object-cover"
+      onError={e => { e.currentTarget.src = '/default-avatar.svg' }}
+    />
   )
 }
 
@@ -433,7 +424,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
     }
     const completedMembers = totalWithRaid - incompleteMembers
     const completedChars   = totalChars - incompleteChars
-    const pct = totalWithRaid > 0 ? Math.round((completedMembers / totalWithRaid) * 100) : 0
+    const pct = totalChars > 0 ? Math.round((completedChars / totalChars) * 100) : 0
     return { raidId, difficulty, totalWithRaid, incompleteMembers, incompleteChars, completedMembers, completedChars, totalChars, pct }
   }), [raidList, visibleMembers])
 
@@ -623,7 +614,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
                 {difficulties.map(stat => {
                   const { diff } = getRaidLabel(stat.raidId, stat.difficulty)
                   const key = `${stat.raidId}__${stat.difficulty}`
-                  const allDone = stat.incompleteMembers === 0 && stat.totalWithRaid > 0
+                  const allDone = stat.incompleteChars === 0 && stat.totalChars > 0
                   const c = DIFF_COLORS[stat.difficulty] || DIFF_COLOR_DEFAULT
 
                   return (
@@ -649,7 +640,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
                         {stat.totalWithRaid > 0 && <span className="text-sm font-normal text-gray-400 dark:text-gray-500 ml-0.5">%</span>}
                       </p>
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-3">
-                        {stat.totalWithRaid > 0 ? `${stat.completedMembers}/${stat.totalWithRaid}명 완료` : '데이터 없음'}
+                        {stat.totalChars > 0 ? `${stat.completedChars}/${stat.totalChars}캐릭터 완료` : '데이터 없음'}
                       </p>
 
                       {/* 프로그레스 바 */}
@@ -660,11 +651,6 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
                         />
                       </div>
 
-                      {/* 캐릭터 수 보조 통계 */}
-                      <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500">
-                        <span className="ns-bold text-gray-600 dark:text-gray-400">{stat.totalChars > 0 ? `${stat.completedChars}/${stat.totalChars}` : '—'}</span>
-                        <span>캐릭터</span>
-                      </div>
                     </button>
                   )
                 })}
@@ -962,7 +948,6 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
                   <p className="text-2xl ns-extrabold leading-none text-gray-900 dark:text-white">
                     {stat?.pct}<span className="text-sm text-gray-400 dark:text-gray-500">%</span>
                   </p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{stat?.completedMembers}/{stat?.totalWithRaid}명 완료</p>
                 </div>
                 <button
                   type="button"
