@@ -516,7 +516,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       )
       if (!entry) return []
       const clears = Array.isArray(entry.gateClears) ? entry.gateClears : []
-      if (clears.every(Boolean)) return [] // 전부 완료
+      if (clears.length > 0 && clears.every(Boolean)) return [] // 전부 완료
       return [{ char, gateClears: clears }]
     })
   }, [selectedRaid, activeChars, raids])
