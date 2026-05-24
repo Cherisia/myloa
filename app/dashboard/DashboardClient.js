@@ -521,6 +521,18 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     })
   }, [selectedRaid, activeChars, raids])
 
+  // 레이드 필터 활성 시 미완료 캐릭터를 앞으로 정렬
+  const sortedActiveChars = useMemo(() => {
+    if (!selectedRaid) return activeChars
+    const incompleteIds = new Set(raidIncompleteChars.map(({ char }) => char.id))
+    return [...activeChars].sort((a, b) => {
+      const aIncomplete = incompleteIds.has(a.id)
+      const bIncomplete = incompleteIds.has(b.id)
+      if (aIncomplete !== bIncomplete) return aIncomplete ? -1 : 1
+      return 0
+    })
+  }, [selectedRaid, activeChars, raidIncompleteChars])
+
   // 캐릭터가 있다가 0이 되면 빈 상태 모달 자동 표시 (초기 0은 제외)
   // CharacterEditModal을 완료로 닫은 직후에는 억제 (이미 빈 상태임을 알고 닫은 것)
   const hadCharsRef      = useRef(initialChars.length > 0)
@@ -1656,7 +1668,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         // ── 카드 뷰 ────────────────────────────────────────────────────────
         const renderCardView = () => (
           <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 2xl:gap-4">
-            {activeChars.map(char => {
+            {sortedActiveChars.map(char => {
               const charRaids = [...(raids[char.id] || [])]
                 .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
                 .filter(e => !selectedRaid || (e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
@@ -2494,8 +2506,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 const charsPerTable = Math.max(1, Math.floor((containerW - COL_RAID) / COL_CHAR))
                 // selectedRaid 필터 활성 시 먼저 캐릭터를 필터링하여 청크 분산 방지
                 const charsToChunk = selectedRaid
-                  ? activeChars.filter(char => (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
-                  : activeChars
+                  ? sortedActiveChars.filter(char => (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
+                  : sortedActiveChars
                 const chunks = []
                 for (let i = 0; i < charsToChunk.length; i += charsPerTable)
                   chunks.push(charsToChunk.slice(i, i + charsPerTable))
