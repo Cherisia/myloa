@@ -114,6 +114,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const confettiInitRef                         = useRef(false)
   const goldConfettiInitRef                     = useRef(false)
   const tableWrapRef                            = useRef(null)
+  const sortCacheRef                            = useRef({ raidKey: null, charKey: null, sorted: null })
   const [tableContainerWidth, setTableContainerWidth] = useState(0)
 
   // 원정대 탭 = chars의 expeditionId 기준으로 자동 파생
@@ -522,15 +523,23 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   }, [selectedRaid, activeChars, raids])
 
   // 레이드 필터 활성 시 미완료 캐릭터를 앞으로 정렬
+  // 같은 필터 내에서 체크 상태가 바뀌어도 순서는 유지 (필터/캐릭터 목록 변경 시에만 재정렬)
   const sortedActiveChars = useMemo(() => {
     if (!selectedRaid) return activeChars
+
+    const raidKey = `${selectedRaid.raidId}-${selectedRaid.diffKey}`
+    const cache = sortCacheRef.current
+    if (cache.raidKey === raidKey && cache.charKey === activeChars) return cache.sorted
+
     const incompleteIds = new Set(raidIncompleteChars.map(({ char }) => char.id))
-    return [...activeChars].sort((a, b) => {
+    const sorted = [...activeChars].sort((a, b) => {
       const aIncomplete = incompleteIds.has(a.id)
       const bIncomplete = incompleteIds.has(b.id)
       if (aIncomplete !== bIncomplete) return aIncomplete ? -1 : 1
       return 0
     })
+    sortCacheRef.current = { raidKey, charKey: activeChars, sorted }
+    return sorted
   }, [selectedRaid, activeChars, raidIncompleteChars])
 
   // 캐릭터가 있다가 0이 되면 빈 상태 모달 자동 표시 (초기 0은 제외)
