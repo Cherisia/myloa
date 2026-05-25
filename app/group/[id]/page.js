@@ -22,6 +22,7 @@ export default async function GroupDetailPage({ params }) {
               nickname: true,
               discordUsername: true,
               image: true,
+              raidPublic: true,
               loaExpeditions: {
                 orderBy: { createdAt: 'asc' },
                 include: {

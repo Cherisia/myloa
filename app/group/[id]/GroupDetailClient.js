@@ -75,8 +75,12 @@ function adaptMember(m) {
   }
 }
 
+function isHidden(member) {
+  return member.visibility === 'none' || member.user?.raidPublic === false
+}
+
 function getMemberIncompleteChars(member, raidId, difficulty) {
-  if (member.visibility === 'none') return []
+  if (isHidden(member)) return []
   const chars = []
   for (const exp of member.expeditions || []) {
     for (const c of exp.characters || []) {
@@ -90,7 +94,7 @@ function getMemberIncompleteChars(member, raidId, difficulty) {
 }
 
 function getMemberCompletedChars(member, raidId, difficulty) {
-  if (member.visibility === 'none') return []
+  if (isHidden(member)) return []
   const chars = []
   for (const exp of member.expeditions || []) {
     for (const c of exp.characters || []) {
@@ -141,26 +145,25 @@ function RaidRow({ raidId, difficulty, chars, highlight, completed }) {
   const chips = chars.map((ch, i) => {
     const icon = getClassIcon(ch.characterClass)
     return (
-      <div key={i} className="relative group cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300">
+      <div key={i} className={`relative group cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold ${completed ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300'}`}>
         {completed && (
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         )}
         {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
         <span>{ch.name}</span>
-        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col gap-1 bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#3a3a3a] text-gray-700 dark:text-gray-200 rounded-lg px-2.5 py-2 whitespace-nowrap shadow-md z-50">
-          <div className="flex items-center gap-1 text-[11px] ns-bold">
+        <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 hidden group-hover:flex flex-col gap-0.5 bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#3a3a3a] text-gray-700 dark:text-gray-200 rounded-md px-2 py-1.5 whitespace-nowrap shadow-sm z-50">
+          <div className="flex items-center gap-1 text-[10px] ns-bold">
             <IconTrophy />
             <span>{Number(ch.itemLevel).toFixed(2)}</span>
           </div>
           {ch.combatPower != null && (
-            <div className="flex items-center gap-1 text-[11px] ns-bold">
+            <div className="flex items-center gap-1 text-[10px] ns-bold">
               <IconPower />
               <span>{Math.round(Number(ch.combatPower)).toLocaleString('ko-KR')}</span>
             </div>
           )}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white dark:border-t-[#2a2a2a]" />
         </div>
       </div>
     )
@@ -367,10 +370,11 @@ function EmptyTabMsg({ msg }) {
 
 // ── 탭 정의 ──────────────────────────────────────────────────────────────────
 const TABS = [
-  { id: 'raids',    label: '레이드현황' },
-  { id: 'members',  label: '멤버' },
-  { id: 'pending',  label: '대기중' },
-  { id: 'settings', label: '설정' },
+  { id: 'raids',    label: '레이드현황', leaderOnly: false },
+  { id: 'members',  label: '멤버',       leaderOnly: false },
+  { id: 'manage',   label: '멤버관리',   leaderOnly: true  },
+  { id: 'pending',  label: '대기중',     leaderOnly: true  },
+  { id: 'settings', label: '설정',       leaderOnly: true  },
 ]
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -393,6 +397,9 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
   const [memberModal,   setMemberModal]   = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleteInput,   setDeleteInput]   = useState('')
+  const [kickConfirm,   setKickConfirm]   = useState(null) // { userId, displayName }
+  const [memberSearch,  setMemberSearch]  = useState('')
+  const [manageSearch,  setManageSearch]  = useState('')
 
   const isLeader  = expedition.leaderId === userId
   const isOfficer = isLeader || myMembership.role === 'officer'
@@ -665,11 +672,20 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
   function renderMembers() {
     const myVis = expedition.members.find(m => m.userId === userId)?.visibility || 'all'
 
-    const sorted = [...activeMembers].sort((a, b) => {
-      const aFav = expedition.favoritedUserIds?.includes(a.userId) ? 0 : 1
-      const bFav = expedition.favoritedUserIds?.includes(b.userId) ? 0 : 1
-      return aFav - bFav
-    })
+    const q = memberSearch.trim().toLowerCase()
+    const sorted = [...activeMembers]
+      .filter(m => {
+        if (!q) return true
+        const name = (m.user?.nickname || m.user?.name || '').toLowerCase()
+        const discord = (m.user?.discordUsername || '').toLowerCase()
+        const repCharName = ((m.user?.loaExpeditions?.[0]?.characters || [])[0]?.name || '').toLowerCase()
+        return name.includes(q) || discord.includes(q) || repCharName.includes(q)
+      })
+      .sort((a, b) => {
+        const aFav = expedition.favoritedUserIds?.includes(a.userId) ? 0 : 1
+        const bFav = expedition.favoritedUserIds?.includes(b.userId) ? 0 : 1
+        return aFav - bFav
+      })
 
     return (
       <div className="space-y-4">
@@ -689,8 +705,27 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
           </button>
         </div>
 
+        {/* 검색 */}
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            value={memberSearch}
+            onChange={e => setMemberSearch(e.target.value)}
+            placeholder="닉네임, 디스코드, 대표 캐릭터 검색"
+            className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] focus:border-[var(--accent-400)] text-sm dark:text-white outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600 shadow-sm"
+          />
+        </div>
+
         {/* 멤버 그리드 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {sorted.length === 0 ? (
+            <div className="col-span-full py-10 text-center">
+              <p className="text-sm text-gray-400 dark:text-gray-500">검색 결과가 없어요</p>
+            </div>
+          ) : null}
           {sorted.map(m => {
             const role   = expedition.leaderId === m.userId ? 'leader' : m.role
             const isFav  = expedition.favoritedUserIds?.includes(m.userId)
@@ -802,6 +837,86 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
             </div>
           </div>
         ))}
+      </div>
+    )
+  }
+
+  function renderManageMembers() {
+    if (!isLeader) {
+      return (
+        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm py-14 text-center space-y-2">
+          <p className="text-sm text-gray-400">권한이 없습니다.</p>
+        </div>
+      )
+    }
+    const kickableMembers = activeMembers.filter(m => m.userId !== userId)
+    if (kickableMembers.length === 0) {
+      return (
+        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm py-14 text-center space-y-2">
+          <p className="text-2xl">👥</p>
+          <p className="text-sm ns-bold text-gray-500 dark:text-gray-400">관리할 멤버가 없어요</p>
+        </div>
+      )
+    }
+    const mq = manageSearch.trim().toLowerCase()
+    const filteredKickable = kickableMembers.filter(m => {
+      if (!mq) return true
+      const name = (m.user?.nickname || m.user?.name || '').toLowerCase()
+      const discord = (m.user?.discordUsername || '').toLowerCase()
+      const repCharName = ((m.user?.loaExpeditions?.[0]?.characters || [])[0]?.name || '').toLowerCase()
+      return name.includes(mq) || discord.includes(mq) || repCharName.includes(mq)
+    })
+    return (
+      <div className="space-y-2.5">
+        {/* 검색 */}
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            value={manageSearch}
+            onChange={e => setManageSearch(e.target.value)}
+            placeholder="닉네임, 디스코드, 대표 캐릭터 검색"
+            className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] focus:border-[var(--accent-400)] text-sm dark:text-white outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600 shadow-sm"
+          />
+        </div>
+        {filteredKickable.length === 0 && (
+          <div className="py-10 text-center rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm">
+            <p className="text-sm text-gray-400 dark:text-gray-500">검색 결과가 없어요</p>
+          </div>
+        )}
+        {filteredKickable.map(m => {
+          const role     = expedition.leaderId === m.userId ? 'leader' : m.role
+          const repChar  = (m.user?.loaExpeditions?.[0]?.characters || [])[0] || null
+          const dispName = m.user?.nickname || m.user?.name || '알 수 없음'
+          return (
+            <div key={m.userId} className="rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm px-5 py-4 flex items-center gap-3">
+              <Avatar user={m.user} size={36} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-sm ns-bold text-gray-900 dark:text-white truncate">{dispName}</span>
+                  {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부공격대장</span>}
+                </div>
+                {repChar && (
+                  <div className="flex items-center gap-0.5 mt-0.5 text-[var(--accent-500)]">
+                    <IconCrown />
+                    <span className="text-xs ns-bold text-gray-500 dark:text-gray-400 truncate">{repChar.name}</span>
+                  </div>
+                )}
+                {m.user?.discordUsername && <p className="text-xs text-gray-400">@{m.user.discordUsername}</p>}
+              </div>
+              <button
+                type="button"
+                disabled={loading === `kick-${m.userId}`}
+                onClick={() => setKickConfirm({ userId: m.userId, displayName: dispName })}
+                className="flex-shrink-0 text-xs ns-bold px-3 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors disabled:opacity-50"
+              >
+                추방
+              </button>
+            </div>
+          )
+        })}
       </div>
     )
   }
@@ -1049,8 +1164,8 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
                   </div>
                 )}
 
-                {/* 완료한 멤버 */}
-                {completedRows.length > 0 && (
+                {/* 완료한 멤버 - 숨김 */}
+                {false && completedRows.length > 0 && (
                   <>
                     <div className="px-5 pt-4 pb-2 border-t border-gray-100 dark:border-[#252525]">
                       <div className="flex items-center gap-2">
@@ -1169,7 +1284,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
 
         {/* 탭 바 — 세그먼트 컨트롤 */}
         <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#252525] rounded-2xl">
-          {TABS.map(t => (
+          {TABS.filter(t => !t.leaderOnly || isLeader).map(t => (
             <button key={t.id} type="button" onClick={() => setTab(t.id)}
               className={`flex-1 relative rounded-xl px-2 py-2.5 text-xs ns-bold transition-all duration-150 ${
                 tab === t.id
@@ -1189,11 +1304,40 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
         <div>
           {tab === 'raids'    && renderRaids()}
           {tab === 'members'  && renderMembers()}
+          {tab === 'manage'   && renderManageMembers()}
           {tab === 'pending'  && renderPending()}
           {tab === 'settings' && renderSettings()}
         </div>
       </div>
       {renderRaidModal()}
+      {kickConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setKickConfirm(null)} />
+          <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl overflow-hidden">
+            <div className="px-6 pt-6 pb-2 space-y-1.5">
+              <p className="text-base ns-extrabold text-gray-900 dark:text-white">멤버 추방</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                <span className="ns-bold text-gray-700 dark:text-gray-300">{kickConfirm.displayName}</span>님을 공격대에서 추방할까요?
+              </p>
+            </div>
+            <div className="flex gap-2 px-6 pb-6 pt-4">
+              <button type="button" onClick={() => setKickConfirm(null)}
+                className="flex-1 rounded-xl py-3 text-sm ns-bold bg-gray-100 dark:bg-[#252525] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2a2a2a] transition-colors"
+              >취소</button>
+              <button
+                type="button"
+                disabled={loading === `kick-${kickConfirm.userId}`}
+                onClick={async () => {
+                  const target = kickConfirm
+                  setKickConfirm(null)
+                  await memberAction(target.userId, 'kick')
+                }}
+                className="flex-1 rounded-xl py-3 text-sm ns-bold bg-red-500 hover:bg-red-600 active:bg-red-700 text-white transition-all disabled:opacity-50"
+              >추방</button>
+            </div>
+          </div>
+        </div>
+      )}
       {regenConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setRegenConfirm(false)} />

@@ -1,0 +1,18 @@
+import { auth } from '@/lib/auth'
+import { redirect } from 'next/navigation'
+import { prisma } from '@/lib/db'
+import SettingsClient from './SettingsClient'
+
+export const metadata = { title: '설정 — myloa' }
+
+export default async function SettingsPage() {
+  const session = await auth()
+  if (!session?.user?.id) redirect('/dashboard')
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, nickname: true, discordUsername: true, image: true, raidPublic: true },
+  })
+
+  return <SettingsClient user={user} session={session} />
+}
