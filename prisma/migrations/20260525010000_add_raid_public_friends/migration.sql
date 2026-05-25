@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "raidPublicFriends" BOOLEAN NOT NULL DEFAULT true;

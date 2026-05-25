@@ -66,10 +66,12 @@ function Section({ title, children }) {
 
 export default function SettingsClient({ user, session }) {
   const [nickname, setNickname] = useState(user?.nickname || '')
-  const [raidPublic, setRaidPublic] = useState(user?.raidPublic ?? true)
-  const [nickSaving, setNickSaving] = useState(false)
-  const [nickSaved, setNickSaved] = useState(false)
-  const [raidSaving, setRaidSaving] = useState(false)
+  const [raidPublic, setRaidPublic]               = useState(user?.raidPublic ?? true)
+  const [raidPublicFriends, setRaidPublicFriends] = useState(user?.raidPublicFriends ?? true)
+  const [nickSaving, setNickSaving]               = useState(false)
+  const [nickSaved, setNickSaved]                 = useState(false)
+  const [raidSaving, setRaidSaving]               = useState(false)
+  const [raidFriendsSaving, setRaidFriendsSaving] = useState(false)
   const [error, setError] = useState('')
   const inputRef = useRef(null)
 
@@ -110,6 +112,20 @@ export default function SettingsClient({ user, session }) {
       })
     } finally {
       setRaidSaving(false)
+    }
+  }, [])
+
+  const saveRaidPublicFriends = useCallback(async (val) => {
+    setRaidPublicFriends(val)
+    setRaidFriendsSaving(true)
+    try {
+      await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raidPublicFriends: val }),
+      })
+    } finally {
+      setRaidFriendsSaving(false)
     }
   }, [])
 
@@ -184,21 +200,39 @@ export default function SettingsClient({ user, session }) {
             {error && <p className="text-xs text-red-400 mt-1.5">{error}</p>}
           </div>
 
-          {/* 레이드 현황 공개 */}
-          <div className="px-5 py-4">
-            <div className="flex items-center justify-between">
+          {/* 공격대원에게 레이드 현황 공개 */}
+          <div className="px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
+            <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className={raidPublic ? 'text-[var(--accent-500)]' : 'text-gray-400 dark:text-zinc-500'}>
                   {raidPublic ? <IconEye /> : <IconEyeOff />}
                 </span>
                 <div>
-                  <p className="text-sm ns-bold text-gray-800 dark:text-zinc-200">레이드 현황 공개</p>
+                  <p className="text-sm ns-bold text-gray-800 dark:text-zinc-200">공격대원에게 레이드 현황 공개</p>
                   <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
-                    {raidPublic ? '공격대 멤버에게 레이드 현황이 공개됩니다' : '레이드 현황이 숨겨집니다'}
+                    {raidPublic ? '공격대 멤버에게 레이드 현황이 공개됩니다' : '공격대 멤버에게 레이드 현황이 숨겨집니다'}
                   </p>
                 </div>
               </div>
               <Toggle checked={raidPublic} onChange={saveRaidPublic} disabled={raidSaving} />
+            </div>
+          </div>
+
+          {/* 친구에게 레이드 현황 공개 */}
+          <div className="px-5 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className={raidPublicFriends ? 'text-[var(--accent-500)]' : 'text-gray-400 dark:text-zinc-500'}>
+                  {raidPublicFriends ? <IconEye /> : <IconEyeOff />}
+                </span>
+                <div>
+                  <p className="text-sm ns-bold text-gray-800 dark:text-zinc-200">친구에게 레이드 현황 공개</p>
+                  <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
+                    {raidPublicFriends ? '즐겨찾기한 친구에게 레이드 현황이 공개됩니다' : '친구에게 레이드 현황이 숨겨집니다'}
+                  </p>
+                </div>
+              </div>
+              <Toggle checked={raidPublicFriends} onChange={saveRaidPublicFriends} disabled={raidFriendsSaving} />
             </div>
           </div>
         </Section>

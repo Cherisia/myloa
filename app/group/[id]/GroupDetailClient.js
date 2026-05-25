@@ -138,7 +138,7 @@ function Avatar({ user, size = 28 }) {
 }
 
 // ── RaidRow (MemberDetailModal 내부 레이드 행) ────────────────────────────────
-function RaidRow({ raidId, difficulty, chars, highlight, completed }) {
+function RaidRow({ raidId, difficulty, chars, highlight, completed, noWrap }) {
   const { name, diff, image } = getRaidLabel(raidId, difficulty)
   const c = DIFF_COLORS[difficulty] || DIFF_COLOR_DEFAULT
 
@@ -171,13 +171,13 @@ function RaidRow({ raidId, difficulty, chars, highlight, completed }) {
 
   if (highlight) {
     return (
-      <div className="rounded-xl border border-gray-100 dark:border-[#2a2a2a]">
-        <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gray-50 dark:bg-[#252525] rounded-t-xl">
+      <div className={noWrap ? '' : 'rounded-xl border border-gray-100 dark:border-[#2a2a2a]'}>
+        <div className={`flex items-center gap-2 px-3.5 py-2.5 bg-gray-50 dark:bg-[#252525] ${noWrap ? 'rounded-t-xl' : 'rounded-t-xl'}`}>
           {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
           <span className="text-[13px] ns-bold text-gray-900 dark:text-white flex-1 truncate">{name}</span>
           <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full flex-shrink-0 ${c.badge}`}>{diff}</span>
         </div>
-        <div className="px-3.5 py-2.5 bg-white dark:bg-[#1e1e1e] flex flex-wrap gap-1.5 rounded-b-xl">
+        <div className="px-3.5 py-2.5 bg-white dark:bg-[#1e1e1e] flex flex-wrap gap-1.5">
           {chips}
         </div>
       </div>
@@ -199,10 +199,11 @@ function RaidRow({ raidId, difficulty, chars, highlight, completed }) {
 }
 
 // ── MemberDetailModal ─────────────────────────────────────────────────────────
-function MemberDetailModal({ member, role, myMember, raidList, onClose }) {
+function MemberDetailModal({ member, role, myMember, raidList, visibleMembers, favSortIds, onClose }) {
   const isPrivate = member.visibility === 'none'
   const repChar = member.expeditions?.[0]?.characters?.[0] || null
   const [activeTab, setActiveTab] = useState('together')
+  const [expandedRaid, setExpandedRaid] = useState(null)
 
   const memberRaidData = raidList.map(({ raidId, difficulty }) => {
     const chars = []
@@ -250,7 +251,73 @@ function MemberDetailModal({ member, role, myMember, raidList, onClose }) {
   function renderTabContent() {
     if (activeTab === 'together') {
       if (!togetherRaids.length) return <EmptyTabMsg msg={tabEmptyMsg.together} />
-      return togetherRaids.map(r => <RaidRow key={`${r.raidId}-${r.difficulty}`} {...r} highlight />)
+      return togetherRaids.map(r => {
+        const raidKey = `${r.raidId}__${r.difficulty}`
+        const isExpanded = expandedRaid === raidKey
+
+        const memberRows = (visibleMembers || [])
+          .filter(m => m.userId !== member.userId)
+          .map(m => ({ m, chars: getMemberIncompleteChars(m, r.raidId, r.difficulty) }))
+          .filter(({ chars }) => chars.length > 0)
+
+        return (
+          <div key={`${r.raidId}-${r.difficulty}`} className="rounded-xl overflow-hidden border border-gray-100 dark:border-[#2a2a2a]">
+            <button
+              type="button"
+              className="w-full text-left"
+              onClick={() => setExpandedRaid(isExpanded ? null : raidKey)}
+            >
+              <RaidRow {...r} highlight noWrap />
+            </button>
+            {isExpanded && (
+              <div className="border-t border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
+                {memberRows.length === 0 ? (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 px-4 py-3">다른 멤버 중 미완료 캐릭터가 없어요</p>
+                ) : (
+                  <div className="divide-y divide-gray-100 dark:divide-[#242424]">
+                    {memberRows.map(({ m, chars }) => {
+                      const isFav = (favSortIds || []).includes(m.userId)
+                      const mRepChar = m.expeditions?.[0]?.characters?.[0] || null
+                      return (
+                        <div key={m.userId} className="px-4 py-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="relative flex-shrink-0">
+                              <Avatar user={m.user} size={22} />
+                              {isFav && (
+                                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-white dark:bg-[#181818] flex items-center justify-center">
+                                  <IconStar filled size={7} />
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[12px] ns-bold text-gray-800 dark:text-gray-200 truncate flex-1">{m.displayName}</span>
+                            {mRepChar && (
+                              <div className="flex items-center gap-0.5 text-[var(--accent-500)] flex-shrink-0">
+                                <IconCrown />
+                                <span className="text-[10px] ns-bold text-gray-400 dark:text-gray-500 truncate max-w-[80px]">{mRepChar.name}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {chars.map((c, ci) => {
+                              const icon = getClassIcon(c.characterClass)
+                              return (
+                                <div key={ci} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-white dark:bg-[#242424] text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-[#2e2e2e]">
+                                  {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
+                                  <span>{c.name}</span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })
     }
     if (activeTab === 'incomplete') {
       if (!incompleteRaids.length) return <EmptyTabMsg msg={tabEmptyMsg.incomplete} />
@@ -324,7 +391,7 @@ function MemberDetailModal({ member, role, myMember, raidList, onClose }) {
                 <button
                   key={t.id}
                   type="button"
-                  onClick={() => setActiveTab(t.id)}
+                  onClick={() => { setActiveTab(t.id); setExpandedRaid(null) }}
                   className={`relative flex items-center gap-1.5 px-3 py-2.5 text-[12px] ns-bold transition-colors whitespace-nowrap
                     ${activeTab === t.id
                       ? 'text-gray-900 dark:text-white'
@@ -381,6 +448,7 @@ const TABS = [
 export default function GroupDetailClient({ expedition: init, userId, myMembership }) {
   const router = useRouter()
   const [expedition,   setExpedition]   = useState(init)
+  const [favSortIds,   setFavSortIds]   = useState(() => init.favoritedUserIds || [])
   const [tab,          setTab]          = useState('raids')
   const [loading,      setLoading]      = useState(null)
   const [copied,       setCopied]       = useState(false)
@@ -682,8 +750,8 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
         return name.includes(q) || discord.includes(q) || repCharName.includes(q)
       })
       .sort((a, b) => {
-        const aFav = expedition.favoritedUserIds?.includes(a.userId) ? 0 : 1
-        const bFav = expedition.favoritedUserIds?.includes(b.userId) ? 0 : 1
+        const aFav = favSortIds.includes(a.userId) ? 0 : 1
+        const bFav = favSortIds.includes(b.userId) ? 0 : 1
         return aFav - bFav
       })
 
@@ -1018,8 +1086,8 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
     const { name, diff } = getRaidLabel(selRaidId, selDiff)
 
     const sorted = [...visibleMembers].sort((a, b) => {
-      const aFav = expedition.favoritedUserIds?.includes(a.userId) ? 0 : 1
-      const bFav = expedition.favoritedUserIds?.includes(b.userId) ? 0 : 1
+      const aFav = favSortIds.includes(a.userId) ? 0 : 1
+      const bFav = favSortIds.includes(b.userId) ? 0 : 1
       return aFav - bFav
     })
 
@@ -1394,6 +1462,8 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
           role={memberModal.role}
           myMember={adaptedActive.find(m => m.userId === userId)}
           raidList={raidList}
+          visibleMembers={visibleMembers}
+          favSortIds={favSortIds}
           onClose={() => setMemberModal(null)}
         />
       )}

@@ -90,6 +90,7 @@ export default function Navbar() {
   const navLinks = [
     { href: '/dashboard', label: '원정대' },
     ...(session ? [{ href: '/group', label: '공격대' }] : []),
+    ...(session ? [{ href: '/friends', label: '친구' }] : []),
   ]
   const isActive = (href) => href && (pathname === href || pathname.startsWith(href + '/'))
 

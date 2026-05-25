@@ -11,7 +11,7 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, name: true, nickname: true, discordUsername: true, image: true, raidPublic: true },
+    select: { id: true, name: true, nickname: true, discordUsername: true, image: true, raidPublic: true, raidPublicFriends: true },
   })
   if (!user) return NextResponse.json({ error: '사용자를 찾을 수 없습니다' }, { status: 404 })
 
@@ -31,6 +31,9 @@ export async function PATCH(request) {
   if (typeof body.raidPublic === 'boolean') {
     data.raidPublic = body.raidPublic
   }
+  if (typeof body.raidPublicFriends === 'boolean') {
+    data.raidPublicFriends = body.raidPublicFriends
+  }
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
@@ -39,7 +42,7 @@ export async function PATCH(request) {
   const updated = await prisma.user.update({
     where: { id: session.user.id },
     data,
-    select: { nickname: true, raidPublic: true },
+    select: { nickname: true, raidPublic: true, raidPublicFriends: true },
   })
 
   return NextResponse.json({ success: true, ...updated })
