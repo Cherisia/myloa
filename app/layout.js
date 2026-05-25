@@ -3,11 +3,8 @@ import Script from 'next/script'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import SessionProvider from '@/components/SessionProvider'
 import Navbar from '@/components/Navbar'
-import AdSense from '@/components/AdSense'
+import { SidebarAdLeft, SidebarAdRight } from '@/components/SidebarAds'
 import { auth } from '@/lib/auth'
-
-const AD_SLOT_SIDEBAR_L = '7996518124'
-const AD_SLOT_SIDEBAR_R = '7746939400'
 
 export const metadata = {
   title: 'myloa - 로스트아크 레이드 숙제 관리 & 공유',
@@ -33,7 +30,7 @@ export default async function RootLayout({ children }) {
             <div className="2xl:flex 2xl:items-start 2xl:gap-4 2xl:px-4">
               {/* 좌측 사이드바 — 2xl only (160×600 sticky) */}
               <aside className="hidden 2xl:flex w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden items-start justify-center" style={{ minHeight: '600px' }}>
-                <AdSense slot={AD_SLOT_SIDEBAR_L} sidebar />
+                <SidebarAdLeft />
               </aside>
               {/* 본문 */}
               <main className="flex-1 min-w-0 px-4 py-6">
@@ -41,7 +38,7 @@ export default async function RootLayout({ children }) {
               </main>
               {/* 우측 사이드바 — 2xl only (160×600 sticky) */}
               <aside className="hidden 2xl:flex w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden items-start justify-center" style={{ minHeight: '600px' }}>
-                <AdSense slot={AD_SLOT_SIDEBAR_R} sidebar />
+                <SidebarAdRight />
               </aside>
             </div>
           </ThemeProvider>
