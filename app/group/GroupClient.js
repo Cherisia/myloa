@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { RAIDS } from '@/lib/raidData'
 import { HIDDEN_RAID_IDS, DIFF_LABEL, DIFF_COLOR, getClassIcon } from '@/app/dashboard/_constants'
@@ -161,9 +161,14 @@ function computeGroupRaids(groupFriends, me) {
     }
   }
 
+  // 그룹 인원이 레이드 최대 인원을 초과하는 경우 해당 레이드 제외
+  const groupSize = allParticipants.length
+  const raidMaxPlayers = Object.fromEntries(RAIDS.filter(r => r.maxPlayers).map(r => [r.id, r.maxPlayers]))
+
   // 모든 참여자(나 포함)가 미완료 캐릭터를 보유한 레이드만 표시
   const intersection = [...allKeys].filter(key => {
     const [raidId, difficulty] = key.split('__')
+    if (raidMaxPlayers[raidId] && groupSize > raidMaxPlayers[raidId]) return false
     return allParticipants.every(friend => hasIncompleteChar(friend, raidId, difficulty))
   })
 
@@ -205,6 +210,17 @@ function getRaidInfo(raidId, difficulty) {
   return { name: raid.name, diffLabel: diff?.label || difficulty, image: raid.image }
 }
 
+function getAllCharsForRaid(friend, raidId, difficulty) {
+  const result = []
+  for (const exp of friend.loaExpeditions || []) {
+    for (const char of exp.characters || []) {
+      const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+      if (entry) result.push(char)
+    }
+  }
+  return result
+}
+
 const STATUS_DOT = {
   complete:   'bg-emerald-400',
   partial:    'bg-amber-400',
@@ -216,8 +232,307 @@ const STATUS_LABEL = {
   complete: '완료', partial: '일부완료', incomplete: '미완료', none: '없음', hidden: '비공개',
 }
 
+// ── Friend Raid Modal (길드 MemberDetailModal과 동일한 디자인) ────────────────
+const RAID_MAP_GROUP = Object.fromEntries(RAIDS.map(r => [r.id, r]))
+const DIFF_COLORS_GROUP = {
+  nightmare: { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300' },
+  hard:      { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300' },
+  normal:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300' },
+  stage3:    { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300' },
+  stage2:    { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300' },
+  stage1:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300' },
+}
+
+function FriendRaidRow({ raidId, difficulty, chars, highlight, completed, noWrap }) {
+  const raid = RAID_MAP_GROUP[raidId]
+  const diff = raid?.difficulties?.find(d => d.key === difficulty)
+  const name = raid?.name || raidId
+  const diffLabel = diff?.label || difficulty
+  const image = raid?.image || null
+  const c = DIFF_COLORS_GROUP[difficulty] || { badge: 'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400' }
+
+  const chips = chars.map((ch, i) => {
+    const icon = getClassIcon(ch.class)
+    return (
+      <div key={i} className={`relative group cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold ${
+        completed
+          ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400'
+          : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300'
+      }`}>
+        {completed && (
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
+        <span>{ch.name}</span>
+        <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 hidden group-hover:flex flex-col gap-0.5 bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#3a3a3a] text-gray-700 dark:text-gray-200 rounded-md px-2 py-1.5 whitespace-nowrap shadow-sm z-50">
+          <div className="flex items-center gap-1 text-[10px] ns-bold">
+            <IconTrophy />
+            <span>{Number(ch.itemLevel).toFixed(2)}</span>
+          </div>
+          {ch.combatPower != null && (
+            <div className="flex items-center gap-1 text-[10px] ns-bold">
+              <Image src="/combat-power.svg" alt="전투력" width={10} height={10} unoptimized />
+              <span>{Math.round(Number(ch.combatPower)).toLocaleString('ko-KR')}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  })
+
+  if (highlight) {
+    return (
+      <div className={noWrap ? '' : 'rounded-xl border border-gray-100 dark:border-[#2a2a2a]'}>
+        <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gray-50 dark:bg-[#252525] rounded-t-xl">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
+          <span className="text-[13px] ns-bold text-gray-900 dark:text-white flex-1 truncate">{name}</span>
+          <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full flex-shrink-0 ${c.badge}`}>{diffLabel}</span>
+        </div>
+        <div className="px-3.5 py-2.5 bg-white dark:bg-[#1e1e1e] flex flex-wrap gap-1.5">{chips}</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-100 dark:border-[#2a2a2a]">
+      <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gray-50 dark:bg-[#252525] rounded-t-xl">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
+        <span className="text-[13px] ns-bold text-gray-900 dark:text-white flex-1 truncate">{name}</span>
+        <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full flex-shrink-0 ${c.badge}`}>{diffLabel}</span>
+      </div>
+      <div className="px-3.5 py-2.5 flex flex-wrap gap-1.5 bg-white dark:bg-[#1e1e1e] rounded-b-xl">{chips}</div>
+    </div>
+  )
+}
+
+function EmptyFriendTabMsg({ msg }) {
+  return (
+    <div className="py-10 text-center">
+      <p className="text-sm text-gray-400 dark:text-gray-500">{msg}</p>
+    </div>
+  )
+}
+
+function FriendRaidModal({ friend, me, onClose }) {
+  const [activeTab, setActiveTab] = useState('together')
+  const [expandedRaid, setExpandedRaid] = useState(null)
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  const name = getDisplayName(friend)
+  const repChar = getRepChar(friend)
+
+  const { raidData, incompleteRaids, completedRaids, togetherRaids } = useMemo(() => {
+    const raidOrder = Object.fromEntries(RAIDS.map((r, i) => [r.id, i]))
+    const DIFF_SORT = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
+
+    const raidKeys = new Set()
+    for (const exp of friend.loaExpeditions || []) {
+      for (const char of exp.characters || []) {
+        for (const raid of char.characterRaids || []) {
+          if (!HIDDEN_RAID_IDS.has(raid.raidId)) raidKeys.add(`${raid.raidId}__${raid.difficulty}`)
+        }
+      }
+    }
+
+    const sortedKeys = [...raidKeys].sort((a, b) => {
+      const [aId, aDiff] = a.split('__'), [bId, bDiff] = b.split('__')
+      const ro = (raidOrder[aId] ?? 99) - (raidOrder[bId] ?? 99)
+      return ro !== 0 ? ro : (DIFF_SORT[aDiff] ?? 9) - (DIFF_SORT[bDiff] ?? 9)
+    })
+
+    const raidData = sortedKeys.map(key => {
+      const [raidId, difficulty] = key.split('__')
+      const chars = []
+      for (const exp of friend.loaExpeditions || []) {
+        for (const char of exp.characters || []) {
+          const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+          if (!entry) continue
+          chars.push({ ...char, status: raidStatusOf(entry) })
+        }
+      }
+      return { raidId, difficulty, chars }
+    }).filter(r => r.chars.length > 0)
+
+    const incompleteRaids = raidData
+      .map(r => ({ ...r, chars: r.chars.filter(c => c.status !== 'complete') }))
+      .filter(r => r.chars.length > 0)
+
+    const completedRaids = raidData
+      .map(r => ({ ...r, chars: r.chars.filter(c => c.status === 'complete') }))
+      .filter(r => r.chars.length > 0)
+
+    const togetherRaids = incompleteRaids.filter(({ raidId, difficulty }) => {
+      for (const exp of me?.loaExpeditions || []) {
+        for (const char of exp.characters || []) {
+          const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+          if (!entry) continue
+          if (raidStatusOf(entry) !== 'complete') return true
+        }
+      }
+      return false
+    })
+
+    return { raidData, incompleteRaids, completedRaids, togetherRaids }
+  }, [friend, me])
+
+  function getMyIncompleteChars(raidId, difficulty) {
+    if (!me) return []
+    const result = []
+    for (const exp of me.loaExpeditions || []) {
+      for (const char of exp.characters || []) {
+        const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+        if (entry && raidStatusOf(entry) !== 'complete') result.push(char)
+      }
+    }
+    return result
+  }
+
+  const MODAL_TABS = [
+    { id: 'together',   label: '함께할 수 있는 레이드', count: togetherRaids.length },
+    { id: 'incomplete', label: '미완료한 레이드',        count: incompleteRaids.length },
+    { id: 'completed',  label: '완료한 레이드',          count: completedRaids.length },
+  ]
+
+  function renderTabContent() {
+    if (activeTab === 'together') {
+      if (!togetherRaids.length) return <EmptyFriendTabMsg msg="함께할 수 있는 레이드가 없어요" />
+      return togetherRaids.map(r => {
+        const raidKey = `${r.raidId}__${r.difficulty}`
+        const isExpanded = expandedRaid === raidKey
+        const myChars = getMyIncompleteChars(r.raidId, r.difficulty)
+        return (
+          <div key={raidKey} className="rounded-xl overflow-hidden border border-gray-100 dark:border-[#2a2a2a]">
+            <button type="button" className="w-full text-left" onClick={() => setExpandedRaid(isExpanded ? null : raidKey)}>
+              <FriendRaidRow raidId={r.raidId} difficulty={r.difficulty} chars={r.chars} highlight noWrap />
+            </button>
+            {isExpanded && (
+              <div className="border-t border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
+                {myChars.length === 0 ? (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 px-4 py-3">내 미완료 캐릭터가 없어요</p>
+                ) : (
+                  <div className="px-4 py-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Avatar src={me?.image} name={getDisplayName(me)} size={22} />
+                      <span className="text-[12px] ns-bold text-gray-800 dark:text-gray-200 flex-1">나</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {myChars.map((c, ci) => {
+                        const icon = getClassIcon(c.class)
+                        return (
+                          <div key={ci} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-white dark:bg-[#242424] text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-[#2e2e2e]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
+                            <span>{c.name}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })
+    }
+    if (activeTab === 'incomplete') {
+      if (!incompleteRaids.length) return <EmptyFriendTabMsg msg="미완료한 레이드가 없어요" />
+      return incompleteRaids.map(r => <FriendRaidRow key={`${r.raidId}-${r.difficulty}`} raidId={r.raidId} difficulty={r.difficulty} chars={r.chars} />)
+    }
+    if (!completedRaids.length) return <EmptyFriendTabMsg msg="완료한 레이드가 없어요" />
+    return completedRaids.map(r => <FriendRaidRow key={`${r.raidId}-${r.difficulty}`} raidId={r.raidId} difficulty={r.difficulty} chars={r.chars} completed />)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full sm:max-w-md h-[90vh] sm:h-[82vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-2xl overflow-hidden">
+
+        {/* 모바일 핸들 */}
+        <div className="sm:hidden flex justify-center pt-3 flex-shrink-0">
+          <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-[#333]" />
+        </div>
+
+        {/* 헤더 */}
+        <div className="px-5 pt-4 pb-4 flex-shrink-0 flex items-center gap-3 border-b border-gray-100 dark:border-[#2a2a2a]">
+          <Avatar src={friend.image} name={name} size={44} />
+          <div className="flex-1 min-w-0">
+            <div className="text-base ns-bold text-gray-900 dark:text-white truncate">{name}</div>
+            <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+              {repChar && (
+                <div className="flex items-center gap-0.5 flex-shrink-0 text-[var(--accent-500)]">
+                  <IconCrown />
+                  <span className="text-xs ns-bold text-gray-700 dark:text-gray-300">{repChar.name}</span>
+                </div>
+              )}
+              {repChar && friend.discordUsername && (
+                <span className="text-[10px] text-gray-300 dark:text-gray-600 flex-shrink-0">·</span>
+              )}
+              {friend.discordUsername && (
+                <p className="text-xs text-gray-400">@{friend.discordUsername}</p>
+              )}
+            </div>
+          </div>
+          <button type="button" onClick={onClose}
+            className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-gray-400 transition-colors flex-shrink-0">
+            <IconX />
+          </button>
+        </div>
+
+        {/* 탭 바 */}
+        <div className="flex-shrink-0 flex border-b border-gray-100 dark:border-[#2a2a2a] px-3 pt-1">
+          {MODAL_TABS.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => { setActiveTab(t.id); setExpandedRaid(null) }}
+              className={`relative flex items-center gap-1.5 px-3 py-2.5 text-[12px] ns-bold transition-colors whitespace-nowrap ${
+                activeTab === t.id
+                  ? 'text-gray-900 dark:text-white'
+                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
+              }`}
+            >
+              {t.label}
+              {t.count > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ns-bold ${
+                  activeTab === t.id
+                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                    : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400'
+                }`}>
+                  {t.count}
+                </span>
+              )}
+              {activeTab === t.id && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 dark:bg-white rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* 탭 콘텐츠 */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
+          {renderTabContent()}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Raid Members Modal ────────────────────────────────────────────────────────
 function RaidMembersModal({ modal, me, onClose }) {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
   const { groupFriends, raidId, difficulty } = modal
   const { name, image } = getRaidInfo(raidId, difficulty)
   const mePublic = me ? { ...me, raidPublicFriends: true } : null
@@ -304,6 +619,10 @@ function RaidMembersModal({ modal, me, onClose }) {
 
 // ── Confirm Modal ──────────────────────────────────────────────────────────────
 function ConfirmModal({ modal, onConfirm, onCancel }) {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
   const name = getDisplayName(modal.target)
 
   const config = {
@@ -430,6 +749,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
   const [activeTab, setActiveTab] = useState('friends')
   const [confirmModal, setConfirmModal] = useState(null)
   const [raidModal, setRaidModal] = useState(null) // { groupFriends, raidId, difficulty }
+  const [friendModal, setFriendModal] = useState(null) // { friend }
 
   // 그룹 — localStorage 영속화
   const [groups, setGroupsRaw] = useState([])
@@ -590,8 +910,8 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
   const tabs = [
-    { key: 'friends', label: '친구', count: friends.length },
     { key: 'groups', label: '그룹' },
+    { key: 'friends', label: '친구', count: friends.length },
     { key: 'requests', label: '받은 요청', count: pendingCount, badge: true },
   ]
 
@@ -611,12 +931,19 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
           onClose={() => setRaidModal(null)}
         />
       )}
+      {friendModal && (
+        <FriendRaidModal
+          friend={friendModal.friend}
+          me={me}
+          onClose={() => setFriendModal(null)}
+        />
+      )}
 
       {/* ── 페이지 헤더 ─────────────────────────────────────────────────── */}
       <div className="border-b border-gray-100 dark:border-white/[0.05] bg-white dark:bg-[#111] px-4 sm:px-8 py-5">
         <div className="mx-auto max-w-[1400px] flex items-center justify-between">
           <div>
-            <h1 className="text-lg ns-bold text-gray-900 dark:text-white">친구</h1>
+            <h1 className="text-lg ns-bold text-gray-900 dark:text-white">그룹</h1>
             <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
               친구와 함께 갈 수 있는 레이드를 확인하세요
             </p>
@@ -636,13 +963,13 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         </div>
 
         {/* ── 탭 ─────────────────────────────────────────────────────────── */}
-        <div className="mx-auto max-w-[1400px] mt-4 flex gap-1">
+        <div className="mx-auto max-w-[1400px] mt-4 flex gap-1 w-[24%]" style={{marginLeft:0}}>
           {tabs.map(tab => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`relative px-4 py-1.5 text-sm ns-bold rounded-lg transition-colors ${
+              className={`relative flex-1 text-center px-4 py-1.5 text-sm ns-bold rounded-lg transition-colors ${
                 activeTab === tab.key
                   ? 'bg-[var(--accent-400)] text-gray-900'
                   : 'text-gray-500 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/[0.05]'
@@ -774,7 +1101,8 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                         <div
                           className="flex items-center gap-3 px-4 py-3
                             border-b border-gray-50 dark:border-white/[0.03] last:border-b-0
-                            hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+                            hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
+                          onClick={() => setFriendModal({ friend })}
                         >
                           <Avatar src={friend.image} name={name} size={36} />
                           <div className="flex-1 min-w-0">
@@ -803,7 +1131,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
+                          <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                             <button
                               type="button"
                               onClick={() => toggleFavorite(friend)}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { RAIDS } from '@/lib/raidData'
@@ -468,6 +468,12 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   const [kickConfirm,   setKickConfirm]   = useState(null) // { userId, displayName }
   const [memberSearch,  setMemberSearch]  = useState('')
   const [manageSearch,  setManageSearch]  = useState('')
+
+  const anyModalOpen = !!raidModal || !!memberModal || !!kickConfirm || regenConfirm || deleteConfirm || saveSuccess
+  useEffect(() => {
+    document.body.style.overflow = anyModalOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [anyModalOpen])
 
   const isLeader  = expedition.leaderId === userId
   const isOfficer = isLeader || myMembership.role === 'officer'

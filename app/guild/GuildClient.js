@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 const IconPlus = () => (
@@ -163,6 +163,11 @@ export default function GuildClient({ initialGroups }) {
   const router = useRouter()
   const [showCreate, setShowCreate] = useState(false)
   const [showJoin, setShowJoin] = useState(false)
+
+  useEffect(() => {
+    document.body.style.overflow = (showCreate || showJoin) ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [showCreate, showJoin])
 
   function handleCreated(newGroup) {
     setShowCreate(false)
