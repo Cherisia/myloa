@@ -1,5 +1,6 @@
 import './globals.css'
 import Script from 'next/script'
+import Link from 'next/link'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import SessionProvider from '@/components/SessionProvider'
 import Navbar from '@/components/Navbar'
@@ -35,6 +36,11 @@ export default async function RootLayout({ children }) {
               {/* 본문 */}
               <main className="flex-1 min-w-0 px-4 py-6">
                 {children}
+                <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-white/[0.06] text-center">
+                  <Link href="/privacy" className="text-[11px] text-gray-400 dark:text-zinc-600 hover:text-gray-600 dark:hover:text-zinc-400 transition-colors">
+                    개인정보처리방침
+                  </Link>
+                </footer>
               </main>
               {/* 우측 사이드바 — 2xl only (160×600 sticky) */}
               <aside className="hidden 2xl:flex w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden items-start justify-center" style={{ minHeight: '600px' }}>
