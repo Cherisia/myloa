@@ -8,25 +8,62 @@ import { SidebarAdLeft, SidebarAdRight } from '@/components/SidebarAds'
 import { auth } from '@/lib/auth'
 
 export const metadata = {
+  metadataBase: new URL('https://myloa.app'),
   title: {
     default: 'myloa - 로스트아크 레이드 숙제 관리 & 공유',
     template: '%s - myloa',
   },
-  description: '로스트아크 레이드 숙제를 관리하고 지인들과 공유해보세요.',
+  description: '로스트아크 레이드 숙제를 캐릭터별로 관리하고 골드를 계산하세요. 길드·그룹원과 레이드 진행 현황을 실시간으로 공유할 수 있습니다.',
+  keywords: ['로스트아크', '로스트아크 숙제', '레이드 숙제', '숙제 관리', '골드 계산', '로아 숙제', '로아 레이드', '레이드 체크리스트', '길드 레이드 현황', 'lost ark', 'raid tracker'],
+  authors: [{ name: 'myloa', url: 'https://myloa.app' }],
+  creator: 'myloa',
+  publisher: 'myloa',
+  openGraph: {
+    type: 'website',
+    locale: 'ko_KR',
+    url: 'https://myloa.app',
+    siteName: 'myloa',
+    title: 'myloa - 로스트아크 레이드 숙제 관리 & 공유',
+    description: '로스트아크 레이드 숙제를 캐릭터별로 관리하고 골드를 계산하세요. 길드·그룹원과 레이드 진행 현황을 실시간으로 공유할 수 있습니다.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'myloa - 로스트아크 레이드 숙제 관리 & 공유',
+    description: '로스트아크 레이드 숙제를 캐릭터별로 관리하고 골드를 계산하세요. 길드·그룹원과 레이드 진행 현황을 실시간으로 공유할 수 있습니다.',
+  },
   icons: { icon: '/icon.svg' },
   verification: {
-    other: { 'google-adsense-account': 'ca-pub-7505734558280029' },
+    google: 'XkrTtOH9OlbQnHmkUGOcJZJ7b06HFsRbdzX5prlVksM',
+    other: {
+      // 네이버 서치어드바이저: 등록 후 발급받은 코드로 교체
+      // 'naver-site-verification': 'YOUR_NAVER_VERIFICATION_CODE',
+      'google-adsense-account': 'ca-pub-7505734558280029',
+    },
   },
 }
 
 export default async function RootLayout({ children }) {
   const session = await auth()
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'myloa',
+    url: 'https://myloa.app',
+    description: '로스트아크 레이드 숙제를 캐릭터별로 관리하고 골드를 계산하세요. 길드·그룹원과 레이드 진행 현황을 실시간으로 공유할 수 있습니다.',
+    applicationCategory: 'GameApplication',
+    operatingSystem: 'Web',
+    inLanguage: 'ko',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+  }
+
   return (
     <html lang="ko" suppressHydrationWarning>
-      <head>
-      </head>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <SessionProvider session={session}>
           <ThemeProvider>
             <Navbar />

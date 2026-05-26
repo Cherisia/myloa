@@ -1,6 +1,8 @@
 export const metadata = {
   title: '개인정보처리방침',
-  description: 'myloa 서비스의 개인정보처리방침입니다.',
+  description: 'myloa의 개인정보 수집 항목, 이용 목적, 보유 기간 및 이용자 권리를 안내합니다.',
+  alternates: { canonical: 'https://myloa.app/privacy' },
+  robots: { index: true, follow: false },
 }
 
 export default function PrivacyPage() {

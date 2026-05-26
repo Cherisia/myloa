@@ -4,8 +4,9 @@ import { redirect } from 'next/navigation'
 import GroupClient from './GroupClient'
 
 export const metadata = {
-  title: '그룹',
+  title: '그룹원 레이드 현황',
   description: '친구들의 레이드 현황을 확인하고 함께 공략할 레이드를 찾아보세요.',
+  robots: { index: false, follow: false },
 }
 
 const FRIEND_USER_SELECT = {

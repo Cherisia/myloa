@@ -4,8 +4,9 @@ import { redirect } from 'next/navigation'
 import GuildClient from './GuildClient'
 
 export const metadata = {
-  title: '길드',
+  title: '길드 레이드 현황',
   description: '길드원들의 레이드 진행 현황을 한눈에 확인하고 공략을 함께 계획하세요.',
+  robots: { index: false, follow: false },
 }
 
 export default async function GuildPage() {

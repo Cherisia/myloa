@@ -1,7 +1,8 @@
 // 서버 컴포넌트 — DB에서 캐릭터 + 숙제를 미리 불러와 클라이언트에 전달
 export const metadata = {
-  title: '대시보드',
-  description: '로스트아크 레이드 숙제를 관리하고 지인들과 공유해보세요.',
+  title: '레이드 숙제 관리',
+  description: '로스트아크 캐릭터별 주간 레이드 숙제를 체크하고 골드 수급을 계산하세요. 비로그인으로도 바로 체험할 수 있습니다.',
+  alternates: { canonical: 'https://myloa.app/dashboard' },
 }
 
 import { auth } from '@/lib/auth'

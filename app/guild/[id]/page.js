@@ -3,6 +3,10 @@ import { prisma } from '@/lib/db'
 import { notFound, redirect } from 'next/navigation'
 import GuildDetailClient from './GuildDetailClient'
 
+export const metadata = {
+  robots: { index: false, follow: false },
+}
+
 export default async function GuildDetailPage({ params }) {
   const session = await auth()
   if (!session?.user?.id) redirect('/dashboard')

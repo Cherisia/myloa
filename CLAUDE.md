@@ -238,6 +238,44 @@ npx prisma migrate deploy
 
 **순서:** 로컬 migrate deploy → Neon MCP로 운영 SQL 실행 → 두 곳 모두 완료 확인 → git push(배포)
 
+## SEO 규칙
+
+### 페이지별 인덱싱 정책
+| 페이지 | 인덱싱 | 이유 |
+|--------|--------|------|
+| `/dashboard` | ✅ index | 비로그인 데모 접근 가능 — 핵심 랜딩 페이지 |
+| `/privacy` | ✅ index | 공개 페이지 |
+| `/guild`, `/guild/[id]` | ❌ noindex | 로그인 필수 |
+| `/group` | ❌ noindex | 로그인 필수 |
+| `/settings` | ❌ noindex | 로그인 필수 |
+
+- 새 페이지 추가 시: 로그인 없이 접근 가능한 경우에만 sitemap(`app/sitemap.js`)에 추가
+- 로그인 필수 페이지는 metadata에 반드시 `robots: { index: false, follow: false }` 명시
+- `app/robots.js` disallow 목록도 함께 업데이트
+
+### metadata 작성 규칙
+- **title 구분자**: `ㅡ` 금지, 반드시 `-` 사용 (예: `레이드 숙제 관리 - myloa`)
+- **description**: 80자 이상, 핵심 키워드(로스트아크, 레이드 숙제, 골드 계산 등) 포함
+- **canonical**: 공개 페이지에는 `alternates: { canonical: 'https://myloa.app/경로' }` 추가
+- `metadataBase`는 `layout.js`의 `metadata` 객체 안에만 선언 (standalone export 금지)
+- 루트(`/`) 리다이렉트는 `permanentRedirect` 사용 (308 — SEO 신호 전달)
+
+### 검색엔진 인증 코드 위치
+`app/layout.js` `verification` 필드에 주석으로 슬롯 준비되어 있음:
+```js
+verification: {
+  // google: 'Google Search Console 인증 코드',
+  other: {
+    // 'naver-site-verification': '네이버 서치어드바이저 인증 코드',
+    'google-adsense-account': 'ca-pub-7505734558280029',
+  },
+}
+```
+
+### JSON-LD 구조화 데이터
+`app/layout.js` RootLayout 내부에 `WebApplication` 스키마 삽입되어 있음.
+스키마 수정 시 [Schema.org WebApplication](https://schema.org/WebApplication) 스펙 준수.
+
 ## 알려진 제약
 - `AutoSetupModal`: `raidsByName`은 `previewBase`(chars+apiKey) + `strategy`에서 `useMemo`로 파생 — effect로 관리하지 않음
 - 드래그앤드랍(캐릭터 순서): HTML5 DnD API + 커스텀 ghost (`setDragImage`)

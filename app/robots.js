@@ -3,7 +3,7 @@ export default function robots() {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', '/settings'],
+      disallow: ['/api/', '/settings', '/guild/', '/group/'],
     },
     sitemap: 'https://myloa.app/sitemap.xml',
   }
