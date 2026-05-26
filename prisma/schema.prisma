@@ -99,6 +99,8 @@ model Character {
   expedition     LoaExpedition      @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
   characterRaids CharacterRaid[]
   customItems    CharacterCustomItem[]
+
+  @@index([expeditionId])
 }
 
 // ─── 숙제 ─────────────────────────────────────────────────────────────────────
@@ -119,6 +121,7 @@ model CharacterRaid {
   character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@unique([characterId, raidId, difficulty])
+  @@index([resetAt])
 }
 
 // ─── 커스텀 숙제 ──────────────────────────────────────────────────────────────

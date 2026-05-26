@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useMemo, useEffect } from 'react'
-import { RAIDS, CLASS_COLOR, calcGoldBound, calcGoldTrade } from '@/lib/raidData'
+import { RAIDS, RAID_MAP, CLASS_COLOR, calcGoldBound, calcGoldTrade } from '@/lib/raidData'
 import { LOA_KEY_STORAGE, DIFF_LABEL, DIFF_COLOR, GOLD_CHAR_LIMIT, EX_RAID_IDS } from '../_constants'
 import { getClassIcon } from '../_constants'
 import { IconInfo, IconItemLevel } from '../_icons'
@@ -275,7 +275,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                         {char.raidEntries.length === 0 ? (
                           <p className="px-3 py-2.5 text-xs text-gray-400 dark:text-gray-600">설정된 레이드가 없습니다</p>
                         ) : char.raidEntries.map((entry, i) => {
-                          const raid = RAIDS.find(r => r.id === entry.raidId)
+                          const raid = RAID_MAP[entry.raidId]
                           const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
                           if (!raid || !diff) return null
                           const allGates  = new Array(diff.gates).fill(true)
@@ -366,7 +366,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                         아이템레벨이 낮아 배정 가능한 레이드가 없습니다
                       </p>
                     ) : entries.map((entry, i) => {
-                      const raid = RAIDS.find(r => r.id === entry.raidId)
+                      const raid = RAID_MAP[entry.raidId]
                       const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
                       if (!raid || !diff) return null
                       const allGates  = new Array(diff.gates).fill(true)

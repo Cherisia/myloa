@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import DiscordIcon from '@/components/DiscordIcon'
 import AdSense from '@/components/AdSense'
-import { RAIDS, CLASS_COLOR, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
+import { RAIDS, RAID_MAP, RAID_ORDER_MAP, CLASS_COLOR, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
 import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, KURZAN_NAMES, DAILY_PRESET_ORDER, orderedDailyCustomItems, isWeeklyCustomItem, getClassIcon, getKurzanPreset, CUSTOM_MAX } from './_constants'
 import { IconCrown, IconPlus, IconCheck, IconRefresh, IconInfo, IconClass, IconItemLevel, IconPower, IconGrip } from './_icons'
 import { saveRaid, deleteRaid, computeAutoRaids } from './_raidHelpers'
@@ -24,7 +24,7 @@ function collectDashboardImageUrls(chars, raidsByCharId, customByCharId = {}) {
     const clsIcon = getClassIcon(char.class)
     if (clsIcon) urls.push(clsIcon)
     for (const entry of raidsByCharId[char.id] || []) {
-      const raid = RAIDS.find(r => r.id === entry.raidId)
+      const raid = RAID_MAP[entry.raidId]
       if (raid?.image) urls.push(raid.image)
     }
     for (const item of customByCharId[char.id] || []) {
@@ -488,7 +488,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         if (HIDDEN_RAID_IDS.has(r.raidId)) continue
         const key = `${r.raidId}:${r.difficulty}`
         if (!seen.has(key)) {
-          const raidDef = RAIDS.find(x => x.id === r.raidId)
+          const raidDef = RAID_MAP[r.raidId]
           const diffDef = raidDef?.difficulties.find(x => x.key === r.difficulty)
           seen.set(key, {
             raidId:    r.raidId,
@@ -504,7 +504,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       }
     }
     return [...seen.values()].sort((a, b) =>
-      RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId)
+      (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1)
     )
   }, [activeChars, raids])
 
@@ -568,7 +568,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           return cKey === accountKey && (raids[c.id] || []).some(e => e.raidId === raidId)
         })
         if (conflict) {
-          const raidName = RAIDS.find(r => r.id === raidId)?.name || raidId
+          const raidName = RAID_MAP[raidId]?.name || raidId
           setExRaidError({ raidName, conflictCharName: conflict.name })
           return
         }
@@ -588,7 +588,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         if (oldEntry) persistDelete(charId, raidId, oldEntry.difficulty)
         list = list.filter(e => e.raidId !== raidId)
         // 새 난이도 추가 후 DB 저장
-        const raid = RAIDS.find(r => r.id === raidId)
+        const raid = RAID_MAP[raidId]
         const diff = raid?.difficulties.find(d => d.key === diffKey)
         if (diff) {
           // EX 레이드는 항상 골드, 일반 레이드는 캐릭터/계정 한도 기준으로 결정
@@ -658,7 +658,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       const allDone  = entry.gateClears.length > 0 && entry.gateClears.every(Boolean)
       const moreDone = entry.moreDone || false
 
-      const raid     = RAIDS.find(r => r.id === raidId)
+      const raid     = RAID_MAP[raidId]
       const diff     = raid?.difficulties.find(d => d.key === diffKey)
       const allGates = diff ? new Array(diff.gates).fill(true) : []
       const hasMore  = diff ? calcGoldMore(diff, allGates) > 0 : false
@@ -1113,7 +1113,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       let moreDoneCount = 0
       charRaids.forEach(entry => {
         const isEX = EX_RAID_IDS.has(entry.raidId)
-        const raid = RAIDS.find(r => r.id === entry.raidId)
+        const raid = RAID_MAP[entry.raidId]
         const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
         if (!diff) return
         const allGates = new Array(diff.gates).fill(true)
@@ -1167,7 +1167,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     Object.entries(raids).forEach(([charId, list]) => {
       if (!activeIds.has(charId)) return
       list.forEach(entry => {
-        const raid = RAIDS.find(r => r.id === entry.raidId)
+        const raid = RAID_MAP[entry.raidId]
         const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
         if (!diff) return
         allTotalCount++
@@ -1598,7 +1598,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           const char     = chars.find(c => c.id === charId)
           const charRaids = (raids[charId] || [])
             .filter(entry => !HIDDEN_RAID_IDS.has(entry.raidId))
-            .sort((a, b) => RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId))
+            .sort((a, b) => (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1))
 
           const isDark = document.documentElement.classList.contains('dark')
           const _dTheme       = document.documentElement.dataset.theme || ''
@@ -1620,7 +1620,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
           // 레이드 행
           charRaids.forEach(entry => {
-            const raid   = RAIDS.find(r => r.id === entry.raidId)
+            const raid   = RAID_MAP[entry.raidId]
             if (!raid) return
             const allDone = entry.gateClears.length > 0 && entry.gateClears.every(Boolean)
             const row = document.createElement('div')
@@ -1681,7 +1681,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               const charRaids = [...(raids[char.id] || [])]
                 .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
                 .filter(e => !selectedRaid || (e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
-                .sort((a, b) => RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId))
+                .sort((a, b) => (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1))
               if (selectedRaid && charRaids.length === 0) return null
 
               const isDragging = dragCharId === char.id
@@ -1853,7 +1853,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     ) : (
                       <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
                         {charRaids.map(entry => {
-                          const raid = RAIDS.find(r => r.id === entry.raidId)
+                          const raid = RAID_MAP[entry.raidId]
                           const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
                           if (!raid || !diff) return null
                           const allGates  = new Array(diff.gates).fill(true)
@@ -2261,7 +2261,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     })}
                   {showRaidHeader && renderSectionHeader('raid', raidSectionTitle)}
                   {raidsToRender.map(row => {
-                    const raidData = RAIDS.find(r => r.id === row.raidId)
+                    const raidData = RAID_MAP[row.raidId]
                     return (
                       <tr key={row.key} className={glanceTable ? 'group border-b border-gray-100 dark:border-[#2a2a2a]' : 'group/row transition-colors border-b border-gray-100/90 dark:border-white/[0.05] hover:bg-gray-50/90 dark:hover:bg-white/[0.03]'}>
                         <td style={{ width: colW.raid, minWidth: colW.stretch ? 0 : COL_RAID }} className={glanceTable

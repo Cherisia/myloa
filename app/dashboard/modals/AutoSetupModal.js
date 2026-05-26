@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useMemo } from 'react'
-import { RAIDS, calcGoldTrade, calcGoldBound } from '@/lib/raidData'
+import { RAIDS, RAID_MAP, calcGoldTrade, calcGoldBound } from '@/lib/raidData'
 import { LOA_KEY_STORAGE, EX_RAID_IDS, getClassIcon } from '../_constants'
 import { buildAutoRaids } from '../_raidHelpers'
 
@@ -178,7 +178,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
                   {/* 레이드 목록 */}
                   <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
                     {entries.map(entry => {
-                      const raid = RAIDS.find(r => r.id === entry.raidId)
+                      const raid = RAID_MAP[entry.raidId]
                       const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
                       if (!raid || !diff) return null
                       const allGates  = new Array(diff.gates).fill(true)

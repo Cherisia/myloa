@@ -31,9 +31,9 @@ function tryConsumeServerPoolSlot(rateKey) {
     return Math.ceil((SERVER_POOL_COOLDOWN_MS - (now - prev)) / 1000)
   }
   serverPoolLastAt.set(rateKey, now)
-  if (serverPoolLastAt.size > 5000) {
+  if (serverPoolLastAt.size > 500) {
     for (const [k, t] of serverPoolLastAt) {
-      if (now - t > SERVER_POOL_COOLDOWN_MS * 2) serverPoolLastAt.delete(k)
+      if (now - t > SERVER_POOL_COOLDOWN_MS) serverPoolLastAt.delete(k)
     }
   }
   return null
