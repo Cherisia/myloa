@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { RAIDS } from '@/lib/raidData'
+import { RAID_MAP } from '@/lib/raidData'
 import { getGroupRaidList, raidStatusOf } from '@/lib/groupRaidShare'
 import { CLASS_ICON, getClassIcon } from '@/app/dashboard/_constants'
 
@@ -106,7 +106,6 @@ function getMemberCompletedChars(member, raidId, difficulty) {
   return chars
 }
 
-const RAID_MAP = Object.fromEntries(RAIDS.map(r => [r.id, r]))
 function getRaidLabel(raidId, difficulty) {
   const raid = RAID_MAP[raidId]
   const diff = raid?.difficulties?.find(d => d.key === difficulty)

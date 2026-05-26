@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useMemo } from 'react'
-import { RAIDS, RAID_MAP, calcGoldTrade, calcGoldBound } from '@/lib/raidData'
+import { RAID_MAP, calcGoldTrade, calcGoldBound } from '@/lib/raidData'
 import { LOA_KEY_STORAGE, EX_RAID_IDS, getClassIcon } from '../_constants'
 import { buildAutoRaids } from '../_raidHelpers'
 

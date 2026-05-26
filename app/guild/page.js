@@ -4,7 +4,8 @@ import { redirect } from 'next/navigation'
 import GuildClient from './GuildClient'
 
 export const metadata = {
-  title: 'myloa - 로스트아크 레이드 숙제 관리 & 공유',
+  title: '길드',
+  description: '길드원들의 레이드 진행 현황을 한눈에 확인하고 공략을 함께 계획하세요.',
 }
 
 export default async function GuildPage() {

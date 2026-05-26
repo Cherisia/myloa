@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import Image from 'next/image'
-import { RAIDS } from '@/lib/raidData'
+import { RAIDS, RAID_MAP, RAID_ORDER_MAP } from '@/lib/raidData'
 import { HIDDEN_RAID_IDS, DIFF_LABEL, DIFF_COLOR, getClassIcon } from '@/app/dashboard/_constants'
 import { raidStatusOf } from '@/lib/groupRaidShare'
 
@@ -172,13 +172,12 @@ function computeGroupRaids(groupFriends, me) {
     return allParticipants.every(friend => hasIncompleteChar(friend, raidId, difficulty))
   })
 
-  const raidOrder = Object.fromEntries(RAIDS.map((r, i) => [r.id, i]))
   const DIFF_SORT_MAP = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
 
   return intersection
     .map(key => { const [raidId, difficulty] = key.split('__'); return { raidId, difficulty } })
     .sort((a, b) => {
-      const ro = (raidOrder[a.raidId] ?? 99) - (raidOrder[b.raidId] ?? 99)
+      const ro = (RAID_ORDER_MAP[a.raidId] ?? 99) - (RAID_ORDER_MAP[b.raidId] ?? 99)
       if (ro !== 0) return ro
       return (DIFF_SORT_MAP[a.difficulty] ?? 9) - (DIFF_SORT_MAP[b.difficulty] ?? 9)
     })
@@ -204,7 +203,7 @@ function getFriendRaidStatus(friend, raidId, difficulty) {
 }
 
 function getRaidInfo(raidId, difficulty) {
-  const raid = RAIDS.find(r => r.id === raidId)
+  const raid = RAID_MAP[raidId]
   if (!raid) return { name: raidId, diffLabel: difficulty, image: null }
   const diff = raid.difficulties?.find(d => d.key === difficulty)
   return { name: raid.name, diffLabel: diff?.label || difficulty, image: raid.image }
@@ -233,7 +232,6 @@ const STATUS_LABEL = {
 }
 
 // ── Friend Raid Modal (길드 MemberDetailModal과 동일한 디자인) ────────────────
-const RAID_MAP_GROUP = Object.fromEntries(RAIDS.map(r => [r.id, r]))
 const DIFF_COLORS_GROUP = {
   nightmare: { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300' },
   hard:      { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300' },
@@ -244,7 +242,7 @@ const DIFF_COLORS_GROUP = {
 }
 
 function FriendRaidRow({ raidId, difficulty, chars, highlight, completed, noWrap }) {
-  const raid = RAID_MAP_GROUP[raidId]
+  const raid = RAID_MAP[raidId]
   const diff = raid?.difficulties?.find(d => d.key === difficulty)
   const name = raid?.name || raidId
   const diffLabel = diff?.label || difficulty
@@ -331,7 +329,6 @@ function FriendRaidModal({ friend, me, onClose }) {
   const repChar = getRepChar(friend)
 
   const { raidData, incompleteRaids, completedRaids, togetherRaids } = useMemo(() => {
-    const raidOrder = Object.fromEntries(RAIDS.map((r, i) => [r.id, i]))
     const DIFF_SORT = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
 
     const raidKeys = new Set()
@@ -345,7 +342,7 @@ function FriendRaidModal({ friend, me, onClose }) {
 
     const sortedKeys = [...raidKeys].sort((a, b) => {
       const [aId, aDiff] = a.split('__'), [bId, bDiff] = b.split('__')
-      const ro = (raidOrder[aId] ?? 99) - (raidOrder[bId] ?? 99)
+      const ro = (RAID_ORDER_MAP[aId] ?? 99) - (RAID_ORDER_MAP[bId] ?? 99)
       return ro !== 0 ? ro : (DIFF_SORT[aDiff] ?? 9) - (DIFF_SORT[bDiff] ?? 9)
     })
 

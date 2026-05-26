@@ -114,7 +114,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const confettiInitRef                         = useRef(false)
   const goldConfettiInitRef                     = useRef(false)
   const tableWrapRef                            = useRef(null)
-  const sortCacheRef                            = useRef({ raidKey: null, charKey: null, sorted: null })
   const [tableContainerWidth, setTableContainerWidth] = useState(0)
 
   // 원정대 탭 = chars의 expeditionId 기준으로 자동 파생
@@ -204,7 +203,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         if (checks)   setCustomChecks(JSON.parse(checks))
         if (gauge)    setRestGauge(JSON.parse(gauge))
         if (deducted) setRestGaugeDeducted(JSON.parse(deducted))
-      } catch {}
+      } catch (e) { console.error('[migration:load]', e) }
     } else if (Object.keys(initialCustomItems).length === 0) {
       // 로그인 상태이지만 DB가 비어있음: localStorage → DB 마이그레이션
       try {
@@ -245,7 +244,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     if (d.restGauge) { if (!newRG[charId]) newRG[charId] = {};  newRG[charId][d.id]  = d.restGauge }
                     if (d.deducted)  { if (!newRGD[charId]) newRGD[charId] = {}; newRGD[charId][d.id] = true }
                   }
-                } catch {}
+                } catch (e) { console.error('[migration]', e) }
               }
             }
             setCustomItems(newCI)
@@ -256,7 +255,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               .forEach(k => { try { localStorage.removeItem(k) } catch {} })
           })()
         }
-      } catch {}
+      } catch (e) { console.error('[migration:db]', e) }
     }
     setLsReady(true)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -310,7 +309,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     setCustomItems(prev => { const n = { ...prev }; deletedIds.forEach(id => delete n[id]); return n })
 
     if (isLoggedIn) {
-      pageChars.forEach(c => fetch(`/api/characters?id=${c.id}`, { method: 'DELETE' }).catch(() => {}))
+      pageChars.forEach(c => fetch(`/api/characters?id=${c.id}`, { method: 'DELETE' }).catch(e => console.error('[deleteExpPage]', e)))
     }
   }
 
@@ -398,7 +397,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       const { [itemId]: _, ...rest } = prev[charId] || {}
       return { ...prev, [charId]: rest }
     })
-    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'DELETE' })
+    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'DELETE' }).catch(e => console.error('[deleteCustomItem]', e))
   }
   const deleteCustomItemAll = (name) => {
     const itemIds = []
@@ -417,11 +416,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       })
       return next
     })
-    if (isLoggedIn) itemIds.forEach(id => fetch(`/api/custom-items/${id}`, { method: 'DELETE' }))
+    if (isLoggedIn) itemIds.forEach(id => fetch(`/api/custom-items/${id}`, { method: 'DELETE' }).catch(e => console.error('[deleteCustomItemAll]', e)))
   }
   const reorderCustomItems = (charId, newItems) => {
     setCustomItems(prev => ({ ...prev, [charId]: newItems }))
-    if (isLoggedIn) newItems.forEach((it, i) => fetch(`/api/custom-items/${it.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sortOrder: i }) }))
+    if (isLoggedIn) newItems.forEach((it, i) => fetch(`/api/custom-items/${it.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sortOrder: i }) }).catch(e => console.error('[reorderCustomItems]', e)))
   }
   const toggleCustomCheck = (charId, itemId) => {
     const item = (customItems[charId] || []).find(it => it.id === itemId)
@@ -448,18 +447,18 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     }
 
     setCustomChecks(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: newChecked } }))
-    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done: newChecked, restGauge: newRestGaugeVal, deducted: newDeducted }) })
+    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done: newChecked, restGauge: newRestGaugeVal, deducted: newDeducted }) }).catch(e => console.error('[toggleCustomCheck]', e))
   }
   const adjustRestGauge = (charId, itemId, delta) => {
     const cur = restGauge[charId]?.[itemId] ?? 0
     const next = Math.max(0, Math.min(100, cur + delta))
     setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: next } }))
-    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restGauge: next }) })
+    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restGauge: next }) }).catch(e => console.error('[adjustRestGauge]', e))
   }
   const setRestGaugeValue = (charId, itemId, value) => {
     const next = Math.max(0, Math.min(100, value))
     setRestGauge(prev => ({ ...prev, [charId]: { ...(prev[charId] || {}), [itemId]: next } }))
-    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restGauge: next }) })
+    if (isLoggedIn) fetch(`/api/custom-items/${itemId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restGauge: next }) }).catch(e => console.error('[setRestGaugeValue]', e))
   }
 
   // 대표 캐릭터 — 전체 탭: 첫 번째 원정대의 accountRepChar / 개별 탭: 해당 원정대의 accountRepChar / 데모: initialRepCharId 우선
@@ -523,23 +522,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   }, [selectedRaid, activeChars, raids])
 
   // 레이드 필터 활성 시 미완료 캐릭터를 앞으로 정렬
-  // 같은 필터 내에서 체크 상태가 바뀌어도 순서는 유지 (필터/캐릭터 목록 변경 시에만 재정렬)
+  // 레이드 필터 선택 시 미완료 캐릭터를 앞으로 정렬
   const sortedActiveChars = useMemo(() => {
     if (!selectedRaid) return activeChars
-
-    const raidKey = `${selectedRaid.raidId}-${selectedRaid.diffKey}`
-    const cache = sortCacheRef.current
-    if (cache.raidKey === raidKey && cache.charKey === activeChars) return cache.sorted
-
     const incompleteIds = new Set(raidIncompleteChars.map(({ char }) => char.id))
-    const sorted = [...activeChars].sort((a, b) => {
+    return [...activeChars].sort((a, b) => {
       const aIncomplete = incompleteIds.has(a.id)
       const bIncomplete = incompleteIds.has(b.id)
       if (aIncomplete !== bIncomplete) return aIncomplete ? -1 : 1
       return 0
     })
-    sortCacheRef.current = { raidKey, charKey: activeChars, sorted }
-    return sorted
   }, [selectedRaid, activeChars, raidIncompleteChars])
 
   // 캐릭터가 있다가 0이 되면 빈 상태 모달 자동 표시 (초기 0은 제외)
@@ -763,7 +755,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       return updatedChars
     })
     setRaids(prev => { const n = { ...prev }; delete n[charId]; return n })
-    if (isLoggedIn) fetch(`/api/characters?id=${charId}`, { method: 'DELETE' }).catch(() => {})
+    if (isLoggedIn) fetch(`/api/characters?id=${charId}`, { method: 'DELETE' }).catch(e => console.error('[deleteChar]', e))
   }
 
   // 캐릭터 순서 저장

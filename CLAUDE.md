@@ -15,7 +15,7 @@
 app/
   dashboard/
     page.js              # 서버 컴포넌트 — DB 조회 후 DashboardClient에 전달
-    DashboardClient.js   # 메인 대시보드 (~4800줄)
+    DashboardClient.js   # 메인 대시보드 (~2700줄)
     loading.js           # 로딩 스켈레톤
     _constants.js        # EX_RAID_IDS, GOLD_RAID_LIMIT, CLASS_ICON, AUTO_PRESETS 등
     _icons.js            # IconCrown, IconPlus, IconCheck 등 SVG 아이콘 컴포넌트
@@ -44,6 +44,9 @@ app/
   group/
     page.js              # 서버 컴포넌트 — 내 그룹 목록
     GroupClient.js       # 그룹원 목록·요청·그룹 편성 UI
+  settings/
+    page.js                  # 서버 컴포넌트 — 설정 페이지
+    SettingsClient.js        # 닉네임·레이드 공개 설정 UI
   api/
     homework/route.js         # GET/POST/DELETE — 레이드 체크 저장
     homework/batch/route.js   # POST — 레이드 일괄 업데이트
@@ -69,7 +72,7 @@ app/
     cron/daily-reset/route.js  # POST — 일일 숙제 초기화 (06:00 KST)
     cron/weekly-reset/route.js # POST — 주간 숙제 초기화 (수 06:00 KST)
 lib/
-  raidData.js          # RAIDS 정의, CLASS_COLOR, calcGold* 함수
+  raidData.js          # RAIDS 정의, RAID_MAP(O(1) id 조회), RAID_ORDER_MAP(정렬용 인덱스), CLASS_COLOR, calcGold* 함수
   groupRaidShare.js    # 길드 레이드 공유 유틸 (raidStatusOf, getMemberRaidStatus, getGroupRaidList)
   auth.js              # NextAuth 설정
   db.js                # Prisma 클라이언트 (Neon serverless adapter)
@@ -130,6 +133,23 @@ components/
 // 주간 초기화: 매주 수요일 06:00 KST
 // EX 레이드(abrel-ex): 계정당 1캐릭터만 선택 가능
 // HIDDEN_RAID_IDS: UI에 노출하지 않는 레이드 (데이터는 유지)
+```
+
+### RAIDS 조회 패턴
+`RAIDS.find` / `RAIDS.findIndex` 대신 반드시 모듈 레벨 맵을 사용한다.
+
+```js
+import { RAID_MAP, RAID_ORDER_MAP } from '@/lib/raidData'
+
+// ✅ O(1) — id로 raid 객체 조회
+const raid = RAID_MAP[entry.raidId]
+
+// ✅ O(1) — RAIDS 배열 순서 기준 정렬
+.sort((a, b) => (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1))
+
+// ❌ O(n) — 사용 금지
+const raid = RAIDS.find(r => r.id === entry.raidId)
+RAIDS.findIndex(r => r.id === a.raidId) - RAIDS.findIndex(r => r.id === b.raidId)
 ```
 
 ### 골드 규칙
@@ -224,3 +244,4 @@ npx prisma migrate deploy
 - `CharacterAddModal`의 localStorage API키 로드는 `useEffect`로 처리
 - `ApiKeyGuideModal`은 `CharacterAddModal.js` 안에 로컬 함수로 포함됨
 - LoA API 키는 AES-256으로 암호화하여 DB 저장 (`lib/encrypt.js`)
+- 커스텀 숙제 아이콘 등 optimistic UI 패턴(toggleCustomCheck, adjustRestGauge 등)은 fire-and-forget fetch 사용 — 실패 시 console.error 기록, UI는 롤백하지 않음

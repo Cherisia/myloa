@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useMemo, useEffect } from 'react'
-import { RAIDS, RAID_MAP, CLASS_COLOR, calcGoldBound, calcGoldTrade } from '@/lib/raidData'
+import { RAID_MAP, CLASS_COLOR, calcGoldBound, calcGoldTrade } from '@/lib/raidData'
 import { LOA_KEY_STORAGE, DIFF_LABEL, DIFF_COLOR, GOLD_CHAR_LIMIT, EX_RAID_IDS } from '../_constants'
 import { getClassIcon } from '../_constants'
 import { IconInfo, IconItemLevel } from '../_icons'

@@ -3,7 +3,10 @@ import { prisma } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import GroupClient from './GroupClient'
 
-export const metadata = { title: '그룹 — myloa' }
+export const metadata = {
+  title: '그룹',
+  description: '친구들의 레이드 현황을 확인하고 함께 공략할 레이드를 찾아보세요.',
+}
 
 const FRIEND_USER_SELECT = {
   id: true,

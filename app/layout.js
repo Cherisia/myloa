@@ -8,7 +8,10 @@ import { SidebarAdLeft, SidebarAdRight } from '@/components/SidebarAds'
 import { auth } from '@/lib/auth'
 
 export const metadata = {
-  title: 'myloa - 로스트아크 레이드 숙제 관리 & 공유',
+  title: {
+    default: 'myloa - 로스트아크 레이드 숙제 관리 & 공유',
+    template: '%s - myloa',
+  },
   description: '로스트아크 레이드 숙제를 관리하고 지인들과 공유해보세요.',
   icons: { icon: '/icon.svg' },
   verification: {

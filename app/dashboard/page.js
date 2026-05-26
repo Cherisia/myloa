@@ -1,4 +1,9 @@
 // 서버 컴포넌트 — DB에서 캐릭터 + 숙제를 미리 불러와 클라이언트에 전달
+export const metadata = {
+  title: '대시보드',
+  description: '로스트아크 레이드 숙제를 관리하고 지인들과 공유해보세요.',
+}
+
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { isResetPassed, getNextResetAt, getNextDailyResetAt } from '@/lib/raidData'

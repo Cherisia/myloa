@@ -1,5 +1,5 @@
 export const metadata = {
-  title: '개인정보처리방침 - myloa',
+  title: '개인정보처리방침',
   description: 'myloa 서비스의 개인정보처리방침입니다.',
 }
 

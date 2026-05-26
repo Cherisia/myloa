@@ -3,7 +3,10 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import SettingsClient from './SettingsClient'
 
-export const metadata = { title: '설정 — myloa' }
+export const metadata = {
+  title: '설정',
+  description: 'myloa 계정 및 프로필 설정을 관리하세요.',
+}
 
 export default async function SettingsPage() {
   const session = await auth()
