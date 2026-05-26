@@ -270,7 +270,7 @@ function RaidMembersModal({ modal, me, onClose }) {
                           {classIcon ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={classIcon} alt={char.class} width={18} height={18}
-                              className="flex-shrink-0 opacity-60 dark:opacity-50"
+                              className="flex-shrink-0 class-icon"
                             />
                           ) : (
                             <div className="w-[18px] h-[18px] flex-shrink-0" />
