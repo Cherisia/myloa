@@ -1,6 +1,6 @@
-// GET    /api/expedition/[id] → 공격대 상세
-// PATCH  /api/expedition/[id] → 공격대 설정 변경 (리더)
-// DELETE /api/expedition/[id] → 공격대 삭제(리더) or 탈퇴(멤버)
+// GET    /api/expedition/[id] → 길드 상세
+// PATCH  /api/expedition/[id] → 길드 설정 변경 (리더)
+// DELETE /api/expedition/[id] → 길드 삭제(리더) or 탈퇴(멤버)
 
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
@@ -46,7 +46,7 @@ export async function GET(request, { params }) {
     },
   })
 
-  if (!expedition) return NextResponse.json({ error: '공격대를 찾을 수 없습니다' }, { status: 404 })
+  if (!expedition) return NextResponse.json({ error: '길드를 찾을 수 없습니다' }, { status: 404 })
 
   const myMembership = expedition.members.find(m => m.userId === userId)
   if (!myMembership || myMembership.status === 'rejected' || myMembership.status === 'left') {
@@ -68,7 +68,7 @@ export async function PATCH(request, { params }) {
   const { name, description, notice, autoAccept, regenerateCode } = await request.json()
 
   const expedition = await prisma.expedition.findUnique({ where: { id } })
-  if (!expedition) return NextResponse.json({ error: '공격대를 찾을 수 없습니다' }, { status: 404 })
+  if (!expedition) return NextResponse.json({ error: '길드를 찾을 수 없습니다' }, { status: 404 })
   if (expedition.leaderId !== userId) return NextResponse.json({ error: '권한이 없습니다' }, { status: 403 })
 
   const updated = await prisma.expedition.update({
@@ -93,7 +93,7 @@ export async function DELETE(request, { params }) {
   const body = await request.json().catch(() => ({}))
 
   const expedition = await prisma.expedition.findUnique({ where: { id } })
-  if (!expedition) return NextResponse.json({ error: '공격대를 찾을 수 없습니다' }, { status: 404 })
+  if (!expedition) return NextResponse.json({ error: '길드를 찾을 수 없습니다' }, { status: 404 })
 
   if (expedition.leaderId === userId && body.action !== 'leave') {
     await prisma.expedition.delete({ where: { id } })

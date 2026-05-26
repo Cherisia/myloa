@@ -18,7 +18,8 @@
       "mcp__Neon__list_projects",
       "mcp__Neon__describe_branch",
       "mcp__Neon__list_branch_computes",
-      "mcp__Neon__run_sql_transaction"
+      "mcp__Neon__run_sql_transaction",
+      "mcp__Neon__describe_project"
     ]
   }
 }

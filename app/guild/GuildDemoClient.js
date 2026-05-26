@@ -45,7 +45,7 @@ function DemoLoginModal({ onClose }) {
           <div className="space-y-1.5">
             <p className="text-lg ns-extrabold text-gray-900 dark:text-white">로그인이 필요해요</p>
             <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-              공격대 만들기·참가는 디스코드 로그인 후<br />이용할 수 있어요
+              길드 만들기·참가는 디스코드 로그인 후<br />이용할 수 있어요
             </p>
           </div>
           <div className="flex flex-col gap-2.5">
@@ -128,7 +128,7 @@ function PublicGroupCard({ group, onNeedLogin }) {
   )
 }
 
-export default function GroupDemoClient({ myGroups, publicGroups }) {
+export default function GuildDemoClient({ myGroups, publicGroups }) {
   const [searchQ, setSearchQ] = useState('')
   const [sort, setSort] = useState('members')
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -155,15 +155,15 @@ export default function GroupDemoClient({ myGroups, publicGroups }) {
       {/* 헤더 */}
       <div>
         <div className="flex items-center gap-2.5 mb-1">
-          <h1 className="text-2xl ns-extrabold text-gray-900 dark:text-white">공격대</h1>
+          <h1 className="text-2xl ns-extrabold text-gray-900 dark:text-white">길드</h1>
           <span className="text-[10px] ns-bold px-2.5 py-1 rounded-full bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-400)]">미리보기</span>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">로그인하면 실제 공격대 기능을 이용할 수 있어요</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">로그인하면 실제 길드 기능을 이용할 수 있어요</p>
       </div>
 
-      {/* 내 공격대 섹션 */}
+      {/* 내 길드 섹션 */}
       <div className="space-y-3">
-        <p className="text-[11px] ns-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">내 공격대 예시</p>
+        <p className="text-[11px] ns-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">내 길드 예시</p>
         <div className="space-y-2.5">
           {myGroups.map(g => (
             <MyGroupCard key={g.id} group={g} onNeedLogin={() => setShowLoginModal(true)} />
@@ -173,7 +173,7 @@ export default function GroupDemoClient({ myGroups, publicGroups }) {
 
       {/* 공개 그룹 탐색 섹션 */}
       <div className="space-y-4">
-        <p className="text-[11px] ns-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">공개 공격대 탐색</p>
+        <p className="text-[11px] ns-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">공개 길드 탐색</p>
 
         {/* 검색 + 정렬 */}
         <div className="space-y-2">
@@ -184,7 +184,7 @@ export default function GroupDemoClient({ myGroups, publicGroups }) {
             <input
               value={searchQ}
               onChange={e => setSearchQ(e.target.value)}
-              placeholder="공격대 이름으로 검색"
+              placeholder="길드 이름으로 검색"
               className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm text-sm dark:text-white outline-none focus:shadow-md transition-all"
             />
           </div>
@@ -221,14 +221,14 @@ export default function GroupDemoClient({ myGroups, publicGroups }) {
       <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm px-6 py-8 text-center space-y-4">
         <div className="space-y-1">
           <p className="text-base ns-extrabold text-gray-900 dark:text-white">지금 바로 시작해보세요</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">디스코드로 로그인하면 공격대를 만들거나 참가할 수 있어요</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">디스코드로 로그인하면 길드를 만들거나 참가할 수 있어요</p>
         </div>
         <div className="flex flex-col gap-2.5 max-w-[220px] mx-auto">
           <button
             type="button"
             onClick={() => setShowLoginModal(true)}
             className="rounded-2xl py-3 text-sm ns-bold bg-[var(--accent-400)] hover:bg-[var(--accent-300)] active:bg-[var(--accent-500)] text-gray-900 transition-all"
-          >공격대 만들기</button>
+          >길드 만들기</button>
           <button
             type="button"
             onClick={() => setShowLoginModal(true)}

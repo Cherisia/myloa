@@ -3,46 +3,84 @@ import { prisma } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import GroupClient from './GroupClient'
 
-export const metadata = {
-  title: 'myloa - 로스트아크 레이드 숙제 관리 & 공유',
+export const metadata = { title: '그룹 — myloa' }
+
+const FRIEND_USER_SELECT = {
+  id: true,
+  name: true,
+  nickname: true,
+  discordUsername: true,
+  image: true,
+  raidPublic: true,
+  raidPublicFriends: true,
+  loaExpeditions: {
+    orderBy: { createdAt: 'asc' },
+    include: {
+      characters: {
+        where: { isActive: true },
+        orderBy: [{ sortOrder: 'asc' }, { itemLevel: 'desc' }],
+        include: { characterRaids: { orderBy: { createdAt: 'asc' } } },
+      },
+    },
+  },
 }
 
 export default async function GroupPage() {
   const session = await auth()
+  if (!session?.user?.id) redirect('/dashboard')
 
-  if (!session?.user?.id) {
-    redirect('/dashboard')
+  const userId = session.user.id
+
+  const [sentAccepted, receivedAccepted, favorites, incomingRequests] = await Promise.all([
+    prisma.friendRequest.findMany({
+      where: { senderId: userId, status: 'accepted' },
+      select: { id: true, receiverId: true },
+    }),
+    prisma.friendRequest.findMany({
+      where: { receiverId: userId, status: 'accepted' },
+      select: { id: true, senderId: true },
+    }),
+    prisma.userFavorite.findMany({
+      where: { userId },
+      select: { targetUserId: true },
+    }),
+    prisma.friendRequest.findMany({
+      where: { receiverId: userId, status: 'pending' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        createdAt: true,
+        sender: { select: FRIEND_USER_SELECT },
+      },
+    }),
+  ])
+
+  const friendEntries = [
+    ...sentAccepted.map(r => ({ requestId: r.id, friendId: r.receiverId })),
+    ...receivedAccepted.map(r => ({ requestId: r.id, friendId: r.senderId })),
+  ]
+
+  const favoriteSet = new Set(favorites.map(f => f.targetUserId))
+
+  let friends = []
+  if (friendEntries.length > 0) {
+    const users = await prisma.user.findMany({
+      where: { id: { in: friendEntries.map(e => e.friendId) } },
+      select: FRIEND_USER_SELECT,
+    })
+    friends = users
+      .map(u => ({
+        ...u,
+        isFavorite: favoriteSet.has(u.id),
+        requestId: friendEntries.find(e => e.friendId === u.id)?.requestId,
+      }))
+      .sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0))
   }
 
-  const memberships = await prisma.expeditionMember.findMany({
-    where: { userId: session.user.id, status: 'active' },
-    include: {
-      expedition: {
-        include: {
-          members: true,
-          leader: { select: { id: true, name: true, image: true } },
-        },
-      },
-    },
-    orderBy: { joinedAt: 'asc' },
+  const me = await prisma.user.findUnique({
+    where: { id: userId },
+    select: FRIEND_USER_SELECT,
   })
 
-  const groups = memberships.map(m => {
-    const exp = m.expedition
-    const isLeader  = exp.leaderId === session.user.id
-    const isOfficer = isLeader || m.role === 'officer'
-    const activeCount  = exp.members.filter(mem => mem.status === 'active').length
-    const pendingCount = exp.members.filter(mem => mem.status === 'pending').length
-    return {
-      id:           exp.id,
-      name:         exp.name,
-      description:  exp.description,
-      maxMembers:   exp.maxMembers,
-      memberCount:  activeCount,
-      pendingCount: isOfficer ? pendingCount : 0,
-      myRole:       isLeader ? 'leader' : m.role,
-    }
-  })
-
-  return <GroupClient initialGroups={groups} />
+  return <GroupClient initialFriends={friends} initialRequests={incomingRequests} me={me} />
 }

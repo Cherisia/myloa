@@ -1,9 +1,9 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { notFound, redirect } from 'next/navigation'
-import GroupDetailClient from './GroupDetailClient'
+import GuildDetailClient from './GuildDetailClient'
 
-export default async function GroupDetailPage({ params }) {
+export default async function GuildDetailPage({ params }) {
   const session = await auth()
   if (!session?.user?.id) redirect('/dashboard')
 
@@ -46,11 +46,11 @@ export default async function GroupDetailPage({ params }) {
 
   const myMembership = expedition.members.find(m => m.userId === session.user.id)
   if (!myMembership || myMembership.status === 'rejected' || myMembership.status === 'left') {
-    redirect('/group')
+    redirect('/guild')
   }
 
   return (
-    <GroupDetailClient
+    <GuildDetailClient
       expedition={{ ...expedition, favoritedUserIds: expedition.favorites.map(f => f.targetUserId) }}
       userId={session.user.id}
       myMembership={myMembership}

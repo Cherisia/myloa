@@ -33,13 +33,17 @@ app/
       AnimatedGold.js    # 골드 숫자 애니메이션
       CharGoldBadges.js  # 캐릭터별 골드 배지
       Confetti.js        # 100% 완료 폭죽
-  group/
-    page.js              # 서버 컴포넌트 — 내 공격대 목록
-    GroupDemoClient.js   # 공격대 데모 UI
-    _demoListData.js     # 비로그인 데모용 샘플 공격대 목록 데이터
+  guild/
+    page.js              # 서버 컴포넌트 — 내 길드 목록
+    GuildClient.js       # 길드 목록 UI (만들기·참가 모달 포함)
+    GuildDemoClient.js   # 길드 데모 UI
+    _demoListData.js     # 비로그인 데모용 샘플 길드 목록 데이터
     [id]/
-      page.js            # 서버 컴포넌트 — 공격대 상세 (demo id 지원)
-      GroupDetailClient.js  # 레이드현황·멤버·대기중·설정 탭
+      page.js            # 서버 컴포넌트 — 길드 상세
+      GuildDetailClient.js  # 레이드현황·멤버·대기중·설정 탭
+  group/
+    page.js              # 서버 컴포넌트 — 내 그룹 목록
+    GroupClient.js       # 그룹원 목록·요청·그룹 편성 UI
   api/
     homework/route.js         # GET/POST/DELETE — 레이드 체크 저장
     homework/batch/route.js   # POST — 레이드 일괄 업데이트
@@ -50,17 +54,23 @@ app/
     custom-items/route.js     # GET/POST — 커스텀 숙제 항목
     custom-items/[id]/route.js # PATCH/DELETE — 커스텀 항목 수정·삭제
     expeditions/[id]/route.js  # PATCH — LoaExpedition 커스텀 탭 이름 저장
-    expedition/route.js        # GET(내 공격대 목록) / POST(공격대 생성)
+    expedition/route.js        # GET(내 길드 목록) / POST(길드 생성)
     expedition/join/route.js   # POST — 초대 코드로 가입 신청
-    expedition/[id]/route.js   # GET/PATCH/DELETE — 공격대 상세·수정·삭제/탈퇴
+    expedition/[id]/route.js   # GET/PATCH/DELETE — 길드 상세·수정·삭제/탈퇴
     expedition/[id]/members/route.js   # PATCH — 수락/거절/역할변경/강퇴/공개설정
     expedition/[id]/favorites/route.js # POST/DELETE — 즐겨찾기
+    group/route.js             # GET(그룹원 목록) / DELETE(그룹원 삭제)
+    group/requests/route.js    # GET(받은 요청) / POST(그룹 요청 보내기)
+    group/requests/[id]/route.js # PATCH — 그룹 요청 수락/거절
+    group/favorites/route.js   # POST/DELETE — 그룹원 즐겨찾기
+    group/pending-count/route.js # GET — 받은 그룹 요청 대기 수 (Navbar 배지)
+    group/search/route.js      # GET — 사용자 검색
     loa/route.js              # 로스트아크 OpenAPI 프록시
     cron/daily-reset/route.js  # POST — 일일 숙제 초기화 (06:00 KST)
     cron/weekly-reset/route.js # POST — 주간 숙제 초기화 (수 06:00 KST)
 lib/
   raidData.js          # RAIDS 정의, CLASS_COLOR, calcGold* 함수
-  groupRaidShare.js    # 공격대 레이드 공유 유틸 (raidStatusOf, getMemberRaidStatus, getGroupRaidList)
+  groupRaidShare.js    # 길드 레이드 공유 유틸 (raidStatusOf, getMemberRaidStatus, getGroupRaidList)
   auth.js              # NextAuth 설정
   db.js                # Prisma 클라이언트 (Neon serverless adapter)
   encrypt.js           # API 키 AES-256 암호화
@@ -140,7 +150,7 @@ const persistDelete = (charId, raidId, diffKey) => { if (isLoggedIn) deleteRaid(
 - 커스텀 숙제 아이콘: `_bynnArkIcons.js` 매핑 + `BynnArkIconPicker.js` 선택기
 
 ### 대표 캐릭터 왕관 아이콘 규칙
-대표 캐릭터(최고 아이템레벨 캐릭터, 공격대 리더 표시 등) 앞에는 반드시 `_icons.js`의 `IconCrown`을 사용한다.
+대표 캐릭터(최고 아이템레벨 캐릭터, 길드 리더 표시 등) 앞에는 반드시 `_icons.js`의 `IconCrown`을 사용한다.
 
 ```jsx
 // _icons.js 정의 (정답)

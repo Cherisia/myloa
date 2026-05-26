@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from './ThemeProvider'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import DiscordIcon from './DiscordIcon'
 
@@ -84,13 +84,22 @@ export default function Navbar() {
   const pathname            = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const { data: session } = useSession()
+  const [pendingFriendCount, setPendingFriendCount] = useState(0)
+
+  useEffect(() => {
+    if (!session?.user?.id) { setPendingFriendCount(0); return }
+    fetch('/api/group/pending-count')
+      .then(r => r.json())
+      .then(d => setPendingFriendCount(d.count || 0))
+      .catch(() => {})
+  }, [session?.user?.id])
 
   const s = THEME_STYLE[theme] || THEME_STYLE.yellow
 
   const navLinks = [
     { href: '/dashboard', label: '원정대' },
-    ...(session ? [{ href: '/group', label: '공격대' }] : []),
-    ...(session ? [{ href: '/friends', label: '친구' }] : []),
+    ...(session ? [{ href: '/guild', label: '길드' }] : []),
+    ...(session ? [{ href: '/group', label: '그룹', badge: pendingFriendCount }] : []),
   ]
   const isActive = (href) => href && (pathname === href || pathname.startsWith(href + '/'))
 
@@ -172,7 +181,7 @@ export default function Navbar() {
 
         {/* 데스크탑 Nav */}
         <nav className="hidden sm:flex items-center gap-1">
-          {navLinks.map(({ href, label, onClick }) => onClick ? (
+          {navLinks.map(({ href, label, onClick, badge }) => onClick ? (
             <button
               key={label}
               type="button"
@@ -185,11 +194,16 @@ export default function Navbar() {
             <Link
               key={href}
               href={href}
-              className={`relative px-2.5 py-1 text-xs transition-colors duration-150 ${
+              className={`relative flex items-center gap-1 px-2.5 py-1 text-xs transition-colors duration-150 ${
                 isActive(href) ? s.navActive : s.navBase
               }`}
             >
               {label}
+              {badge > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[14px] h-3.5 px-1 text-[9px] ns-bold rounded-full bg-red-500 text-white leading-none">
+                  {badge}
+                </span>
+              )}
               {isActive(href) && (
                 <span className={`absolute bottom-0 left-2 right-2 h-[2px] rounded-full ${s.navUnderline}`} />
               )}
@@ -228,7 +242,7 @@ export default function Navbar() {
         <div className={`sm:hidden border-t px-4 py-3 space-y-0.5 ${s.header.replace('bg-white/90', 'bg-white').replace('bg-\\[#111111\\]\\/95', 'bg-[#111111]')}`}
           style={theme === 'dark' ? { backgroundColor: '#111111' } : { backgroundColor: '#ffffff' }}
         >
-          {navLinks.map(({ href, label, onClick }) => onClick ? (
+          {navLinks.map(({ href, label, onClick, badge }) => onClick ? (
             <button
               key={label}
               type="button"
@@ -242,11 +256,16 @@ export default function Navbar() {
               key={href}
               href={href}
               onClick={() => setMobileOpen(false)}
-              className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-colors ${
                 isActive(href) ? s.navActive : s.navBase
               }`}
             >
               {label}
+              {badge > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] ns-bold rounded-full bg-red-500 text-white leading-none">
+                  {badge}
+                </span>
+              )}
             </Link>
           ))}
           <div className="pt-3 pb-1 flex flex-col gap-3 border-t mt-2" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.07)' : '#f0f0f0' }}>

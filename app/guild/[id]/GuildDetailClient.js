@@ -343,8 +343,8 @@ function MemberDetailModal({ member, role, myMember, raidList, visibleMembers, f
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-base ns-bold text-gray-900 dark:text-white truncate">{member.user?.nickname || member.user?.name || '알 수 없음'}</span>
-              {role === 'leader'  && <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">공격대장</span>}
-              {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부공격대장</span>}
+              {role === 'leader'  && <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">길드장</span>}
+              {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부길드장</span>}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
               {repChar && (
@@ -445,7 +445,7 @@ const TABS = [
 ]
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function GroupDetailClient({ expedition: init, userId, myMembership }) {
+export default function GuildDetailClient({ expedition: init, userId, myMembership }) {
   const router = useRouter()
   const [expedition,   setExpedition]   = useState(init)
   const [favSortIds,   setFavSortIds]   = useState(() => init.favoritedUserIds || [])
@@ -594,13 +594,13 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
       setDeleteConfirm(true)
       return
     }
-    if (!confirm('공격대에서 탈퇴하시겠습니까?')) return
+    if (!confirm('길드에서 탈퇴하시겠습니까?')) return
     await fetch(`/api/expedition/${expedition.id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'leave' }),
     })
-    router.push('/group')
+    router.push('/guild')
     router.refresh()
   }
 
@@ -610,7 +610,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     })
-    router.push('/group')
+    router.push('/guild')
     router.refresh()
   }
 
@@ -625,16 +625,16 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
   if (myStatus === 'pending') {
     return (
       <div className="max-w-lg mx-auto px-4 py-8 space-y-4">
-        <button type="button" onClick={() => router.push('/group')}
+        <button type="button" onClick={() => router.push('/guild')}
           className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
-          <IconBack /> 공격대 목록
+          <IconBack /> 길드 목록
         </button>
         <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm px-6 py-16 text-center space-y-3">
           <p className="text-4xl">⏳</p>
           <p className="text-base ns-extrabold text-gray-900 dark:text-white">{expedition.name}</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">가입 승인 대기 중이에요</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">공격대장이 수락하면 입장할 수 있어요</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">길드장이 수락하면 입장할 수 있어요</p>
         </div>
       </div>
     )
@@ -825,8 +825,8 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-[15px] ns-bold text-gray-900 dark:text-white truncate">{m.user?.nickname || m.user?.name || '알 수 없음'}</span>
-                      {role === 'leader'  && <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">공격대장</span>}
-                      {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부공격대장</span>}
+                      {role === 'leader'  && <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">길드장</span>}
+                      {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부길드장</span>}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
                       {repChar && (
@@ -964,7 +964,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-sm ns-bold text-gray-900 dark:text-white truncate">{dispName}</span>
-                  {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부공격대장</span>}
+                  {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부길드장</span>}
                 </div>
                 {repChar && (
                   <div className="flex items-center gap-0.5 mt-0.5 text-[var(--accent-500)]">
@@ -1020,9 +1020,9 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
 
         {isLeader && (
           <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm px-5 py-4 space-y-4">
-            <p className="text-xs ns-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">공격대 설정</p>
+            <p className="text-xs ns-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">길드 설정</p>
             <div>
-              <label className="text-xs ns-bold text-gray-500 dark:text-gray-400 block mb-1.5">공격대 이름</label>
+              <label className="text-xs ns-bold text-gray-500 dark:text-gray-400 block mb-1.5">길드 이름</label>
               <input value={settingsForm.name} maxLength={30}
                 onChange={e => setSettingsForm(p => ({ ...p, name: e.target.value }))}
                 className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#252525] border border-transparent focus:border-[var(--accent-400)] focus:bg-white dark:focus:bg-[#1a1a1a] text-sm dark:text-white outline-none transition-all"
@@ -1071,7 +1071,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
           <button type="button" onClick={() => leaveOrDelete(isLeader)}
             className="text-sm ns-bold text-red-500 hover:text-red-600 transition-colors"
           >
-            {isLeader ? '공격대 삭제' : '공격대 탈퇴'}
+            {isLeader ? '길드 삭제' : '길드 탈퇴'}
           </button>
         </div>
       </div>
@@ -1326,10 +1326,10 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-5">
         {/* 헤더 */}
         <div>
-          <button type="button" onClick={() => router.push('/group')}
+          <button type="button" onClick={() => router.push('/guild')}
             className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mb-3"
           >
-            <IconBack /> 공격대 목록
+            <IconBack /> 길드 목록
           </button>
           <h1 className="text-xl ns-extrabold text-gray-900 dark:text-white truncate">{expedition.name}</h1>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -1385,7 +1385,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
             <div className="px-6 pt-6 pb-2 space-y-1.5">
               <p className="text-base ns-extrabold text-gray-900 dark:text-white">멤버 추방</p>
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                <span className="ns-bold text-gray-700 dark:text-gray-300">{kickConfirm.displayName}</span>님을 공격대에서 추방할까요?
+                <span className="ns-bold text-gray-700 dark:text-gray-300">{kickConfirm.displayName}</span>님을 길드에서 추방할까요?
               </p>
             </div>
             <div className="flex gap-2 px-6 pb-6 pt-4">
@@ -1430,7 +1430,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeleteConfirm(false)} />
           <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl overflow-hidden">
             <div className="px-6 pt-6 pb-2 space-y-1.5">
-              <p className="text-base ns-extrabold text-gray-900 dark:text-white">공격대 삭제</p>
+              <p className="text-base ns-extrabold text-gray-900 dark:text-white">길드 삭제</p>
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                 이 작업은 되돌릴 수 없어요.<br />삭제하려면 아래에 <span className="ns-bold text-gray-700 dark:text-gray-300">삭제합니다</span>를 입력하세요.
               </p>
@@ -1479,7 +1479,7 @@ export default function GroupDetailClient({ expedition: init, userId, myMembersh
               </div>
               <div>
                 <p className="text-base ns-extrabold text-gray-900 dark:text-white">저장 완료</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">공격대 설정이 저장되었어요</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">길드 설정이 저장되었어요</p>
               </div>
               <button
                 type="button"

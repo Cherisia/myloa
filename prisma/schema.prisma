@@ -33,6 +33,10 @@ model User {
   expeditionMember    ExpeditionMember[]
   leadingExpeditions  Expedition[]                @relation("ExpeditionLeader")
   expeditionFavorites ExpeditionMemberFavorite[]  @relation("FavoriteViewer")
+  sentFriendRequests     FriendRequest[]  @relation("FriendRequestSender")
+  receivedFriendRequests FriendRequest[]  @relation("FriendRequestReceiver")
+  favoritedFriends       UserFavorite[]   @relation("FavoriteOwner")
+  favoritedBy            UserFavorite[]   @relation("FavoriteTarget")
 }
 
 model Account {
@@ -171,6 +175,32 @@ model ExpeditionMember {
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([expeditionId, userId])
+}
+
+model FriendRequest {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     String   @default("pending") // "pending" | "accepted" | "rejected"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender   User @relation("FriendRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("FriendRequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+}
+
+model UserFavorite {
+  id           String   @id @default(cuid())
+  userId       String
+  targetUserId String
+  createdAt    DateTime @default(now())
+
+  user   User @relation("FavoriteOwner", fields: [userId], references: [id], onDelete: Cascade)
+  target User @relation("FavoriteTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetUserId])
 }
 
 model ExpeditionMemberFavorite {

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { useState, useCallback, useRef } from 'react'
 
 const IconCheck = () => (
@@ -27,6 +27,12 @@ const IconLogout = () => (
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
     <polyline points="16 17 21 12 16 7"/>
     <line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+)
+
+const IconSpinner = () => (
+  <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
   </svg>
 )
 
@@ -65,6 +71,7 @@ function Section({ title, children }) {
 }
 
 export default function SettingsClient({ user, session }) {
+  const { update: updateSession } = useSession()
   const [nickname, setNickname] = useState(user?.nickname || '')
   const [raidPublic, setRaidPublic]               = useState(user?.raidPublic ?? true)
   const [raidPublicFriends, setRaidPublicFriends] = useState(user?.raidPublicFriends ?? true)
@@ -91,6 +98,7 @@ export default function SettingsClient({ user, session }) {
       if (res.ok) {
         setNickSaved(true)
         setTimeout(() => setNickSaved(false), 2000)
+        await updateSession()
       } else {
         setError('저장에 실패했습니다.')
       }
@@ -136,7 +144,6 @@ export default function SettingsClient({ user, session }) {
         {/* 헤더 */}
         <div className="mb-6">
           <h1 className="text-xl ns-bold text-gray-900 dark:text-white">설정</h1>
-          <p className="text-sm text-gray-400 dark:text-zinc-500 mt-0.5">개인 정보 및 공격대 설정</p>
         </div>
 
         {/* 프로필 */}
@@ -167,13 +174,13 @@ export default function SettingsClient({ user, session }) {
           </div>
         </Section>
 
-        {/* 공격대 설정 */}
-        <Section title="공격대">
+        {/* 길드 설정 */}
+        <Section>
           {/* 닉네임 */}
           <div className="px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
             <div className="flex items-start justify-between gap-3 mb-2">
               <div>
-                <p className="text-sm ns-bold text-gray-800 dark:text-zinc-200">공격대 닉네임</p>
+                <p className="text-sm ns-bold text-gray-800 dark:text-zinc-200">원정대 이름</p>
                 <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">다른 멤버에게 표시되는 이름</p>
               </div>
             </div>
@@ -192,15 +199,37 @@ export default function SettingsClient({ user, session }) {
                 type="button"
                 onClick={saveNickname}
                 disabled={nickSaving}
-                className="px-4 py-2 rounded-xl text-xs ns-bold bg-[var(--accent-400)] hover:bg-[var(--accent-300)] active:bg-[var(--accent-500)] text-gray-900 transition-all disabled:opacity-50 flex-shrink-0 flex items-center gap-1.5"
+                className="w-[5.5rem] h-10 rounded-xl text-xs ns-bold flex-shrink-0 relative overflow-hidden transition-all duration-200 disabled:pointer-events-none"
+                style={{
+                  background: nickSaved
+                    ? 'var(--accent-100)'
+                    : 'var(--accent-400)',
+                }}
+                aria-busy={nickSaving}
               >
-                {nickSaved ? <><IconCheck />저장됨</> : nickSaving ? '저장 중' : '저장'}
+                <span
+                  className="absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150"
+                  style={{ opacity: nickSaved ? 1 : 0 }}
+                  aria-hidden={!nickSaved}
+                >
+                  <span className="text-[var(--accent-600)]"><IconCheck /></span>
+                  <span className="text-[var(--accent-700)]">저장됨</span>
+                </span>
+                <span
+                  className="absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150"
+                  style={{ opacity: nickSaved ? 0 : 1 }}
+                  aria-hidden={nickSaved}
+                >
+                  {nickSaving
+                    ? <span className="text-gray-900 dark:text-gray-900"><IconSpinner /></span>
+                    : <span className="text-gray-900">저장</span>}
+                </span>
               </button>
             </div>
             {error && <p className="text-xs text-red-400 mt-1.5">{error}</p>}
           </div>
 
-          {/* 공격대원에게 레이드 현황 공개 */}
+          {/* 길드원에게 레이드 현황 공개 */}
           <div className="px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -208,9 +237,9 @@ export default function SettingsClient({ user, session }) {
                   {raidPublic ? <IconEye /> : <IconEyeOff />}
                 </span>
                 <div>
-                  <p className="text-sm ns-bold text-gray-800 dark:text-zinc-200">공격대원에게 레이드 현황 공개</p>
+                  <p className="text-sm ns-bold text-gray-800 dark:text-zinc-200">길드원에게 레이드 현황 공개</p>
                   <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
-                    {raidPublic ? '공격대 멤버에게 레이드 현황이 공개됩니다' : '공격대 멤버에게 레이드 현황이 숨겨집니다'}
+                    {raidPublic ? '길드원에게 레이드 현황이 공개됩니다' : '길드원에게 레이드 현황이 공개되지 않습니다'}
                   </p>
                 </div>
               </div>
@@ -228,7 +257,7 @@ export default function SettingsClient({ user, session }) {
                 <div>
                   <p className="text-sm ns-bold text-gray-800 dark:text-zinc-200">친구에게 레이드 현황 공개</p>
                   <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
-                    {raidPublicFriends ? '즐겨찾기한 친구에게 레이드 현황이 공개됩니다' : '친구에게 레이드 현황이 숨겨집니다'}
+                    {raidPublicFriends ? '친구에게 레이드 현황이 공개됩니다' : '친구에게 레이드 현황이 공개되지 않습니다'}
                   </p>
                 </div>
               </div>
