@@ -483,7 +483,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
 
   const adaptedActive  = useMemo(() => activeMembers.map(adaptMember), [activeMembers])
   const raidList       = useMemo(() => getGroupRaidList(adaptedActive), [adaptedActive])
-  const visibleMembers = useMemo(() => adaptedActive.filter(m => m.visibility !== 'none'), [adaptedActive])
+  const visibleMembers = useMemo(() => adaptedActive.filter(m => !isHidden(m)), [adaptedActive])
 
   const raidStats = useMemo(() => raidList.map(({ raidId, difficulty }) => {
     let totalWithRaid = 0, incompleteMembers = 0, totalChars = 0, incompleteChars = 0

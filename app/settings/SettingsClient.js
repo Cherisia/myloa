@@ -239,7 +239,7 @@ export default function SettingsClient({ user, session }) {
                 <div>
                   <p className="text-sm ns-bold text-gray-800 dark:text-zinc-200">길드원에게 레이드 현황 공개</p>
                   <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
-                    {raidPublic ? '길드원에게 레이드 현황이 공개됩니다' : '길드원에게 레이드 현황이 공개되지 않습니다'}
+                    {raidPublic ? '길드원에게 레이드 현황이 공개됩니다' : '속해있는 모든 길드에서 레이드 현황이 공개되지 않습니다'}
                   </p>
                 </div>
               </div>

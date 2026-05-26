@@ -39,11 +39,19 @@ export async function PATCH(request) {
     return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
   }
 
-  const updated = await prisma.user.update({
-    where: { id: session.user.id },
-    data,
-    select: { nickname: true, raidPublic: true, raidPublicFriends: true },
-  })
+  const [updated] = await prisma.$transaction([
+    prisma.user.update({
+      where: { id: session.user.id },
+      data,
+      select: { nickname: true, raidPublic: true, raidPublicFriends: true },
+    }),
+    ...(typeof body.raidPublic === 'boolean'
+      ? [prisma.expeditionMember.updateMany({
+          where: { userId: session.user.id, status: 'active' },
+          data: { visibility: body.raidPublic ? 'all' : 'none' },
+        })]
+      : []),
+  ])
 
   return NextResponse.json({ success: true, ...updated })
 }
