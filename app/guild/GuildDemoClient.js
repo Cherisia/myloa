@@ -35,7 +35,7 @@ function DemoLoginModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm">
       <div
-        className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl"
+        className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:border sm:border-gray-200/50 dark:sm:border-[#2d2d2d]"
         onClick={e => e.stopPropagation()}
       >
         <div className="sm:hidden flex justify-center pt-3 pb-0">
@@ -74,7 +74,7 @@ function MyGroupCard({ group, onNeedLogin }) {
     <button
       type="button"
       onClick={onNeedLogin}
-      className="w-full text-left rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm hover:shadow-md active:shadow-sm hover:-translate-y-0.5 active:translate-y-0 px-5 py-4 transition-all duration-150"
+      className="w-full text-left rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_6px_24px_rgba(0,0,0,0.58)] hover:-translate-y-0.5 active:translate-y-0 px-5 py-4 transition-all duration-150"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 space-y-1.5">
@@ -105,7 +105,7 @@ function MyGroupCard({ group, onNeedLogin }) {
 
 function PublicGroupCard({ group, onNeedLogin }) {
   return (
-    <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm p-5 flex flex-col gap-3">
+    <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] p-5 flex flex-col gap-3">
       <div className="min-w-0 space-y-1">
         <span className="ns-bold text-[15px] text-gray-900 dark:text-white block">{group.name}</span>
         {group.description && (
@@ -185,7 +185,7 @@ export default function GuildDemoClient({ myGroups, publicGroups }) {
               value={searchQ}
               onChange={e => setSearchQ(e.target.value)}
               placeholder="길드 이름으로 검색"
-              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm text-sm dark:text-white outline-none focus:shadow-md transition-all"
+              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)] text-sm dark:text-white outline-none focus:border-[var(--accent-400)] focus:shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all"
             />
           </div>
           <div className="flex gap-2">
@@ -201,7 +201,7 @@ export default function GuildDemoClient({ myGroups, publicGroups }) {
                 className={`px-4 py-2 rounded-xl text-xs ns-bold transition-all ${
                   sort === val
                     ? 'bg-[var(--accent-400)] text-gray-900 shadow-sm'
-                    : 'bg-white dark:bg-[#1e1e1e] text-gray-500 dark:text-gray-400 shadow-sm hover:shadow-md'
+                    : 'bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] text-gray-500 dark:text-gray-400 shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
                 }`}
               >
                 {label}
@@ -218,7 +218,7 @@ export default function GuildDemoClient({ myGroups, publicGroups }) {
       </div>
 
       {/* 하단 CTA 카드 */}
-      <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm px-6 py-8 text-center space-y-4">
+      <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-6 py-8 text-center space-y-4">
         <div className="space-y-1">
           <p className="text-base ns-extrabold text-gray-900 dark:text-white">지금 바로 시작해보세요</p>
           <p className="text-xs text-gray-400 dark:text-gray-500">디스코드로 로그인하면 길드를 만들거나 참가할 수 있어요</p>

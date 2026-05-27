@@ -184,8 +184,8 @@ function RaidRow({ raidId, difficulty, chars, highlight, completed, noWrap }) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-100 dark:border-[#2a2a2a]">
-      <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gray-50 dark:bg-[#252525] rounded-t-xl">
+    <div className="rounded-xl border border-gray-200 dark:border-[#2a2a2a] shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
+      <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-b from-gray-50 to-gray-50/70 dark:from-[#252525] dark:to-[#212121] rounded-t-xl">
         {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
         <span className="text-[13px] ns-bold text-gray-900 dark:text-white flex-1 truncate">{name}</span>
         <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full flex-shrink-0 ${c.badge}`}>{diff}</span>
@@ -260,7 +260,7 @@ function MemberDetailModal({ member, role, myMember, raidList, visibleMembers, f
           .filter(({ chars }) => chars.length > 0)
 
         return (
-          <div key={`${r.raidId}-${r.difficulty}`} className="rounded-xl overflow-hidden border border-gray-100 dark:border-[#2a2a2a]">
+          <div key={`${r.raidId}-${r.difficulty}`} className="rounded-xl overflow-hidden border border-gray-200 dark:border-[#2a2a2a] shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
             <button
               type="button"
               className="w-full text-left"
@@ -329,7 +329,7 @@ function MemberDetailModal({ member, role, myMember, raidList, visibleMembers, f
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full sm:max-w-md h-[90vh] sm:h-[82vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-2xl overflow-hidden">
+      <div className="relative z-10 w-full sm:max-w-md h-[90vh] sm:h-[82vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:border sm:border-gray-200/50 dark:sm:border-[#2d2d2d] overflow-hidden">
 
         {/* 모바일 핸들 */}
         <div className="sm:hidden flex justify-center pt-3 flex-shrink-0">
@@ -635,7 +635,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
         >
           <IconBack /> 길드 목록
         </button>
-        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm px-6 py-16 text-center space-y-3">
+        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-6 py-16 text-center space-y-3">
           <p className="text-4xl">⏳</p>
           <p className="text-base ns-extrabold text-gray-900 dark:text-white">{expedition.name}</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">가입 승인 대기 중이에요</p>
@@ -650,7 +650,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   function renderRaids() {
     if (raidList.length === 0 || visibleMembers.length === 0) {
       return (
-        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm py-16 text-center space-y-2">
+        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] py-16 text-center space-y-2">
           <p className="text-3xl">⚔️</p>
           <p className="text-sm ns-bold text-gray-500 dark:text-gray-400">공개된 레이드 정보가 없어요</p>
           <p className="text-xs text-gray-400 dark:text-gray-600">멤버들이 레이드를 등록하면 여기에 표시돼요</p>
@@ -702,7 +702,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                       key={key}
                       type="button"
                       onClick={() => setRaidModal(key)}
-                      className="flex-1 min-w-0 rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm hover:shadow-md active:shadow-sm hover:-translate-y-0.5 active:translate-y-0 px-4 py-4 text-left transition-all duration-150"
+                      className="flex-1 min-w-0 rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_6px_24px_rgba(0,0,0,0.58)] hover:-translate-y-0.5 active:translate-y-0 px-4 py-4 text-left transition-all duration-150"
                     >
                       {/* 난이도 뱃지 */}
                       <div className="flex items-center gap-2 mb-3">
@@ -763,7 +763,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
     return (
       <div className="space-y-4">
         {/* 내 공개 설정 */}
-        <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm px-5 py-4 flex items-center justify-between gap-4">
+        <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-5 py-4 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm ns-bold text-gray-900 dark:text-white">레이드 현황 공개</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">켜면 다른 멤버에게 내 현황이 보여요</p>
@@ -808,7 +808,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
 
             return (
               <div key={m.userId}
-                className={`relative rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm px-4 py-4 ${!isSelf ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:shadow-sm transition-all duration-150' : ''}`}
+                className={`relative rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-4 py-4 ${!isSelf ? 'cursor-pointer hover:shadow-[0_8px_28px_rgba(0,0,0,0.11)] dark:hover:shadow-[0_8px_32px_rgba(0,0,0,0.6)] hover:-translate-y-1 active:translate-y-0 transition-all duration-150' : ''}`}
                 onClick={() => {
                   if (isSelf) return
                   const adapted = adaptedActive.find(a => a.userId === m.userId)
@@ -876,14 +876,14 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   function renderPending() {
     if (!isOfficer) {
       return (
-        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm py-14 text-center space-y-2">
+        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] py-14 text-center space-y-2">
           <p className="text-sm text-gray-400">권한이 없습니다.</p>
         </div>
       )
     }
     if (pendingMembers.length === 0) {
       return (
-        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm py-14 text-center space-y-2">
+        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] py-14 text-center space-y-2">
           <p className="text-2xl">✅</p>
           <p className="text-sm ns-bold text-gray-500 dark:text-gray-400">대기 중인 신청이 없어요</p>
         </div>
@@ -892,7 +892,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
     return (
       <div className="space-y-2.5">
         {pendingMembers.map(m => (
-          <div key={m.userId} className="rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm px-5 py-4 flex items-center gap-3">
+          <div key={m.userId} className="rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-5 py-4 flex items-center gap-3">
             <Avatar user={m.user} size={36} />
             <div className="flex-1 min-w-0">
               <p className="text-sm ns-bold text-gray-900 dark:text-white truncate">{m.user?.nickname || m.user?.name || '알 수 없음'}</p>
@@ -917,7 +917,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   function renderManageMembers() {
     if (!isLeader) {
       return (
-        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm py-14 text-center space-y-2">
+        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] py-14 text-center space-y-2">
           <p className="text-sm text-gray-400">권한이 없습니다.</p>
         </div>
       )
@@ -925,7 +925,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
     const kickableMembers = activeMembers.filter(m => m.userId !== userId)
     if (kickableMembers.length === 0) {
       return (
-        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-sm py-14 text-center space-y-2">
+        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] py-14 text-center space-y-2">
           <p className="text-2xl">👥</p>
           <p className="text-sm ns-bold text-gray-500 dark:text-gray-400">관리할 멤버가 없어요</p>
         </div>
@@ -955,7 +955,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
           />
         </div>
         {filteredKickable.length === 0 && (
-          <div className="py-10 text-center rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm">
+          <div className="py-10 text-center rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
             <p className="text-sm text-gray-400 dark:text-gray-500">검색 결과가 없어요</p>
           </div>
         )}
@@ -964,7 +964,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
           const repChar  = (m.user?.loaExpeditions?.[0]?.characters || [])[0] || null
           const dispName = m.user?.nickname || m.user?.name || '알 수 없음'
           return (
-            <div key={m.userId} className="rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm px-5 py-4 flex items-center gap-3">
+            <div key={m.userId} className="rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-5 py-4 flex items-center gap-3">
               <Avatar user={m.user} size={36} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -998,7 +998,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
     return (
       <div className="space-y-3">
         {/* 초대 코드 */}
-        <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm px-5 py-4 space-y-3">
+        <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-5 py-4 space-y-3">
           <p className="text-xs ns-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">초대 코드</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 text-base ns-extrabold text-gray-900 dark:text-white tracking-[0.3em] bg-gray-50 dark:bg-[#252525] rounded-xl px-4 py-3 text-center min-w-0">
@@ -1024,7 +1024,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
         </div>
 
         {isLeader && (
-          <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm px-5 py-4 space-y-4">
+          <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-5 py-4 space-y-4">
             <p className="text-xs ns-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">길드 설정</p>
             <div>
               <label className="text-xs ns-bold text-gray-500 dark:text-gray-400 block mb-1.5">길드 이름</label>
@@ -1072,7 +1072,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
         )}
 
         {/* 탈퇴 / 삭제 */}
-        <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-sm px-5 py-4">
+        <div className="rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-5 py-4">
           <button type="button" onClick={() => leaveOrDelete(isLeader)}
             className="text-sm ns-bold text-red-500 hover:text-red-600 transition-colors"
           >
@@ -1110,7 +1110,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
         <div className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-[2px]" onClick={() => setRaidModal(null)} />
 
-        <div className="relative z-10 w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[85vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-2xl overflow-hidden">
+        <div className="relative z-10 w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[85vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:border sm:border-gray-200/50 dark:sm:border-[#2d2d2d] overflow-hidden">
           {/* 모바일 핸들 */}
           <div className="sm:hidden flex justify-center pt-3 pb-0 flex-shrink-0">
             <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-[#333]" />
@@ -1386,7 +1386,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
       {kickConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setKickConfirm(null)} />
-          <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl overflow-hidden">
+          <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-200/50 dark:border-[#2d2d2d] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] overflow-hidden">
             <div className="px-6 pt-6 pb-2 space-y-1.5">
               <p className="text-base ns-extrabold text-gray-900 dark:text-white">멤버 추방</p>
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -1414,7 +1414,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
       {regenConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setRegenConfirm(false)} />
-          <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl overflow-hidden">
+          <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-200/50 dark:border-[#2d2d2d] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] overflow-hidden">
             <div className="px-6 pt-6 pb-2 space-y-1.5">
               <p className="text-base ns-extrabold text-gray-900 dark:text-white">초대 코드 재발급</p>
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">기존 초대 코드는 사용할 수 없게 돼요. 계속할까요?</p>
@@ -1433,7 +1433,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeleteConfirm(false)} />
-          <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl overflow-hidden">
+          <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-200/50 dark:border-[#2d2d2d] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] overflow-hidden">
             <div className="px-6 pt-6 pb-2 space-y-1.5">
               <p className="text-base ns-extrabold text-gray-900 dark:text-white">길드 삭제</p>
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -1475,7 +1475,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
       {saveSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSaveSuccess(false)} />
-          <div className="relative z-10 w-full max-w-xs mx-4 rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl overflow-hidden">
+          <div className="relative z-10 w-full max-w-xs mx-4 rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-200/50 dark:border-[#2d2d2d] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] overflow-hidden">
             <div className="px-6 pt-8 pb-6 text-center space-y-3">
               <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

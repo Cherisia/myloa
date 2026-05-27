@@ -1404,7 +1404,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       <div className="flex items-stretch gap-3 -mt-3">
       <div className="grid grid-cols-1 gap-2 w-full md:grid-cols-3 md:gap-3 md:max-w-[50%]">
         {/* 원정대 캐릭터 */}
-        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 flex flex-col min-h-[80px] md:min-h-0">
+        <div className="rounded-xl border border-gray-200 dark:border-[#2d2d2d] bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 flex flex-col min-h-[80px] md:min-h-0">
           {isLoggedIn && activeChars.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full gap-1.5 py-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600">
@@ -1453,7 +1453,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
 
         {/* 이번 주 획득 골드 */}
-        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 overflow-hidden flex flex-col justify-center">
+        <div className="rounded-xl border border-gray-200 dark:border-[#2d2d2d] bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 overflow-hidden flex flex-col justify-center">
           <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 mb-2">이번 주 획득</p>
           <div className="flex flex-col gap-1.5">
             {/* 귀속 행 */}
@@ -1476,7 +1476,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
 
         {/* 완료 레이드 */}
-        <div className="rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-4 py-3 overflow-hidden flex flex-col justify-center">
+        <div className="rounded-xl border border-gray-200 dark:border-[#2d2d2d] bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 overflow-hidden flex flex-col justify-center">
           {allTotalCount <= totalCount ? (
             /* 모든 레이드가 골드 레이드 — 기존 단일 바 */
             <>
@@ -1699,13 +1699,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onDrop={!isMobile ? (e) => handleCharDrop(e, char.id) : undefined}
                   onDragEnd={!isMobile ? handleCharDragEnd : undefined}
                   className={`relative rounded-xl border bg-white dark:bg-[#222222] overflow-hidden transition-all select-none flex flex-col ${
-                    isDragging  ? 'opacity-40 border-gray-200 dark:border-[#383838]' :
-                    isDragOver  ? 'border-yellow-400 dark:border-yellow-600 ring-2 ring-yellow-300/50 dark:ring-yellow-700/30' :
-                                  'border-gray-200 dark:border-[#383838]'
+                    isDragging  ? 'opacity-40 border-gray-200 dark:border-[#383838] shadow-none' :
+                    isDragOver  ? 'border-yellow-400 dark:border-yellow-600 ring-2 ring-yellow-300/50 dark:ring-yellow-700/30 shadow-[0_4px_20px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.55)]' :
+                                  'border-gray-200 dark:border-[#2d2d2d] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1),0_2px_6px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_6px_24px_rgba(0,0,0,0.58)] hover:-translate-y-px'
                   }`}
                 >
                   {/* ── 캐릭터 헤더 ── */}
-                  <div className="flex items-center gap-1.5 pl-2.5 pr-1 bg-gray-50 dark:bg-[#181818] h-[47px] 2xl:h-[56px] overflow-hidden">
+                  <div className="flex items-center gap-1.5 pl-2.5 pr-1 bg-gradient-to-b from-gray-50 to-gray-50/60 dark:from-[#1e1e1e] dark:to-[#1a1a1a] border-b border-gray-100 dark:border-[#272727] h-[47px] 2xl:h-[56px] overflow-hidden">
                     {getClassIcon(char.class)
                       ? <Image src={getClassIcon(char.class)} alt={char.class} width={28} height={28} unoptimized className="class-icon w-7 h-7 2xl:w-9 2xl:h-9 object-contain flex-shrink-0" />
                       : <span className="w-7 h-7 2xl:w-9 2xl:h-9 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
@@ -1750,7 +1750,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   </div>
 
                   {/* 골드 요약 */}
-                  <div className="px-2.5 py-1.5 border-t border-gray-100 dark:border-[#2a2a2a] bg-gray-50/50 dark:bg-[#181818]/50">
+                  <div className="px-2.5 py-1.5 border-t border-gray-100 dark:border-[#272727] bg-gray-50/80 dark:bg-[#1c1c1c]/70">
                     <CharGoldBadges
                       bound={charGoldMap[char.id]?.bound ?? 0}
                       trade={charGoldMap[char.id]?.trade ?? 0}
@@ -1763,11 +1763,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {/* ── 일일 숙제 섹션 ── */}
                   {orderedDaily.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
+                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-yellow-50 to-yellow-50/40 dark:from-yellow-900/25 dark:to-yellow-900/5 border-t border-yellow-200/70 dark:border-yellow-800/30">
                         <span className="text-[10px] md:text-[12px] ns-bold text-yellow-700 dark:text-yellow-400">일일 숙제</span>
                         <span className="text-[10px] md:text-[12px] text-yellow-500 dark:text-yellow-500">({dailyDoneCount}/{orderedDaily.length})</span>
                       </div>
-                      <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
+                      <div className="divide-y divide-gray-100 dark:divide-[#272727]">
                         {orderedDaily.map(item => {
                           const checked = !!(customChecks[char.id]?.[item.id])
                           const gauge   = restGauge[char.id]?.[item.id] ?? 0
@@ -1836,14 +1836,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
                   {/* ── 주간 레이드 섹션 ── */}
                   <div className="flex-1 flex flex-col">
-                    <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
+                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-yellow-50 to-yellow-50/40 dark:from-yellow-900/25 dark:to-yellow-900/5 border-t border-yellow-200/70 dark:border-yellow-800/30">
                       <span className="text-[10px] md:text-[12px] ns-bold text-yellow-700 dark:text-yellow-400">주간 레이드</span>
                       <span className="text-[10px] md:text-[12px] text-yellow-500 dark:text-yellow-500">({raidDoneCount}/{charRaids.length})</span>
                     </div>
                     {charRaids.length === 0 ? (
                       <div className="py-3 text-center text-[10px] md:text-[12px] text-gray-300 dark:text-gray-600">레이드 미설정</div>
                     ) : (
-                      <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
+                      <div className="divide-y divide-gray-100 dark:divide-[#272727]">
                         {charRaids.map(entry => {
                           const raid = RAID_MAP[entry.raidId]
                           const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
@@ -1938,11 +1938,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {/* ── 주간 숙제 섹션 ── */}
                   {weeklyItems.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1 px-2.5 py-1 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-100 dark:border-yellow-900/40">
+                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-yellow-50 to-yellow-50/40 dark:from-yellow-900/25 dark:to-yellow-900/5 border-t border-yellow-200/70 dark:border-yellow-800/30">
                         <span className="text-[10px] md:text-[12px] ns-bold text-yellow-700 dark:text-yellow-400">주간 숙제</span>
                         <span className="text-[10px] md:text-[12px] text-yellow-500 dark:text-yellow-500">({weeklyDoneCount}/{weeklyItems.length})</span>
                       </div>
-                      <div className="divide-y divide-gray-50 dark:divide-[#2a2a2a]">
+                      <div className="divide-y divide-gray-100 dark:divide-[#272727]">
                         {weeklyItems.map(item => {
                           const checked = !!(customChecks[char.id]?.[item.id])
                           return (
@@ -2118,30 +2118,30 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           const raidSectionTitle = selectedRaid ? '레이드 숙제' : '주간 레이드'
 
           const theadSticky = glanceTable
-            ? 'sticky left-0 z-30 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-[#2a2a2a]'
-            : 'sticky left-0 z-30 bg-gradient-to-b from-gray-50/95 to-gray-50 dark:from-[#1c1c1c] dark:to-[#181818] border-r border-gray-200/70 dark:border-white/[0.08] shadow-[2px_0_10px_-4px_rgba(0,0,0,0.08)] dark:shadow-[2px_0_10px_-4px_rgba(0,0,0,0.45)]'
+            ? 'sticky left-0 z-30 bg-gray-50 dark:bg-[#1c1c1c] border-r border-gray-200 dark:border-[#272727]'
+            : 'sticky left-0 z-30 bg-gradient-to-b from-gray-50 to-gray-50/80 dark:from-[#1e1e1e] dark:to-[#1a1a1a] border-r border-gray-200/70 dark:border-white/[0.08] shadow-[2px_0_10px_-4px_rgba(0,0,0,0.08)] dark:shadow-[2px_0_10px_-4px_rgba(0,0,0,0.45)]'
 
           const theadRow1 = glanceTable
-            ? 'border-b border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]'
-            : 'border-b border-gray-200/75 dark:border-white/[0.08] bg-gradient-to-b from-gray-50/90 to-gray-50 dark:from-[#1c1c1c] dark:to-[#181818]'
+            ? 'border-b border-gray-200 dark:border-[#272727] bg-gray-50 dark:bg-[#1c1c1c]'
+            : 'border-b border-gray-200 dark:border-white/[0.08] bg-gradient-to-b from-gray-50 to-gray-50/80 dark:from-[#1e1e1e] dark:to-[#1a1a1a]'
           const theadRow2 = glanceTable
-            ? 'border-b border-gray-200 dark:border-[#383838] bg-gray-50 dark:bg-[#181818]'
-            : 'border-b border-gray-200/80 dark:border-white/[0.1] bg-gradient-to-b from-gray-50/90 to-gray-50 dark:from-[#1c1c1c] dark:to-[#181818]'
+            ? 'border-b border-gray-200 dark:border-[#272727] bg-gray-50 dark:bg-[#1c1c1c]'
+            : 'border-b border-gray-200/80 dark:border-white/[0.1] bg-gradient-to-b from-gray-50 to-gray-50/80 dark:from-[#1e1e1e] dark:to-[#1a1a1a]'
           const thCharPad = glanceTable ? 'px-2 py-2 border-r border-gray-100 dark:border-[#2a2a2a]' : 'px-2.5 py-2.5 border-r border-gray-200/55 dark:border-white/[0.06]'
           const thGoldPad = glanceTable ? 'px-2 py-1.5 border-r border-gray-100 dark:border-[#2a2a2a]' : 'px-2 py-2 border-r border-gray-200/55 dark:border-white/[0.06]'
 
           const wrapClass = glanceTable
-            ? 'rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] overflow-hidden'
-            : 'rounded-xl border border-gray-200/90 dark:border-[#333] bg-white/95 dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.35)] overflow-hidden backdrop-blur-sm'
+            ? 'rounded-xl border border-gray-200 dark:border-[#2d2d2d] bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.45)] overflow-hidden'
+            : 'rounded-xl border border-gray-200 dark:border-[#2d2d2d] bg-white dark:bg-[#222222] shadow-[0_2px_12px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.5)] overflow-hidden'
 
           const renderSectionHeader = (id, label) => (
             <tr key={`sec-${id}`} className="pointer-events-none">
               <td
                 colSpan={colSpan}
-                className="sticky left-0 z-20 border-y border-yellow-100 dark:border-yellow-800/35 bg-yellow-50 dark:bg-yellow-900/10 px-3 py-2"
+                className="sticky left-0 z-20 border-y border-yellow-200/70 dark:border-yellow-800/30 bg-gradient-to-r from-yellow-50 to-yellow-50/40 dark:from-yellow-900/20 dark:to-yellow-900/5 px-3 py-2"
               >
                 <div className="flex items-center gap-2">
-                  <span className="inline-block w-0.5 h-3.5 shrink-0 rounded-full bg-yellow-500 dark:bg-yellow-400" aria-hidden />
+                  <span className="inline-block w-[3px] h-3.5 shrink-0 rounded-full bg-yellow-400 dark:bg-yellow-500 shadow-[0_0_4px_rgba(250,204,21,0.5)] dark:shadow-[0_0_4px_rgba(234,179,8,0.4)]" aria-hidden />
                   <span className="text-[11px] min-[1920px]:text-[11px] ns-bold text-yellow-800 dark:text-yellow-200 tracking-tight">{label}</span>
                 </div>
               </td>
@@ -2255,10 +2255,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {raidsToRender.map(row => {
                     const raidData = RAID_MAP[row.raidId]
                     return (
-                      <tr key={row.key} className={glanceTable ? 'group border-b border-gray-100 dark:border-[#2a2a2a]' : 'group/row transition-colors border-b border-gray-100/90 dark:border-white/[0.05] hover:bg-gray-50/90 dark:hover:bg-white/[0.03]'}>
+                      <tr key={row.key} className={glanceTable ? 'group border-b border-gray-100 dark:border-[#272727]' : 'group/row transition-colors border-b border-gray-100 dark:border-[#272727] hover:bg-gray-50/70 dark:hover:bg-white/[0.04]'}>
                         <td style={{ width: colW.raid, minWidth: colW.stretch ? 0 : COL_RAID }} className={glanceTable
-                          ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-1.5'
-                          : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/90 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.03] border-r border-gray-100/90 dark:border-white/[0.06] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
+                          ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#272727] px-2 py-1.5'
+                          : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/70 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.04] border-r border-gray-100 dark:border-[#272727] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
                         }>
                           <div className="flex items-center gap-1.5">
                             {raidData?.image && (
@@ -2276,7 +2276,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               onDragOver={(e) => handleCharDragOver(e, char.id)}
                               onDrop={(e) => handleCharDrop(e, char.id)}
                               style={{ width: colW.char, maxWidth: colW.stretch ? undefined : COL_CHAR, minWidth: 0, overflow: 'hidden' }}
-                              className={`${glanceTable ? 'border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1' : 'border-r border-gray-100/90 dark:border-white/[0.06] last:border-r-0 p-1.5 group-hover/row:bg-gray-50/50 dark:group-hover/row:bg-white/[0.02]'} transition-colors ${
+                              className={`${glanceTable ? 'border-r border-gray-100 dark:border-[#272727] last:border-r-0 p-1' : 'border-r border-gray-100 dark:border-[#272727] last:border-r-0 p-1.5 group-hover/row:bg-gray-50/50 dark:group-hover/row:bg-white/[0.03]'} transition-colors ${
                                 dragCharId === char.id ? 'bg-yellow-100/50 dark:bg-yellow-900/15' :
                                 dropCharId === char.id ? 'bg-yellow-50/70 dark:bg-yellow-900/8' :
                                 dragCharId            ? 'opacity-50' : ''
