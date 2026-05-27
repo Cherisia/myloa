@@ -521,17 +521,37 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     })
   }, [selectedRaid, activeChars, raids])
 
-  // 레이드 필터 활성 시 미완료 캐릭터를 앞으로 정렬
-  // 레이드 필터 선택 시 미완료 캐릭터를 앞으로 정렬
+  // 레이드 필터 활성 시 미완료 캐릭터를 앞으로 정렬 (필터 선택 시점 순서 동결 — 체크해도 재정렬 안 함)
+  const frozenOrderRef = useRef(null) // { key: 'raidId:diffKey', charIds: string[] }
   const sortedActiveChars = useMemo(() => {
-    if (!selectedRaid) return activeChars
-    const incompleteIds = new Set(raidIncompleteChars.map(({ char }) => char.id))
-    return [...activeChars].sort((a, b) => {
-      const aIncomplete = incompleteIds.has(a.id)
-      const bIncomplete = incompleteIds.has(b.id)
-      if (aIncomplete !== bIncomplete) return aIncomplete ? -1 : 1
-      return 0
-    })
+    if (!selectedRaid) {
+      frozenOrderRef.current = null
+      return activeChars
+    }
+
+    const filterKey = `${selectedRaid.raidId}:${selectedRaid.diffKey}`
+    const frozen = frozenOrderRef.current
+
+    // 필터가 바뀌었거나 처음 적용될 때만 순서를 새로 계산해서 동결
+    if (!frozen || frozen.key !== filterKey) {
+      const incompleteIds = new Set(raidIncompleteChars.map(({ char }) => char.id))
+      const sorted = [...activeChars].sort((a, b) => {
+        const aInc = incompleteIds.has(a.id)
+        const bInc = incompleteIds.has(b.id)
+        if (aInc !== bInc) return aInc ? -1 : 1
+        return 0
+      })
+      frozenOrderRef.current = { key: filterKey, charIds: sorted.map(c => c.id) }
+      return sorted
+    }
+
+    // 동결된 순서 그대로 유지 (체크/해제로 raids가 바뀌어도 재정렬 안 함)
+    const charMap = new Map(activeChars.map(c => [c.id, c]))
+    const frozenSet = new Set(frozen.charIds)
+    const ordered = frozen.charIds.map(id => charMap.get(id)).filter(Boolean)
+    // 동결 이후 새로 추가된 캐릭터는 뒤에 추가
+    activeChars.forEach(c => { if (!frozenSet.has(c.id)) ordered.push(c) })
+    return ordered
   }, [selectedRaid, activeChars, raidIncompleteChars])
 
   // 캐릭터가 있다가 0이 되면 빈 상태 모달 자동 표시 (초기 0은 제외)
