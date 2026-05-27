@@ -10,7 +10,7 @@ import { buildAutoRaids } from '../_raidHelpers'
 function ItemLevelIcon({ size = 11 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" className="flex-shrink-0 opacity-60">
-      <path d="M8 1L10.5 5.5H13.5L11 8.5L12 13L8 10.5L4 13L5 8.5L2.5 5.5H5.5L8 1Z" fill="currentColor" className="text-yellow-500 dark:text-yellow-400" />
+      <path d="M8 1L10.5 5.5H13.5L11 8.5L12 13L8 10.5L4 13L5 8.5L2.5 5.5H5.5L8 1Z" fill="currentColor" className="text-[var(--accent-500)] dark:text-[var(--accent-400)]" />
     </svg>
   )
 }
@@ -155,7 +155,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
                     )}
                     {/* 왕관 (최고레벨 캐릭터) */}
                     {idx === 0 && (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0 text-yellow-500 dark:text-yellow-400">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0 text-[var(--accent-500)] dark:text-[var(--accent-400)]">
                         <path d="M2 19h20v2H2zM2 6l5 5 5-8 5 8 5-5v11H2z"/>
                       </svg>
                     )}
@@ -250,7 +250,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
             취소
           </button>
           <button onClick={handleApply} disabled={!preview}
-            className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+            className="flex-1 rounded bg-[var(--accent-200)] hover:bg-[var(--accent-300)] dark:bg-[#2e2e2e] dark:hover:bg-[#383838] disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-[var(--accent-900)] dark:text-gray-300 transition-colors">
             자동 설정 적용
           </button>
         </div>

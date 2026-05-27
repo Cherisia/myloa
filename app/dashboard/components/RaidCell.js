@@ -38,18 +38,18 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
       onClick={onToggle}
       className={`w-full h-[47px] flex items-center gap-1.5 px-1.5 py-1.5 rounded cursor-pointer transition-colors
         ${moreDone
-          ? 'bg-yellow-100 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
+          ? 'bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20'
           : allDone
-          ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
+          ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20'
           : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
         }`}
     >
       {/* 왼쪽: 체크박스 */}
       <div className={`h-[24px] w-[24px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all
         ${moreDone
-          ? 'bg-yellow-500 border-yellow-500 text-yellow-900 shadow-sm'
+          ? 'bg-[var(--accent-500)] border-[var(--accent-500)] text-[var(--accent-900)] shadow-sm'
           : allDone
-          ? 'bg-yellow-400 border-yellow-400 text-yellow-900 shadow-sm'
+          ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)] shadow-sm'
           : 'border-gray-200 dark:border-[#383838]'}`}>
         {allDone && <IconCheck />}
       </div>
@@ -106,7 +106,7 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
             {diff.label}
           </span>
           <span className={`text-[11px] min-[1920px]:text-[11px] ns-bold leading-none tabular-nums tracking-tight
-            ${moreDone ? 'text-yellow-700 dark:text-yellow-500' : allDone ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-500'}`}>
+            ${moreDone ? 'text-[var(--accent-700)] dark:text-[var(--accent-500)]' : allDone ? 'text-[var(--accent-600)] dark:text-[var(--accent-400)]' : 'text-gray-500 dark:text-gray-500'}`}>
             {totalGold.toLocaleString()}G
           </span>
           {entry.isGoldCheck && (

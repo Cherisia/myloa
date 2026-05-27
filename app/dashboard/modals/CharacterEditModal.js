@@ -140,13 +140,13 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
                 onClick={toggleAll}
                 className={`w-4 h-4 flex-shrink-0 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
                   allSelected || someSelected
-                    ? 'bg-yellow-400 border-yellow-400'
-                    : 'border-gray-300 dark:border-[#555] hover:border-yellow-400'
+                    ? 'bg-[var(--accent-400)] border-[var(--accent-400)]'
+                    : 'border-gray-300 dark:border-[#555] hover:border-[var(--accent-400)]'
                 }`}
               >
                 {allSelected && <IconCheck />}
                 {someSelected && (
-                  <svg width="8" height="2" viewBox="0 0 8 2" fill="currentColor" className="text-yellow-900">
+                  <svg width="8" height="2" viewBox="0 0 8 2" fill="currentColor" className="text-[var(--accent-900)]">
                     <rect width="8" height="2" rx="1"/>
                   </svg>
                 )}
@@ -174,7 +174,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
               <div key={char.id} className="relative">
                 {/* 삽입 인디케이터 — 위 */}
                 {isOver && dragDir === 'up' && (
-                  <div className="absolute -top-[3px] left-0 right-0 h-[3px] rounded-full bg-yellow-400 shadow-[0_0_8px_2px_rgba(250,204,21,0.5)] z-10 pointer-events-none" />
+                  <div className="absolute -top-[3px] left-0 right-0 h-[3px] rounded-full bg-[var(--accent-400)] shadow-[0_0_8px_2px_var(--accent-glow)] z-10 pointer-events-none" />
                 )}
 
                 <div
@@ -187,9 +187,9 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
                   onClick={() => !dragId && toggleSelect(char.id)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border select-none transition-all duration-150 ${
                     isDragging
-                      ? 'opacity-30 scale-[0.98] border-dashed border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/10'
+                      ? 'opacity-30 scale-[0.98] border-dashed border-[var(--accent-300)] dark:border-[var(--accent-700)] bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10'
                       : isSelected
-                        ? 'border-yellow-400/60 dark:border-yellow-600/40 bg-yellow-50 dark:bg-yellow-900/10 cursor-pointer hover:border-yellow-400'
+                        ? 'border-[var(--accent-400)]/60 dark:border-[var(--accent-600)]/40 bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 cursor-pointer hover:border-[var(--accent-400)]'
                         : 'border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                   }`}
                   style={isOver ? { boxShadow: 'none' } : {}}
@@ -202,7 +202,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
                   {/* 체크박스 */}
                   <div className={`w-4 h-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                     isSelected
-                      ? 'bg-yellow-400 border-yellow-400'
+                      ? 'bg-[var(--accent-400)] border-[var(--accent-400)]'
                       : 'border-gray-300 dark:border-[#555]'
                   }`}>
                     {isSelected && <IconCheck />}
@@ -235,7 +235,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
 
                 {/* 삽입 인디케이터 — 아래 */}
                 {isOver && dragDir === 'down' && (
-                  <div className="absolute -bottom-[3px] left-0 right-0 h-[3px] rounded-full bg-yellow-400 shadow-[0_0_8px_2px_rgba(250,204,21,0.5)] z-10 pointer-events-none" />
+                  <div className="absolute -bottom-[3px] left-0 right-0 h-[3px] rounded-full bg-[var(--accent-400)] shadow-[0_0_8px_2px_var(--accent-glow)] z-10 pointer-events-none" />
                 )}
               </div>
             )
@@ -283,7 +283,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+                className="flex-1 rounded bg-[var(--accent-200)] hover:bg-[var(--accent-300)] dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm ns-bold text-[var(--accent-900)] dark:text-gray-300 transition-colors">
                 완료
               </button>
             </div>

@@ -97,6 +97,8 @@ components/
 - `globals.css`에서 `[data-theme="pink"]`와 `.dark` 클래스로 컬러 오버라이드
 - `ThemeProvider`가 `<html>` 에 `data-theme` + `dark` 클래스 부착
 - 테마: `yellow` (기본) / `pink` / `sky` / `dark` — Navbar.js `THEMES` 배열 참고
+- **다크 모드 감지**: `@custom-variant dark (&:where(.dark, .dark *))` — `prefers-color-scheme` 기반이 아닌 **클래스 기반**이므로 미디어 쿼리로 감지하면 안 됨
+- `globals.css`에 `!important` 오버라이드 방식은 불완전함 — 새 컬러 클래스가 추가될 때마다 누락 가능. CSS 변수 방식을 항상 우선한다.
 
 ### 색상 하드코딩 금지
 테마별로 색이 달라야 하므로 **accent 색상을 Tailwind 컬러 클래스로 하드코딩하지 않는다.**
@@ -105,25 +107,48 @@ components/
 
 ```css
 /* globals.css — 테마별 accent 팔레트 */
-:root, [data-theme="yellow"] { --accent-400: #facc15; /* ... */ }
-[data-theme="pink"]          { --accent-400: #f472b6; /* ... */ }
-[data-theme="sky"]           { --accent-400: #38bdf8; /* ... */ }
-.dark                        { --accent-400: #d4d4d8; /* ... */ }
+:root, [data-theme="yellow"] { --accent-400: #facc15; --accent-glow: rgba(250,204,21,0.5); /* ... */ }
+[data-theme="pink"]          { --accent-400: #f472b6; --accent-glow: rgba(244,114,182,0.5); /* ... */ }
+[data-theme="sky"]           { --accent-400: #38bdf8; --accent-glow: rgba(56,189,248,0.5);  /* ... */ }
+.dark                        { --accent-400: #d4d4d8; --accent-glow: rgba(136,136,136,0.3); /* ... */ }
 ```
 
 ```jsx
 /* ✅ 올바른 사용 — CSS 변수로 테마 대응 */
-<button className="bg-[var(--accent-400)] hover:bg-[var(--accent-300)] active:bg-[var(--accent-500)] text-gray-900">
+<button className="bg-[var(--accent-400)] hover:bg-[var(--accent-300)] active:bg-[var(--accent-500)] text-[var(--accent-900)]">
 <span className="bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)]">
 
 /* ❌ 금지 — 특정 테마 색 하드코딩 */
-<button className="bg-yellow-400 hover:bg-yellow-300">
+<button className="bg-yellow-400 hover:bg-yellow-300 text-yellow-900">
 <span className="bg-pink-100 text-pink-700">
 ```
 
-사용 가능한 변수: `--accent-50` ~ `--accent-900` (globals.css 정의 참고)
+사용 가능한 변수: `--accent-50` ~ `--accent-900`, `--accent-bar`, `--accent-glow` (globals.css 정의 참고)
 
-**예외:** 게임 요소 고유 색상(EX 레이드 금빛 뱃지 `from-amber-400 to-yellow-300` 등)과 Discord 브랜드 컬러(`#5865F2`)는 하드코딩 허용.
+**예외:** 게임 요소 고유 색상(EX 레이드 금빛 뱃지 `from-amber-400 to-yellow-300`, 아이템레벨 등급 색상 `text-orange-500/text-yellow-500/text-green-500` 등)과 Discord 브랜드 컬러(`#5865F2`)는 하드코딩 허용.
+
+#### 다크 모드 accent 색상 주의사항
+
+다크 테마의 `--accent-*` 변수는 zinc 계열 회색으로 매핑된다. 이로 인해 라이트 모드 로직을 그대로 쓰면 색이 틀리는 케이스가 있다.
+
+| 상황 | 잘못된 패턴 | 올바른 패턴 |
+|------|------------|------------|
+| 미묘한 배경 오버레이 | `bg-[var(--accent-50)]` (다크에서 zinc-800 = 너무 진함) | `dark:bg-[var(--accent-900)]/10` |
+| 선택 상태 배경 | `bg-[var(--accent-100)]` | `bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20` |
+| 강조 그림자 | `shadow-yellow-400/50` | `shadow-[var(--accent-glow)]` 또는 `shadow-[0_0_8px_2px_var(--accent-glow)]` |
+
+#### 버튼 다크 모드 패턴
+
+라이트 배경 버튼(`bg-[var(--accent-200)]`)은 다크에서 zinc-600이 되어 텍스트(`--accent-900` = zinc-700)와 대비가 떨어진다. 다크 모드에서는 명시적으로 오버라이드한다.
+
+```jsx
+/* ✅ 올바른 — 라이트는 accent, 다크는 explicit neutral */
+<button className="bg-[var(--accent-200)] hover:bg-[var(--accent-300)] text-[var(--accent-900)]
+                   dark:bg-[#2e2e2e] dark:hover:bg-[#383838] dark:text-gray-300">
+
+/* ✅ 강한 accent 버튼 (배경 자체가 accent-400) — 다크 오버라이드 불필요 */
+<button className="bg-[var(--accent-400)] hover:bg-[var(--accent-500)] text-[var(--accent-900)]">
+```
 
 ### 레이드 데이터 구조
 ```js

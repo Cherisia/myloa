@@ -135,8 +135,8 @@ export default function CustomItemsEditor({
                 onClick={() => setItemType(key)}
                 className={`px-3 py-1 text-[10px] ns-bold transition-colors ${
                   itemType === key
-                    ? 'bg-yellow-400 dark:bg-yellow-500 text-yellow-900'
-                    : 'bg-white dark:bg-[#181818] text-gray-500 dark:text-gray-400 hover:bg-yellow-50/90 dark:hover:bg-[#252525]'
+                    ? 'bg-[var(--accent-400)] text-[var(--accent-900)]'
+                    : 'bg-white dark:bg-[#181818] text-gray-500 dark:text-gray-400 hover:bg-[var(--accent-50)]/90 dark:hover:bg-[#252525]'
                 }`}
               >
                 {label}
@@ -151,8 +151,8 @@ export default function CustomItemsEditor({
               onKeyDown={handleKeyDown}
               disabled={isFull}
               placeholder={isFull ? '최대 10개까지' : '숙제 이름 (최대 10자)'}
-              className={`w-full rounded-lg border px-3 py-1.5 text-xs text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-colors disabled:opacity-50 bg-white dark:bg-[#181818] hover:border-yellow-200/80 dark:hover:border-[#4a4a4a] ${
-                isDuplicate ? 'border-red-300 dark:border-red-700 focus:border-red-400' : 'border-gray-200 dark:border-[#383838] focus:border-yellow-400 dark:focus:border-yellow-500/70 focus:ring-2 focus:ring-yellow-400/20 dark:focus:ring-yellow-500/15'
+              className={`w-full rounded-lg border px-3 py-1.5 text-xs text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600 outline-none transition-colors disabled:opacity-50 bg-white dark:bg-[#181818] hover:border-[var(--accent-200)]/80 dark:hover:border-[#4a4a4a] ${
+                isDuplicate ? 'border-red-300 dark:border-red-700 focus:border-red-400' : 'border-gray-200 dark:border-[#383838] focus:border-[var(--accent-400)] focus:ring-2 focus:ring-[var(--accent-400)]/20'
               }`}
             />
             {isDuplicate && (
@@ -167,11 +167,11 @@ export default function CustomItemsEditor({
           />
           <div className="flex gap-2 flex-shrink-0">
             <button type="button" onClick={handleAdd} disabled={!canAdd}
-              className="flex items-center gap-1 rounded-lg bg-yellow-400 dark:bg-yellow-500 px-3 py-1.5 text-xs ns-bold text-yellow-900 disabled:opacity-40 hover:bg-yellow-500 dark:hover:bg-yellow-400 active:bg-yellow-600 dark:active:bg-yellow-600 transition-colors">
+              className="flex items-center gap-1 rounded-lg bg-[var(--accent-400)] px-3 py-1.5 text-xs ns-bold text-[var(--accent-900)] disabled:opacity-40 hover:bg-[var(--accent-500)] active:bg-[var(--accent-600)] transition-colors">
               <IconPlus size={11} /> 추가
             </button>
             <button type="button" onClick={handleAddAll} disabled={!input.trim() || isDuplicate}
-              className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-[#404040] bg-white dark:bg-[#1c1c1c] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 disabled:opacity-40 hover:bg-yellow-50/90 hover:border-yellow-300/60 dark:hover:bg-[#2a2a2a] dark:hover:border-[#505050] transition-colors whitespace-nowrap">
+              className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-[#404040] bg-white dark:bg-[#1c1c1c] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 disabled:opacity-40 hover:bg-[var(--accent-50)]/90 hover:border-[var(--accent-300)]/60 dark:hover:bg-[#2a2a2a] dark:hover:border-[#505050] transition-colors whitespace-nowrap">
               원정대 추가
             </button>
           </div>
@@ -190,7 +190,7 @@ export default function CustomItemsEditor({
                       className={`flex items-center gap-1 pl-2 pr-1.5 py-0.5 text-[10px] transition-colors ${
                     already || isFull || levelLocked
                       ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-yellow-700 dark:hover:text-yellow-300 hover:bg-yellow-50/50 dark:hover:bg-transparent'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-[var(--accent-700)] hover:bg-[var(--accent-50)]/50 dark:hover:bg-transparent'
                   }`}
                 >
                   <Image src={preset.image} alt="" width={12} height={12} className="custom-homework-icon w-3 h-3 object-contain flex-shrink-0" />
@@ -203,7 +203,7 @@ export default function CustomItemsEditor({
                   type="button"
                   onClick={e => handlePresetAll(e, preset)}
                   title="원정대 캐릭터에 추가"
-                  className="pl-1 pr-2 py-0.5 text-[9px] ns-bold text-gray-400 dark:text-gray-600 hover:text-yellow-700 dark:hover:text-yellow-400 hover:bg-yellow-50/60 dark:hover:bg-[#2a2a2a] transition-colors border-l border-gray-200 dark:border-[#383838]"
+                  className="pl-1 pr-2 py-0.5 text-[9px] ns-bold text-gray-400 dark:text-gray-600 hover:text-[var(--accent-700)] hover:bg-[var(--accent-50)]/60 dark:hover:bg-[#2a2a2a] transition-colors border-l border-gray-200 dark:border-[#383838]"
                 >
                   원정대
                 </button>
@@ -232,7 +232,7 @@ export default function CustomItemsEditor({
                   onDrop={e => handleDrop(e, idx)}
                   onDragEnd={handleDragEnd}
                   className={`flex items-center gap-2 px-3 py-2 border-b border-gray-50 dark:border-[#2a2a2a] last:border-b-0 select-none transition-colors ${
-                    isDragging ? 'opacity-40' : isOver ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''
+                    isDragging ? 'opacity-40' : isOver ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10' : ''
                   }`}
                 >
                   <span className="cursor-default text-gray-300 dark:text-gray-600 flex-shrink-0"><IconGrip /></span>

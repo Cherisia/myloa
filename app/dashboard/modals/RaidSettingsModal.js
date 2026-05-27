@@ -166,7 +166,7 @@ export default function RaidSettingsModal({
           <button type="button" onClick={onClose} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
           <p className="text-sm text-gray-400 dark:text-gray-500 mb-1">등록된 캐릭터가 없습니다</p>
           <p className="text-xs text-gray-300 dark:text-gray-600">캐릭터를 먼저 추가해 주세요</p>
-          <button type="button" onClick={() => { onClose(); onOpenCharAdd() }} className="mt-6 px-4 py-2 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+          <button type="button" onClick={() => { onClose(); onOpenCharAdd() }} className="mt-6 px-4 py-2 rounded bg-[var(--accent-200)] hover:bg-[var(--accent-300)] dark:bg-[#2e2e2e] dark:hover:bg-[#383838] text-sm ns-bold text-[var(--accent-900)] dark:text-gray-300 transition-colors">
             캐릭터 추가
           </button>
         </div>
@@ -195,12 +195,12 @@ export default function RaidSettingsModal({
               onClick={() => setExpAndPickChar(g.id)}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
                 g.id === selectedExpId
-                  ? 'bg-yellow-200 text-yellow-900'
+                  ? 'bg-[var(--accent-200)] text-[var(--accent-900)]'
                   : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
               }`}
             >
               {g.label}
-              <span className={`ml-1 tabular-nums ${g.id === selectedExpId ? 'text-yellow-800' : 'text-gray-400'}`}>
+              <span className={`ml-1 tabular-nums ${g.id === selectedExpId ? 'text-[var(--accent-800)]' : 'text-gray-400'}`}>
                 ({g.chars.length})
               </span>
             </button>
@@ -220,7 +220,7 @@ export default function RaidSettingsModal({
                 onClick={() => setSelectedCharId(char.id)}
                 className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs ns-bold transition-colors border ${
                   active
-                    ? 'bg-yellow-200 border-yellow-300 text-yellow-900'
+                    ? 'bg-[var(--accent-200)] border-[var(--accent-300)] text-[var(--accent-900)]'
                     : 'border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                 }`}
               >
@@ -234,7 +234,7 @@ export default function RaidSettingsModal({
                 )}
                 {count > 0 && (
                   <span className={`text-[10px] px-1 rounded-full ns-bold ${
-                    active ? 'bg-yellow-400/40 text-yellow-900' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500'
+                    active ? 'bg-[var(--accent-400)]/40 text-[var(--accent-900)]' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500'
                   }`}>
                     {count}
                   </span>
@@ -251,13 +251,13 @@ export default function RaidSettingsModal({
             onClick={() => setSettingsTab('raid')}
             className={`relative px-3 py-2 text-xs ns-bold transition-colors rounded-t-lg ${
               settingsTab === 'raid'
-                ? 'text-yellow-900 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/15'
+                ? 'text-[var(--accent-900)] dark:text-[var(--accent-300)] bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/15'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             레이드 설정
             {settingsTab === 'raid' && (
-              <span className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-yellow-400 dark:bg-yellow-500" />
+              <span className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[var(--accent-400)]" />
             )}
           </button>
           <button
@@ -265,13 +265,13 @@ export default function RaidSettingsModal({
             onClick={() => setSettingsTab('custom')}
             className={`relative px-3 py-2 text-xs ns-bold transition-colors rounded-t-lg ${
               settingsTab === 'custom'
-                ? 'text-yellow-900 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/15'
+                ? 'text-[var(--accent-900)] dark:text-[var(--accent-300)] bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/15'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             커스텀 설정
             {settingsTab === 'custom' && (
-              <span className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-yellow-400 dark:bg-yellow-500" />
+              <span className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[var(--accent-400)]" />
             )}
           </button>
         </div>
@@ -283,7 +283,7 @@ export default function RaidSettingsModal({
             <div className="flex gap-1">
               {[0, 1, 2].map(i => (
                 <div key={i} className={`h-1.5 w-5 rounded-full transition-colors ${
-                  normalGoldCount > GOLD_RAID_LIMIT ? 'bg-red-400' : i < normalGoldCount ? 'bg-yellow-400' : 'bg-gray-200 dark:bg-[#2a2a2a]'
+                  normalGoldCount > GOLD_RAID_LIMIT ? 'bg-red-400' : i < normalGoldCount ? 'bg-[var(--accent-400)]' : 'bg-gray-200 dark:bg-[#2a2a2a]'
                 }`} />
               ))}
             </div>
@@ -300,7 +300,7 @@ export default function RaidSettingsModal({
               <div className="flex gap-0.5">
                 {Array.from({ length: GOLD_CHAR_LIMIT }).map((_, i) => (
                   <div key={i} className={`h-1.5 w-3 rounded-full transition-colors ${
-                    count > GOLD_CHAR_LIMIT ? 'bg-red-400' : i < count ? 'bg-yellow-400' : 'bg-gray-200 dark:bg-[#2a2a2a]'
+                    count > GOLD_CHAR_LIMIT ? 'bg-red-400' : i < count ? 'bg-[var(--accent-400)]' : 'bg-gray-200 dark:bg-[#2a2a2a]'
                   }`} />
                 ))}
               </div>
@@ -358,9 +358,9 @@ export default function RaidSettingsModal({
                           className="flex items-center gap-1.5 flex-shrink-0 disabled:cursor-not-allowed"
                           title={title}
                         >
-                          <span className={`text-[10px] ns-bold transition-colors ${isGold ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}>골드</span>
+                          <span className={`text-[10px] ns-bold transition-colors ${isGold ? 'text-[var(--accent-600)] dark:text-[var(--accent-400)]' : 'text-gray-300 dark:text-gray-600'}`}>골드</span>
                           <span className={`relative inline-flex h-4 w-7 flex-shrink-0 items-center rounded-full transition-colors ${
-                            isGold    ? 'bg-yellow-400'
+                            isGold    ? 'bg-[var(--accent-400)]'
                             : hasActive ? 'bg-gray-200 dark:bg-[#383838]'
                             :             'bg-gray-100 dark:bg-[#2a2a2a] opacity-40'
                           }`}>
@@ -380,7 +380,7 @@ export default function RaidSettingsModal({
                         const diffStyle = on
                           ? diff.key === 'nightmare' ? 'border-purple-300 bg-purple-50 dark:bg-purple-900/15 text-purple-600 dark:text-purple-400'
                             : diff.key === 'hard' ? 'border-red-300 bg-red-50 dark:bg-red-900/15 text-red-600 dark:text-red-400'
-                            : 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700 dark:text-yellow-400'
+                            : 'border-[var(--accent-400)] bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 text-[var(--accent-700)] dark:text-[var(--accent-400)]'
                           : 'border-gray-200 dark:border-[#383838] text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-500'
                         return (
                           <button
@@ -422,7 +422,7 @@ export default function RaidSettingsModal({
           <button
             type="button"
             onClick={handleConfirm}
-            className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors"
+            className="w-full rounded bg-[var(--accent-200)] hover:bg-[var(--accent-300)] dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm font-medium text-[var(--accent-900)] dark:text-gray-300 transition-colors"
           >
             확인
           </button>
@@ -447,7 +447,7 @@ export default function RaidSettingsModal({
               </p>
             </div>
             <div className="px-5 pb-5">
-              <button type="button" onClick={onClearExRaidError} className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors">확인</button>
+              <button type="button" onClick={onClearExRaidError} className="w-full rounded bg-[var(--accent-200)] hover:bg-[var(--accent-300)] dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm font-medium text-[var(--accent-900)] dark:text-gray-300 transition-colors">확인</button>
             </div>
           </div>
         </div>
@@ -485,7 +485,7 @@ export default function RaidSettingsModal({
                   if (goldError[0]?.name) focusExceededChar(goldError[0].name)
                   setGoldError(null)
                 }}
-                className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors"
+                className="w-full rounded bg-[var(--accent-200)] hover:bg-[var(--accent-300)] dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm font-medium text-[var(--accent-900)] dark:text-gray-300 transition-colors"
               >
                 수정하러 갈게요!
               </button>
@@ -520,7 +520,7 @@ export default function RaidSettingsModal({
               </div>
             </div>
             <div className="px-5 pb-5">
-              <button type="button" onClick={() => setAcctGoldError(null)} className="w-full rounded bg-yellow-200 hover:bg-yellow-300 py-2 text-sm font-medium text-yellow-900 transition-colors">수정하러 갈게요!</button>
+              <button type="button" onClick={() => setAcctGoldError(null)} className="w-full rounded bg-[var(--accent-200)] hover:bg-[var(--accent-300)] dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm font-medium text-[var(--accent-900)] dark:text-gray-300 transition-colors">수정하러 갈게요!</button>
             </div>
           </div>
         </div>

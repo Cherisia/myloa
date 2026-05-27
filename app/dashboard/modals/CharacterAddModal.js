@@ -21,12 +21,12 @@ function ApiKeyGuideModal({ onClose }) {
         <div className="px-5 py-5 space-y-4">
           <ol className="space-y-3">
             <li className="flex gap-3">
-              <span className="h-5 w-5 flex-shrink-0 mt-0.5 rounded-full bg-yellow-200 text-yellow-900 text-[11px] ns-bold flex items-center justify-center">1</span>
+              <span className="h-5 w-5 flex-shrink-0 mt-0.5 rounded-full bg-[var(--accent-200)] text-[var(--accent-900)] text-[11px] ns-bold flex items-center justify-center">1</span>
               <div>
                 <p className="text-sm ns-bold text-gray-800 dark:text-gray-100">포털 접속 및 로그인</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
                   <a href="https://developer-lostark.game.onstove.com/clients" target="_blank" rel="noreferrer"
-                    className="text-yellow-500 dark:text-yellow-400 underline underline-offset-2 hover:text-yellow-600">
+                    className="text-[var(--accent-500)] underline underline-offset-2 hover:text-[var(--accent-600)]">
                     로스트아크 개발자 포털
                   </a>
                   에 접속해 스토브(Stove) 계정으로 로그인 후{' '}
@@ -35,7 +35,7 @@ function ApiKeyGuideModal({ onClose }) {
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="h-5 w-5 flex-shrink-0 mt-0.5 rounded-full bg-yellow-200 text-yellow-900 text-[11px] ns-bold flex items-center justify-center">2</span>
+              <span className="h-5 w-5 flex-shrink-0 mt-0.5 rounded-full bg-[var(--accent-200)] text-[var(--accent-900)] text-[11px] ns-bold flex items-center justify-center">2</span>
               <div>
                 <p className="text-sm ns-bold text-gray-800 dark:text-gray-100">클라이언트 생성</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
@@ -45,7 +45,7 @@ function ApiKeyGuideModal({ onClose }) {
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="h-5 w-5 flex-shrink-0 mt-0.5 rounded-full bg-yellow-200 text-yellow-900 text-[11px] ns-bold flex items-center justify-center">3</span>
+              <span className="h-5 w-5 flex-shrink-0 mt-0.5 rounded-full bg-[var(--accent-200)] text-[var(--accent-900)] text-[11px] ns-bold flex items-center justify-center">3</span>
               <div>
                 <p className="text-sm ns-bold text-gray-800 dark:text-gray-100">API 키 입력</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
@@ -263,7 +263,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                                 ${exStrategy === key
                                   ? key === 'no_gold'
                                     ? 'bg-gray-200 dark:bg-[#333] text-gray-500 dark:text-gray-400'
-                                    : 'bg-yellow-200 dark:bg-[#2e2e2e] text-yellow-800 dark:text-gray-200'
+                                    : 'bg-[var(--accent-200)] dark:bg-[#2e2e2e] text-[var(--accent-800)] dark:text-gray-200'
                                   : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'}`}>
                               {label}
                             </button>
@@ -324,7 +324,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                     {getClassIcon(char.class) && <Image src={getClassIcon(char.class)} alt={char.class} width={20} height={20} unoptimized className="class-icon w-5 h-5 object-contain flex-shrink-0" />}
                     {/* 왕관 (대표 캐릭터) */}
                     {isRep && (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0 text-yellow-400 dark:text-yellow-500">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0 text-[var(--accent-400)]">
                         <path d="M2 19h20v2H2v-2zm2-2l2-9 4 4 2-7 2 7 4-4 2 9H4z"/>
                       </svg>
                     )}
@@ -352,7 +352,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                             ${strategy === key
                               ? key === 'no_gold'
                                 ? 'bg-gray-200 dark:bg-[#333] text-gray-500 dark:text-gray-400'
-                                : 'bg-yellow-200 dark:bg-[#2e2e2e] text-yellow-800 dark:text-gray-200'
+                                : 'bg-[var(--accent-200)] dark:bg-[#2e2e2e] text-[var(--accent-800)] dark:text-gray-200'
                               : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'}`}>
                           {label}
                         </button>
@@ -443,7 +443,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                 이전
               </button>
               <button onClick={handleConfirm} disabled={goldCharCount > GOLD_CHAR_LIMIT}
-                className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                className="flex-1 rounded bg-[var(--accent-200)] hover:bg-[var(--accent-300)] dark:bg-[#2e2e2e] dark:hover:bg-[#383838] py-2 text-sm ns-bold text-[var(--accent-900)] dark:text-gray-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                 {selectedChars.length}개 캐릭터 추가
               </button>
             </div>
@@ -466,7 +466,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
           <div>
             <label className="block text-xs ns-bold text-gray-500 dark:text-gray-400 mb-1.5">캐릭터명</label>
             <input
-              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-[16px] bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
+              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-[16px] bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-[var(--accent-400)] transition-colors"
               value={charName} onChange={e => setCharName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && search()}
               placeholder="보유 캐릭터명 아무거나 입력" autoFocus
@@ -484,13 +484,13 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                 )}
               </label>
               <button type="button" onClick={() => setShowGuide(true)}
-                className="text-xs text-yellow-500 dark:text-yellow-400 ns-light px-2 py-0.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors">
+                className="text-xs text-[var(--accent-500)] ns-light px-2 py-0.5 rounded hover:bg-[var(--accent-50)] dark:hover:bg-[var(--accent-900)]/20 transition-colors">
                 발급 가이드
               </button>
             </div>
             <input
               type="text"
-              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-[16px] font-mono bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-yellow-400 transition-colors"
+              className="w-full rounded border border-gray-200 dark:border-[#383838] px-3 py-2 text-[16px] font-mono bg-white dark:bg-[#181818] dark:text-gray-100 outline-none focus:border-[var(--accent-400)] transition-colors"
               value={apiKey} onChange={e => { setApiKey(e.target.value); setKeySaved(false) }}
               onKeyDown={e => e.key === 'Enter' && search()}
             />
@@ -537,14 +537,14 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                     <div className="relative group inline-flex items-center">
                       <button
                         onClick={() => setSelected(new Set(top6Names))}
-                        className="text-[10px] ns-bold text-yellow-500 dark:text-yellow-400 px-1.5 py-0.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors whitespace-nowrap">
+                        className="text-[10px] ns-bold text-[var(--accent-500)] px-1.5 py-0.5 rounded hover:bg-[var(--accent-50)] dark:hover:bg-[var(--accent-900)]/20 transition-colors whitespace-nowrap">
                         자동선택
                       </button>
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10 pointer-events-none">
-                        <div className="bg-yellow-200 text-yellow-900 text-[10px] ns-bold rounded px-2.5 py-1.5 whitespace-nowrap shadow-lg">
+                        <div className="bg-[var(--accent-200)] text-[var(--accent-900)] text-[10px] ns-bold rounded px-2.5 py-1.5 whitespace-nowrap shadow-lg">
                           아이템 레벨 높은 6개 캐릭터가 선택됩니다.
                         </div>
-                        <div className="w-2 h-2 bg-yellow-200 rotate-45 mx-auto -mt-1" />
+                        <div className="w-2 h-2 bg-[var(--accent-200)] rotate-45 mx-auto -mt-1" />
                       </div>
                     </div>
                     {/* 전체선택 / 전체해제 */}
@@ -553,7 +553,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                         ? setSelected(new Set())
                         : setSelected(new Set(selectables.map(c => c.name)))
                       }
-                      className="text-[10px] ns-bold text-yellow-500 dark:text-yellow-400 px-1.5 py-0.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors whitespace-nowrap">
+                      className="text-[10px] ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] px-1.5 py-0.5 rounded hover:bg-[var(--accent-50)] dark:hover:bg-[var(--accent-900)]/20 transition-colors whitespace-nowrap">
                       {allSelected ? '전체해제' : '전체선택'}
                     </button>
                   </div>
@@ -569,11 +569,11 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                   <label key={c.name}
                     className={`flex items-center gap-3 rounded border px-3 py-2 cursor-pointer transition-colors
                       ${already ? 'border-gray-100 dark:border-[#2a2a2a] opacity-40 cursor-not-allowed'
-                        : checked ? 'border-yellow-400/60 bg-yellow-50/50 dark:bg-yellow-900/10'
+                        : checked ? 'border-[var(--accent-400)]/60 bg-[var(--accent-50)]/50 dark:bg-[var(--accent-900)]/10'
                         : 'border-gray-200 dark:border-[#383838] hover:border-gray-300 dark:hover:border-gray-500'}`}>
                     <input type="checkbox" checked={checked} disabled={already}
                       onChange={() => !already && toggleSelect(c.name)}
-                      className="accent-yellow-500 w-3.5 h-3.5 flex-shrink-0"/>
+                      className="accent-[var(--accent-500)] w-3.5 h-3.5 flex-shrink-0"/>
                     {(() => { const icon = getClassIcon(c.class); return icon
                       ? <Image src={icon} alt={c.class} title={c.class} width={20} height={20} unoptimized className="class-icon w-5 h-5 flex-shrink-0 object-contain" />
                       : <span className={`text-[10px] px-1.5 py-0.5 rounded ns-bold leading-tight flex-shrink-0 ${CLASS_COLOR[c.class] || 'bg-gray-100 text-gray-600'}`}>{c.class}</span>
@@ -601,7 +601,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
               {results !== null ? '이전' : '취소'}
             </button>
             <button onClick={goSetup} disabled={newCount === 0}
-              className="flex-1 rounded bg-yellow-200 hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-yellow-900 transition-colors">
+              className="flex-1 rounded bg-[var(--accent-200)] hover:bg-[var(--accent-300)] dark:bg-[#2e2e2e] dark:hover:bg-[#383838] disabled:opacity-40 disabled:cursor-not-allowed py-2 text-sm ns-bold text-[var(--accent-900)] dark:text-gray-300 transition-colors">
               선택
             </button>
           </div>

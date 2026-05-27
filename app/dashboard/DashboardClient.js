@@ -1266,14 +1266,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {/* ── 데모 모드 안내 배너 ── */}
       {isDemo && (
         <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-3.5 py-2.5 text-xs">
-          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-yellow-500" />
+          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent-400)]" />
           <span className="text-gray-500 dark:text-gray-400">
             <span className="ns-bold text-gray-700 dark:text-gray-200">미리보기 모드</span>
             {' '}· 샘플 데이터가 표시되고 있어요. 체크 상태는 저장되지 않아요.
           </span>
           <button
             onClick={() => signIn('discord', { callbackUrl: '/dashboard' })}
-            className="ml-auto flex-shrink-0 flex items-center gap-1 ns-bold text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-300 transition-colors"
+            className="ml-auto flex-shrink-0 flex items-center gap-1 ns-bold text-[var(--accent-500)] hover:text-[var(--accent-600)] transition-colors"
           >
             로그인하기 →
           </button>
@@ -1291,7 +1291,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               onClick={() => { setActivePageId(null); setEditingPageId(null) }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
                 activePageId === null
-                  ? 'bg-yellow-300 dark:bg-yellow-500/30 text-yellow-900 dark:text-yellow-300'
+                  ? 'bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/30 text-[var(--accent-900)] dark:text-[var(--accent-300)]'
                   : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
               }`}
             >
@@ -1325,7 +1325,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 >
                   {/* 드롭 위치 인디케이터 — 타겟 탭 왼쪽에 세로선 표시 */}
                   {isDragOver && (
-                    <span className="absolute -left-1 top-1 bottom-1 w-0.5 rounded-full bg-yellow-400 dark:bg-yellow-500 pointer-events-none" />
+                    <span className="absolute -left-1 top-1 bottom-1 w-0.5 rounded-full bg-[var(--accent-400)] pointer-events-none" />
                   )}
                   {editingPageId === page.id ? (
                     /* 이름 편집 중: input을 button 밖에 독립적으로 렌더 */
@@ -1338,14 +1338,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         if (e.key === 'Enter') { e.preventDefault(); savePageName() }
                         if (e.key === 'Escape') { setEditingPageId(null); setEditingPageName('') }
                       }}
-                      className="px-3 py-1.5 rounded-full text-xs ns-bold bg-yellow-300 dark:bg-yellow-500/30 text-yellow-900 dark:text-yellow-300 outline-none w-28"
+                      className="px-3 py-1.5 rounded-full text-xs ns-bold bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/30 text-[var(--accent-900)] dark:text-[var(--accent-300)] outline-none w-28"
                     />
                   ) : (
                     <button
                       onClick={() => { setActivePageId(page.id); setEditingPageId(null) }}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-all duration-150 ${
                         isActive
-                          ? 'bg-yellow-300 dark:bg-yellow-500/30 text-yellow-900 dark:text-yellow-300'
+                          ? 'bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/30 text-[var(--accent-900)] dark:text-[var(--accent-300)]'
                           : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                       } ${isDragOver ? 'translate-x-1' : ''}`}
                     >
@@ -1439,7 +1439,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               || activeChars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b)
             return (
               <div className="flex items-start gap-1.5 flex-1">
-                <span className="text-yellow-400 flex-shrink-0 mt-px"><IconCrown /></span>
+                <span className="text-[var(--accent-400)] flex-shrink-0 mt-px"><IconCrown /></span>
                 {repChar ? (
                   <div className="min-w-0 flex-1 flex flex-col justify-between h-full">
                     <div>
@@ -1480,7 +1480,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">귀속</span>
               <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 ml-auto justify-end">
-                <AnimatedGold value={earnedBound} className="ns-bold text-xs min-[1920px]:text-sm text-yellow-600 dark:text-yellow-400 tabular-nums whitespace-nowrap shrink-0" />
+                <AnimatedGold value={earnedBound} className="ns-bold text-xs min-[1920px]:text-sm text-[var(--accent-600)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0" />
                 <span className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0">/ {totalBound.toLocaleString()}G</span>
               </div>
             </div>
@@ -1488,7 +1488,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">거래</span>
               <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 ml-auto justify-end">
-                <AnimatedGold value={earnedTrade} className="ns-bold text-xs min-[1920px]:text-sm text-yellow-600 dark:text-yellow-400 tabular-nums whitespace-nowrap shrink-0" />
+                <AnimatedGold value={earnedTrade} className="ns-bold text-xs min-[1920px]:text-sm text-[var(--accent-600)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0" />
                 <span className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0">/ {totalTrade.toLocaleString()}G</span>
               </div>
             </div>
@@ -1508,7 +1508,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               </div>
               <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden mb-1.5">
                 <div
-                  className="h-full rounded-full bg-yellow-400 transition-all duration-500"
+                  className="h-full rounded-full bg-[var(--accent-400)] transition-all duration-500"
                   style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
                 />
               </div>
@@ -1523,15 +1523,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               <div className="flex flex-col gap-1.5">
                 {/* 골드 행 */}
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">골드</span>
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)] whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">골드</span>
                   <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden min-w-0">
                     <div
-                      className="h-full rounded-full bg-yellow-400 transition-all duration-500"
+                      className="h-full rounded-full bg-[var(--accent-400)] transition-all duration-500"
                       style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
                     />
                   </div>
                   <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-300 tabular-nums whitespace-nowrap shrink-0 min-w-[2.75rem] text-right">{completedCount} / {totalCount}</span>
-                  <span className="text-[14px] min-[1920px]:text-base ns-bold text-yellow-500 dark:text-yellow-400 tabular-nums whitespace-nowrap shrink-0 min-w-[2.5rem] text-right">
+                  <span className="text-[14px] min-[1920px]:text-base ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0 min-w-[2.5rem] text-right">
                     {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
                   </span>
                 </div>
@@ -1720,7 +1720,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onDragEnd={!isMobile ? handleCharDragEnd : undefined}
                   className={`relative rounded-xl border bg-white dark:bg-[#222222] overflow-hidden transition-all select-none flex flex-col ${
                     isDragging  ? 'opacity-40 border-gray-200 dark:border-[#383838] shadow-none' :
-                    isDragOver  ? 'border-yellow-400 dark:border-yellow-600 ring-2 ring-yellow-300/50 dark:ring-yellow-700/30 shadow-[0_4px_20px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.55)]' :
+                    isDragOver  ? 'border-[var(--accent-400)] dark:border-[var(--accent-600)] ring-2 ring-[var(--accent-300)]/50 dark:ring-[var(--accent-700)]/30 shadow-[0_4px_20px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.55)]' :
                                   'border-gray-200 dark:border-[#2d2d2d] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1),0_2px_6px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_6px_24px_rgba(0,0,0,0.58)] hover:-translate-y-px'
                   }`}
                 >
@@ -1783,9 +1783,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {/* ── 일일 숙제 섹션 ── */}
                   {orderedDaily.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-yellow-50 to-yellow-50/40 dark:from-yellow-900/25 dark:to-yellow-900/5 border-t border-yellow-200/70 dark:border-yellow-800/30">
-                        <span className="text-[10px] md:text-[12px] ns-bold text-yellow-700 dark:text-yellow-400">일일 숙제</span>
-                        <span className="text-[10px] md:text-[12px] text-yellow-500 dark:text-yellow-500">({dailyDoneCount}/{orderedDaily.length})</span>
+                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
+                        <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)] dark:text-[var(--accent-400)]">일일 숙제</span>
+                        <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({dailyDoneCount}/{orderedDaily.length})</span>
                       </div>
                       <div className="divide-y divide-gray-100 dark:divide-[#272727]">
                         {orderedDaily.map(item => {
@@ -1794,16 +1794,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           const showRestGauge = REST_GAUGE_NAMES.has(item.name)
                           if (showRestGauge) {
                             return (
-                              <div key={item.id} className={`transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''}`}>
+                              <div key={item.id} className={`transition-colors ${checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10' : ''}`}>
                                 <div
                                   onClick={() => toggleCustomCheck(char.id, item.id)}
                                   className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer ${
-                                    checked ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                                    checked ? 'hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                                   }`}
                                 >
                                   {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                                   <div className="flex-1 min-w-0">
-                                    <p className={`text-[10px] md:text-[12px] ns-bold truncate ${checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
+                                    <p className={`text-[10px] md:text-[12px] ns-bold truncate ${checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
                                     <div className="mt-0.5">
                                       <div className="flex gap-px mb-0.5">
                                         {Array.from({ length: 10 }).map((_, i) => (
@@ -1822,7 +1822,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                     </div>
                                   </div>
                                   <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
-                                    checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
+                                    checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
                                   }`}>
                                     {checked && <IconCheck />}
                                   </div>
@@ -1835,15 +1835,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               key={item.id}
                               onClick={() => toggleCustomCheck(char.id, item.id)}
                               className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
-                                checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                                checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
                               {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
-                                checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
+                                checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
                               <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
-                                checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
+                                checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
                               }`}>
                                 {checked && <IconCheck />}
                               </div>
@@ -1856,9 +1856,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
                   {/* ── 주간 레이드 섹션 ── */}
                   <div className="flex-1 flex flex-col">
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-yellow-50 to-yellow-50/40 dark:from-yellow-900/25 dark:to-yellow-900/5 border-t border-yellow-200/70 dark:border-yellow-800/30">
-                      <span className="text-[10px] md:text-[12px] ns-bold text-yellow-700 dark:text-yellow-400">주간 레이드</span>
-                      <span className="text-[10px] md:text-[12px] text-yellow-500 dark:text-yellow-500">({raidDoneCount}/{charRaids.length})</span>
+                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
+                      <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)] dark:text-[var(--accent-400)]">주간 레이드</span>
+                      <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({raidDoneCount}/{charRaids.length})</span>
                     </div>
                     {charRaids.length === 0 ? (
                       <div className="py-3 text-center text-[10px] md:text-[12px] text-gray-300 dark:text-gray-600">레이드 미설정</div>
@@ -1883,23 +1883,23 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               key={`${entry.raidId}:${entry.difficulty}`}
                               onClick={() => toggleRaid(char.id, entry.raidId, entry.difficulty)}
                               className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
-                                moreDone ? 'bg-yellow-100 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
-                                : allDone ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
+                                moreDone ? 'bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20'
+                                : allDone ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20'
                                 : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
                               {raid.image && <Image src={raid.image} alt={raid.name} width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-0.5">
-                                  <p className={`text-[10px] md:text-[12px] ns-bold truncate ${allDone ? 'text-yellow-700 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
+                                  <p className={`text-[10px] md:text-[12px] ns-bold truncate ${allDone ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)]' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
                                   {entry.isGoldCheck && <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-2.5 h-2.5 md:w-[13px] md:h-[13px] object-contain flex-shrink-0" />}
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <span className={`text-[8px] md:text-[10px] ns-bold px-1 py-px rounded leading-tight ${diffBadge}`}>{diff.label}</span>
                                   {entry.isGoldCheck && (
                                     <span className={`text-[9px] md:text-[11px] ns-bold tabular-nums ${
-                                      moreDone ? 'text-yellow-600 dark:text-yellow-500'
-                                      : allDone ? 'text-yellow-500 dark:text-yellow-400'
+                                      moreDone ? 'text-[var(--accent-600)] dark:text-[var(--accent-500)]'
+                                      : allDone ? 'text-[var(--accent-500)] dark:text-[var(--accent-400)]'
                                       : 'text-gray-500 dark:text-gray-400'
                                     }`}>{totalGold.toLocaleString()}G</span>
                                   )}
@@ -1942,8 +1942,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               </div>
                               {/* 체크박스 — 오른쪽 */}
                               <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
-                                moreDone ? 'bg-yellow-500 border-yellow-500 text-yellow-900'
-                                : allDone ? 'bg-yellow-400 border-yellow-400 text-yellow-900'
+                                moreDone ? 'bg-[var(--accent-500)] border-[var(--accent-500)] text-[var(--accent-900)]'
+                                : allDone ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]'
                                 : 'border-gray-300 dark:border-[#383838]'
                               }`}>
                                 {allDone && <IconCheck />}
@@ -1958,9 +1958,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {/* ── 주간 숙제 섹션 ── */}
                   {weeklyItems.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-yellow-50 to-yellow-50/40 dark:from-yellow-900/25 dark:to-yellow-900/5 border-t border-yellow-200/70 dark:border-yellow-800/30">
-                        <span className="text-[10px] md:text-[12px] ns-bold text-yellow-700 dark:text-yellow-400">주간 숙제</span>
-                        <span className="text-[10px] md:text-[12px] text-yellow-500 dark:text-yellow-500">({weeklyDoneCount}/{weeklyItems.length})</span>
+                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
+                        <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)] dark:text-[var(--accent-400)]">주간 숙제</span>
+                        <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({weeklyDoneCount}/{weeklyItems.length})</span>
                       </div>
                       <div className="divide-y divide-gray-100 dark:divide-[#272727]">
                         {weeklyItems.map(item => {
@@ -1970,15 +1970,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               key={item.id}
                               onClick={() => toggleCustomCheck(char.id, item.id)}
                               className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
-                                checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                                checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
                               {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
-                                checked ? 'text-yellow-700 dark:text-yellow-400 line-through' : 'text-gray-700 dark:text-gray-200'
+                                checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
                               <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
-                                checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'
+                                checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
                               }`}>
                                 {checked && <IconCheck />}
                               </div>
@@ -2030,8 +2030,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {itemId ? (
                     isRest ? (
                       <div className="flex flex-col gap-0.5 min-h-[47px] justify-center">
-                        <div onClick={() => toggleCustomCheck(char.id, itemId)} className={`flex items-center justify-center h-7 rounded cursor-pointer transition-colors ${checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
-                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900' : 'border-gray-300 dark:border-[#555]'}`}>{checked && <IconCheck />}</div>
+                        <div onClick={() => toggleCustomCheck(char.id, itemId)} className={`flex items-center justify-center h-7 rounded cursor-pointer transition-colors ${checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'}`}>{checked && <IconCheck />}</div>
                         </div>
                         <div className="px-1 pt-0.5">
                           <div className="flex gap-px mb-0.5">
@@ -2054,11 +2054,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       <div
                         onClick={() => toggleCustomCheck(char.id, itemId)}
                         className={`w-full h-[47px] flex items-center justify-center rounded cursor-pointer transition-colors ${
-                          checked ? 'bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                          checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                         }`}
                       >
                         <div className={`h-[26px] w-[26px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${
-                          checked ? 'bg-yellow-400 border-yellow-400 text-yellow-900 shadow-sm' : 'border-gray-200 dark:border-[#383838]'
+                          checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)] shadow-sm' : 'border-gray-200 dark:border-[#383838]'
                         }`}>
                           {checked && <IconCheck />}
                         </div>
@@ -2158,11 +2158,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             <tr key={`sec-${id}`} className="pointer-events-none">
               <td
                 colSpan={colSpan}
-                className="sticky left-0 z-20 border-y border-yellow-200/70 dark:border-yellow-800/30 bg-gradient-to-r from-yellow-50 to-yellow-50/40 dark:from-yellow-900/20 dark:to-yellow-900/5 px-3 py-2"
+                className="sticky left-0 z-20 border-y border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/20 dark:to-[var(--accent-900)]/5 px-3 py-2"
               >
                 <div className="flex items-center gap-2">
-                  <span className="inline-block w-[3px] h-3.5 shrink-0 rounded-full bg-yellow-400 dark:bg-yellow-500 shadow-[0_0_4px_rgba(250,204,21,0.5)] dark:shadow-[0_0_4px_rgba(234,179,8,0.4)]" aria-hidden />
-                  <span className="text-[11px] min-[1920px]:text-[11px] ns-bold text-yellow-800 dark:text-yellow-200 tracking-tight">{label}</span>
+                  <span className="inline-block w-[3px] h-3.5 shrink-0 rounded-full bg-[var(--accent-400)] shadow-[0_0_4px_var(--accent-glow)]" aria-hidden />
+                  <span className="text-[11px] min-[1920px]:text-[11px] ns-bold text-[var(--accent-800)] tracking-tight">{label}</span>
                 </div>
               </td>
             </tr>
@@ -2196,8 +2196,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           onDragEnd={handleCharDragEnd}
                           style={{ width: colW.char, maxWidth: colW.stretch ? undefined : COL_CHAR, minWidth: 0, overflow: 'hidden' }}
                           className={`${thCharPad} last:border-r-0 align-top select-none cursor-default transition-colors ${
-                            isDragging ? 'bg-yellow-100/80 dark:bg-yellow-900/25' :
-                            isDragOver ? 'bg-yellow-50 dark:bg-yellow-900/10' :
+                            isDragging ? 'bg-[var(--accent-100)]/80 dark:bg-[var(--accent-900)]/25' :
+                            isDragOver ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10' :
                             dragCharId ? 'opacity-50' : ''
                           }`}
                         >
@@ -2243,8 +2243,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         onDrop={(e) => handleCharDrop(e, char.id)}
                         style={{ width: colW.char, maxWidth: colW.stretch ? undefined : COL_CHAR, minWidth: 0, overflow: 'hidden' }}
                         className={`${thGoldPad} last:border-r-0 transition-colors ${
-                          dragCharId === char.id     ? 'bg-yellow-100/70 dark:bg-yellow-900/20' :
-                          dropCharId === char.id     ? 'bg-yellow-50 dark:bg-yellow-900/10' :
+                          dragCharId === char.id     ? 'bg-[var(--accent-100)]/70 dark:bg-[var(--accent-900)]/20' :
+                          dropCharId === char.id     ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10' :
                           dragCharId                 ? 'opacity-50' : ''
                         }`}
                       >
@@ -2297,8 +2297,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               onDrop={(e) => handleCharDrop(e, char.id)}
                               style={{ width: colW.char, maxWidth: colW.stretch ? undefined : COL_CHAR, minWidth: 0, overflow: 'hidden' }}
                               className={`${glanceTable ? 'border-r border-gray-100 dark:border-[#272727] last:border-r-0 p-1' : 'border-r border-gray-100 dark:border-[#272727] last:border-r-0 p-1.5 group-hover/row:bg-gray-50/50 dark:group-hover/row:bg-white/[0.03]'} transition-colors ${
-                                dragCharId === char.id ? 'bg-yellow-100/50 dark:bg-yellow-900/15' :
-                                dropCharId === char.id ? 'bg-yellow-50/70 dark:bg-yellow-900/8' :
+                                dragCharId === char.id ? 'bg-[var(--accent-100)]/50 dark:bg-[var(--accent-900)]/15' :
+                                dropCharId === char.id ? 'bg-[var(--accent-50)]/70 dark:bg-[var(--accent-900)]/8' :
                                 dragCharId            ? 'opacity-50' : ''
                               }`}
                             >
@@ -2340,7 +2340,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           <div className="space-y-2">
             {/* ── 레이드 필터 ── */}
             {allRegisteredRaids.length > 0 && (
-              <div className={`rounded-lg border overflow-hidden transition-colors ${selectedRaid ? 'border-yellow-400/60 dark:border-yellow-600/40' : 'border-gray-200 dark:border-[#383838]'} bg-white dark:bg-[#222222]`}>
+              <div className={`rounded-lg border overflow-hidden transition-colors ${selectedRaid ? 'border-[var(--accent-400)]/60 dark:border-[var(--accent-600)]/40' : 'border-gray-200 dark:border-[#383838]'} bg-white dark:bg-[#222222]`}>
                 {/* 레이드 버튼 행 */}
                 {(() => {
                   const diffBg = (diffKey, isActive) =>
@@ -2404,7 +2404,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey)
                   )
                   return (
-                  <div className="border-t border-yellow-200/60 dark:border-yellow-700/30 bg-yellow-50/40 dark:bg-yellow-900/10">
+                  <div className="border-t border-[var(--accent-200)]/60 dark:border-[var(--accent-700)]/30 bg-[var(--accent-50)]/40 dark:bg-[var(--accent-900)]/10">
                     {(() => {
                       const completeChars   = relevantChars.filter(c => !incompleteIds.has(c.id))
                       const incompleteChars = relevantChars.filter(c =>  incompleteIds.has(c.id))
@@ -2458,7 +2458,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     onClick={() => { setAllTabSort('itemLevel'); localStorage.setItem('dashboard_allTabSort', 'itemLevel') }}
                     className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                       allTabSort === 'itemLevel'
-                        ? 'bg-yellow-200 text-yellow-900 shadow-sm'
+                        ? 'bg-[var(--accent-200)] text-[var(--accent-900)] shadow-sm'
                         : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
                     }`}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -2470,7 +2470,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     onClick={() => { setAllTabSort('expedition'); localStorage.setItem('dashboard_allTabSort', 'expedition') }}
                     className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                       allTabSort === 'expedition'
-                        ? 'bg-yellow-200 text-yellow-900 shadow-sm'
+                        ? 'bg-[var(--accent-200)] text-[var(--accent-900)] shadow-sm'
                         : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
                     }`}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -2487,7 +2487,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onClick={() => { setCardView(false); localStorage.setItem('dashboard_cardView', 'false') }}
                   className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                     !cardView
-                      ? 'bg-yellow-200 text-yellow-900 shadow-sm'
+                      ? 'bg-[var(--accent-200)] text-[var(--accent-900)] shadow-sm'
                       : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
                   }`}
                 >
@@ -2502,7 +2502,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onClick={() => { setCardView(true); localStorage.setItem('dashboard_cardView', 'true') }}
                   className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                     cardView
-                      ? 'bg-yellow-200 text-yellow-900 shadow-sm'
+                      ? 'bg-[var(--accent-200)] text-[var(--accent-900)] shadow-sm'
                       : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
                   }`}
                 >
@@ -2581,7 +2581,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             <p className="text-xs text-gray-300 dark:text-gray-600">캐릭터를 먼저 추가해 주세요</p>
             <button
               onClick={() => { setShowNoChar(false); setCharEditOpenAdd(true); setShowCharEdit(true) }}
-              className="mt-6 px-4 py-2 rounded bg-yellow-200 hover:bg-yellow-300 dark:bg-[#2e2e2e] dark:hover:bg-[#383838] text-sm ns-bold text-yellow-900 dark:text-gray-300 transition-colors">
+              className="mt-6 px-4 py-2 rounded bg-[var(--accent-200)] hover:bg-[var(--accent-300)] dark:bg-[#2e2e2e] dark:hover:bg-[#383838] text-sm ns-bold text-[var(--accent-900)] dark:text-gray-300 transition-colors">
               캐릭터 추가
             </button>
           </div>
@@ -2701,7 +2701,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
             <button
               onClick={() => signIn('discord', { callbackUrl: '/dashboard' })}
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-yellow-400 hover:bg-yellow-300 px-5 py-2.5 text-sm ns-bold text-gray-900 transition-colors"
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-[var(--accent-400)] hover:bg-[var(--accent-300)] px-5 py-2.5 text-sm ns-bold text-gray-900 transition-colors"
             >
               <DiscordIcon size={16} />
               디스코드 로그인
@@ -2721,8 +2721,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             onClick={e => e.stopPropagation()}
           >
             <button onClick={() => setShowGoldLimitNotice(false)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
-            <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center flex-shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow-500">
+            <div className="w-10 h-10 rounded-full bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 flex items-center justify-center flex-shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--accent-500)]">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
             </div>

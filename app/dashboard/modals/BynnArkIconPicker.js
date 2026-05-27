@@ -90,7 +90,7 @@ export default function BynnArkIconPicker({
                   onClick={() => selectIcon(ic.src)}
                   className={`group aspect-square rounded-xl border flex items-center justify-center p-1.5 transition-all ${
                     selected
-                      ? 'border-yellow-400 bg-yellow-50 ring-2 ring-yellow-400/45 dark:border-yellow-500/70 dark:bg-yellow-900/20 dark:ring-yellow-400/35'
+                      ? 'border-[var(--accent-400)] bg-[var(--accent-50)] ring-2 ring-[var(--accent-400)]/45 dark:border-[var(--accent-400)]/70 dark:bg-[var(--accent-900)]/20 dark:ring-[var(--accent-400)]/35'
                       : 'border-gray-200/90 bg-gray-50 hover:border-gray-300 hover:bg-white hover:shadow-sm dark:border-[#353535] dark:bg-[#2a2a2a] dark:hover:border-[#484848] dark:hover:bg-[#303030]'
                   }`}
                 >
@@ -123,9 +123,9 @@ export default function BynnArkIconPicker({
               setOpen(true)
             }
           }}
-          className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-[#404040] bg-white dark:bg-[#2a2a2a] px-2.5 py-1.5 text-[11px] ns-bold text-gray-800 dark:text-gray-100 hover:bg-yellow-50/90 hover:border-yellow-300/70 dark:hover:bg-[#333] dark:hover:border-yellow-500/40 disabled:opacity-40 transition-colors shadow-sm shadow-black/[0.03] dark:shadow-none"
+          className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-[#404040] bg-white dark:bg-[#2a2a2a] px-2.5 py-1.5 text-[11px] ns-bold text-gray-800 dark:text-gray-100 hover:bg-[var(--accent-50)]/90 hover:border-[var(--accent-300)]/70 dark:hover:bg-[#333] dark:hover:border-[var(--accent-400)]/40 disabled:opacity-40 transition-colors shadow-sm shadow-black/[0.03] dark:shadow-none"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow-600 dark:text-yellow-500 opacity-80">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--accent-600)] dark:text-[var(--accent-400)] opacity-80">
             <circle cx="11" cy="11" r="8" />
             <path d="M21 21l-4.3-4.3" />
           </svg>
@@ -133,7 +133,7 @@ export default function BynnArkIconPicker({
         </button>
         {value != null && value !== '' && (
           <div className="flex items-center gap-1">
-            <div className="w-8 h-8 rounded-lg border border-gray-200 dark:border-[#404040] bg-white dark:bg-[#1c1c1c] flex items-center justify-center overflow-hidden p-0.5 shadow-sm shadow-black/[0.04] dark:shadow-none ring-0 transition-shadow hover:ring-2 hover:ring-yellow-400/25 dark:hover:ring-yellow-500/20">
+            <div className="w-8 h-8 rounded-lg border border-gray-200 dark:border-[#404040] bg-white dark:bg-[#1c1c1c] flex items-center justify-center overflow-hidden p-0.5 shadow-sm shadow-black/[0.04] dark:shadow-none ring-0 transition-shadow hover:ring-2 hover:ring-[var(--accent-400)]/25 dark:hover:ring-[var(--accent-400)]/20">
               <Image src={value} alt="" width={32} height={32} className="custom-homework-icon w-full h-full object-contain" />
             </div>
             <button
