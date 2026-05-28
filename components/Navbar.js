@@ -166,7 +166,7 @@ export default function Navbar() {
   return (
     <>
     <header className={`sticky top-0 z-50 border-b backdrop-blur-md ${s.header}`}>
-      <div className="mx-auto max-w-[1600px] px-5 flex items-center gap-6" style={{ height: 50 }}>
+      <div className="px-4 2xl:pl-52 2xl:pr-52 flex items-center gap-6" style={{ height: 50 }}>
 
         {/* 로고 */}
         <Link href="/dashboard" className="flex items-center flex-shrink-0">
