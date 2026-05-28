@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>myloa 사용 가이드</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --text:    #1a1a1a;
+      --text-2:  #6b6b6b;
+      --text-3:  #b0b0b0;
+      --border:  #e8e8e8;
+      --bg:      #ffffff;
+      --bg-2:    #f7f7f5;
+      --bg-3:    #f0f0ed;
+      --accent:  #2383e2;
+    }
+
+    html, body { height: 100%; }
+    body {
+      font-family: 'Pretendard', ui-sans-serif, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── 사이드바 + 메인 레이아웃 ── */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── 사이드바 ── */
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 12px;
+      gap: 2px;
+      overflow-y: auto;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-3);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 0 8px;
+      margin-bottom: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-2);
+      transition: background .12s, color .12s;
+      border: none;
+      background: none;
+      font-family: inherit;
+      text-align: left;
+      width: 100%;
+    }
+    .nav-item:hover { background: var(--bg-2); color: var(--text); }
+    .nav-item.active { background: var(--bg-3); color: var(--text); font-weight: 600; }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      opacity: .7;
+    }
+    .nav-item.active .nav-icon { opacity: 1; }
+
+    .nav-num {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-3);
+      font-weight: 400;
+    }
+    .nav-item.active .nav-num { color: var(--accent); font-weight: 600; }
+
+    /* ── 메인 ── */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .main::-webkit-scrollbar { width: 4px; }
+    .main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /* ── 패널 ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .panel-inner {
+      max-width: 680px;
+      padding: 56px 60px 80px;
+    }
+
+    /* ── 패널 헤더 ── */
+    .panel-tag {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-3);
+      margin-bottom: 8px;
+    }
+    .panel-title {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -.03em;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .panel-lead {
+      font-size: 15px;
+      color: var(--text-2);
+      line-height: 1.7;
+      margin-bottom: 40px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── 스텝 ── */
+    .steps { display: flex; flex-direction: column; gap: 32px; }
+
+    .step-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .step-title-num {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-3);
+      background: var(--bg-3);
+      width: 22px; height: 22px;
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-left: 30px;
+    }
+
+    .step-text {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.75;
+    }
+    .step-text strong { color: var(--text); font-weight: 600; }
+
+    /* ── 번호 리스트 ── */
+    .ol {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .ol-item {
+      display: flex;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+    .ol-item strong { color: var(--text); font-weight: 600; }
+    .ol-n {
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-3);
+      margin-top: 3px;
+      width: 16px;
+    }
+
+    /* ── callout ── */
+    .callout {
+      background: var(--bg-2);
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 13.5px;
+      color: var(--text-2);
+      line-height: 1.65;
+    }
+    .callout strong { color: var(--text); font-weight: 600; }
+
+    .callout-blue {
+      background: #eef4fc;
+      color: #2d5f96;
+    }
+    .callout-blue strong { color: #1a3f6b; }
+
+    /* ── 스크린샷 플레이스홀더 ── */
+    .screenshot {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 36px 24px;
+      min-height: 160px;
+      text-align: center;
+    }
+    .ss-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-3);
+    }
+    .ss-hint {
+      font-size: 12px;
+      color: var(--bg-3);
+      background: var(--text-3);
+      padding: 2px 8px;
+      border-radius: 3px;
+      opacity: .6;
+    }
+    .ss-icon {
+      font-size: 18px;
+      color: var(--text-3);
+      margin-bottom: 2px;
+    }
+    .screenshot img {
+      width: 100%;
+      border-radius: 6px;
+      display: block;
+    }
+    .screenshot.has-img {
+      padding: 0;
+      min-height: auto;
+      background: none;
+      border: 1px solid var(--border);
+    }
+
+    /* ── 구분선 ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 28px 0;
+    }
+
+    /* ── 이전/다음 ── */
+    .nav-btns {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .nav-btn {
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all .12s;
+    }
+    .nav-btn:hover { background: var(--bg-2); color: var(--text); }
+    .nav-btn:disabled { opacity: .3; pointer-events: none; }
+    .nav-btn.primary {
+      background: var(--text);
+      border-color: var(--text);
+      color: #fff;
+    }
+    .nav-btn.primary:hover { opacity: .85; }
+
+    /* ── 완료 ── */
+    .done {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 40px;
+      text-align: center;
+      margin-top: 24px;
+    }
+    .done-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .done-desc { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+
+    /* ── 상단 헤더 (좁은 화면용) ── */
+    @media (max-width: 640px) {
+      .sidebar { display: none; }
+      .panel-inner { padding: 32px 24px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- 사이드바 -->
+  <nav class="sidebar">
+    <div class="sidebar-title">myloa 가이드</div>
+
+    <button class="nav-item active" data-tab="0">
+      <span class="nav-icon">→</span>
+      시작하기
+      <span class="nav-num">1</span>
+    </button>
+    <button class="nav-item" data-tab="1">
+      <span class="nav-icon">+</span>
+      캐릭터 추가
+      <span class="nav-num">2</span>
+    </button>
+    <button class="nav-item" data-tab="2">
+      <span class="nav-icon">◎</span>
+      레이드 설정
+      <span class="nav-num">3</span>
+    </button>
+    <button class="nav-item" data-tab="3">
+      <span class="nav-icon">✓</span>
+      숙제 체크
+      <span class="nav-num">4</span>
+    </button>
+    <button class="nav-item" data-tab="4">
+      <span class="nav-icon">◈</span>
+      골드 확인
+      <span class="nav-num">5</span>
+    </button>
+    <button class="nav-item" data-tab="5">
+      <span class="nav-icon">≡</span>
+      커스텀 숙제
+      <span class="nav-num">6</span>
+    </button>
+    <button class="nav-item" data-tab="6">
+      <span class="nav-icon">◻</span>
+      원정대
+      <span class="nav-num">7</span>
+    </button>
+    <button class="nav-item" data-tab="7">
+      <span class="nav-icon">↗</span>
+      현황 공유
+      <span class="nav-num">8</span>
+    </button>
+  </nav>
+
+  <!-- 메인 -->
+  <main class="main">
+
+
+    <!-- ══ 1. 시작하기 ══ -->
+    <div class="panel active" data-panel="0">
+      <div class="panel-inner">
+        <div class="panel-tag">Step 1</div>
+        <h1 class="panel-title">시작하기</h1>
+        <p class="panel-lead">myloa는 Discord 계정으로 로그인합니다. 별도 회원가입이 없어요.</p>
+
+        <div class="steps">
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">1</span>
+              myloa.app 접속
+            </div>
+            <div class="step-body">
+              <p class="step-text">접속하면 데모 대시보드가 바로 보입니다. 로그인 없이도 화면을 미리 볼 수 있어요.</p>
+              <div class="screenshot has-img">
+                <img src="screenshots/01-dashboard.jpg" alt="비로그인 데모 대시보드" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">2</span>
+              Discord로 로그인
+            </div>
+            <div class="step-body">
+              <p class="step-text">우측 상단 <strong>로그인</strong> 버튼 클릭 → Discord 인증 창에서 <strong>승인</strong>을 누르면 완료됩니다.</p>
+              <div class="screenshot has-img">
+                <img src="screenshots/01-dashboard.jpg" alt="Discord 로그인 버튼" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="nav-btns">
+          <button class="nav-btn" disabled>이전</button>
+          <button class="nav-btn primary" onclick="goTab(1)">캐릭터 추가 →</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══ 2. 캐릭터 추가 ══ -->
+    <div class="panel" data-panel="1">
+      <div class="panel-inner">
+        <div class="panel-tag">Step 2</div>
+        <h1 class="panel-title">캐릭터 추가</h1>
+        <p class="panel-lead">로스트아크 API 키를 연결하면 내 캐릭터를 자동으로 불러옵니다.</p>
+
+        <div class="steps">
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">1</span>
+              API 키 발급
+            </div>
+            <div class="step-body">
+              <div class="ol">
+                <div class="ol-item"><span class="ol-n">1.</span><span><strong>developer.lostark.game.onstove.com</strong> 접속 후 게임 계정으로 로그인</span></div>
+                <div class="ol-item"><span class="ol-n">2.</span><span>[나의 애플리케이션] → [새 애플리케이션 등록]</span></div>
+                <div class="ol-item"><span class="ol-n">3.</span><span>이름을 입력하고 등록하면 <strong>API 키</strong>가 발급됩니다</span></div>
+              </div>
+              <div class="callout callout-blue">
+                myloa 안의 <strong>[API 키 발급 가이드]</strong> 버튼을 누르면 단계별 안내를 바로 볼 수 있어요.
+              </div>
+              <div class="screenshot">
+                <div class="ss-icon">▭</div>
+                <div class="ss-label">스크린샷 — 로스트아크 개발자 포털 API 키 화면</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">2</span>
+              캐릭터 검색 및 추가
+            </div>
+            <div class="step-body">
+              <p class="step-text">대시보드에서 <strong>[+ 캐릭터 추가]</strong>를 클릭하면 모달이 열립니다.</p>
+              <div class="ol">
+                <div class="ol-item"><span class="ol-n">1.</span><span>API 키 붙여넣기</span></div>
+                <div class="ol-item"><span class="ol-n">2.</span><span>캐릭터 이름 검색 → 원정대 목록 확인</span></div>
+                <div class="ol-item"><span class="ol-n">3.</span><span>추가할 캐릭터 선택 후 [추가] 클릭</span></div>
+              </div>
+              <div class="screenshot has-img">
+                <img src="screenshots/03-char-search.jpg" alt="캐릭터 추가 모달" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">3</span>
+              순서 변경 및 삭제
+            </div>
+            <div class="step-body">
+              <p class="step-text"><strong>[캐릭터 편집]</strong>에서 드래그 앤 드롭으로 순서를 바꾸거나 삭제할 수 있습니다.</p>
+              <div class="screenshot has-img">
+                <img src="screenshots/05-char-edit.jpg" alt="캐릭터 편집 모달" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="nav-btns">
+          <button class="nav-btn" onclick="goTab(0)">← 시작하기</button>
+          <button class="nav-btn primary" onclick="goTab(2)">레이드 설정 →</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══ 3. 레이드 설정 ══ -->
+    <div class="panel" data-panel="2">
+      <div class="panel-inner">
+        <div class="panel-tag">Step 3</div>
+        <h1 class="panel-title">레이드 설정</h1>
+        <p class="panel-lead">어떤 레이드를 할지, 골드 수령 여부를 캐릭터별로 설정합니다.</p>
+
+        <div class="steps">
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">1</span>
+              자동 세팅 (권장)
+            </div>
+            <div class="step-body">
+              <p class="step-text">대시보드 우측 상단 <strong>[자동 세팅]</strong>을 클릭하면 아이템레벨 기준으로 적합한 레이드를 자동 추천합니다.</p>
+              <div class="ol">
+                <div class="ol-item"><span class="ol-n">1.</span><span>전략 선택 (골드 최대화 / 빠른 클리어 등)</span></div>
+                <div class="ol-item"><span class="ol-n">2.</span><span>미리보기 확인 후 [적용]</span></div>
+              </div>
+              <div class="screenshot">
+                <div class="ss-icon">▭</div>
+                <div class="ss-label">스크린샷 — 원정대 자동 세팅 모달</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">2</span>
+              수동 설정
+            </div>
+            <div class="step-body">
+              <p class="step-text">각 캐릭터 카드의 <strong>[레이드 설정]</strong>에서 세부 조정이 가능합니다.</p>
+              <div class="ol">
+                <div class="ol-item"><span class="ol-n">·</span><span>레이드 및 난이도 (노말 / 하드) 선택</span></div>
+                <div class="ol-item"><span class="ol-n">·</span><span>골드 체크 여부 설정 — 캐릭터당 최대 3개</span></div>
+                <div class="ol-item"><span class="ol-n">·</span><span>EX 레이드는 원정대 전체에서 1캐릭터만 선택 가능</span></div>
+              </div>
+              <div class="screenshot has-img">
+                <img src="screenshots/04-raid-settings.jpg" alt="레이드 설정 모달" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="nav-btns">
+          <button class="nav-btn" onclick="goTab(1)">← 캐릭터 추가</button>
+          <button class="nav-btn primary" onclick="goTab(3)">숙제 체크 →</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══ 4. 숙제 체크 ══ -->
+    <div class="panel" data-panel="3">
+      <div class="panel-inner">
+        <div class="panel-tag">Step 4</div>
+        <h1 class="panel-title">숙제 체크</h1>
+        <p class="panel-lead">클리어한 레이드 관문을 클릭해서 체크합니다.</p>
+
+        <div class="steps">
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">1</span>
+              관문 클리어 체크
+            </div>
+            <div class="step-body">
+              <p class="step-text">대시보드에서 각 레이드 칸을 클릭하면 체크가 됩니다. 레이드 전체 클리어 시 카드가 완료 상태로 바뀝니다.</p>
+              <div class="screenshot has-img">
+                <img src="screenshots/06-raid-check.jpg" alt="레이드 체크 중인 대시보드" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">2</span>
+              주간 자동 초기화
+            </div>
+            <div class="step-body">
+              <p class="step-text">레이드 체크는 매주 <strong>수요일 오전 6시</strong>에 자동으로 초기화됩니다. 별도 조작이 필요 없어요.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="nav-btns">
+          <button class="nav-btn" onclick="goTab(2)">← 레이드 설정</button>
+          <button class="nav-btn primary" onclick="goTab(4)">골드 확인 →</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══ 5. 골드 확인 ══ -->
+    <div class="panel" data-panel="4">
+      <div class="panel-inner">
+        <div class="panel-tag">Step 5</div>
+        <h1 class="panel-title">골드 확인</h1>
+        <p class="panel-lead">이번 주 골드 수익을 대시보드에서 바로 확인할 수 있습니다.</p>
+
+        <div class="steps">
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">1</span>
+              상단 골드 요약
+            </div>
+            <div class="step-body">
+              <p class="step-text">대시보드 상단에 이번 주 <strong>총 예상 골드 수익</strong>이 표시됩니다. 레이드를 클리어할수록 실시간으로 올라갑니다.</p>
+              <div class="screenshot has-img">
+                <img src="screenshots/07-gold-summary.jpg" alt="상단 골드 요약" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">2</span>
+              캐릭터별 골드 배지
+            </div>
+            <div class="step-body">
+              <p class="step-text">각 캐릭터 카드 하단에 <strong>해당 캐릭터의 주간 골드 수령량</strong>이 표시됩니다.</p>
+              <div class="screenshot has-img">
+                <img src="screenshots/06-raid-check.jpg" alt="캐릭터 카드 골드 배지" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">3</span>
+              더보기 골드 설정
+            </div>
+            <div class="step-body">
+              <p class="step-text">일부 레이드에서 귀속 아이템 선택 시 추가 골드를 받을 수 있습니다. 레이드 칸을 <strong>우클릭</strong>하면 옵션이 나옵니다.</p>
+              <div class="ol">
+                <div class="ol-item"><span class="ol-n">1.</span><span>더보기 골드 받기 활성화</span></div>
+                <div class="ol-item"><span class="ol-n">2.</span><span>귀속 / 거래 여부 선택</span></div>
+              </div>
+              <div class="screenshot">
+                <div class="ss-icon">▭</div>
+                <div class="ss-label">스크린샷 — 더보기 골드 옵션 메뉴</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="nav-btns">
+          <button class="nav-btn" onclick="goTab(3)">← 숙제 체크</button>
+          <button class="nav-btn primary" onclick="goTab(5)">커스텀 숙제 →</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══ 6. 커스텀 숙제 ══ -->
+    <div class="panel" data-panel="5">
+      <div class="panel-inner">
+        <div class="panel-tag">Step 6</div>
+        <h1 class="panel-title">커스텀 숙제</h1>
+        <p class="panel-lead">레이드 외에 나만의 일일·주간 숙제를 직접 추가할 수 있습니다.</p>
+
+        <div class="steps">
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">1</span>
+              항목 추가
+            </div>
+            <div class="step-body">
+              <p class="step-text"><strong>[커스텀 숙제 편집]</strong>에서 새 항목을 만듭니다.</p>
+              <div class="ol">
+                <div class="ol-item"><span class="ol-n">1.</span><span>숙제 이름 입력</span></div>
+                <div class="ol-item"><span class="ol-n">2.</span><span>아이콘 선택</span></div>
+                <div class="ol-item"><span class="ol-n">3.</span><span>초기화 주기 선택 — 일일 / 주간</span></div>
+                <div class="ol-item"><span class="ol-n">4.</span><span>[추가] 클릭 → 대시보드에 바로 반영</span></div>
+              </div>
+              <div class="screenshot has-img">
+                <img src="screenshots/10-custom-edit.jpg" alt="커스텀 숙제 편집 모달" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">2</span>
+              체크 및 초기화
+            </div>
+            <div class="step-body">
+              <p class="step-text">추가한 항목은 각 캐릭터 카드에서 체크할 수 있고, 설정한 주기에 따라 자동 초기화됩니다.</p>
+              <div class="screenshot has-img">
+                <img src="screenshots/06-raid-check.jpg" alt="대시보드 커스텀 숙제 체크 영역" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="nav-btns">
+          <button class="nav-btn" onclick="goTab(4)">← 골드 확인</button>
+          <button class="nav-btn primary" onclick="goTab(6)">원정대 →</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══ 7. 원정대 ══ -->
+    <div class="panel" data-panel="6">
+      <div class="panel-inner">
+        <div class="panel-tag">Step 7</div>
+        <h1 class="panel-title">원정대</h1>
+        <p class="panel-lead">길드원과 레이드 현황을 공유하기 위한 공간입니다.</p>
+
+        <div class="steps">
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">1</span>
+              원정대 만들기
+            </div>
+            <div class="step-body">
+              <p class="step-text">상단 메뉴 <strong>[원정대]</strong> → <strong>[원정대 만들기]</strong> 클릭</p>
+              <div class="ol">
+                <div class="ol-item"><span class="ol-n">1.</span><span>원정대 이름 입력 후 생성</span></div>
+                <div class="ol-item"><span class="ol-n">2.</span><span>자동 발급된 <strong>초대 코드</strong>를 길드원에게 공유</span></div>
+              </div>
+              <div class="screenshot has-img">
+                <img src="screenshots/13-guild-create.jpg" alt="원정대 만들기 모달" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">2</span>
+              초대 코드로 참가
+            </div>
+            <div class="step-body">
+              <div class="ol">
+                <div class="ol-item"><span class="ol-n">1.</span><span>[원정대] 페이지 → [초대 코드로 참가]</span></div>
+                <div class="ol-item"><span class="ol-n">2.</span><span>코드 입력 후 신청</span></div>
+                <div class="ol-item"><span class="ol-n">3.</span><span>리더 수락 → 멤버 합류 완료</span></div>
+              </div>
+              <div class="screenshot has-img">
+                <img src="screenshots/14-guild-settings.jpg" alt="초대 코드" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">3</span>
+              멤버 관리 (리더)
+            </div>
+            <div class="step-body">
+              <p class="step-text"><strong>[설정]</strong> 탭에서 가입 신청 수락·거절, 역할 변경, 강퇴를 관리할 수 있습니다.</p>
+              <div class="screenshot has-img">
+                <img src="screenshots/14-guild-settings.jpg" alt="원정대 설정 탭" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="nav-btns">
+          <button class="nav-btn" onclick="goTab(5)">← 커스텀 숙제</button>
+          <button class="nav-btn primary" onclick="goTab(7)">현황 공유 →</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══ 8. 현황 공유 ══ -->
+    <div class="panel" data-panel="7">
+      <div class="panel-inner">
+        <div class="panel-tag">Step 8</div>
+        <h1 class="panel-title">현황 공유</h1>
+        <p class="panel-lead">원정대 멤버들의 레이드 클리어 현황을 실시간으로 확인합니다.</p>
+
+        <div class="steps">
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">1</span>
+              레이드 공개 설정
+            </div>
+            <div class="step-body">
+              <p class="step-text">내 현황이 다른 멤버에게 보이려면 공개 설정이 필요합니다.</p>
+              <div class="ol">
+                <div class="ol-item"><span class="ol-n">1.</span><span>우측 상단 프로필 → [설정]</span></div>
+                <div class="ol-item"><span class="ol-n">2.</span><span><strong>[레이드 현황 공개]</strong> 토글 ON</span></div>
+              </div>
+              <div class="callout">
+                끄면 원정대 멤버에게도 현황이 숨겨집니다.
+              </div>
+              <div class="screenshot">
+                <div class="ss-icon">▭</div>
+                <div class="ss-label">스크린샷 — 설정 페이지 레이드 공개 토글</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">2</span>
+              원정대 레이드 현황
+            </div>
+            <div class="step-body">
+              <p class="step-text">원정대 상세 페이지 <strong>[레이드 현황]</strong> 탭에서 멤버별 클리어 진행 상황을 확인합니다.</p>
+              <div class="ol">
+                <div class="ol-item"><span class="ol-n">·</span><span>레이드별 클리어 멤버 수 표시</span></div>
+                <div class="ol-item"><span class="ol-n">·</span><span>레이드 행 클릭 → 멤버별 상세 펼치기</span></div>
+              </div>
+              <div class="screenshot has-img">
+                <img src="screenshots/16-raid-status.jpg" alt="원정대 레이드 현황 탭" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-title">
+              <span class="step-title-num">3</span>
+              그룹 (지인 공유)
+            </div>
+            <div class="step-body">
+              <p class="step-text">소수의 지인과 공유하려면 <strong>[그룹]</strong> 탭에서 닉네임으로 검색 후 그룹 요청을 보내면 됩니다. 수락하면 서로의 현황을 볼 수 있어요.</p>
+              <div class="screenshot has-img">
+                <img src="screenshots/17-group.jpg" alt="그룹 페이지" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="done">
+          <div class="done-title">가이드를 모두 완료했습니다</div>
+          <div class="done-desc">궁금한 점이 있으면 myloa.app에서 피드백을 남겨주세요.</div>
+        </div>
+
+        <div class="nav-btns">
+          <button class="nav-btn" onclick="goTab(6)">← 원정대</button>
+          <button class="nav-btn" disabled>마지막 단계</button>
+        </div>
+      </div>
+    </div>
+
+
+  </main>
+</div>
+
+<script>
+  const TOTAL = 8;
+  let current = 0;
+
+  const panels  = document.querySelectorAll('.panel');
+  const navItems = document.querySelectorAll('.nav-item');
+
+  function goTab(idx) {
+    if (idx < 0 || idx >= TOTAL) return;
+    panels[current].classList.remove('active');
+    navItems[current].classList.remove('active');
+    current = idx;
+    panels[current].classList.add('active');
+    navItems[current].classList.add('active');
+    document.querySelector('.main').scrollTop = 0;
+    navItems[current].scrollIntoView({ block: 'nearest' });
+  }
+
+  navItems.forEach((btn, i) => btn.addEventListener('click', () => goTab(i)));
+</script>
+</body>
+</html>
