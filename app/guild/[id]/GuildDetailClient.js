@@ -254,10 +254,10 @@ function MemberDetailModal({ member, role, myMember, raidList, visibleMembers, f
         const raidKey = `${r.raidId}__${r.difficulty}`
         const isExpanded = expandedRaid === raidKey
 
-        const memberRows = (visibleMembers || [])
-          .filter(m => m.userId !== member.userId)
-          .map(m => ({ m, chars: getMemberIncompleteChars(m, r.raidId, r.difficulty) }))
-          .filter(({ chars }) => chars.length > 0)
+        const memberRows = myMember
+          ? [{ m: myMember, chars: getMemberIncompleteChars(myMember, r.raidId, r.difficulty) }]
+              .filter(({ chars }) => chars.length > 0)
+          : []
 
         return (
           <div key={`${r.raidId}-${r.difficulty}`} className="rounded-xl overflow-hidden border border-gray-200 dark:border-[#2a2a2a] shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
@@ -300,9 +300,21 @@ function MemberDetailModal({ member, role, myMember, raidList, visibleMembers, f
                             {chars.map((c, ci) => {
                               const icon = getClassIcon(c.characterClass)
                               return (
-                                <div key={ci} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-white dark:bg-[#242424] text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-[#2e2e2e]">
+                                <div key={ci} className="relative group cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300">
                                   {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
                                   <span>{c.name}</span>
+                                  <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 hidden group-hover:flex flex-col gap-0.5 bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#3a3a3a] text-gray-700 dark:text-gray-200 rounded-md px-2 py-1.5 whitespace-nowrap shadow-sm z-50">
+                                    <div className="flex items-center gap-1 text-[10px] ns-bold">
+                                      <IconTrophy />
+                                      <span>{Number(c.itemLevel).toFixed(2)}</span>
+                                    </div>
+                                    {c.combatPower != null && (
+                                      <div className="flex items-center gap-1 text-[10px] ns-bold">
+                                        <IconPower />
+                                        <span>{Math.round(Number(c.combatPower)).toLocaleString('ko-KR')}</span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               )
                             })}
@@ -689,8 +701,8 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                 )}
               </div>
 
-              {/* 난이도별 카드 */}
-              <div className="flex gap-2.5">
+              {/* 난이도별 카드 — 항상 3열 고정, 카드마다 1/3 너비 */}
+              <div className="grid grid-cols-3 gap-2.5">
                 {difficulties.map(stat => {
                   const { diff } = getRaidLabel(stat.raidId, stat.difficulty)
                   const key = `${stat.raidId}__${stat.difficulty}`
@@ -702,35 +714,41 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                       key={key}
                       type="button"
                       onClick={() => setRaidModal(key)}
-                      className="flex-1 min-w-0 rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_6px_24px_rgba(0,0,0,0.58)] hover:-translate-y-0.5 active:translate-y-0 px-4 py-4 text-left transition-all duration-150"
+                      className="group relative overflow-hidden rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_8px_28px_rgba(0,0,0,0.55)] hover:-translate-y-1 active:translate-y-0 px-4 pt-5 pb-4 text-left transition-all duration-200"
                     >
-                      {/* 난이도 뱃지 */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className={`text-[10px] ns-extrabold px-2.5 py-0.5 rounded-full leading-none ${c.badge}`}>
-                          {diff}
-                        </span>
-                        {allDone && (
-                          <span className="text-[10px] ns-bold text-gray-400 dark:text-gray-500">모두 완료</span>
-                        )}
-                      </div>
+                      {/* 상단 컬러 액센트 바 */}
+                      <span className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${c.bar}`} />
 
-                      {/* 완료율 숫자 — 크고 굵게 */}
-                      <p className={`text-2xl ns-extrabold tabular-nums leading-none mb-0.5 ${c.pct}`}>
+                      {/* 난이도 뱃지 */}
+                      <span className={`inline-flex text-[10px] ns-extrabold px-2.5 py-0.5 rounded-full leading-none mb-3 ${c.badge}`}>
+                        {diff}
+                      </span>
+
+                      {/* 완료율 */}
+                      <p className={`text-3xl ns-extrabold tabular-nums leading-none mb-0.5 ${c.pct}`}>
                         {stat.totalWithRaid > 0 ? stat.pct : '—'}
                         {stat.totalWithRaid > 0 && <span className="text-sm font-normal text-gray-400 dark:text-gray-500 ml-0.5">%</span>}
                       </p>
-                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-3">
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-3.5">
                         {stat.totalChars > 0 ? `${stat.completedChars}/${stat.totalChars}캐릭터 완료` : '데이터 없음'}
                       </p>
 
                       {/* 프로그레스 바 */}
-                      <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden mb-3">
+                      <div className="h-1 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${c.bar}`}
+                          className={`h-full rounded-full transition-all duration-700 bg-gradient-to-r ${c.bar}`}
                           style={{ width: stat.totalWithRaid > 0 ? `${stat.pct}%` : '0%' }}
                         />
                       </div>
 
+                      {allDone && (
+                        <div className="mt-2.5 flex items-center gap-1">
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500 flex-shrink-0">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          <span className="text-[10px] ns-bold text-emerald-500">모두 완료</span>
+                        </div>
+                      )}
                     </button>
                   )
                 })}
