@@ -2355,12 +2355,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       diffKey.startsWith('stage') ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40' :
                                                     'bg-sky-50 dark:bg-sky-950/30 text-sky-500 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/40'
                     )
+                  const DIFF_PRIORITY = { nightmare: 0, hard: 1, stage3: 2, stage2: 3, stage1: 4, normal: 5 }
                   const raidGroups = allRegisteredRaids.reduce((acc, r) => {
                     const g = acc.find(x => x.raidId === r.raidId)
                     if (g) g.diffs.push(r)
                     else acc.push({ raidId: r.raidId, raidName: r.raidName, diffs: [r] })
                     return acc
                   }, [])
+                  raidGroups.forEach(g => g.diffs.sort((a, b) => (DIFF_PRIORITY[a.diffKey] ?? 99) - (DIFF_PRIORITY[b.diffKey] ?? 99)))
                   return (
                     <div className="flex items-center gap-y-2 px-3 py-2.5 flex-wrap">
                       {raidGroups.map((group, gi) => (
