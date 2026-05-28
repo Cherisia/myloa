@@ -743,7 +743,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
   const [requests, setRequests]   = useState(initialRequests)
   const [dragging, setDragging]   = useState(null)
   const [dragOver, setDragOver]   = useState(null)
-  const [activeTab, setActiveTab] = useState('friends')
+  const [activeTab, setActiveTab] = useState('groups')
   const [confirmModal, setConfirmModal] = useState(null)
   const [raidModal, setRaidModal] = useState(null) // { groupFriends, raidId, difficulty }
   const [friendModal, setFriendModal] = useState(null) // { friend }
@@ -938,7 +938,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
 
       {/* ── 페이지 헤더 ─────────────────────────────────────────────────── */}
       <div className="border-b border-gray-100 dark:border-white/[0.05] bg-white dark:bg-[#111] px-4 sm:px-8 py-5">
-        <div className="mx-auto max-w-[1400px] flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg ns-bold text-gray-900 dark:text-white">그룹</h1>
             <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
@@ -960,7 +960,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         </div>
 
         {/* ── 탭 ─────────────────────────────────────────────────────────── */}
-        <div className="mx-auto max-w-[1400px] mt-4 flex gap-1 w-[24%]" style={{marginLeft:0}}>
+        <div className="mt-4 flex gap-1 w-[24%]">
           {tabs.map(tab => (
             <button
               key={tab.key}
@@ -994,7 +994,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-8 py-6">
+      <div className="max-w-[1400px] px-4 sm:px-8 py-6">
 
         {/* ── 친구 탭 ──────────────────────────────────────────────────────── */}
         {activeTab === 'friends' && (
