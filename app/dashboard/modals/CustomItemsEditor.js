@@ -36,6 +36,7 @@ export default function CustomItemsEditor({
   const inputRef                = useRef(null)
   /** 다음 추가에 붙일 아이콘 — 그리드에서 선택한 public URL */
   const [iconForAdd, setIconForAdd] = useState(null)
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(null) // item name to confirm
 
   const charItems     = (selectedChar ? customItems[selectedChar.id] : null) || []
   const charItemNames = useMemo(() => new Set(charItems.map(it => it.name)), [charItems])
@@ -125,6 +126,31 @@ export default function CustomItemsEditor({
 
   return (
     <div className="flex flex-col min-h-0">
+      {deleteAllConfirm && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-[#1e1e1e] rounded-xl shadow-xl px-6 py-5 w-72 flex flex-col gap-4">
+            <p className="text-sm ns-bold text-gray-800 dark:text-gray-100 text-center leading-relaxed">
+              <span className="text-[var(--accent-500)]">{deleteAllConfirm}</span>을<br/>해당 원정대에서 삭제합니다.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteAllConfirm(null)}
+                className="flex-1 rounded-lg border border-gray-200 dark:border-[#404040] bg-white dark:bg-[#2a2a2a] py-2 text-xs ns-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#333] transition-colors"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => { onDeleteAll(deleteAllConfirm); setDeleteAllConfirm(null) }}
+                className="flex-1 rounded-lg bg-red-400 hover:bg-red-500 py-2 text-xs ns-bold text-white transition-colors"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className={`px-0 py-3 flex-shrink-0 space-y-2 ${noTopBorder ? '' : 'border-t border-gray-100 dark:border-[#383838]'}`}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap sm:gap-2">
           <div className="flex rounded-md overflow-hidden border border-gray-200 dark:border-[#383838] w-fit flex-shrink-0">
@@ -248,7 +274,7 @@ export default function CustomItemsEditor({
                   </div>
                   {multiCharNames.has(item.name) && (
                     <button type="button"
-                      onClick={() => onDeleteAll(item.name)}
+                      onClick={() => setDeleteAllConfirm(item.name)}
                       className="text-[9px] ns-bold text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition-colors flex-shrink-0 whitespace-nowrap"
                     >
                       원정대삭제
