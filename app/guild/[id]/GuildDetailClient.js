@@ -236,9 +236,9 @@ function MemberDetailModal({ member, role, myMember, raidList, visibleMembers, f
   })
 
   const MODAL_TABS = [
-    { id: 'together',   label: '함께할 수 있는 레이드', count: togetherRaids.length },
-    { id: 'incomplete', label: '미완료한 레이드',        count: incompleteRaids.length },
-    { id: 'completed',  label: '완료한 레이드',          count: completedRaids.length },
+    { id: 'together',   label: '함께할 수 있는 레이드', count: togetherRaids.reduce((s, r) => s + r.chars.length, 0) },
+    { id: 'incomplete', label: '미완료한 레이드',        count: incompleteRaids.reduce((s, r) => s + r.chars.length, 0) },
+    { id: 'completed',  label: '완료한 레이드',          count: completedRaids.reduce((s, r) => s + r.chars.length, 0) },
   ]
 
   const tabEmptyMsg = {
