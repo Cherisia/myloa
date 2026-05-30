@@ -29,39 +29,6 @@ const DIFF_LABEL = {
   stage3: '3단계', stage2: '2단계', stage1: '1단계',
 }
 
-const DIFF_STYLE = {
-  nightmare: {
-    active:   'bg-purple-500 text-white border-purple-500',
-    inactive: 'border-gray-200 dark:border-[#333] text-gray-500 dark:text-gray-400 hover:border-purple-300 hover:text-purple-600 dark:hover:border-purple-700 dark:hover:text-purple-400',
-    dot: 'bg-purple-500',
-  },
-  hard: {
-    active:   'bg-red-500 text-white border-red-500',
-    inactive: 'border-gray-200 dark:border-[#333] text-gray-500 dark:text-gray-400 hover:border-red-300 hover:text-red-500 dark:hover:border-red-700 dark:hover:text-red-400',
-    dot: 'bg-red-500',
-  },
-  normal: {
-    active:   'bg-gray-500 text-white border-gray-500',
-    inactive: 'border-gray-200 dark:border-[#333] text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500',
-    dot: 'bg-gray-400',
-  },
-  stage3: {
-    active:   'bg-orange-500 text-white border-orange-500',
-    inactive: 'border-gray-200 dark:border-[#333] text-gray-500 dark:text-gray-400 hover:border-orange-300 hover:text-orange-600 dark:hover:border-orange-700 dark:hover:text-orange-400',
-    dot: 'bg-orange-500',
-  },
-  stage2: {
-    active:   'bg-amber-500 text-white border-amber-500',
-    inactive: 'border-gray-200 dark:border-[#333] text-gray-500 dark:text-gray-400 hover:border-amber-300 hover:text-amber-600 dark:hover:border-amber-700 dark:hover:text-amber-400',
-    dot: 'bg-amber-400',
-  },
-  stage1: {
-    active:   'bg-gray-400 text-white border-gray-400',
-    inactive: 'border-gray-200 dark:border-[#333] text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500',
-    dot: 'bg-gray-300',
-  },
-}
-
 // ── 카테고리 ─────────────────────────────────────────────────────────────────
 const CATEGORIES = [
   { key: 'all',        label: '전체' },
@@ -255,318 +222,203 @@ const GATE_MATERIALS = {
   },
 }
 
-function computeMaterialTotals(gateList) {
-  const totals = {}
-  for (const gateMats of gateList) {
-    for (const item of gateMats) {
-      totals[item.name] = (totals[item.name] || 0) + item.count
-    }
-  }
-  return totals
-}
-
-const MATERIAL_ORDER = [
-  '운명의파괴석', '운명의수호석', '운명의파편', '운명의돌파석', '운명의돌',
-  '순환돌파석', '위대한비상의돌',
-  '고귀한구원자의팔찌', '찬란한구원자의팔찌',
-  '담금질낙뢰의뿔', '카르마의잔영', '업화의쐐기돌',
-  '은총의파편', '클리어메달', '불과얼음의주화',
-]
-
-function sortedTotals(totals) {
-  return MATERIAL_ORDER
-    .filter(name => totals[name])
-    .map(name => ({ name, count: totals[name] }))
-}
-
 function sum(arr) { return arr.reduce((a, b) => a + b, 0) }
+
+function formatGold(g) {
+  if (g >= 10000) return `${Math.round(g / 1000)}K`
+  if (g >= 1000)  return `${(g / 1000).toFixed(1)}K`
+  return g.toLocaleString()
+}
 
 // ── 재료 칩 ──────────────────────────────────────────────────────────────────
 function MaterialChip({ name, count }) {
   const icon = MATERIAL_ICON[name]
   const shortName = name.replace('운명의', '').replace('구원자의팔찌', '팔찌')
   return (
-    <span className="inline-flex items-center gap-1 bg-gray-100 dark:bg-[#272727] rounded-md px-2 py-1 shrink-0">
-      {icon && (
-        <Image src={icon} alt={name} width={13} height={13} unoptimized className="rounded-sm shrink-0 opacity-90" />
-      )}
-      <span className="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">{shortName}</span>
-      <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-        {count.toLocaleString()}
-      </span>
+    <span className="inline-flex items-center gap-1 bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2a2a2a] rounded-lg px-2 py-1 shrink-0">
+      {icon && <Image src={icon} alt={name} width={12} height={12} unoptimized className="shrink-0 opacity-90" />}
+      <span className="text-[10px] text-gray-400 dark:text-gray-500">{shortName}</span>
+      <span className="text-[11px] font-bold text-gray-800 dark:text-gray-200 tabular-nums">{count.toLocaleString()}</span>
     </span>
   )
 }
 
-// ── 골드 표 (단일 관문) ───────────────────────────────────────────────────────
-function SingleGateGold({ diff }) {
-  const bound = diff.goldBound[0] || 0
-  const trade = diff.goldTrade[0] || 0
-  const more  = diff.goldMore[0]  || 0
-  const total = bound + trade
+// ── 관문 카드 ─────────────────────────────────────────────────────────────────
+function GateCard({ gateNum, bound, trade, more, materials }) {
+  const total    = bound + trade
+  const hasBound = bound > 0
+  const hasTrade = trade > 0
 
   return (
-    <div className="space-y-2">
-      {bound > 0 && (
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs text-gray-400 dark:text-gray-500">귀속</span>
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{bound.toLocaleString()}</span>
-        </div>
-      )}
-      {trade > 0 && (
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs text-gray-400 dark:text-gray-500">거래</span>
-          <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400">{trade.toLocaleString()}</span>
-        </div>
-      )}
-      <div className="flex items-baseline justify-between pt-2.5 border-t border-gray-200 dark:border-[#303030]">
-        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">합계</span>
-        <span className="text-2xl font-black tracking-tight text-[var(--accent-600)] dark:text-[var(--accent-400)]">
-          {total.toLocaleString()}<span className="text-base ml-0.5 font-bold">G</span>
-        </span>
-      </div>
-      {more > 0 && (
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs text-red-400 dark:text-red-500">더보기 비용</span>
-          <span className="text-sm font-semibold text-red-500 dark:text-red-400">
-            -{more.toLocaleString()}
+    <div className="bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#232323] rounded-2xl p-5 flex flex-col gap-3">
+      {/* 관문 번호 */}
+      <p className="text-[10px] font-bold tracking-widest text-[var(--accent-500)] dark:text-[var(--accent-400)] uppercase">
+        {gateNum}관문
+      </p>
+
+      {/* 골드 */}
+      <div>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[34px] font-black leading-none tracking-tight text-gray-900 dark:text-gray-50">
+            {total.toLocaleString()}
           </span>
+          <span className="text-sm font-bold text-gray-300 dark:text-gray-600 leading-none pb-0.5">G</span>
         </div>
-      )}
-    </div>
-  )
-}
-
-// ── 골드 표 (다중 관문) ───────────────────────────────────────────────────────
-function MultiGateGold({ diff, gateCount }) {
-  const totalBound = sum(diff.goldBound)
-  const totalTrade = sum(diff.goldTrade)
-  const totalMore  = sum(diff.goldMore)
-  const totalGold  = totalBound + totalTrade
-  const gateGolds  = Array.from({ length: gateCount }, (_, i) =>
-    (diff.goldBound[i] || 0) + (diff.goldTrade[i] || 0)
-  )
-
-  const hasBound = totalBound > 0
-  const hasTrade = totalTrade > 0
-  const hasMore  = totalMore > 0
-
-  // 레이블 컬럼 고정, 관문 컬럼 균등, 합계 컬럼 고정
-  const colTemplate = `56px ${Array(gateCount).fill('1fr').join(' ')} 100px`
-
-  // 그리드 공통 스타일
-  const rowStyle = { display: 'grid', gridTemplateColumns: colTemplate, alignItems: 'baseline' }
-
-  const dash = <span className="text-gray-200 dark:text-gray-700 font-normal">—</span>
-
-  return (
-    <div className="overflow-x-auto">
-      <div style={{ minWidth: `${56 + gateCount * 80 + 100}px` }}>
-
-        {/* 헤더 */}
-        <div style={rowStyle} className="pb-2.5 border-b border-gray-200 dark:border-[#2e2e2e]">
-          <span />
-          {Array.from({ length: gateCount }, (_, i) => (
-            <span key={i} className="text-right text-[11px] font-medium text-gray-400 dark:text-gray-500 pr-3">
-              {i + 1}관문
-            </span>
-          ))}
-          <span className="text-right text-[11px] font-semibold text-gray-500 dark:text-gray-400">합계</span>
-        </div>
-
-        {/* 귀속 */}
-        {hasBound && (
-          <div style={rowStyle} className="py-2.5 border-b border-gray-50 dark:border-[#1e1e1e]">
-            <span className="text-xs text-gray-400 dark:text-gray-500">귀속</span>
-            {diff.goldBound.map((g, i) => (
-              <span key={i} className="text-right text-sm text-gray-600 dark:text-gray-300 pr-3">
-                {g > 0 ? g.toLocaleString() : dash}
-              </span>
-            ))}
-            <span className="text-right text-sm font-semibold text-gray-700 dark:text-gray-200">
-              {totalBound.toLocaleString()}
-            </span>
-          </div>
-        )}
-
-        {/* 거래 */}
-        {hasTrade && (
-          <div style={rowStyle} className="py-2.5 border-b border-gray-50 dark:border-[#1e1e1e]">
-            <span className="text-xs text-gray-400 dark:text-gray-500">거래</span>
-            {diff.goldTrade.map((g, i) => (
-              <span key={i} className="text-right text-sm text-yellow-600 dark:text-yellow-400 pr-3">
-                {g > 0 ? g.toLocaleString() : dash}
-              </span>
-            ))}
-            <span className="text-right text-sm font-semibold text-yellow-600 dark:text-yellow-400">
-              {totalTrade.toLocaleString()}
-            </span>
-          </div>
-        )}
-
-        {/* 합계 구분선 */}
-        <div className="h-0.5 bg-gray-200 dark:bg-[#333]" />
-
-        {/* 합계 */}
-        <div style={rowStyle} className="py-3">
-          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">합계</span>
-          {gateGolds.map((g, i) => (
-            <span key={i} className="text-right text-base font-bold text-[var(--accent-600)] dark:text-[var(--accent-400)] pr-3">
-              {g.toLocaleString()}
-            </span>
-          ))}
-          <span className="text-right">
-            <span className="text-xl font-black tracking-tight text-[var(--accent-600)] dark:text-[var(--accent-400)]">
-              {totalGold.toLocaleString()}
-            </span>
-            <span className="text-sm font-bold text-[var(--accent-600)] dark:text-[var(--accent-400)] ml-0.5">G</span>
-          </span>
-        </div>
-
-        {/* 더보기 구분선 + 행 */}
-        {hasMore && (
-          <>
-            <div className="h-px bg-gray-100 dark:bg-[#252525]" />
-            <div style={rowStyle} className="py-2.5">
-              <span className="text-xs text-red-400 dark:text-red-500">더보기</span>
-              {diff.goldMore.map((g, i) => (
-                <span key={i} className="text-right text-sm text-red-400 dark:text-red-400 pr-3">
-                  {g > 0 ? `-${g.toLocaleString()}` : dash}
-                </span>
-              ))}
-              <span className="text-right text-sm font-semibold text-red-500 dark:text-red-400">
-                -{totalMore.toLocaleString()}
-              </span>
-            </div>
-          </>
+        <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+          {hasBound && hasTrade
+            ? `귀속 ${bound.toLocaleString()} · 거래 ${trade.toLocaleString()}`
+            : hasTrade ? '거래 가능' : '귀속'}
+        </p>
+        {more > 0 && (
+          <p className="text-[11px] font-semibold text-red-400 dark:text-red-500 mt-0.5">
+            더보기 -{more.toLocaleString()}
+          </p>
         )}
       </div>
+
+      {/* 재료 */}
+      {materials && materials.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-gray-100 dark:border-[#2a2a2a]">
+          {materials.map(item => (
+            <MaterialChip key={item.name} name={item.name} count={item.count} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
 // ── 레이드 상세 ───────────────────────────────────────────────────────────────
 function RaidDetail({ raid, diffKey, onDiffChange }) {
-  const cat     = getRaidCategory(raid)
+  const cat       = getRaidCategory(raid)
   const activeKey = diffKey ?? raid.difficulties[0].key
-  const diff    = raid.difficulties.find(d => d.key === activeKey) ?? raid.difficulties[0]
+  const diff      = raid.difficulties.find(d => d.key === activeKey) ?? raid.difficulties[0]
   const gateCount = diff.gates
 
-  const raidMaterials  = GATE_MATERIALS[raid.id]
-  const materials      = raidMaterials?.[activeKey]
-  const fallbackKey    = raidMaterials ? Object.keys(raidMaterials).at(-1) : null
-  const displayMats    = materials ?? raidMaterials?.[fallbackKey]
-  const isFallback     = !materials && displayMats
+  const raidMaterials = GATE_MATERIALS[raid.id]
+  const materials     = raidMaterials?.[activeKey]
+  const fallbackKey   = raidMaterials ? Object.keys(raidMaterials).at(-1) : null
+  const displayMats   = materials ?? raidMaterials?.[fallbackKey]
+  const isFallback    = !materials && displayMats
 
   const totalGold = sum(diff.goldBound) + sum(diff.goldTrade)
+  const totalMore = sum(diff.goldMore)
+
+  const gridCols =
+    gateCount >= 4 ? 'grid-cols-2 xl:grid-cols-4' :
+    gateCount === 3 ? 'grid-cols-1 sm:grid-cols-3' :
+    gateCount === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
 
   return (
-    <div className="mt-5 space-y-6">
-      {/* 레이드 헤더 */}
-      <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-[#252525] border border-gray-150 dark:border-[#333] flex items-center justify-center shrink-0">
-            <Image src={raid.image} alt="" width={20} height={20} unoptimized className="opacity-70" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-none">{raid.name}</h2>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium leading-none ${CAT_COLOR[cat]}`}>
-                {CAT_LABEL[cat]}
-              </span>
-              {raid.maxPlayers === 4 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-[#2a2a2a] dark:text-gray-400 leading-none">
-                  4인
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
-              최소 아이템레벨 {raid.minItemLevel.toLocaleString()}
-            </p>
-          </div>
-        </div>
-
-        {/* 난이도 선택 */}
-        {raid.difficulties.length > 1 && (
-          <div className="flex gap-1.5 sm:ml-auto flex-wrap">
-            {raid.difficulties.map(d => {
-              const s = DIFF_STYLE[d.key] ?? DIFF_STYLE.normal
-              const isActive = activeKey === d.key
-              return (
-                <button
-                  key={d.key}
-                  onClick={() => onDiffChange(d.key)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${isActive ? s.active : s.inactive}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? 'bg-white/80' : s.dot}`} />
-                  {DIFF_LABEL[d.key]}
-                  <span className="opacity-50 text-[10px] font-normal">{d.minItemLevel.toLocaleString()}</span>
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* 골드 표 */}
-      <div>
-        {gateCount === 1
-          ? <SingleGateGold diff={diff} />
-          : <MultiGateGold diff={diff} gateCount={gateCount} />
-        }
-      </div>
-
-      {/* 재료 보상 */}
-      {displayMats && (
-        <div className="pt-1 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 tracking-wider uppercase">
-              재료 보상
+    <div>
+      {/* 헤더 */}
+      <div className="mb-6">
+        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${CAT_COLOR[cat]}`}>
+            {CAT_LABEL[cat]}
+          </span>
+          {raid.maxPlayers === 4 && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-[#2a2a2a] dark:text-gray-400 font-medium">
+              4인
             </span>
-            {isFallback && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
-                {DIFF_LABEL[fallbackKey]} 기준
-              </span>
-            )}
-          </div>
-
-          <div className="space-y-2.5">
-            {displayMats.map((gateMats, gi) => (
-              <div key={gi} className="flex items-start gap-3">
-                <span className="text-[11px] text-gray-400 dark:text-gray-500 shrink-0 w-9 pt-1.5">
-                  {gi + 1}관문
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {gateMats.map(item => (
-                    <MaterialChip key={item.name} name={item.name} count={item.count} />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* 전체 합산 (관문이 2개 이상일 때만) */}
-          {gateCount > 1 && (
-            <div className="flex items-start gap-3 pt-2 border-t border-gray-100 dark:border-[#252525]">
-              <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 shrink-0 w-9 pt-1.5">합산</span>
-              <div className="flex flex-wrap gap-1.5">
-                {sortedTotals(computeMaterialTotals(displayMats)).map(item => (
-                  <MaterialChip key={item.name} name={item.name} count={item.count} />
-                ))}
-              </div>
-            </div>
           )}
+        </div>
+        <h2 className="text-2xl font-black text-gray-900 dark:text-gray-50 tracking-tight mb-1">
+          {raid.name}
+        </h2>
+        <p className="text-xs text-gray-400 dark:text-gray-500">
+          최소 아이템레벨 {raid.minItemLevel.toLocaleString()}
+        </p>
+      </div>
+
+      {/* 난이도 선택 */}
+      {raid.difficulties.length > 1 && (
+        <div className="w-fit bg-gray-100 dark:bg-[#1a1a1a] rounded-xl p-1 flex gap-0.5 mb-6">
+          {raid.difficulties.map(d => {
+            const isActive = activeKey === d.key
+            return (
+              <button
+                key={d.key}
+                onClick={() => onDiffChange(d.key)}
+                className={`flex flex-col items-center px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap
+                  ${isActive
+                    ? 'bg-white dark:bg-[#2e2e2e] text-gray-900 dark:text-gray-100 shadow-sm'
+                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                  }`}
+              >
+                <span>{DIFF_LABEL[d.key]}</span>
+                <span className="text-[10px] font-normal opacity-50 mt-0.5 tabular-nums">{d.minItemLevel.toLocaleString()}</span>
+              </button>
+            )
+          })}
         </div>
       )}
 
-      {raidMaterials === undefined && (
-        <p className="text-xs text-gray-400 dark:text-gray-500">재료 데이터 준비 중</p>
+      {/* 관문 그리드 */}
+      <div className={`grid gap-3 ${gridCols}`}>
+        {Array.from({ length: gateCount }, (_, i) => (
+          <GateCard
+            key={i}
+            gateNum={i + 1}
+            bound={diff.goldBound[i] || 0}
+            trade={diff.goldTrade[i] || 0}
+            more={diff.goldMore[i] || 0}
+            materials={displayMats?.[i]}
+          />
+        ))}
+      </div>
+
+      {/* 전체 합계 */}
+      {gateCount > 1 && (
+        <div className="mt-4 flex items-center justify-between px-5 py-4 bg-gray-50 dark:bg-[#161616] border border-gray-100 dark:border-[#232323] rounded-2xl">
+          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 tracking-wide uppercase">
+            전체 합계
+          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-black text-[var(--accent-600)] dark:text-[var(--accent-400)] tabular-nums">
+              {totalGold.toLocaleString()}
+              <span className="text-sm font-bold ml-1">G</span>
+            </span>
+            {totalMore > 0 && (
+              <span className="text-[11px] font-semibold text-red-400 dark:text-red-500 tabular-nums">
+                더보기 -{totalMore.toLocaleString()}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {isFallback && (
+        <p className="mt-3 text-[10px] text-gray-400 dark:text-gray-600">
+          * 재료 정보는 {DIFF_LABEL[fallbackKey]} 기준입니다
+        </p>
       )}
     </div>
   )
 }
 
-// ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
+// ── 카테고리 필터 버튼 ────────────────────────────────────────────────────────
+function CategoryFilter({ activeCategory, onChange }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {CATEGORIES.map(cat => (
+        <button
+          key={cat.key}
+          onClick={() => onChange(cat.key)}
+          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors
+            ${activeCategory === cat.key
+              ? 'bg-[var(--accent-400)] text-[var(--accent-900)]'
+              : 'bg-gray-100 text-gray-500 dark:bg-[#1e1e1e] dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#252525]'
+            }`}
+        >
+          {cat.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── 메인 ─────────────────────────────────────────────────────────────────────
 export default function RaidRewardClient() {
   const [activeCategory, setActiveCategory] = useState('all')
   const [selectedRaidId, setSelectedRaidId] = useState(RAIDS[0].id)
@@ -599,64 +451,84 @@ export default function RaidRewardClient() {
     setSelectedDiff(raid?.difficulties[0].key ?? null)
   }
 
+  function getMaxGold(raid) {
+    const d = raid.difficulties[0]
+    return sum(d.goldBound) + sum(d.goldTrade)
+  }
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
-      {/* 헤더 */}
-      <div className="mb-7">
-        <h1 className="text-2xl font-black text-gray-900 dark:text-gray-100 mb-1">레이드 보상</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          레이드 종류와 이름을 선택해 관문별 골드·재료·더보기 비용을 확인하세요.
-        </p>
+    <div className="max-w-5xl mx-auto px-4 py-6 sm:py-10">
+
+      {/* 페이지 헤더 */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-black text-gray-900 dark:text-gray-50 tracking-tight">레이드 보상</h1>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">관문별 골드 · 재료 보상 정보</p>
       </div>
 
-      {/* 1단계 탭: 종류 */}
-      <div className="flex gap-1.5 overflow-x-auto pb-2">
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.key}
-            onClick={() => handleCategoryChange(cat.key)}
-            className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors shrink-0
-              ${activeCategory === cat.key
-                ? 'bg-[var(--accent-400)] text-[var(--accent-900)]'
-                : 'bg-gray-100 text-gray-500 dark:bg-[#232323] dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#2d2d2d]'
-              }`}
+      {/* ── 모바일 네비게이션 ── */}
+      <div className="md:hidden space-y-3 mb-6">
+        <CategoryFilter activeCategory={activeCategory} onChange={handleCategoryChange} />
+        <select
+          value={selectedRaid?.id ?? ''}
+          onChange={e => handleRaidChange(e.target.value)}
+          className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 appearance-none"
+        >
+          {filteredRaids.map(raid => (
+            <option key={raid.id} value={raid.id}>{raid.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* ── 레이아웃 ── */}
+      <div className="md:flex gap-8 items-start">
+
+        {/* 사이드바 (데스크탑) */}
+        <div className="hidden md:flex flex-col w-52 shrink-0 gap-4">
+          <CategoryFilter activeCategory={activeCategory} onChange={handleCategoryChange} />
+
+          {/* 레이드 목록 */}
+          <nav
+            className="space-y-0.5 overflow-y-auto max-h-[calc(100vh-260px)]"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {cat.label}
-          </button>
-        ))}
-      </div>
+            {filteredRaids.map(raid => {
+              const isSelected = selectedRaid?.id === raid.id
+              const maxGold    = getMaxGold(raid)
+              return (
+                <button
+                  key={raid.id}
+                  onClick={() => handleRaidChange(raid.id)}
+                  className={`w-full text-left flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all
+                    ${isSelected
+                      ? 'bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 text-[var(--accent-800)] dark:text-[var(--accent-300)]'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] hover:text-gray-900 dark:hover:text-gray-200'
+                    }`}
+                >
+                  <span className="text-sm font-semibold truncate flex-1">{raid.name}</span>
+                  <span className={`text-[11px] font-bold shrink-0 tabular-nums
+                    ${isSelected ? 'text-[var(--accent-600)] dark:text-[var(--accent-400)]' : 'text-gray-300 dark:text-gray-600'}`}
+                  >
+                    {formatGold(maxGold)}
+                  </span>
+                </button>
+              )
+            })}
+          </nav>
+        </div>
 
-      {/* 2단계 탭: 레이드 이름 */}
-      <div className="flex overflow-x-auto border-b border-gray-150 dark:border-[#2a2a2a] mt-0.5 mb-0">
-        {filteredRaids.map(raid => (
-          <button
-            key={raid.id}
-            onClick={() => handleRaidChange(raid.id)}
-            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-all shrink-0 -mb-px
-              ${selectedRaid?.id === raid.id
-                ? 'border-[var(--accent-500)] text-[var(--accent-600)] dark:border-[var(--accent-400)] dark:text-[var(--accent-400)]'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-[#444]'
-              }`}
-          >
-            {raid.name}
-          </button>
-        ))}
-      </div>
+        {/* 구분선 (데스크탑) */}
+        <div className="hidden md:block w-px self-stretch bg-gray-100 dark:bg-[#1e1e1e] shrink-0" />
 
-      {/* 레이드 상세 */}
-      {selectedRaid && (
-        <RaidDetail
-          raid={selectedRaid}
-          diffKey={currentDiffKey}
-          onDiffChange={setSelectedDiff}
-        />
-      )}
-
-      {/* 푸터 */}
-      <div className="mt-10 pb-4">
-        <p className="text-xs text-gray-400 dark:text-gray-600">
-          실제 보상은 게임 업데이트에 따라 달라질 수 있습니다.
-        </p>
+        {/* 상세 패널 */}
+        <div className="flex-1 min-w-0">
+          {selectedRaid && (
+            <RaidDetail
+              raid={selectedRaid}
+              diffKey={currentDiffKey}
+              onDiffChange={setSelectedDiff}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
