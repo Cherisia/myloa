@@ -81,12 +81,18 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id
-  const [expeditionsRaw, userRow, customItemsRaw] = await Promise.all([
+  const [expeditionsRaw, userRow, customItemsRaw, weeklyHistory] = await Promise.all([
     prisma.loaExpedition.findMany({ where: { userId }, orderBy: { createdAt: 'asc' }, include: EXPEDITION_INCLUDE }),
     prisma.user.findUnique({ where: { id: userId }, select: { apiKey: true } }),
     prisma.characterCustomItem.findMany({
       where: { character: { expedition: { userId } } },
       orderBy: [{ characterId: 'asc' }, { sortOrder: 'asc' }],
+    }),
+    prisma.weeklyRaidHistory.findMany({
+      where:   { userId },
+      orderBy: { weekStart: 'asc' },
+      take:    10,
+      select:  { id: true, weekStart: true, totalRaids: true, goldRaids: true, totalGold: true },
     }),
   ])
   const hasApiKey = !!userRow?.apiKey
@@ -197,5 +203,6 @@ export default async function DashboardPage() {
     initialCustomChecks={initialCustomChecks}
     initialRestGauge={initialRestGauge}
     initialRestGaugeDeducted={initialRestGaugeDeducted}
+    initialHistory={weeklyHistory}
   />
 }

@@ -37,6 +37,7 @@ model User {
   receivedFriendRequests FriendRequest[]  @relation("FriendRequestReceiver")
   favoritedFriends       UserFavorite[]   @relation("FavoriteOwner")
   favoritedBy            UserFavorite[]   @relation("FavoriteTarget")
+  weeklyRaidHistories    WeeklyRaidHistory[]
 }
 
 model Account {
@@ -204,6 +205,24 @@ model UserFavorite {
   target User @relation("FavoriteTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
 
   @@unique([userId, targetUserId])
+}
+
+// ─── 주간 숙제 기록 ────────────────────────────────────────────────────────────
+// 매주 수요일 리셋 시점의 레이드 완료 현황 스냅샷
+
+model WeeklyRaidHistory {
+  id         String   @id @default(cuid())
+  userId     String
+  weekStart  DateTime // 해당 주 스냅샷 시각 (수요일 06:00 KST)
+  totalRaids Int      // 모든 관문 클리어된 레이드 수
+  goldRaids  Int      // 골드 체크 + 모든 관문 클리어된 레이드 수
+  totalGold  Int      // 골드 레이드 합산 골드 (귀속+거래)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@index([userId])
 }
 
 model ExpeditionMemberFavorite {
