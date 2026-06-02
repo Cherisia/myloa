@@ -16,7 +16,7 @@ import AnimatedGold from './components/AnimatedGold'
 import CharGoldBadges from './components/CharGoldBadges'
 import RaidCell from './components/RaidCell'
 import Confetti, { GoldConfetti } from './components/Confetti'
-import WeeklyHistoryChart from './components/WeeklyHistoryChart'
+
 
 /** 카드 레이어보다 나중에 깜박이는 img 아이콘을 줄이기 위해 브라우저 캐시에 선적재한다. */
 function collectDashboardImageUrls(chars, raidsByCharId, customByCharId = {}) {
@@ -62,7 +62,7 @@ function buildCustomHomeworkRowMap(filteredChars, customItems, includeItem) {
   return byName
 }
 
-export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialHasApiKey = false, initialCustomItems = {}, initialCustomChecks = {}, initialRestGauge = {}, initialRestGaugeDeducted = {}, initialExpNames = {}, initialRepCharId = null, initialHistory = [] }) {
+export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialHasApiKey = false, initialCustomItems = {}, initialCustomChecks = {}, initialRestGauge = {}, initialRestGaugeDeducted = {}, initialExpNames = {}, initialRepCharId = null }) {
   const isDemo = !isLoggedIn
   const [chars, setChars] = useState(initialChars)
   const [raids, setRaids] = useState(initialRaids)
@@ -2584,13 +2584,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         )
       })()}
       </div>
-
-      {/* ── 주간 숙제 기록 차트 ── */}
-      {!isDemo && (
-        <div className="max-w-2xl mx-auto px-3 md:px-4">
-          <WeeklyHistoryChart history={initialHistory} />
-        </div>
-      )}
 
       {/* ── 모달 ── */}
       {showRaidSettings && (
