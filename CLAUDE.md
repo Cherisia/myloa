@@ -3,8 +3,8 @@
 # myloa — 로스트아크 레이드 숙제 관리
 
 ## 기술 스택
-- **Next.js** (App Router, 서버 컴포넌트 + 클라이언트 컴포넌트)
-- **Prisma** + **PostgreSQL** (Neon)
+- **Next.js 16** (App Router, 서버 컴포넌트 + 클라이언트 컴포넌트)
+- **Prisma** + **PostgreSQL** (Neon serverless)
 - **NextAuth.js v5** — Discord OAuth
 - **Tailwind CSS v4** — `@custom-variant dark` + `[data-theme="pink"]` 테마
 - **Pretendard** 폰트 (`ns-bold`=700, `ns-extrabold`=800, `ns-light`=300 헬퍼 클래스)
@@ -13,9 +13,15 @@
 
 ```
 app/
+  layout.js            # 루트 레이아웃 — metadata, JSON-LD, 2xl 사이드바 레이아웃
+  page.js              # / → /dashboard permanentRedirect (308)
+  sitemap.js           # 공개 페이지 sitemap
+  robots.js            # robots.txt — /api/ /settings /guild/ /group/ /history disallow
+  globals.css          # 테마 CSS 변수, Tailwind 설정
+  opengraph-image.js   # 기본 OG 이미지
   dashboard/
     page.js              # 서버 컴포넌트 — DB 조회 후 DashboardClient에 전달
-    DashboardClient.js   # 메인 대시보드 (~2700줄)
+    DashboardClient.js   # 메인 대시보드 (~2830줄)
     loading.js           # 로딩 스켈레톤
     _constants.js        # EX_RAID_IDS, GOLD_RAID_LIMIT, CLASS_ICON, AUTO_PRESETS 등
     _icons.js            # IconCrown, IconPlus, IconCheck 등 SVG 아이콘 컴포넌트
@@ -29,10 +35,14 @@ app/
       CustomItemsEditor.js   # 커스텀 숙제 항목 관리
       BynnArkIconPicker.js   # 커스텀 숙제 아이콘 선택기
     components/
-      RaidCell.js        # 레이드 완료 토글 셀
-      AnimatedGold.js    # 골드 숫자 애니메이션
-      CharGoldBadges.js  # 캐릭터별 골드 배지
-      Confetti.js        # 100% 완료 폭죽
+      RaidCell.js            # 레이드 완료 토글 셀
+      AnimatedGold.js        # 골드 숫자 애니메이션
+      CharGoldBadges.js      # 캐릭터별 골드 배지
+      Confetti.js            # 100% 완료 폭죽
+      WeeklyHistoryChart.js  # 주간 숙제 히스토리 막대 차트
+  history/
+    page.js              # 서버 컴포넌트 — 주간 기록 조회 (비로그인 데모 지원)
+    HistoryClient.js     # 히스토리 차트 + 통계 UI
   guild/
     page.js              # 서버 컴포넌트 — 내 길드 목록
     GuildClient.js       # 길드 목록 UI (만들기·참가 모달 포함)
@@ -48,6 +58,7 @@ app/
     page.js                  # 서버 컴포넌트 — 설정 페이지
     SettingsClient.js        # 닉네임·레이드 공개 설정 UI
   api/
+    auth/[...nextauth]/route.js  # NextAuth Discord OAuth 핸들러
     homework/route.js         # GET/POST/DELETE — 레이드 체크 저장
     homework/batch/route.js   # POST — 레이드 일괄 업데이트
     characters/route.js       # GET/POST/DELETE/PATCH(순서) — 캐릭터 CRUD
@@ -68,7 +79,9 @@ app/
     group/favorites/route.js   # POST/DELETE — 그룹원 즐겨찾기
     group/pending-count/route.js # GET — 받은 그룹 요청 대기 수 (Navbar 배지)
     group/search/route.js      # GET — 사용자 검색
-    loa/route.js              # 로스트아크 OpenAPI 프록시
+    history/route.js           # GET — 주간 숙제 기록 조회 (최근 10주)
+    user/profile/route.js      # GET/PATCH — 프로필 조회·수정 (닉네임·설정)
+    loa/route.js               # 로스트아크 OpenAPI 프록시 (서버사이드 rate limit)
     cron/daily-reset/route.js  # POST — 일일 숙제 초기화 (06:00 KST)
     cron/weekly-reset/route.js # POST — 주간 숙제 초기화 (수 06:00 KST)
 lib/
@@ -82,7 +95,8 @@ components/
   ThemeProvider.js
   SessionProvider.js   # NextAuth 세션 래퍼
   DiscordIcon.js       # 공유 Discord SVG 아이콘
-  AdSense.js           # Google AdSense 연동
+  AdSense.js           # Google AdSense 인라인 광고 슬롯
+  SidebarAds.js        # SidebarAdLeft / SidebarAdRight — 2xl(1536px+) sticky 사이드바 광고
 ```
 
 ## 핵심 규칙
@@ -92,6 +106,7 @@ components/
 - `isDemo = !isLoggedIn` — DashboardClient 내에서 파생, prop으로 전달하지 않음
 - 체크박스 토글은 클라이언트 상태만 변경 (`persistRaid` / `persistDelete` 래퍼가 `isLoggedIn` 여부로 fetch 스킵)
 - 레이드 설정·캐릭터 설정·캐릭터 갱신 버튼 클릭 시 → "테스트 데이터입니다" 모달 (`showLoginGuide`)
+- `/history` 페이지도 비로그인 시 `makeDemoHistory()` 샘플 데이터로 렌더링
 
 ### 테마
 - `globals.css`에서 `[data-theme="pink"]`와 `.dark` 클래스로 컬러 오버라이드
@@ -274,10 +289,10 @@ npx prisma migrate deploy
 | `/guild`, `/guild/[id]` | ❌ noindex | 로그인 필수 |
 | `/group` | ❌ noindex | 로그인 필수 |
 | `/settings` | ❌ noindex | 로그인 필수 |
-| `/history` | ❌ noindex | 로그인 필수 |
+| `/history` | ❌ noindex | 비로그인 데모 접근 가능하나 noindex 정책 |
 
 - 새 페이지 추가 시: 로그인 없이 접근 가능한 경우에만 sitemap(`app/sitemap.js`)에 추가
-- 로그인 필수 페이지는 metadata에 반드시 `robots: { index: false, follow: false }` 명시
+- 로그인 필수 또는 noindex 페이지는 metadata에 반드시 `robots: { index: false, follow: false }` 명시
 - `app/robots.js` disallow 목록도 함께 업데이트
 
 ### metadata 작성 규칙
@@ -287,16 +302,16 @@ npx prisma migrate deploy
 **개별 page.js의 `title`에 "myloa"를 절대 포함하지 않는다** — template이 자동으로 "- myloa"를 붙인다.
 
 ```js
-// ✅ 올바른 — template이 '숙제 히스토리 - myloa'로 완성
-export const metadata = { title: '숙제 히스토리' }
+// ✅ 올바른 — template이 '로스트아크 숙제 히스토리 - myloa'로 완성
+export const metadata = { title: '로스트아크 숙제 히스토리' }
 
-// ❌ 금지 — '숙제 히스토리 - myloa - myloa' 중복 발생
-export const metadata = { title: '숙제 히스토리 - myloa' }
+// ❌ 금지 — '로스트아크 숙제 히스토리 - myloa - myloa' 중복 발생
+export const metadata = { title: '로스트아크 숙제 히스토리 - myloa' }
 ```
 
 **예외**: `openGraph.title` / `twitter.title`은 template을 거치지 않으므로 "myloa"를 직접 포함한다.
 ```js
-openGraph: { title: '로스트아크 레이드 보상 - myloa' }  // ✅ OG는 template 미적용
+openGraph: { title: '로스트아크 레이드 보상 정보 - myloa' }  // ✅ OG는 template 미적용
 ```
 
 - **title 구분자**: `ㅡ` 금지, 반드시 `-` 사용
@@ -305,13 +320,13 @@ openGraph: { title: '로스트아크 레이드 보상 - myloa' }  // ✅ OG는 t
 - `metadataBase`는 `layout.js`의 `metadata` 객체 안에만 선언 (standalone export 금지)
 - 루트(`/`) 리다이렉트는 `permanentRedirect` 사용 (308 — SEO 신호 전달)
 
-### 검색엔진 인증 코드 위치
-`app/layout.js` `verification` 필드에 주석으로 슬롯 준비되어 있음:
+### 검색엔진 인증 코드
+`app/layout.js` `verification` 필드에 설정되어 있음:
 ```js
 verification: {
-  // google: 'Google Search Console 인증 코드',
+  google: 'XkrTtOH9OlbQnHmkUGOcJZJ7b06HFsRbdzX5prlVksM',  // Google Search Console 인증됨
   other: {
-    // 'naver-site-verification': '네이버 서치어드바이저 인증 코드',
+    // 'naver-site-verification': 'YOUR_NAVER_VERIFICATION_CODE',  // 네이버 등록 후 교체
     'google-adsense-account': 'ca-pub-7505734558280029',
   },
 }
@@ -328,3 +343,4 @@ verification: {
 - `ApiKeyGuideModal`은 `CharacterAddModal.js` 안에 로컬 함수로 포함됨
 - LoA API 키는 AES-256으로 암호화하여 DB 저장 (`lib/encrypt.js`)
 - 커스텀 숙제 아이콘 등 optimistic UI 패턴(toggleCustomCheck, adjustRestGauge 등)은 fire-and-forget fetch 사용 — 실패 시 console.error 기록, UI는 롤백하지 않음
+- `api/loa/route.js` rate limit은 in-memory (서버 재시작 시 초기화됨)
