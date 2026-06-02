@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { RAID_MAP } from '@/lib/raidData'
@@ -136,6 +136,44 @@ function Avatar({ user, size = 28 }) {
   )
 }
 
+// ── CharChip — fixed-position tooltip (overflow-hidden 클리핑 우회) ───────────
+function CharChip({ icon, name, itemLevel, combatPower, className, children }) {
+  const ref = useRef(null)
+  const [pos, setPos] = useState(null)
+  return (
+    <div
+      ref={ref}
+      className={`relative cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold ${className}`}
+      onMouseEnter={() => {
+        if (ref.current) {
+          const r = ref.current.getBoundingClientRect()
+          setPos({ x: r.left, y: r.top })
+        }
+      }}
+      onMouseLeave={() => setPos(null)}
+    >
+      {children}
+      {pos && (
+        <div
+          className="pointer-events-none fixed z-[9999] flex flex-col gap-1 bg-gray-800 dark:bg-gray-700 text-white rounded-md px-2.5 py-2 whitespace-nowrap shadow-md text-[11px] ns-bold"
+          style={{ left: pos.x, top: pos.y - 8, transform: 'translateY(-100%)' }}
+        >
+          <div className="flex items-center gap-1">
+            <IconTrophy />
+            <span>{Number(itemLevel).toFixed(2)}</span>
+          </div>
+          {combatPower != null && (
+            <div className="flex items-center gap-1">
+              <IconPower />
+              <span>{Math.round(Number(combatPower)).toLocaleString('ko-KR')}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── RaidRow (MemberDetailModal 내부 레이드 행) ────────────────────────────────
 function RaidRow({ raidId, difficulty, chars, highlight, completed, noWrap }) {
   const { name, diff, image } = getRaidLabel(raidId, difficulty)
@@ -144,7 +182,12 @@ function RaidRow({ raidId, difficulty, chars, highlight, completed, noWrap }) {
   const chips = chars.map((ch, i) => {
     const icon = getClassIcon(ch.characterClass)
     return (
-      <div key={i} className={`relative group cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold ${completed ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300'}`}>
+      <CharChip
+        key={i}
+        itemLevel={ch.itemLevel}
+        combatPower={ch.combatPower}
+        className={completed ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300'}
+      >
         {completed && (
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
             <polyline points="20 6 9 17 4 12" />
@@ -152,19 +195,7 @@ function RaidRow({ raidId, difficulty, chars, highlight, completed, noWrap }) {
         )}
         {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
         <span>{ch.name}</span>
-        <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 hidden group-hover:flex flex-col gap-0.5 bg-white dark:bg-[#2a2a2a] shadow-border-md text-gray-700 dark:text-gray-200 rounded-md px-2 py-1.5 whitespace-nowrap shadow-sm z-50">
-          <div className="flex items-center gap-1 text-[10px] ns-bold">
-            <IconTrophy />
-            <span>{Number(ch.itemLevel).toFixed(2)}</span>
-          </div>
-          {ch.combatPower != null && (
-            <div className="flex items-center gap-1 text-[10px] ns-bold">
-              <IconPower />
-              <span>{Math.round(Number(ch.combatPower)).toLocaleString('ko-KR')}</span>
-            </div>
-          )}
-        </div>
-      </div>
+      </CharChip>
     )
   })
 
@@ -300,22 +331,10 @@ function MemberDetailModal({ member, role, myMember, raidList, visibleMembers, f
                             {chars.map((c, ci) => {
                               const icon = getClassIcon(c.characterClass)
                               return (
-                                <div key={ci} className="relative group cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300">
+                                <CharChip key={ci} itemLevel={c.itemLevel} combatPower={c.combatPower} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300">
                                   {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
                                   <span>{c.name}</span>
-                                  <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 hidden group-hover:flex flex-col gap-0.5 bg-white dark:bg-[#2a2a2a] shadow-border-md text-gray-700 dark:text-gray-200 rounded-md px-2 py-1.5 whitespace-nowrap shadow-sm z-50">
-                                    <div className="flex items-center gap-1 text-[10px] ns-bold">
-                                      <IconTrophy />
-                                      <span>{Number(c.itemLevel).toFixed(2)}</span>
-                                    </div>
-                                    {c.combatPower != null && (
-                                      <div className="flex items-center gap-1 text-[10px] ns-bold">
-                                        <IconPower />
-                                        <span>{Math.round(Number(c.combatPower)).toLocaleString('ko-KR')}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
+                                </CharChip>
                               )
                             })}
                           </div>
@@ -1226,26 +1245,13 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                             {chars.map((c, ci) => {
                               const iconFile = CLASS_ICON[c.characterClass]
                               return (
-                                <div key={ci} className="relative group cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300">
+                                <CharChip key={ci} itemLevel={c.itemLevel} combatPower={c.combatPower} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300">
                                   {iconFile && (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img src={`/class/${iconFile}.svg`} alt={c.characterClass} className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />
                                   )}
                                   <span>{c.name}</span>
-                                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col gap-1 bg-white dark:bg-[#2a2a2a] shadow-border-md text-gray-700 dark:text-gray-200 rounded-lg px-2.5 py-2 whitespace-nowrap shadow-md z-50">
-                                    <div className="flex items-center gap-1 text-[11px] ns-bold">
-                                      <IconTrophy />
-                                      <span>{Number(c.itemLevel).toFixed(2)}</span>
-                                    </div>
-                                    {c.combatPower != null && (
-                                      <div className="flex items-center gap-1 text-[11px] ns-bold">
-                                        <IconPower />
-                                        <span>{Math.round(Number(c.combatPower)).toLocaleString('ko-KR')}</span>
-                                      </div>
-                                    )}
-                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white dark:border-t-[#2a2a2a]" />
-                                  </div>
-                                </div>
+                                </CharChip>
                               )
                             })}
                           </div>
@@ -1303,7 +1309,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                               {chars.map((c, ci) => {
                                 const iconFile = CLASS_ICON[c.characterClass]
                                 return (
-                                  <div key={ci} className="relative group cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 dark:text-gray-500">
+                                  <CharChip key={ci} itemLevel={c.itemLevel} combatPower={c.combatPower} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 dark:text-gray-500">
                                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                                       <polyline points="20 6 9 17 4 12" />
                                     </svg>
@@ -1312,20 +1318,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                                       <img src={`/class/${iconFile}.svg`} alt={c.characterClass} className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />
                                     )}
                                     <span>{c.name}</span>
-                                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col gap-1 bg-white dark:bg-[#2a2a2a] shadow-border-md text-gray-700 dark:text-gray-200 rounded-lg px-2.5 py-2 whitespace-nowrap shadow-md z-50">
-                                      <div className="flex items-center gap-1 text-[11px] ns-bold">
-                                        <IconTrophy />
-                                        <span>{Number(c.itemLevel).toFixed(2)}</span>
-                                      </div>
-                                      {c.combatPower != null && (
-                                        <div className="flex items-center gap-1 text-[11px] ns-bold">
-                                          <IconPower />
-                                          <span>{Math.round(Number(c.combatPower)).toLocaleString('ko-KR')}</span>
-                                        </div>
-                                      )}
-                                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white dark:border-t-[#2a2a2a]" />
-                                    </div>
-                                  </div>
+                                  </CharChip>
                                 )
                               })}
                             </div>
