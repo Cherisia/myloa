@@ -2390,23 +2390,23 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     <div className="flex items-center flex-wrap gap-y-1 px-2.5 py-2">
                       {/* 필터 아이콘 라벨 */}
                       <div className="flex items-center gap-1 pr-2.5 mr-0.5 border-r border-gray-100 dark:border-[#2e2e2e] self-center">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600 flex-shrink-0">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600 flex-shrink-0">
                           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
                         </svg>
-                        <span className="text-[9px] min-[1920px]:text-[11px] text-gray-300 dark:text-gray-600 ns-bold tracking-wide whitespace-nowrap">필터</span>
+                        <span className="text-[10px] min-[1920px]:text-[12px] text-gray-300 dark:text-gray-600 ns-bold tracking-wide whitespace-nowrap">필터</span>
                       </div>
                       {raidGroups.map((group, gi) => (
                         <div key={group.raidId} className="flex items-center">
                           {gi > 0 && <div className="w-px h-4 bg-gray-200 dark:bg-[#3a3a3a] mx-2 flex-shrink-0" />}
                           <div className="flex items-center gap-0.5">
-                            <span className="text-[10px] min-[1920px]:text-[12px] text-gray-400 dark:text-gray-500 whitespace-nowrap px-1">{group.raidName}</span>
+                            <span className="text-[11px] min-[1920px]:text-[13px] text-gray-400 dark:text-gray-500 whitespace-nowrap px-1">{group.raidName}</span>
                             {group.diffs.map(r => {
                               const isActive = selectedRaid?.raidId === r.raidId && selectedRaid?.diffKey === r.diffKey
                               return (
                                 <button
                                   key={r.diffKey}
                                   onClick={() => setSelectedRaid(isActive ? null : { raidId: r.raidId, diffKey: r.diffKey })}
-                                  className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] min-[1920px]:text-[12px] ns-bold ${diffStyle(r.diffKey, isActive)}`}
+                                  className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] min-[1920px]:text-[13px] ns-bold ${diffStyle(r.diffKey, isActive)}`}
                                 >
                                   <span>{r.diffLabel}</span>
                                   {r.incomplete > 0 ? (
@@ -2414,7 +2414,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                       {r.incomplete}
                                     </span>
                                   ) : (
-                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" className={isActive ? 'text-white/80' : 'text-emerald-500 dark:text-emerald-400'}><polyline points="20 6 9 17 4 12"/></svg>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" className={isActive ? 'text-white/80' : 'text-emerald-500 dark:text-emerald-400'}><polyline points="20 6 9 17 4 12"/></svg>
                                   )}
                                 </button>
                               )
