@@ -1,6 +1,6 @@
 export const metadata = {
-  title: '숙제 히스토리 - myloa',
-  description: '주간 레이드 숙제 완료 히스토리',
+  title: '숙제 히스토리',
+  description: '캐릭터별 주간 레이드 숙제 완료 현황과 골드 수급 히스토리를 확인하세요.',
   robots: { index: false, follow: false },
 }
 

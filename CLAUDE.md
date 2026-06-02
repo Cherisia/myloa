@@ -269,18 +269,38 @@ npx prisma migrate deploy
 | 페이지 | 인덱싱 | 이유 |
 |--------|--------|------|
 | `/dashboard` | ✅ index | 비로그인 데모 접근 가능 — 핵심 랜딩 페이지 |
+| `/raids` | ✅ index | 공개 페이지 |
 | `/privacy` | ✅ index | 공개 페이지 |
 | `/guild`, `/guild/[id]` | ❌ noindex | 로그인 필수 |
 | `/group` | ❌ noindex | 로그인 필수 |
 | `/settings` | ❌ noindex | 로그인 필수 |
+| `/history` | ❌ noindex | 로그인 필수 |
 
 - 새 페이지 추가 시: 로그인 없이 접근 가능한 경우에만 sitemap(`app/sitemap.js`)에 추가
 - 로그인 필수 페이지는 metadata에 반드시 `robots: { index: false, follow: false }` 명시
 - `app/robots.js` disallow 목록도 함께 업데이트
 
 ### metadata 작성 규칙
-- **title 구분자**: `ㅡ` 금지, 반드시 `-` 사용 (예: `레이드 숙제 관리 - myloa`)
-- **description**: 80자 이상, 핵심 키워드(로스트아크, 레이드 숙제, 골드 계산 등) 포함
+
+#### title 규칙 (중요)
+루트 레이아웃(`app/layout.js`)에 `title.template: '%s - myloa'`가 설정되어 있다.
+**개별 page.js의 `title`에 "myloa"를 절대 포함하지 않는다** — template이 자동으로 "- myloa"를 붙인다.
+
+```js
+// ✅ 올바른 — template이 '숙제 히스토리 - myloa'로 완성
+export const metadata = { title: '숙제 히스토리' }
+
+// ❌ 금지 — '숙제 히스토리 - myloa - myloa' 중복 발생
+export const metadata = { title: '숙제 히스토리 - myloa' }
+```
+
+**예외**: `openGraph.title` / `twitter.title`은 template을 거치지 않으므로 "myloa"를 직접 포함한다.
+```js
+openGraph: { title: '로스트아크 레이드 보상 - myloa' }  // ✅ OG는 template 미적용
+```
+
+- **title 구분자**: `ㅡ` 금지, 반드시 `-` 사용
+- **description**: 공개(index) 페이지는 80자 이상, 핵심 키워드(로스트아크, 레이드 숙제, 골드 계산 등) 포함
 - **canonical**: 공개 페이지에는 `alternates: { canonical: 'https://myloa.app/경로' }` 추가
 - `metadataBase`는 `layout.js`의 `metadata` 객체 안에만 선언 (standalone export 금지)
 - 루트(`/`) 리다이렉트는 `permanentRedirect` 사용 (308 — SEO 신호 전달)

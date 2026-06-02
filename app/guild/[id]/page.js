@@ -4,6 +4,8 @@ import { notFound, redirect } from 'next/navigation'
 import GuildDetailClient from './GuildDetailClient'
 
 export const metadata = {
+  title: '길드 상세',
+  description: '길드원들의 레이드 진행 현황을 확인하세요.',
   robots: { index: false, follow: false },
 }
 
