@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db'
 import SettingsClient from './SettingsClient'
 
 export const metadata = {
-  title: '설정',
+  title: '계정 설정',
   description: 'myloa 계정 및 프로필 설정을 관리하세요.',
   robots: { index: false, follow: false },
 }
