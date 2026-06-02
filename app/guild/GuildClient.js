@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 const IconPlus = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -22,6 +23,11 @@ const IconUsers = () => (
 const IconChevron = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <polyline points="9 18 15 12 9 6" />
+  </svg>
+)
+const IconCrown = ({ className }) => (
+  <svg width="12" height="11" viewBox="0 0 24 22" fill="currentColor" className={className}>
+    <path d="M2 19h20v2H2zM22 3.27l-5.5 6.5L12 2 7.5 9.77 2 3.27V18h20V3.27z"/>
   </svg>
 )
 
@@ -175,7 +181,7 @@ export default function GuildClient({ initialGroups }) {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8 space-y-6">
+    <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
       {/* 헤더 */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -226,31 +232,57 @@ export default function GuildClient({ initialGroups }) {
               onClick={() => router.push(`/guild/${g.id}`)}
               className="w-full text-left rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_6px_24px_rgba(0,0,0,0.58)] hover:-translate-y-0.5 active:translate-y-0 px-5 py-4 transition-all duration-150"
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1 space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="ns-bold text-[15px] text-gray-900 dark:text-white">{g.name}</span>
-                    {g.myRole === 'leader' && (
-                      <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">길드장</span>
-                    )}
-                    {g.myRole === 'officer' && (
-                      <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부길드장</span>
-                    )}
+              <div className="flex items-center justify-between gap-4">
+                {/* 왼쪽: 길드명 + 서브 정보 */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="ns-extrabold text-[17px] text-gray-900 dark:text-white truncate">{g.name}</span>
                     {g.pendingCount > 0 && (
-                      <span className="text-[10px] ns-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">신청 {g.pendingCount}</span>
+                      <span className="text-[10px] ns-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full flex-shrink-0">신청 {g.pendingCount}</span>
                     )}
                   </div>
-                  {g.description && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{g.description}</p>
-                  )}
-                  <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
-                    <IconUsers />
-                    <span className="ns-bold text-gray-600 dark:text-gray-400">{g.memberCount}명</span>
+                  <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
+                    <IconCrown className="text-[var(--accent-400)] flex-shrink-0" />
+                    {g.leaderNickname && (
+                      <span className="ns-bold text-gray-700 dark:text-gray-300">{g.leaderNickname}</span>
+                    )}
+                    <span className="text-gray-300 dark:text-gray-600">·</span>
+                    <span>공대원 <span className="ns-bold text-gray-700 dark:text-gray-300">{g.memberCount}명</span></span>
+                    <span className="text-gray-300 dark:text-gray-600">·</span>
+                    <span>캐릭터 <span className="ns-bold text-gray-700 dark:text-gray-300">{g.totalCharCount}개</span></span>
                   </div>
                 </div>
-                <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">
-                  <IconChevron />
-                </span>
+
+                {/* 오른쪽: 아바타 + 역할 뱃지 + 화살표 */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {g.memberAvatars?.length > 0 && (
+                    <div className="flex items-center">
+                      {g.memberAvatars.slice(0, 5).map((src, i) => (
+                        <div
+                          key={i}
+                          className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
+                          style={{ marginLeft: i === 0 ? 0 : '-8px', zIndex: 5 - i }}
+                        >
+                          <Image src={src} alt="" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                        </div>
+                      ))}
+                      {g.memberAvatars.length > 5 && (
+                        <div
+                          className="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#3a3a3a] flex items-center justify-center flex-shrink-0"
+                          style={{ marginLeft: '-8px', zIndex: 0 }}
+                        >
+                          <span className="text-[9px] ns-bold text-gray-500 dark:text-gray-300">+{g.memberAvatars.length - 5}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {g.myRole === 'officer' && (
+                    <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부길드장</span>
+                  )}
+                  <span className="text-gray-300 dark:text-gray-600">
+                    <IconChevron />
+                  </span>
+                </div>
               </div>
             </button>
           ))}

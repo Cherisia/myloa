@@ -21,28 +21,59 @@ export default async function GuildPage() {
     include: {
       expedition: {
         include: {
-          members: true,
-          leader: { select: { id: true, name: true, image: true } },
+          members: {
+            include: { user: { select: { id: true, image: true } } },
+            orderBy: { joinedAt: 'asc' },
+          },
+          leader: {
+            select: {
+              id: true, name: true, image: true, nickname: true,
+              loaExpeditions: {
+                select: { repCharName: true },
+                take: 1,
+              },
+            },
+          },
         },
       },
     },
     orderBy: { joinedAt: 'asc' },
   })
 
+  // 길드별 전체 활성 캐릭터 수 일괄 조회
+  const expeditionIds = memberships.map(m => m.expedition.id)
+  const charCountRows = await prisma.$queryRaw`
+    SELECT em."expeditionId", COUNT(c.id)::int AS cnt
+    FROM "ExpeditionMember" em
+    JOIN "LoaExpedition" le ON le."userId" = em."userId"
+    JOIN "Character" c ON c."expeditionId" = le.id AND c."isActive" = true
+    WHERE em."expeditionId" = ANY(${expeditionIds}) AND em.status = 'active'
+    GROUP BY em."expeditionId"
+  `
+  const charCountMap = Object.fromEntries(charCountRows.map(r => [r.expeditionId, r.cnt]))
+
   const groups = memberships.map(m => {
     const exp = m.expedition
-    const isLeader  = exp.leaderId === session.user.id
-    const isOfficer = isLeader || m.role === 'officer'
-    const activeCount  = exp.members.filter(mem => mem.status === 'active').length
-    const pendingCount = exp.members.filter(mem => mem.status === 'pending').length
+    const isLeader   = exp.leaderId === session.user.id
+    const isOfficer  = isLeader || m.role === 'officer'
+    const activeMembers = exp.members.filter(mem => mem.status === 'active')
+    const pendingCount  = exp.members.filter(mem => mem.status === 'pending').length
+    const memberAvatars = activeMembers.map(mem => mem.user?.image).filter(Boolean)
+    const leaderNickname = exp.leader?.nickname
+      || exp.leader?.loaExpeditions?.[0]?.repCharName
+      || exp.leader?.name
+      || null
     return {
-      id:           exp.id,
-      name:         exp.name,
-      description:  exp.description,
-      maxMembers:   exp.maxMembers,
-      memberCount:  activeCount,
-      pendingCount: isOfficer ? pendingCount : 0,
-      myRole:       isLeader ? 'leader' : m.role,
+      id:             exp.id,
+      name:           exp.name,
+      description:    exp.description,
+      maxMembers:     exp.maxMembers,
+      memberCount:    activeMembers.length,
+      totalCharCount: charCountMap[exp.id] ?? 0,
+      pendingCount:   isOfficer ? pendingCount : 0,
+      myRole:         isLeader ? 'leader' : m.role,
+      leaderNickname,
+      memberAvatars,
     }
   })
 
