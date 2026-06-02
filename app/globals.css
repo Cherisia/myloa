@@ -88,13 +88,20 @@ body {
   color: #e0e0e0;
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { border-radius: 9999px; background: #d1d5db; }
-.dark ::-webkit-scrollbar-thumb { background: #444444; }
+::-webkit-scrollbar-thumb { border-radius: 9999px; background: var(--accent-200); }
+::-webkit-scrollbar-thumb:hover { border-radius: 9999px; background: var(--accent-300); }
+* { scrollbar-width: thin; scrollbar-color: var(--accent-200) transparent; }
 
 .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: var(--accent-200) transparent; }
+.scrollbar-thin::-webkit-scrollbar { width: 3px; height: 3px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { border-radius: 9999px; background: var(--accent-200); }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--accent-300); }
 
 /* ── Pretendard weight 헬퍼 ─────────────────────────────────── */
 .ns-light     { font-weight: 300; }
@@ -280,8 +287,6 @@ body {
   filter: none;
 }
 
-/* ── 스크롤바 ── */
-[data-theme="sky"] ::-webkit-scrollbar-thumb { background: #bae6fd; } /* sky-200 */
 
 /* ── 액센트: 노랑 → 스카이 ── */
 [data-theme="sky"] .bg-yellow-200         { background-color: #bae6fd !important; } /* sky-200 */

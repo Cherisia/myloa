@@ -187,7 +187,7 @@ export default function RaidSettingsModal({
         </div>
 
         {/* 원정대 탭 */}
-        <div className="flex gap-1.5 px-5 py-2.5 overflow-x-auto border-b border-gray-100 dark:border-[#383838] flex-shrink-0 scrollbar-hide">
+        <div className="flex gap-1.5 px-5 py-2.5 overflow-x-auto border-b border-gray-100 dark:border-[#383838] flex-shrink-0 scrollbar-thin">
           {expGroups.map(g => (
             <button
               key={g.id}
@@ -208,7 +208,7 @@ export default function RaidSettingsModal({
         </div>
 
         {/* 캐릭터 선택 (현재 원정대) */}
-        <div className="flex gap-1.5 px-5 py-2.5 overflow-x-auto border-b border-gray-100 dark:border-[#383838] flex-shrink-0 scrollbar-hide">
+        <div className="flex gap-1.5 px-5 py-2.5 overflow-x-auto border-b border-gray-100 dark:border-[#383838] flex-shrink-0 scrollbar-thin">
           {groupChars.map(char => {
             const count = (raids[char.id] || []).length
             const active = char.id === selectedCharId
