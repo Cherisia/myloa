@@ -2366,9 +2366,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   const diffStyle = (diffKey, isActive) => {
                     const base = 'transition-all duration-150 whitespace-nowrap cursor-pointer select-none'
                     if (isActive) {
-                      return diffKey === 'nightmare' || diffKey === 'stage3' ? `${base} bg-violet-500 text-white shadow-sm` :
-                             diffKey === 'hard'      || diffKey === 'stage2' ? `${base} bg-rose-500 text-white shadow-sm` :
-                                                                               `${base} bg-sky-500 text-white shadow-sm`
+                      return diffKey === 'nightmare' || diffKey === 'stage3' ? `${base} bg-violet-200 dark:bg-violet-800/60 text-violet-700 dark:text-violet-200` :
+                             diffKey === 'hard'      || diffKey === 'stage2' ? `${base} bg-rose-200 dark:bg-rose-800/60 text-rose-700 dark:text-rose-200` :
+                                                                               `${base} bg-sky-200 dark:bg-sky-800/60 text-sky-700 dark:text-sky-200`
                     }
                     return diffKey === 'nightmare' || diffKey === 'stage3' ? `${base} text-violet-500 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30` :
                            diffKey === 'hard'      || diffKey === 'stage2' ? `${base} text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30` :
@@ -2406,15 +2406,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 <button
                                   key={r.diffKey}
                                   onClick={() => setSelectedRaid(isActive ? null : { raidId: r.raidId, diffKey: r.diffKey })}
-                                  className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] min-[1920px]:text-[13px] ns-bold ${diffStyle(r.diffKey, isActive)}`}
+                                  className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] min-[1920px]:text-[13px] ${diffStyle(r.diffKey, isActive)}`}
                                 >
                                   <span>{r.diffLabel}</span>
                                   {r.incomplete > 0 ? (
-                                    <span className={`inline-flex items-center justify-center rounded-full min-w-[14px] h-[14px] px-0.5 text-[9px] ns-bold tabular-nums ${isActive ? 'bg-white/25 text-white' : incompleteColor(r.diffKey)}`}>
+                                    <span className={`inline-flex items-center justify-center rounded-full min-w-[14px] h-[14px] px-0.5 text-[9px] ns-bold tabular-nums ${incompleteColor(r.diffKey)}`}>
                                       {r.incomplete}
                                     </span>
                                   ) : (
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" className={isActive ? 'text-white/80' : 'text-emerald-500 dark:text-emerald-400'}><polyline points="20 6 9 17 4 12"/></svg>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" className="text-emerald-500 dark:text-emerald-400"><polyline points="20 6 9 17 4 12"/></svg>
                                   )}
                                 </button>
                               )
