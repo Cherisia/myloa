@@ -695,7 +695,7 @@ function RaidDetail({ raid, diffKey, onDiffChange }) {
           {raid.name}
         </h2>
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-          최소 아이템레벨 {raid.minItemLevel.toLocaleString()}
+          최소 아이템레벨 {(diff.minItemLevel ?? raid.minItemLevel).toLocaleString()}
         </p>
       </div>
 
@@ -732,7 +732,7 @@ function RaidDetail({ raid, diffKey, onDiffChange }) {
             {tradePct > 0 && (
               <span className="flex items-center gap-1 text-[var(--accent-500)] dark:text-[var(--accent-400)]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-400)] inline-block" />
-                유통 골드 {tradePct}%
+                거래 가능 골드 {tradePct}%
               </span>
             )}
           </div>
@@ -803,7 +803,7 @@ function RaidDetail({ raid, diffKey, onDiffChange }) {
                       <>
                         <span className="text-gray-500 dark:text-gray-400">귀속 {totalBound.toLocaleString()}G</span>
                         <span className="text-gray-300 dark:text-gray-600">+</span>
-                        <span className="text-[var(--accent-500)] dark:text-[var(--accent-400)]">유통 {totalTrade.toLocaleString()}G</span>
+                        <span className="text-[var(--accent-500)] dark:text-[var(--accent-400)]">거래 가능 {totalTrade.toLocaleString()}G</span>
                         <span className="text-gray-300 dark:text-gray-600">=</span>
                         <span className="font-black text-gray-900 dark:text-gray-50">{totalGold.toLocaleString()}G</span>
                       </>
@@ -923,8 +923,7 @@ export default function RaidRewardClient() {
 
           {/* 레이드 목록 */}
           <nav
-            className="space-y-0.5 overflow-y-auto max-h-[calc(100vh-260px)]"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="space-y-0.5"
           >
             {filteredRaids.map(raid => {
               const isSelected = selectedRaid?.id === raid.id
