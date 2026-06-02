@@ -1542,14 +1542,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             <>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400">완료 레이드</p>
-                <span
-                  onClick={() => setRemainFilter(f => f === 'all' ? null : 'all')}
-                  className={`text-xs min-[1920px]:text-sm ns-bold cursor-pointer select-none transition-all px-1 rounded ${
-                    remainFilter === 'all'
-                      ? 'bg-[var(--accent-400)] text-[var(--accent-900)]'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-[var(--accent-500)]'
-                  }`}
-                >
+                <span className="text-xs min-[1920px]:text-sm ns-bold text-gray-700 dark:text-gray-300">
                   {completedCount} / {totalCount}
                 </span>
               </div>
@@ -1570,14 +1563,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               <div className="flex flex-col gap-1.5">
                 {/* 골드 행 */}
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span
-                    onClick={() => setRemainFilter(f => f === 'gold' ? null : 'gold')}
-                    className={`text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem] cursor-pointer transition-all select-none ${
-                      remainFilter === 'gold'
-                        ? 'bg-[var(--accent-400)] text-[var(--accent-900)]'
-                        : 'bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)] hover:bg-[var(--accent-200)] dark:hover:bg-[var(--accent-900)]/50'
-                    }`}
-                  >골드</span>
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem] bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)]">골드</span>
                   <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden min-w-0">
                     <div
                       className="h-full rounded-full bg-[var(--accent-400)] transition-all duration-500"
@@ -1591,14 +1577,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 </div>
                 {/* 전체 행 */}
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span
-                    onClick={() => setRemainFilter(f => f === 'all' ? null : 'all')}
-                    className={`text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem] cursor-pointer transition-all select-none ${
-                      remainFilter === 'all'
-                        ? 'bg-blue-400 text-white'
-                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50'
-                    }`}
-                  >전체</span>
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem] bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400">전체</span>
                   <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden min-w-0">
                     <div
                       className="h-full rounded-full bg-blue-400 transition-all duration-500"
@@ -2435,41 +2414,62 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   }, [])
                   raidGroups.forEach(g => g.diffs.sort((a, b) => (DIFF_PRIORITY[a.diffKey] ?? 99) - (DIFF_PRIORITY[b.diffKey] ?? 99)))
                   return (
-                    <div className="flex items-center flex-wrap gap-y-1 px-2.5 py-2">
-                      {/* 필터 아이콘 라벨 */}
-                      <div className="flex items-center gap-1 pr-2.5 mr-0.5 border-r border-gray-100 dark:border-[#2e2e2e] self-center">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600 flex-shrink-0">
-                          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                        </svg>
-                        <span className="text-[10px] min-[1920px]:text-[12px] text-gray-300 dark:text-gray-600 ns-bold tracking-wide whitespace-nowrap">필터</span>
-                      </div>
-                      {raidGroups.map((group, gi) => (
-                        <div key={group.raidId} className="flex items-center">
-                          {gi > 0 && <div className="w-px h-4 bg-gray-200 dark:bg-[#3a3a3a] mx-2 flex-shrink-0" />}
-                          <div className="flex items-center gap-0.5">
-                            <span className="text-[11px] min-[1920px]:text-[13px] text-gray-400 dark:text-gray-500 whitespace-nowrap px-1">{group.raidName}</span>
-                            {group.diffs.map(r => {
-                              const isActive = selectedRaid?.raidId === r.raidId && selectedRaid?.diffKey === r.diffKey
-                              return (
-                                <button
-                                  key={r.diffKey}
-                                  onClick={() => setSelectedRaid(isActive ? null : { raidId: r.raidId, diffKey: r.diffKey })}
-                                  className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] min-[1920px]:text-[13px] ${diffStyle(r.diffKey, isActive)}`}
-                                >
-                                  <span>{r.diffLabel}</span>
-                                  {r.incomplete > 0 ? (
-                                    <span className={`inline-flex items-center justify-center rounded-full min-w-[14px] h-[14px] px-0.5 text-[9px] ns-bold tabular-nums ${incompleteColor(r.diffKey)}`}>
-                                      {r.incomplete}
-                                    </span>
-                                  ) : (
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" className="text-emerald-500 dark:text-emerald-400"><polyline points="20 6 9 17 4 12"/></svg>
-                                  )}
-                                </button>
-                              )
-                            })}
-                          </div>
+                    <div className="flex flex-col px-2.5 py-2 gap-1">
+                      {/* 첫 번째 줄 — 미완료 필터 버튼 */}
+                      <div className="flex items-center gap-y-1">
+                        <div className="flex items-center gap-1 pr-2.5 mr-0.5 border-r border-gray-100 dark:border-[#2e2e2e] self-center">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600 flex-shrink-0">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                          </svg>
+                          <span className="text-[10px] min-[1920px]:text-[12px] text-gray-300 dark:text-gray-600 ns-bold tracking-wide whitespace-nowrap">필터</span>
                         </div>
-                      ))}
+                        <button
+                          onClick={() => setRemainFilter(f => f === 'gold' ? null : 'gold')}
+                          className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] min-[1920px]:text-[13px] transition-all duration-150 whitespace-nowrap cursor-pointer select-none mr-1 ${
+                            remainFilter === 'gold'
+                              ? 'bg-[var(--accent-200)] dark:bg-[var(--accent-800)]/60 text-[var(--accent-700)] dark:text-[var(--accent-200)]'
+                              : 'text-[var(--accent-600)] dark:text-[var(--accent-300)] hover:bg-[var(--accent-50)] dark:hover:bg-[var(--accent-950)]/30'
+                          }`}
+                        >미완료 골드</button>
+                        <button
+                          onClick={() => setRemainFilter(f => f === 'all' ? null : 'all')}
+                          className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] min-[1920px]:text-[13px] transition-all duration-150 whitespace-nowrap cursor-pointer select-none ${
+                            remainFilter === 'all'
+                              ? 'bg-blue-200 dark:bg-blue-800/60 text-blue-700 dark:text-blue-200'
+                              : 'text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30'
+                          }`}
+                        >미완료 전체</button>
+                      </div>
+                      {/* 두 번째 줄 — 레이드 필터 버튼 */}
+                      <div className="flex items-center flex-wrap gap-y-1">
+                        {raidGroups.map((group, gi) => (
+                          <div key={group.raidId} className="flex items-center">
+                            {gi > 0 && <div className="w-px h-4 bg-gray-200 dark:bg-[#3a3a3a] mx-2 flex-shrink-0" />}
+                            <div className="flex items-center gap-0.5">
+                              <span className="text-[11px] min-[1920px]:text-[13px] text-gray-400 dark:text-gray-500 whitespace-nowrap px-1">{group.raidName}</span>
+                              {group.diffs.map(r => {
+                                const isActive = selectedRaid?.raidId === r.raidId && selectedRaid?.diffKey === r.diffKey
+                                return (
+                                  <button
+                                    key={r.diffKey}
+                                    onClick={() => setSelectedRaid(isActive ? null : { raidId: r.raidId, diffKey: r.diffKey })}
+                                    className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] min-[1920px]:text-[13px] ${diffStyle(r.diffKey, isActive)}`}
+                                  >
+                                    <span>{r.diffLabel}</span>
+                                    {r.incomplete > 0 ? (
+                                      <span className={`inline-flex items-center justify-center rounded-full min-w-[14px] h-[14px] px-0.5 text-[9px] ns-bold tabular-nums ${incompleteColor(r.diffKey)}`}>
+                                        {r.incomplete}
+                                      </span>
+                                    ) : (
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" className="text-emerald-500 dark:text-emerald-400"><polyline points="20 6 9 17 4 12"/></svg>
+                                    )}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )
                 })()}
