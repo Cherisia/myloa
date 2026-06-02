@@ -153,7 +153,7 @@ export default function CustomItemsEditor({
       )}
       <div className={`px-0 py-3 flex-shrink-0 space-y-2 ${noTopBorder ? '' : 'border-t border-gray-100 dark:border-[#383838]'}`}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap sm:gap-2">
-          <div className="flex rounded-md overflow-hidden border border-gray-200 dark:border-[#383838] w-fit flex-shrink-0">
+          <div className="flex rounded-md overflow-hidden shadow-border-md w-fit flex-shrink-0">
             {[{ key: 'daily', label: '일일' }, { key: 'weekly', label: '주간' }].map(({ key, label }) => (
               <button
                 key={key}
@@ -207,7 +207,7 @@ export default function CustomItemsEditor({
             const already = charItemNames.has(preset.name)
             const levelLocked = preset.name === '할의 모래시계' && (selectedChar?.itemLevel || 0) < HAL_MIN_LEVEL
             return (
-              <div key={preset.name} className="flex items-center rounded-full border border-gray-200 dark:border-[#383838] overflow-hidden">
+              <div key={preset.name} className="flex items-center rounded-full shadow-border-md overflow-hidden">
                 <button
                   type="button"
                   onClick={() => handlePreset(preset)}
@@ -239,7 +239,7 @@ export default function CustomItemsEditor({
         </div>
       </div>
 
-      <div className="max-h-[220px] overflow-y-auto rounded-lg border border-gray-100 dark:border-[#383838]">
+      <div className="max-h-[220px] overflow-y-auto rounded-lg shadow-border">
         {charItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 gap-1">
             <p className="text-xs text-gray-400 dark:text-gray-600">아직 추가된 숙제가 없어요</p>

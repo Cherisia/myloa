@@ -162,7 +162,7 @@ export default function RaidSettingsModal({
   if (!chars.length) {
     return (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-        <div className="relative w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl px-5 py-10 text-center" onClick={e => e.stopPropagation()}>
+        <div className="relative w-full max-w-md rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl px-5 py-10 text-center" onClick={e => e.stopPropagation()}>
           <button type="button" onClick={onClose} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
           <p className="text-sm text-gray-400 dark:text-gray-500 mb-1">등록된 캐릭터가 없습니다</p>
           <p className="text-xs text-gray-300 dark:text-gray-600">캐릭터를 먼저 추가해 주세요</p>
@@ -176,7 +176,7 @@ export default function RaidSettingsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-      <div className="w-full max-w-3xl rounded-t-2xl sm:rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90dvh]" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-3xl rounded-t-2xl sm:rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90dvh]" onClick={e => e.stopPropagation()}>
 
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
           <div>
@@ -196,7 +196,7 @@ export default function RaidSettingsModal({
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
                 g.id === selectedExpId
                   ? 'bg-[var(--accent-200)] text-[var(--accent-900)]'
-                  : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                  : 'shadow-border-md text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
               }`}
             >
               {g.label}
@@ -326,7 +326,7 @@ export default function RaidSettingsModal({
             raidsForLevel.map(({ raid, difficulties }) => (
                 <div
                   key={raid.id}
-                  className="rounded-lg border border-gray-200 dark:border-[#383838] px-4 py-2.5 transition-colors"
+                  className="rounded-lg shadow-border-md px-4 py-2.5 transition-colors"
                 >
                   <div className="grid items-center gap-3" style={{ gridTemplateColumns: 'minmax(0,140px) 56px auto 1fr' }}>
                     <div className="flex items-center gap-1 min-w-0">
@@ -431,7 +431,7 @@ export default function RaidSettingsModal({
 
       {exRaidError && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30" onClick={onClearExRaidError}>
-          <div className="relative w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="relative w-full max-w-sm rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
             <button type="button" onClick={onClearExRaidError} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
             <div className="px-5 pt-6 pb-4">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/20 mx-auto mb-3">
@@ -455,7 +455,7 @@ export default function RaidSettingsModal({
 
       {goldError && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30" onClick={() => setGoldError(null)}>
-          <div className="relative w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="relative w-full max-w-sm rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
             <button type="button" onClick={() => setGoldError(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
             <div className="px-5 pt-6 pb-4">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/20 mx-auto mb-3">
@@ -471,7 +471,7 @@ export default function RaidSettingsModal({
               </p>
               <div className="space-y-1.5">
                 {goldError.map(c => (
-                  <div key={c.name} className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#383838] px-3 py-2.5">
+                  <div key={c.name} className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-[#2a2a2a] shadow-border-md px-3 py-2.5">
                     <span className="text-sm ns-bold text-gray-800 dark:text-gray-100">{c.name}</span>
                     <span className="text-xs ns-bold text-orange-500 dark:text-orange-400">{c.count} / {GOLD_RAID_LIMIT}</span>
                   </div>
@@ -496,7 +496,7 @@ export default function RaidSettingsModal({
 
       {acctGoldError && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30" onClick={() => setAcctGoldError(null)}>
-          <div className="relative w-full max-w-sm rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="relative w-full max-w-sm rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl" onClick={e => e.stopPropagation()}>
             <button type="button" onClick={() => setAcctGoldError(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-lg leading-none">×</button>
             <div className="px-5 pt-6 pb-4">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/20 mx-auto mb-3">
@@ -512,7 +512,7 @@ export default function RaidSettingsModal({
               </p>
               <div className="space-y-1.5">
                 {acctGoldError.map(a => (
-                  <div key={a.label} className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#383838] px-3 py-2.5">
+                  <div key={a.label} className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-[#2a2a2a] shadow-border-md px-3 py-2.5">
                     <span className="text-sm ns-bold text-gray-800 dark:text-gray-100">{a.label}</span>
                     <span className="text-xs ns-bold text-orange-500 dark:text-orange-400">{a.goldCount} / {GOLD_CHAR_LIMIT}</span>
                   </div>

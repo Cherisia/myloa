@@ -12,7 +12,7 @@ import { autoSelectNormalRaids, autoSelectExRaid } from '../_raidHelpers'
 function ApiKeyGuideModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-black/30">
-      <div className="w-full max-w-sm rounded-t-2xl sm:rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-sm rounded-t-2xl sm:rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">API 키 발급 가이드</span>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
@@ -65,7 +65,7 @@ function ApiKeyGuideModal({ onClose }) {
 
         <div className="px-5 pb-5">
           <button onClick={onClose}
-            className="w-full rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+            className="w-full rounded shadow-border-md py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
             닫기
           </button>
         </div>
@@ -224,7 +224,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
   if (step === 'setup') {
     return (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-        <div className="w-full max-w-2xl rounded-t-2xl sm:rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90dvh]" onClick={e => e.stopPropagation()}>
+        <div className="w-full max-w-2xl rounded-t-2xl sm:rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90dvh]" onClick={e => e.stopPropagation()}>
           {/* 헤더 */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
             <div>
@@ -255,7 +255,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                         </div>
                         <span className="flex-1" />
                         {/* 골드 전략 토글 */}
-                        <div className="flex items-center gap-0.5 ml-1 rounded-md border border-gray-200 dark:border-[#383838] overflow-hidden flex-shrink-0">
+                        <div className="flex items-center gap-0.5 ml-1 rounded-md shadow-border-md overflow-hidden flex-shrink-0">
                           {[['no_gold','골드 미수령'],['trade','거래골드 우선'],['bound','전체골드 우선']].map(([key, label]) => (
                             <button key={key}
                               onClick={() => setExistingStrategies(prev => ({ ...prev, [char.name]: key }))}
@@ -317,7 +317,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
               const strategy  = strategies[char.name] || ('bound')
               const entries   = raidsByName[char.name] || []
               return (
-                <div key={char.name} className="rounded-lg border border-gray-200 dark:border-[#383838] overflow-hidden">
+                <div key={char.name} className="rounded-lg shadow-border-md overflow-hidden">
                   {/* 캐릭터 헤더 */}
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#181818] border-b border-gray-100 dark:border-[#2a2a2a]">
                     {/* 직업 아이콘 */}
@@ -344,7 +344,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
                     )}
                     <span className="flex-1" />
                     {/* 전략 토글 */}
-                    <div className="flex items-center gap-0.5 ml-1 rounded-md border border-gray-200 dark:border-[#383838] overflow-hidden flex-shrink-0">
+                    <div className="flex items-center gap-0.5 ml-1 rounded-md shadow-border-md overflow-hidden flex-shrink-0">
                       {[['no_gold','골드 미수령'],['trade','거래골드 우선'],['bound','전체골드 우선']].map(([key, label]) => (
                         <button key={key}
                           onClick={() => setStrategies(prev => ({ ...prev, [char.name]: key }))}
@@ -439,7 +439,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
             )}
             <div className="flex gap-2 pt-1">
               <button onClick={() => setStep('search')}
-                className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                className="flex-1 rounded shadow-border-md py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
                 이전
               </button>
               <button onClick={handleConfirm} disabled={goldCharCount > GOLD_CHAR_LIMIT}
@@ -456,7 +456,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
   // ── 스텝 1: 캐릭터 검색 ────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-      <div className="w-full max-w-md rounded-t-2xl sm:rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-t-2xl sm:rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838]">
           <span className="ns-bold text-gray-900 dark:text-white">캐릭터 추가</span>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
@@ -516,7 +516,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
           {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
 
           <button onClick={search} disabled={loading}
-            className="w-full rounded border border-gray-200 dark:border-[#383838] py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+            className="w-full rounded shadow-border-md py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
             {loading ? (
               <><svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>검색 중…</>
             ) : '원정대 캐릭터 검색'}
@@ -597,7 +597,7 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
           <div className="flex gap-2 pt-1">
             <button
               onClick={results !== null ? () => setResults(null) : onClose}
-              className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+              className="flex-1 rounded shadow-border-md py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
               {results !== null ? '이전' : '취소'}
             </button>
             <button onClick={goSetup} disabled={newCount === 0}

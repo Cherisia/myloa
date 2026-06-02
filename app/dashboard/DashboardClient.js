@@ -1266,7 +1266,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
       {/* ── 데모 모드 안내 배너 ── */}
       {isDemo && (
-        <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] px-3.5 py-2.5 text-xs">
+        <div className="flex items-center gap-3 rounded-lg shadow-border-md bg-white dark:bg-[#222222] px-3.5 py-2.5 text-xs">
           <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent-400)]" />
           <span className="text-gray-500 dark:text-gray-400">
             <span className="ns-bold text-gray-700 dark:text-gray-200">미리보기 모드</span>
@@ -1293,7 +1293,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
                 activePageId === null
                   ? 'bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/30 text-[var(--accent-900)] dark:text-[var(--accent-300)]'
-                  : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                  : 'shadow-border-md text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
               }`}
             >
               전체
@@ -1347,7 +1347,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-all duration-150 ${
                         isActive
                           ? 'bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/30 text-[var(--accent-900)] dark:text-[var(--accent-300)]'
-                          : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                          : 'shadow-border-md text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                       } ${isDragOver ? 'translate-x-1' : ''}`}
                     >
                       <span>{page.name}</span>
@@ -1398,14 +1398,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
         <div className="grid grid-cols-3 gap-1.5 md:flex md:flex-wrap md:gap-2">
           <button onClick={() => setShowRaidSettings(true)}
-            className="flex items-center justify-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-2.5 md:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
+            className="flex items-center justify-center gap-1.5 rounded shadow-border-md px-3 py-2.5 md:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
             </svg>
             숙제 설정
           </button>
           <button onClick={() => setShowCharEdit(true)}
-            className="flex items-center justify-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-3 py-2.5 md:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
+            className="flex items-center justify-center gap-1.5 rounded shadow-border-md px-3 py-2.5 md:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
             </svg>
@@ -1414,7 +1414,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           <button
             onClick={() => isLoggedIn ? (chars.length === 0 ? setShowNoChar(true) : syncChars()) : setShowLoginGuide(true)}
             disabled={isLoggedIn && (syncing || syncCooldownSec > 0)}
-            className="flex items-center justify-center gap-1.5 rounded border border-gray-200 dark:hover:bg-[#2a2a2a] dark:border-[#383838] px-3 py-2.5 md:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 active:scale-95 transition-all whitespace-nowrap">
+            className="flex items-center justify-center gap-1.5 rounded shadow-border-md dark:hover:bg-[#2a2a2a] px-3 py-2.5 md:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 active:scale-95 transition-all whitespace-nowrap">
             <span className={isLoggedIn && syncing ? 'animate-spin' : ''}><IconRefresh /></span>
             {isLoggedIn && syncing ? '갱신 중…' : '캐릭터 갱신'}
           </button>
@@ -1425,7 +1425,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       <div className="flex items-stretch gap-3 -mt-3">
       <div className="grid grid-cols-1 gap-2 w-full md:grid-cols-3 md:gap-3 md:max-w-[50%]">
         {/* 원정대 캐릭터 */}
-        <div className="rounded-xl border border-gray-200 dark:border-[#2d2d2d] bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 flex flex-col min-h-[80px] md:min-h-0">
+        <div className="rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 flex flex-col min-h-[80px] md:min-h-0">
           {isLoggedIn && activeChars.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full gap-1.5 py-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600">
@@ -1474,7 +1474,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
 
         {/* 이번 주 획득 골드 */}
-        <div className="rounded-xl border border-gray-200 dark:border-[#2d2d2d] bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 overflow-hidden flex flex-col justify-center">
+        <div className="rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 overflow-hidden flex flex-col justify-center">
           <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 mb-2">이번 주 획득</p>
           <div className="flex flex-col gap-1.5">
             {/* 귀속 행 */}
@@ -1497,7 +1497,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
 
         {/* 완료 레이드 */}
-        <div className="rounded-xl border border-gray-200 dark:border-[#2d2d2d] bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 overflow-hidden flex flex-col justify-center">
+        <div className="rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 overflow-hidden flex flex-col justify-center">
           {allTotalCount <= totalCount ? (
             /* 모든 레이드가 골드 레이드 — 기존 단일 바 */
             <>
@@ -1726,7 +1726,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   }`}
                 >
                   {/* ── 캐릭터 헤더 ── */}
-                  <div className="flex items-center gap-1.5 pl-2.5 pr-1 bg-gradient-to-b from-gray-50 to-gray-50/60 dark:from-[#1e1e1e] dark:to-[#1a1a1a] border-b border-gray-100 dark:border-[#272727] h-[47px] 2xl:h-[56px] overflow-hidden">
+                  <div className="flex items-center gap-1.5 pl-2.5 pr-1 bg-gradient-to-b from-gray-50 to-gray-50/60 dark:from-[#1e1e1e] dark:to-[#1a1a1a] border-b border-gray-200 dark:border-[#2d2d2d] h-[47px] 2xl:h-[56px] overflow-hidden">
                     {getClassIcon(char.class)
                       ? <Image src={getClassIcon(char.class)} alt={char.class} width={28} height={28} unoptimized className="class-icon w-7 h-7 2xl:w-9 2xl:h-9 object-contain flex-shrink-0" />
                       : <span className="w-7 h-7 2xl:w-9 2xl:h-9 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
@@ -1771,7 +1771,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   </div>
 
                   {/* 골드 요약 */}
-                  <div className="px-2.5 py-1.5 border-t border-gray-100 dark:border-[#272727] bg-gray-50/80 dark:bg-[#1c1c1c]/70">
+                  <div className="px-2.5 py-1.5 border-t border-gray-200 dark:border-[#2d2d2d] bg-gray-50/80 dark:bg-[#1c1c1c]/70">
                     <CharGoldBadges
                       bound={charGoldMap[char.id]?.bound ?? 0}
                       trade={charGoldMap[char.id]?.trade ?? 0}
@@ -2007,11 +2007,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           return (
           <tr key={name} className={compact
             ? 'group border-b border-gray-100 dark:border-[#2a2a2a]'
-            : 'group/row transition-colors border-b border-gray-100/90 dark:border-white/[0.05] hover:bg-gray-50/90 dark:hover:bg-white/[0.03]'
+            : 'group/row transition-colors border-b border-gray-200/70 dark:border-white/[0.09] hover:bg-gray-50/90 dark:hover:bg-white/[0.03]'
           }>
             <td style={{ width: rw, minWidth: stretch ? 0 : COL_RAID }} className={compact
               ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-2'
-              : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/90 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.03] border-r border-gray-100/90 dark:border-white/[0.06] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
+              : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/90 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.03] border-r border-gray-200/70 dark:border-white/[0.10] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
             }>
               <div className="flex items-center gap-1.5">
                 {meta.image && <Image src={meta.image} alt="" width={18} height={18} className="w-[22px] h-[22px] object-contain flex-shrink-0" />}
@@ -2026,7 +2026,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               return (
                 <td key={char.id} style={charCellStyle} className={compact
                   ? 'border-r border-gray-100 dark:border-[#2a2a2a] last:border-r-0 p-1 align-middle'
-                  : 'border-r border-gray-100/90 dark:border-white/[0.06] last:border-r-0 p-1.5 align-middle transition-colors group-hover/row:bg-gray-50/50 dark:group-hover/row:bg-white/[0.02]'
+                  : 'border-r border-gray-200/70 dark:border-white/[0.10] last:border-r-0 p-1.5 align-middle transition-colors group-hover/row:bg-gray-50/50 dark:group-hover/row:bg-white/[0.02]'
                 }>
                   {itemId ? (
                     isRest ? (
@@ -2152,8 +2152,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           const thGoldPad = glanceTable ? 'px-2 py-1.5 border-r border-gray-100 dark:border-[#2a2a2a]' : 'px-2 py-2 border-r border-gray-200/55 dark:border-white/[0.06]'
 
           const wrapClass = glanceTable
-            ? 'rounded-xl border border-gray-200 dark:border-[#2d2d2d] bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.45)] overflow-hidden'
-            : 'rounded-xl border border-gray-200 dark:border-[#2d2d2d] bg-white dark:bg-[#222222] shadow-[0_2px_12px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.5)] overflow-hidden'
+            ? 'rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.45)] overflow-hidden'
+            : 'rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_2px_12px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.5)] overflow-hidden'
 
           const renderSectionHeader = (id, label) => (
             <tr key={`sec-${id}`} className="pointer-events-none">
@@ -2276,10 +2276,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {raidsToRender.map(row => {
                     const raidData = RAID_MAP[row.raidId]
                     return (
-                      <tr key={row.key} className={glanceTable ? 'group border-b border-gray-100 dark:border-[#272727]' : 'group/row transition-colors border-b border-gray-100 dark:border-[#272727] hover:bg-gray-50/70 dark:hover:bg-white/[0.04]'}>
+                      <tr key={row.key} className={glanceTable ? 'group border-b border-gray-200 dark:border-[#2d2d2d]' : 'group/row transition-colors border-b border-gray-200 dark:border-[#2d2d2d] hover:bg-gray-50/70 dark:hover:bg-white/[0.04]'}>
                         <td style={{ width: colW.raid, minWidth: colW.stretch ? 0 : COL_RAID }} className={glanceTable
-                          ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#272727] px-2 py-1.5'
-                          : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/70 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.04] border-r border-gray-100 dark:border-[#272727] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
+                          ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-200 dark:border-[#2d2d2d] px-2 py-1.5'
+                          : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/70 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.04] border-r border-gray-200 dark:border-[#2d2d2d] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
                         }>
                           <div className="flex items-center gap-1.5">
                             {raidData?.image && (
@@ -2297,7 +2297,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               onDragOver={(e) => handleCharDragOver(e, char.id)}
                               onDrop={(e) => handleCharDrop(e, char.id)}
                               style={{ width: colW.char, maxWidth: colW.stretch ? undefined : COL_CHAR, minWidth: 0, overflow: 'hidden' }}
-                              className={`${glanceTable ? 'border-r border-gray-100 dark:border-[#272727] last:border-r-0 p-1' : 'border-r border-gray-100 dark:border-[#272727] last:border-r-0 p-1.5 group-hover/row:bg-gray-50/50 dark:group-hover/row:bg-white/[0.03]'} transition-colors ${
+                              className={`${glanceTable ? 'border-r border-gray-200 dark:border-[#2d2d2d] last:border-r-0 p-1' : 'border-r border-gray-200 dark:border-[#2d2d2d] last:border-r-0 p-1.5 group-hover/row:bg-gray-50/50 dark:group-hover/row:bg-white/[0.03]'} transition-colors ${
                                 dragCharId === char.id ? 'bg-[var(--accent-100)]/50 dark:bg-[var(--accent-900)]/15' :
                                 dropCharId === char.id ? 'bg-[var(--accent-50)]/70 dark:bg-[var(--accent-900)]/8' :
                                 dragCharId            ? 'opacity-50' : ''
@@ -2317,7 +2317,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   })}
                   {chunkRaidRows.length === 0 && !filteredChars.some(c => (customItems[c.id] || []).length > 0) && (
                     <tr>
-                      <td colSpan={colSpan} className="py-16 text-center border-b border-gray-100/80 dark:border-white/[0.06]">
+                      <td colSpan={colSpan} className="py-16 text-center border-b border-gray-200/70 dark:border-white/[0.09]">
                         <p className="text-gray-400 dark:text-gray-600 text-sm mb-2">표시할 레이드가 없습니다</p>
                         <p className="text-xs text-gray-300 dark:text-gray-700">캐릭터를 추가하여 숙제를 관리해보세요!</p>
                       </td>
@@ -2582,7 +2582,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       )}
       {showNoChar && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-          <div className="relative w-full max-w-md rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl px-5 py-10 text-center" onClick={e => e.stopPropagation()}>
+          <div className="relative w-full max-w-md rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl px-5 py-10 text-center" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowNoChar(false)}
               className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none"
@@ -2634,7 +2634,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
             <div
-              className="relative w-full max-w-xs rounded-2xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
+              className="relative w-full max-w-xs rounded-2xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
               onClick={e => e.stopPropagation()}
             >
               <button onClick={() => setConfirmDeleteCharId(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
@@ -2667,7 +2667,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
             <div
-              className="relative w-full max-w-xs rounded-2xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
+              className="relative w-full max-w-xs rounded-2xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
               onClick={e => e.stopPropagation()}
             >
               <button onClick={() => setConfirmDeletePageId(null)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
@@ -2697,7 +2697,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {showLoginGuide && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
           <div
-            className="relative w-full max-w-sm rounded-2xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
+            className="relative w-full max-w-sm rounded-2xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
             onClick={e => e.stopPropagation()}
           >
             <button onClick={() => setShowLoginGuide(false)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
@@ -2727,7 +2727,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       {showGoldLimitNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={() => setShowGoldLimitNotice(false)}>
           <div
-            className="relative w-full max-w-sm rounded-2xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
+            className="relative w-full max-w-sm rounded-2xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl p-6 flex flex-col items-center gap-4 text-center"
             onClick={e => e.stopPropagation()}
           >
             <button onClick={() => setShowGoldLimitNotice(false)} className="absolute top-3 right-3 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors text-xl leading-none">×</button>
@@ -2746,7 +2746,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             </div>
             <button
               onClick={() => setShowGoldLimitNotice(false)}
-              className="w-full rounded border border-gray-200 dark:border-[#383838] py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
+              className="w-full rounded shadow-border-md py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
             >
               확인
             </button>

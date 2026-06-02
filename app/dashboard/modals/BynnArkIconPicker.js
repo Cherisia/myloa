@@ -52,7 +52,7 @@ export default function BynnArkIconPicker({
   const panel = open && typeof document !== 'undefined' && (
     <div
       ref={panelRef}
-      className="fixed z-[300] flex flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl shadow-black/15 ring-1 ring-black/5 dark:shadow-black/50 dark:ring-white/[0.06] max-h-[min(72vh,428px)]"
+      className="fixed z-[300] flex flex-col overflow-hidden rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl shadow-black/15 ring-1 ring-black/5 dark:shadow-black/50 dark:ring-white/[0.06] max-h-[min(72vh,428px)]"
       style={{ top: anchor.top, left: anchor.left, width: panelW }}
       onClick={(e) => e.stopPropagation()}
     >

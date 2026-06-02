@@ -642,7 +642,7 @@ function MaterialChip({ name, count }) {
   const icon = MATERIAL_ICON[name]
   const displayName = MATERIAL_DISPLAY_NAME[name] ?? name
   return (
-    <span className="relative group inline-flex items-center gap-1.5 bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2a2a2a] rounded-lg px-2.5 py-1.5 shrink-0">
+    <span className="relative group inline-flex items-center gap-1.5 bg-white dark:bg-[#1a1a1a] shadow-border rounded-lg px-2.5 py-1.5 shrink-0">
       {icon && <Image src={icon} alt={name} width={20} height={20} unoptimized className="shrink-0 opacity-90" />}
       <span className="text-[12px] font-bold text-gray-800 dark:text-gray-200 tabular-nums">{count.toLocaleString()}</span>
       <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-gray-800 dark:bg-gray-700 text-white text-[10px] rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-20">
@@ -700,7 +700,7 @@ function RaidDetail({ raid, diffKey, onDiffChange }) {
       </div>
 
       {/* 난이도 탭 + 골드 비율 */}
-      <div className="flex items-center justify-between gap-4 mb-1">
+      <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex gap-0">
           {raid.difficulties.map(d => {
             const isActive = activeKey === d.key
@@ -740,10 +740,10 @@ function RaidDetail({ raid, diffKey, onDiffChange }) {
       </div>
 
       {/* 보상 테이블 */}
-      <div className="overflow-x-auto border border-gray-100 dark:border-[#232323] rounded-2xl">
+      <div className="overflow-x-auto shadow-border rounded-2xl">
         <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="border-b border-gray-100 dark:border-[#232323] bg-gray-50 dark:bg-[#161616]">
+            <tr className="border-b border-gray-200 dark:border-[#2d2d2d] bg-gray-50 dark:bg-[#161616]">
               <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 dark:text-gray-500 w-20">관문</th>
               <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 dark:text-gray-500 w-36">골드</th>
               <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 dark:text-gray-500">클리어 보상</th>
@@ -759,7 +759,7 @@ function RaidDetail({ raid, diffKey, onDiffChange }) {
               const more  = diff.goldMore[i] || 0
               const total = bound + trade
               return (
-                <tr key={i} className="border-b border-gray-100 dark:border-[#1e1e1e] last:border-0">
+                <tr key={i} className="border-b border-gray-200 dark:border-[#2d2d2d] last:border-0">
                   <td className="py-4 px-4 align-top">
                     <span className="font-bold text-gray-700 dark:text-gray-300 text-sm">{i + 1}관문</span>
                   </td>
@@ -952,7 +952,7 @@ export default function RaidRewardClient() {
         </div>
 
         {/* 구분선 (데스크탑) */}
-        <div className="hidden md:block w-px self-stretch bg-gray-100 dark:bg-[#1e1e1e] shrink-0" />
+        <div className="hidden md:block w-px self-stretch bg-gray-200 dark:bg-[#2d2d2d] shrink-0" />
 
         {/* 상세 패널 */}
         <div className="flex-1 min-w-0">

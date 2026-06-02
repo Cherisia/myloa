@@ -130,7 +130,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-      <div className="w-full max-w-md rounded-t-2xl sm:rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90dvh]" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-t-2xl sm:rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90dvh]" onClick={e => e.stopPropagation()}>
 
         {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
@@ -256,7 +256,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
               </button>
               <button
                 onClick={() => setShowBatchConfirm(false)}
-                className="px-3 py-1.5 rounded border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 text-[12px] hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                className="px-3 py-1.5 rounded shadow-border-md text-gray-500 dark:text-gray-400 text-[12px] hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
                 취소
               </button>
             </div>
@@ -264,7 +264,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
             <div className="flex gap-2">
               <button
                 onClick={() => setSelectedIds(new Set())}
-                className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                className="flex-1 rounded shadow-border-md py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
                 선택 취소
               </button>
               <button
@@ -278,7 +278,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
             <div className="flex gap-2">
               <button
                 onClick={() => isDemo ? onLoginRequired?.() : setShowAddChar(true)}
-                className="flex-1 flex items-center justify-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                className="flex-1 flex items-center justify-center gap-1.5 rounded shadow-border-md py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
                 <IconPlus size={12} /> 캐릭터 추가
               </button>
               <button

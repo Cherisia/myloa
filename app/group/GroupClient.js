@@ -265,7 +265,7 @@ function FriendRaidRow({ raidId, difficulty, chars, highlight, completed, noWrap
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
         <span>{ch.name}</span>
-        <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 hidden group-hover:flex flex-col gap-0.5 bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#3a3a3a] text-gray-700 dark:text-gray-200 rounded-md px-2 py-1.5 whitespace-nowrap shadow-sm z-50">
+        <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 hidden group-hover:flex flex-col gap-0.5 bg-white dark:bg-[#2a2a2a] shadow-border-md text-gray-700 dark:text-gray-200 rounded-md px-2 py-1.5 whitespace-nowrap shadow-sm z-50">
           <div className="flex items-center gap-1 text-[10px] ns-bold">
             <IconTrophy />
             <span>{Number(ch.itemLevel).toFixed(2)}</span>
@@ -283,7 +283,7 @@ function FriendRaidRow({ raidId, difficulty, chars, highlight, completed, noWrap
 
   if (highlight) {
     return (
-      <div className={noWrap ? '' : 'rounded-xl border border-gray-200 dark:border-[#2a2a2a] shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]'}>
+      <div className={noWrap ? '' : 'rounded-xl shadow-border shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]'}>
         <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-b from-gray-50 to-gray-50/70 dark:from-[#252525] dark:to-[#212121] rounded-t-xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
@@ -296,7 +296,7 @@ function FriendRaidRow({ raidId, difficulty, chars, highlight, completed, noWrap
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-[#2a2a2a] shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
+    <div className="rounded-xl shadow-border shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
       <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-b from-gray-50 to-gray-50/70 dark:from-[#252525] dark:to-[#212121] rounded-t-xl">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
@@ -407,7 +407,7 @@ function FriendRaidModal({ friend, me, onClose }) {
         const isExpanded = expandedRaid === raidKey
         const myChars = getMyIncompleteChars(r.raidId, r.difficulty)
         return (
-          <div key={raidKey} className="rounded-xl overflow-hidden border border-gray-200 dark:border-[#2a2a2a] shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
+          <div key={raidKey} className="rounded-xl overflow-hidden shadow-border shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
             <button type="button" className="w-full text-left" onClick={() => setExpandedRaid(isExpanded ? null : raidKey)}>
               <FriendRaidRow raidId={r.raidId} difficulty={r.difficulty} chars={r.chars} highlight noWrap />
             </button>
@@ -425,7 +425,7 @@ function FriendRaidModal({ friend, me, onClose }) {
                       {myChars.map((c, ci) => {
                         const icon = getClassIcon(c.class)
                         return (
-                          <div key={ci} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-white dark:bg-[#242424] text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-[#2e2e2e]">
+                          <div key={ci} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-white dark:bg-[#242424] text-gray-700 dark:text-gray-300 shadow-border">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
                             <span>{c.name}</span>
@@ -452,7 +452,7 @@ function FriendRaidModal({ friend, me, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full sm:max-w-md h-[90vh] sm:h-[82vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:border sm:border-gray-200/50 dark:sm:border-[#2d2d2d] overflow-hidden">
+      <div className="relative z-10 w-full sm:max-w-md h-[90vh] sm:h-[82vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:shadow-border overflow-hidden">
 
         {/* 모바일 핸들 */}
         <div className="sm:hidden flex justify-center pt-3 flex-shrink-0">
@@ -538,7 +538,7 @@ function RaidMembersModal({ modal, me, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-xl border border-gray-200 dark:border-[#2d2d2d] w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden">
+      <div className="relative bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-xl shadow-border w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden">
 
         {/* 헤더 */}
         <div className="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-white/[0.08] flex-shrink-0">
@@ -652,7 +652,7 @@ function ConfirmModal({ modal, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-xl border border-gray-200 dark:border-[#2d2d2d] w-full max-w-sm p-6">
+      <div className="relative bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-xl shadow-border w-full max-w-sm p-6">
         <div className="mb-5 text-center">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${config.iconBg}`}>
             {config.icon}
@@ -1001,7 +1001,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
           <div className="max-w-lg space-y-4">
 
             {/* 친구 추가 검색 */}
-            <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
               <div className="px-4 pt-4 pb-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-sm ns-bold text-gray-700 dark:text-zinc-200">친구 추가</span>
@@ -1034,7 +1034,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                 </div>
 
                 {searchResults !== null && (
-                  <div className="mt-2 rounded-xl border border-gray-200 dark:border-[#2a2a2a] overflow-hidden bg-white dark:bg-[#111] shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
+                  <div className="mt-2 rounded-xl shadow-border overflow-hidden bg-white dark:bg-[#111] shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
                     {searchResults.length === 0 ? (
                       <p className="px-4 py-4 text-sm text-center text-gray-400 dark:text-zinc-600">
                         검색 결과가 없습니다
@@ -1063,7 +1063,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
             </div>
 
             {/* 친구 목록 */}
-            <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
               <div className="px-4 pt-3 pb-2 border-b border-gray-50 dark:border-white/[0.04] flex items-center gap-2">
                 <span className="text-[11px] ns-bold text-gray-400 dark:text-zinc-600 uppercase tracking-wider">친구</span>
                 {friends.length > 0 && (
@@ -1166,7 +1166,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         {/* ── 요청 탭 ──────────────────────────────────────────────────────── */}
         {activeTab === 'requests' && (
           <div className="max-w-lg">
-            <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
               {requests.length === 0 ? (
                 <div className="px-4 py-14 text-center">
                   <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-zinc-800/60 flex items-center justify-center mx-auto mb-3">
@@ -1239,7 +1239,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
 
             {/* ── 그룹원 사이드바 ──────────────────────────────────────────── */}
             <div className="w-full lg:w-64 flex-shrink-0 sticky top-4">
-              <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
+              <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
                 <div className="px-4 pt-4 pb-3">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-sm ns-bold text-gray-800 dark:text-zinc-100">친구</span>

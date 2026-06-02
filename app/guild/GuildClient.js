@@ -47,7 +47,7 @@ function CreateModal({ onClose, onCreated }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:border sm:border-gray-200/50 dark:sm:border-[#2d2d2d]" onClick={e => e.stopPropagation()}>
+      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:shadow-border" onClick={e => e.stopPropagation()}>
         <div className="sm:hidden flex justify-center pt-3 pb-0">
           <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-[#333]" />
         </div>
@@ -113,7 +113,7 @@ function JoinModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:border sm:border-gray-200/50 dark:sm:border-[#2d2d2d]" onClick={e => e.stopPropagation()}>
+      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:shadow-border" onClick={e => e.stopPropagation()}>
         <div className="sm:hidden flex justify-center pt-3 pb-0">
           <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-[#333]" />
         </div>
@@ -186,7 +186,7 @@ export default function GuildClient({ initialGroups }) {
           <button
             type="button"
             onClick={() => setShowJoin(true)}
-            className="flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-[#2a2a2a] px-3.5 py-2 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors"
+            className="flex items-center gap-1.5 rounded-xl shadow-border px-3.5 py-2 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors"
           >
             <IconKey /> 코드 입력
           </button>
@@ -202,7 +202,7 @@ export default function GuildClient({ initialGroups }) {
 
       {/* 길드 목록 */}
       {initialGroups.length === 0 ? (
-        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-6 py-16 text-center space-y-4">
+        <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] px-6 py-16 text-center space-y-4">
           <p className="text-4xl">🏰</p>
           <div className="space-y-1">
             <p className="text-sm ns-extrabold text-gray-900 dark:text-white">아직 참여 중인 길드가 없어요</p>
@@ -213,7 +213,7 @@ export default function GuildClient({ initialGroups }) {
               className="rounded-2xl py-3 text-sm ns-bold bg-[var(--accent-400)] hover:bg-[var(--accent-300)] active:bg-[var(--accent-500)] text-gray-900 transition-all"
             >길드 만들기</button>
             <button type="button" onClick={() => setShowJoin(true)}
-              className="rounded-2xl py-3 text-sm ns-bold border border-gray-200 dark:border-[#2a2a2a] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors"
+              className="rounded-2xl py-3 text-sm ns-bold shadow-border text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors"
             >코드로 참가</button>
           </div>
         </div>
@@ -224,7 +224,7 @@ export default function GuildClient({ initialGroups }) {
               key={g.id}
               type="button"
               onClick={() => router.push(`/guild/${g.id}`)}
-              className="w-full text-left rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_6px_24px_rgba(0,0,0,0.58)] hover:-translate-y-0.5 active:translate-y-0 px-5 py-4 transition-all duration-150"
+              className="w-full text-left rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_6px_24px_rgba(0,0,0,0.58)] hover:-translate-y-0.5 active:translate-y-0 px-5 py-4 transition-all duration-150"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1 space-y-1.5">

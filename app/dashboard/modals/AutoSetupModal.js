@@ -71,7 +71,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/25">
-      <div className="w-full max-w-3xl rounded-t-2xl sm:rounded-xl border border-gray-200 dark:border-[#383838] bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90dvh]" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-3xl rounded-t-2xl sm:rounded-xl shadow-border-md bg-white dark:bg-[#222222] shadow-xl flex flex-col max-h-[90dvh]" onClick={e => e.stopPropagation()}>
 
         {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
@@ -105,7 +105,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
               placeholder="원정대 캐릭터명 입력" autoFocus
             />
             <button onClick={search} disabled={loading}
-              className="flex-shrink-0 flex items-center gap-1.5 rounded border border-gray-200 dark:border-[#383838] px-4 py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] disabled:opacity-50 transition-colors">
+              className="flex-shrink-0 flex items-center gap-1.5 rounded shadow-border-md px-4 py-2 text-sm ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] disabled:opacity-50 transition-colors">
               {loading
                 ? <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                 : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -126,7 +126,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
                   className={`px-3 py-1 rounded-full text-xs ns-bold transition-colors ${
                     strategy === opt.key
                       ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
-                      : 'border border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                      : 'shadow-border-md text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                   }`}>
                   {opt.label}
                 </button>
@@ -146,7 +146,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
             {preview.chars.map((char, idx) => {
               const entries = preview.raidsByName[char.name] || []
               return (
-                <div key={char.name} className="rounded-lg border border-gray-200 dark:border-[#383838] overflow-hidden">
+                <div key={char.name} className="rounded-lg shadow-border-md overflow-hidden">
                   {/* 캐릭터 헤더 */}
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-[#383838]">
                     {/* 직업 아이콘 */}
@@ -231,7 +231,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
             </div>
             <div className="flex gap-2">
               <button onClick={() => setConfirm(false)}
-                className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+                className="flex-1 rounded shadow-border-md py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
                 돌아가기
               </button>
               <button onClick={() => { onApply(preview.chars, preview.raidsByName, preview.apiKey); onClose() }}
@@ -246,7 +246,7 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
         {!confirm && (
         <div className="px-5 py-4 border-t border-gray-100 dark:border-[#383838] flex-shrink-0 flex gap-2">
           <button onClick={onClose}
-            className="flex-1 rounded border border-gray-200 dark:border-[#383838] py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+            className="flex-1 rounded shadow-border-md py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
             취소
           </button>
           <button onClick={handleApply} disabled={!preview}

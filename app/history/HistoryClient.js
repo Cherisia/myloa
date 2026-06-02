@@ -96,7 +96,7 @@ export default function HistoryClient({ history, isDemo = false }) {
       )}
 
       {sorted.length === 0 ? (
-        <div className="rounded-2xl border border-gray-100 dark:border-[#2a2a2a] bg-white dark:bg-[#1c1c1c] p-12 flex flex-col items-center gap-3 text-center">
+        <div className="rounded-2xl shadow-border bg-white dark:bg-[#1c1c1c] p-12 flex flex-col items-center gap-3 text-center">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="text-gray-200 dark:text-gray-700">
             <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" strokeWidth="1.5"/>
             <path d="M3 9h18M8 2v4M16 2v4M7 14h3M7 17h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -118,7 +118,7 @@ export default function HistoryClient({ history, isDemo = false }) {
               { label: '골드 비율', value: `${goldPct}%`,        unit: '',   color: true  },
               { label: '누적 골드', value: formatGold(totalGoldAll), unit: '', color: true },
             ].map(c => (
-              <div key={c.label} className="rounded-2xl border border-gray-100 dark:border-[#2a2a2a] bg-white dark:bg-[#1c1c1c] px-3.5 py-3.5 flex flex-col gap-1.5">
+              <div key={c.label} className="rounded-2xl shadow-border bg-white dark:bg-[#1c1c1c] px-3.5 py-3.5 flex flex-col gap-1.5">
                 <span className="text-[11px] text-gray-400 dark:text-gray-500">{c.label}</span>
                 <span className={`text-xl ns-bold leading-none ${c.color ? 'text-[var(--accent-500)] dark:text-[var(--accent-400)]' : 'text-gray-800 dark:text-gray-100'}`}>
                   {c.value}
@@ -129,7 +129,7 @@ export default function HistoryClient({ history, isDemo = false }) {
           </div>
 
           {/* 차트 카드 */}
-          <div className="rounded-2xl border border-gray-100 dark:border-[#2a2a2a] bg-white dark:bg-[#1c1c1c] px-5 pt-5 pb-4 overflow-visible">
+          <div className="rounded-2xl shadow-border bg-white dark:bg-[#1c1c1c] px-5 pt-5 pb-4 overflow-visible">
 
             {/* 차트 헤더 */}
             <div className="flex items-center justify-between mb-4">
@@ -315,7 +315,7 @@ export default function HistoryClient({ history, isDemo = false }) {
           </div>
 
           {/* 주간 상세 목록 */}
-          <div className="rounded-2xl border border-gray-100 dark:border-[#2a2a2a] bg-white dark:bg-[#1c1c1c] overflow-hidden">
+          <div className="rounded-2xl shadow-border bg-white dark:bg-[#1c1c1c] overflow-hidden">
             <div className="px-5 py-3.5 border-b border-gray-50 dark:border-[#252525]">
               <span className="text-sm ns-bold text-gray-700 dark:text-gray-200">주간 상세</span>
             </div>
