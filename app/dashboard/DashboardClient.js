@@ -93,6 +93,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [dragExpId,  setDragExpId]              = useState(null) // 드래그 중인 원정대 id
   const [dropExpId,  setDropExpId]              = useState(null) // 드롭 대상 원정대 id
   const [selectedRaid, setSelectedRaid]         = useState(null) // { raidId, diffKey } — 레이드 필터
+  const [remainFilter, setRemainFilter]         = useState(null) // null | 'gold' | 'all' — 남은 레이드 필터
   const [gearMenuCharId, setGearMenuCharId]     = useState(null) // 카드 톱니바퀴 메뉴
   const [raidSettingsCharId, setRaidSettingsCharId] = useState(null)
   const [allTabSort, setAllTabSort]                 = useState(() => {
@@ -171,6 +172,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       setActivePageId(null)
     }
   }, [expPages]) // eslint-disable-line react-hooks/exhaustive-deps
+  // 탭 변경 시 remainFilter 초기화
+  useEffect(() => { setRemainFilter(null) }, [activePageId])
   // 탭 전환 시 선택된 레이드가 새 탭에 없으면 초기화
   useEffect(() => {
     if (!selectedRaid) return
@@ -1187,6 +1190,24 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       .map(raid => ({ key: raid.id, raidId: raid.id, raidName: raid.name }))
   }, [raids])
 
+  // remainFilter 적용 — 미완료 레이드 행만 남김
+  const filteredRaidRows = useMemo(() => {
+    if (!remainFilter) return raidRows
+    const activeIds = new Set(activeChars.map(c => c.id))
+    return raidRows.filter(row =>
+      Object.entries(raids).some(([charId, list]) => {
+        if (!activeIds.has(charId)) return false
+        return list.some(e => {
+          if (e.raidId !== row.raidId) return false
+          const isDone = e.gateClears.length > 0 && e.gateClears.every(Boolean)
+          if (isDone) return false
+          if (remainFilter === 'gold') return e.isGoldCheck
+          return true // 'all'
+        })
+      })
+    )
+  }, [raidRows, remainFilter, raids, activeChars])
+
   // 요약 통계 — activeChars 기준 (계정 탭에 따라 필터링)
   const { earnedBound, earnedTrade, totalBound, totalTrade, completedCount, totalCount, allCompletedCount, allTotalCount } = useMemo(() => {
     const activeIds = new Set(activeChars.map(c => c.id))
@@ -1521,7 +1542,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             <>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400">완료 레이드</p>
-                <span className="text-xs min-[1920px]:text-sm ns-bold text-gray-700 dark:text-gray-300">
+                <span
+                  onClick={() => setRemainFilter(f => f === 'all' ? null : 'all')}
+                  className={`text-xs min-[1920px]:text-sm ns-bold cursor-pointer select-none transition-all px-1 rounded ${
+                    remainFilter === 'all'
+                      ? 'bg-[var(--accent-400)] text-[var(--accent-900)]'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-[var(--accent-500)]'
+                  }`}
+                >
                   {completedCount} / {totalCount}
                 </span>
               </div>
@@ -1542,7 +1570,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               <div className="flex flex-col gap-1.5">
                 {/* 골드 행 */}
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)] whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">골드</span>
+                  <span
+                    onClick={() => setRemainFilter(f => f === 'gold' ? null : 'gold')}
+                    className={`text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem] cursor-pointer transition-all select-none ${
+                      remainFilter === 'gold'
+                        ? 'bg-[var(--accent-400)] text-[var(--accent-900)]'
+                        : 'bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)] hover:bg-[var(--accent-200)] dark:hover:bg-[var(--accent-900)]/50'
+                    }`}
+                  >골드</span>
                   <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden min-w-0">
                     <div
                       className="h-full rounded-full bg-[var(--accent-400)] transition-all duration-500"
@@ -1556,7 +1591,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 </div>
                 {/* 전체 행 */}
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">전체</span>
+                  <span
+                    onClick={() => setRemainFilter(f => f === 'all' ? null : 'all')}
+                    className={`text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem] cursor-pointer transition-all select-none ${
+                      remainFilter === 'all'
+                        ? 'bg-blue-400 text-white'
+                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50'
+                    }`}
+                  >전체</span>
                   <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden min-w-0">
                     <div
                       className="h-full rounded-full bg-blue-400 transition-all duration-500"
@@ -1712,8 +1754,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               const charRaids = [...(raids[char.id] || [])]
                 .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
                 .filter(e => !selectedRaid || (e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
+                .filter(e => {
+                  if (!remainFilter) return true
+                  const isDone = e.gateClears.length > 0 && e.gateClears.every(Boolean)
+                  if (isDone) return false
+                  if (remainFilter === 'gold') return e.isGoldCheck
+                  return true
+                })
                 .sort((a, b) => (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1))
-              if (selectedRaid && charRaids.length === 0) return null
+              if ((selectedRaid || remainFilter) && charRaids.length === 0) return null
 
               const isDragging = dragCharId === char.id
               const isDragOver = dropCharId === char.id && dragCharId !== char.id
@@ -2102,8 +2151,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
           if (filteredChars.length === 0) return null
 
-          // 이 청크에 속한 캐릭터들이 가진 레이드 행만 표시
-          const chunkRaidRows = raidRows.filter(row =>
+          // 이 청크에 속한 캐릭터들이 가진 레이드 행만 표시 (remainFilter 적용)
+          const chunkRaidRows = filteredRaidRows.filter(row =>
             filteredChars.some(char => (raids[char.id] || []).some(e => e.raidId === row.raidId))
           )
 
