@@ -523,36 +523,55 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   }, [selectedRaid, activeChars, raids])
 
   // 레이드 필터 활성 시 미완료 캐릭터를 앞으로 정렬 (필터 선택 시점 순서 동결 — 체크해도 재정렬 안 함)
-  const frozenOrderRef = useRef(null) // { key: 'raidId:diffKey', charIds: string[] }
+  const frozenOrderRef = useRef(null)      // { key: 'raidId:diffKey', charIds: string[] }
+  const frozenBadgeOrderRef = useRef(null) // { key: 'raidId:diffKey', charIds: string[] } — 필터 배지 순서 동결
   const sortedActiveChars = useMemo(() => {
+    const filterKey = selectedRaid ? `${selectedRaid.raidId}:${selectedRaid.diffKey}` : null
+    const frozen = frozenOrderRef.current
+
     if (!selectedRaid) {
-      frozenOrderRef.current = null
+      // 필터 해제 시 ref를 null로 지우지 않고 active=false 로만 표시 — 같은 필터 재선택 시 이력 활용
+      if (frozen) frozenOrderRef.current = { ...frozen, active: false }
+      // 배지 순서는 필터 해제 시 초기화 — 재선택 시 완료 캐릭터가 뒤로 재정렬되도록
+      frozenBadgeOrderRef.current = null
       return activeChars
     }
 
-    const filterKey = `${selectedRaid.raidId}:${selectedRaid.diffKey}`
-    const frozen = frozenOrderRef.current
+    const isSameKey = frozen?.key === filterKey
 
-    // 필터가 바뀌었거나 처음 적용될 때만 순서를 새로 계산해서 동결
-    if (!frozen || frozen.key !== filterKey) {
-      const incompleteIds = new Set(raidIncompleteChars.map(({ char }) => char.id))
-      const sorted = [...activeChars].sort((a, b) => {
-        const aInc = incompleteIds.has(a.id)
-        const bInc = incompleteIds.has(b.id)
-        if (aInc !== bInc) return aInc ? -1 : 1
-        return 0
-      })
-      frozenOrderRef.current = { key: filterKey, charIds: sorted.map(c => c.id) }
-      return sorted
+    // 필터 활성 중이고 같은 키 → 동결 순서 유지 (체크해도 재정렬 안 함)
+    if (isSameKey && frozen.active) {
+      const charMap = new Map(activeChars.map(c => [c.id, c]))
+      const frozenSet = new Set(frozen.charIds)
+      const ordered = frozen.charIds.map(id => charMap.get(id)).filter(Boolean)
+      activeChars.forEach(c => { if (!frozenSet.has(c.id)) ordered.push(c) })
+      return ordered
     }
 
-    // 동결된 순서 그대로 유지 (체크/해제로 raids가 바뀌어도 재정렬 안 함)
-    const charMap = new Map(activeChars.map(c => [c.id, c]))
-    const frozenSet = new Set(frozen.charIds)
-    const ordered = frozen.charIds.map(id => charMap.get(id)).filter(Boolean)
-    // 동결 이후 새로 추가된 캐릭터는 뒤에 추가
-    activeChars.forEach(c => { if (!frozenSet.has(c.id)) ordered.push(c) })
-    return ordered
+    // 처음 적용하거나 필터 재선택 시 새로 정렬
+    const incompleteIds = new Set(raidIncompleteChars.map(({ char }) => char.id))
+    // 이전에 미완료였던 캐릭터 이력 — 재선택 시 완료 그룹 내 맨 뒤로
+    const prevInitialIncompleteIds = isSameKey ? frozen.initialIncompleteIds : incompleteIds
+    const sorted = [...activeChars].sort((a, b) => {
+      const aInc = incompleteIds.has(a.id)
+      const bInc = incompleteIds.has(b.id)
+      if (aInc !== bInc) return aInc ? -1 : 1
+      // 둘 다 완료: 이전 필터 적용 시점에 미완료였던 캐릭터를 완료 그룹 내 맨 뒤로
+      if (!aInc && !bInc) {
+        const aPrevInc = prevInitialIncompleteIds.has(a.id)
+        const bPrevInc = prevInitialIncompleteIds.has(b.id)
+        if (aPrevInc !== bPrevInc) return aPrevInc ? 1 : -1
+      }
+      return 0
+    })
+    frozenOrderRef.current = {
+      key: filterKey,
+      charIds: sorted.map(c => c.id),
+      // 같은 필터 재선택이면 최초 이력 유지, 새 필터면 현재 미완료를 이력으로 저장
+      initialIncompleteIds: isSameKey ? frozen.initialIncompleteIds : incompleteIds,
+      active: true,
+    }
+    return sorted
   }, [selectedRaid, activeChars, raidIncompleteChars])
 
   // 캐릭터가 있다가 0이 되면 빈 상태 모달 자동 표시 (초기 0은 제외)
@@ -2341,21 +2360,24 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           <div className="space-y-2">
             {/* ── 레이드 필터 ── */}
             {allRegisteredRaids.length > 0 && (
-              <div className={`rounded-lg border overflow-hidden transition-colors ${selectedRaid ? 'border-[var(--accent-400)]/60 dark:border-[var(--accent-600)]/40' : 'border-gray-200 dark:border-[#383838]'} bg-white dark:bg-[#222222]`}>
+              <div className={`rounded-xl border transition-all duration-200 overflow-hidden ${selectedRaid ? 'border-[var(--accent-400)]/50 shadow-[0_0_0_1px_var(--accent-400)]/10' : 'border-gray-200 dark:border-[#2e2e2e]'} bg-white dark:bg-[#1e1e1e]`}>
                 {/* 레이드 버튼 행 */}
                 {(() => {
-                  const diffBg = (diffKey, isActive) =>
-                    isActive ? (
-                      diffKey === 'nightmare'     ? 'bg-violet-200 dark:bg-violet-800/60 text-violet-900 dark:text-violet-100' :
-                      diffKey === 'hard'          ? 'bg-rose-200 dark:bg-rose-800/60 text-rose-900 dark:text-rose-100' :
-                      diffKey.startsWith('stage') ? 'bg-amber-200 dark:bg-amber-800/60 text-amber-900 dark:text-amber-100' :
-                                                    'bg-sky-200 dark:bg-sky-800/60 text-sky-900 dark:text-sky-100'
-                    ) : (
-                      diffKey === 'nightmare'     ? 'bg-violet-50 dark:bg-violet-950/30 text-violet-500 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/40' :
-                      diffKey === 'hard'          ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-500 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40' :
-                      diffKey.startsWith('stage') ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40' :
-                                                    'bg-sky-50 dark:bg-sky-950/30 text-sky-500 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/40'
-                    )
+                  const diffStyle = (diffKey, isActive) => {
+                    const base = 'transition-all duration-150 whitespace-nowrap cursor-pointer select-none'
+                    if (isActive) {
+                      return diffKey === 'nightmare' || diffKey === 'stage3' ? `${base} bg-violet-500 text-white shadow-sm` :
+                             diffKey === 'hard'      || diffKey === 'stage2' ? `${base} bg-rose-500 text-white shadow-sm` :
+                                                                               `${base} bg-sky-500 text-white shadow-sm`
+                    }
+                    return diffKey === 'nightmare' || diffKey === 'stage3' ? `${base} text-violet-500 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30` :
+                           diffKey === 'hard'      || diffKey === 'stage2' ? `${base} text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30` :
+                                                                             `${base} text-sky-500 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/30`
+                  }
+                  const incompleteColor = (diffKey) =>
+                    diffKey === 'nightmare' || diffKey === 'stage3' ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300' :
+                    diffKey === 'hard'      || diffKey === 'stage2' ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300' :
+                                                                      'bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-300'
                   const DIFF_PRIORITY = { nightmare: 0, hard: 1, stage3: 2, stage2: 3, stage1: 4, normal: 5 }
                   const raidGroups = allRegisteredRaids.reduce((acc, r) => {
                     const g = acc.find(x => x.raidId === r.raidId)
@@ -2365,30 +2387,35 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   }, [])
                   raidGroups.forEach(g => g.diffs.sort((a, b) => (DIFF_PRIORITY[a.diffKey] ?? 99) - (DIFF_PRIORITY[b.diffKey] ?? 99)))
                   return (
-                    <div className="flex items-center gap-y-2 px-3 py-2.5 flex-wrap">
+                    <div className="flex items-center flex-wrap gap-y-1 px-2.5 py-2">
+                      {/* 필터 아이콘 라벨 */}
+                      <div className="flex items-center gap-1 pr-2.5 mr-0.5 border-r border-gray-100 dark:border-[#2e2e2e] self-center">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600 flex-shrink-0">
+                          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        <span className="text-[9px] min-[1920px]:text-[11px] text-gray-300 dark:text-gray-600 ns-bold tracking-wide whitespace-nowrap">필터</span>
+                      </div>
                       {raidGroups.map((group, gi) => (
-                        <div key={group.raidId} className="flex items-center gap-2">
-                          {gi > 0 && <div className="w-px h-4 bg-gray-200 dark:bg-[#383838] mx-2 flex-shrink-0" />}
-                          <span className="text-[10px] min-[1920px]:text-[12px] text-gray-400 min-[1920px]:text-gray-600 dark:text-gray-500 dark:min-[1920px]:text-gray-300 whitespace-nowrap mr-0.5">{group.raidName}</span>
-                          <div className="flex items-center gap-1">
+                        <div key={group.raidId} className="flex items-center">
+                          {gi > 0 && <div className="w-px h-4 bg-gray-200 dark:bg-[#3a3a3a] mx-2 flex-shrink-0" />}
+                          <div className="flex items-center gap-0.5">
+                            <span className="text-[10px] min-[1920px]:text-[12px] text-gray-400 dark:text-gray-500 whitespace-nowrap px-1">{group.raidName}</span>
                             {group.diffs.map(r => {
                               const isActive = selectedRaid?.raidId === r.raidId && selectedRaid?.diffKey === r.diffKey
                               return (
                                 <button
                                   key={r.diffKey}
                                   onClick={() => setSelectedRaid(isActive ? null : { raidId: r.raidId, diffKey: r.diffKey })}
-                                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] min-[1920px]:text-[12px] ns-bold min-[1920px]:font-extrabold transition-all whitespace-nowrap ${diffBg(r.diffKey, isActive)}`}
+                                  className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] min-[1920px]:text-[12px] ns-bold ${diffStyle(r.diffKey, isActive)}`}
                                 >
                                   <span>{r.diffLabel}</span>
-                                  <span className="inline-flex items-center justify-center w-4">
-                                    {r.incomplete > 0 ? (
-                                      <span className={`tabular-nums text-[9px] min-[1920px]:text-[11px] ns-bold ${isActive ? 'opacity-70' : 'text-gray-400 dark:text-gray-500'}`}>
-                                        {r.incomplete}
-                                      </span>
-                                    ) : (
-                                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" className="text-emerald-500 dark:text-emerald-400"><polyline points="20 6 9 17 4 12"/></svg>
-                                    )}
-                                  </span>
+                                  {r.incomplete > 0 ? (
+                                    <span className={`inline-flex items-center justify-center rounded-full min-w-[14px] h-[14px] px-0.5 text-[9px] ns-bold tabular-nums ${isActive ? 'bg-white/25 text-white' : incompleteColor(r.diffKey)}`}>
+                                      {r.incomplete}
+                                    </span>
+                                  ) : (
+                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" className={isActive ? 'text-white/80' : 'text-emerald-500 dark:text-emerald-400'}><polyline points="20 6 9 17 4 12"/></svg>
+                                  )}
                                 </button>
                               )
                             })}
@@ -2399,55 +2426,61 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   )
                 })()}
 
-                {/* 선택된 레이드 캐릭터 완료 현황 — 항상 동일 높이 유지 */}
+                {/* 선택된 레이드 캐릭터 완료 현황 */}
                 {selectedRaid && (() => {
                   const incompleteIds = new Set(raidIncompleteChars.map(({ char }) => char.id))
-                  // 해당 레이드가 등록된 캐릭터만 표시
                   const relevantChars = activeChars.filter(char =>
                     (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey)
                   )
+                  // 필터 선택 시점 배지 순서 동결 — 체크해도 재정렬 안 함, 필터 변경 시에만 재계산
+                  const filterKey = `${selectedRaid.raidId}:${selectedRaid.diffKey}`
+                  const frozenBadge = frozenBadgeOrderRef.current
+                  let orderedChars
+                  if (!frozenBadge || frozenBadge.key !== filterKey) {
+                    const incomplete = relevantChars.filter(c =>  incompleteIds.has(c.id))
+                    const complete   = relevantChars.filter(c => !incompleteIds.has(c.id))
+                    orderedChars = [...incomplete, ...complete]
+                    frozenBadgeOrderRef.current = { key: filterKey, charIds: orderedChars.map(c => c.id) }
+                  } else {
+                    const charMap = new Map(relevantChars.map(c => [c.id, c]))
+                    orderedChars = frozenBadge.charIds.map(id => charMap.get(id)).filter(Boolean)
+                    // 동결 이후 새로 추가된 캐릭터는 뒤에 추가
+                    const frozenSet = new Set(frozenBadge.charIds)
+                    relevantChars.forEach(c => { if (!frozenSet.has(c.id)) orderedChars.push(c) })
+                  }
+                  const renderBadge = (char, incomplete) => {
+                    const entry      = (raids[char.id] || []).find(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey)
+                    const gateClears = entry?.gateClears || []
+                    const partialCount = gateClears.filter(Boolean).length
+                    const isPartial  = incomplete && partialCount > 0
+                    return (
+                      <div key={char.id} className={`flex items-center gap-1 rounded-lg px-2 py-0.5 ${
+                        incomplete
+                          ? 'bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#363636]'
+                          : 'bg-emerald-50 dark:bg-emerald-900/15 border border-emerald-200/60 dark:border-emerald-700/25'
+                      }`}>
+                        {incomplete ? (
+                          getClassIcon(char.class)
+                            ? <Image src={getClassIcon(char.class)} alt="" width={13} height={13} unoptimized className="class-icon w-3 h-3 object-contain flex-shrink-0 opacity-70" />
+                            : <span className="w-3 h-3 text-gray-300 flex-shrink-0"><IconClass /></span>
+                        ) : (
+                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-emerald-500 dark:text-emerald-400 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                        )}
+                        <span className={`text-[10px] min-[1920px]:text-[12px] ns-bold ${incomplete ? 'text-gray-600 dark:text-gray-300' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                          {char.name}
+                        </span>
+                        {isPartial && (
+                          <span className="text-[9px] text-gray-400 dark:text-gray-500 tabular-nums">
+                            {partialCount}/{gateClears.length}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  }
                   return (
-                  <div className="border-t border-[var(--accent-200)]/60 dark:border-[var(--accent-700)]/30 bg-[var(--accent-50)]/40 dark:bg-[var(--accent-900)]/10">
-                    {(() => {
-                      const completeChars   = relevantChars.filter(c => !incompleteIds.has(c.id))
-                      const incompleteChars = relevantChars.filter(c =>  incompleteIds.has(c.id))
-                      const renderBadge = (char, incomplete) => {
-                        const entry      = (raids[char.id] || []).find(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey)
-                        const gateClears = entry?.gateClears || []
-                        const partialCount = gateClears.filter(Boolean).length
-                        const isPartial  = incomplete && partialCount > 0
-                        return (
-                          <div key={char.id} className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 border ${
-                            incomplete
-                              ? 'bg-white dark:bg-[#2a2a2a] border-gray-200 dark:border-[#3a3a3a]'
-                              : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200/70 dark:border-emerald-700/30'
-                          }`}>
-                            {incomplete ? (
-                              getClassIcon(char.class)
-                                ? <Image src={getClassIcon(char.class)} alt="" width={14} height={14} unoptimized className="class-icon w-3.5 h-3.5 object-contain flex-shrink-0" />
-                                : <span className="w-3.5 h-3.5 text-gray-300 flex-shrink-0"><IconClass /></span>
-                            ) : (
-                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-emerald-500 dark:text-emerald-400 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
-                            )}
-                            <span className={`text-[10px] ns-bold ${incomplete ? 'text-gray-700 dark:text-gray-200' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                              {char.name}
-                            </span>
-                            {isPartial && (
-                              <span className="text-[9px] text-gray-400 dark:text-gray-500 tabular-nums">
-                                {partialCount}/{gateClears.length}
-                              </span>
-                            )}
-                          </div>
-                        )
-                      }
-                      return (
-                        <div className="flex flex-wrap gap-1.5 px-3 py-2.5">
-                          {incompleteChars.map(c => renderBadge(c, true))}
-                          {completeChars.map(c => renderBadge(c, false))}
-                        </div>
-                      )
-                    })()}
-                  </div>
+                    <div className="border-t border-gray-100 dark:border-[#2a2a2a] bg-gray-50/50 dark:bg-[#191919]/60 px-2.5 py-2 flex flex-wrap gap-1.5">
+                      {orderedChars.map(c => renderBadge(c, incompleteIds.has(c.id)))}
+                    </div>
                   )
                 })()}
               </div>
