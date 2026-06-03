@@ -74,7 +74,7 @@ export default async function RootLayout({ children }) {
                 <SidebarAdLeft />
               </aside>
               {/* 본문 */}
-              <main className="flex-1 min-w-0 px-4 py-6">
+              <main className="flex-1 min-w-0 px-4 py-6 min-h-[calc(100dvh-82px)]">
                 {children}
                 <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-white/[0.06] text-center">
                   <Link href="/privacy" className="text-[11px] text-gray-400 dark:text-zinc-600 hover:text-gray-600 dark:hover:text-zinc-400 transition-colors">

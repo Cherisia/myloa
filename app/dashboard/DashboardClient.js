@@ -1721,23 +1721,22 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         }
 
         // ── 카드 뷰 ────────────────────────────────────────────────────────
-        const renderCardView = () => (
-          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 2xl:gap-4">
-            {sortedActiveChars.map(char => {
-              const charRaids = [...(raids[char.id] || [])]
-                .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
-                .filter(e => !selectedRaid || (e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
-                .filter(e => {
-                  if (!remainFilter) return true
-                  const frozen = frozenRemainRaidsRef.current
-                  if (frozen) return frozen.has(`${char.id}:${e.raidId}:${e.difficulty}`)
-                  const isDone = e.gateClears.length > 0 && e.gateClears.every(Boolean)
-                  if (isDone) return false
-                  if (remainFilter === 'gold') return e.isGoldCheck
-                  return true
-                })
-                .sort((a, b) => (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1))
-              if ((selectedRaid || remainFilter) && charRaids.length === 0) return null
+        const renderCardView = () => {
+          const cards = sortedActiveChars.map(char => {
+            const charRaids = [...(raids[char.id] || [])]
+              .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
+              .filter(e => !selectedRaid || (e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
+              .filter(e => {
+                if (!remainFilter) return true
+                const frozen = frozenRemainRaidsRef.current
+                if (frozen) return frozen.has(`${char.id}:${e.raidId}:${e.difficulty}`)
+                const isDone = e.gateClears.length > 0 && e.gateClears.every(Boolean)
+                if (isDone) return false
+                if (remainFilter === 'gold') return e.isGoldCheck
+                return true
+              })
+              .sort((a, b) => (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1))
+            if ((selectedRaid || remainFilter) && charRaids.length === 0) return null
 
               const isDragging = dragCharId === char.id
               const isDragOver = dropCharId === char.id && dragCharId !== char.id
@@ -2034,9 +2033,24 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
                 </div>
               )
-            })}
-          </div>
-        )
+            })
+          const hasVisible = cards.some(c => c !== null)
+          if (!hasVisible && (selectedRaid || remainFilter)) {
+            const filterLabel = selectedRaid
+              ? `'${RAID_MAP[selectedRaid.raidId]?.name ?? selectedRaid.raidId}' 레이드`
+              : remainFilter === 'gold' ? '미완료 골드 레이드' : '미완료 레이드'
+            return (
+              <div className="flex flex-col items-center justify-center py-20">
+                <p className="text-base text-gray-400 dark:text-gray-500">선택한 필터의 레이드를 모두 완료했어요 😊🎉</p>
+              </div>
+            )
+          }
+          return (
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 2xl:gap-4">
+              {cards}
+            </div>
+          )
+        }
 
         // ── 테이블 뷰 ────────────────────────────────────────────────────────
         const renderCustomRow = (name, charMap, meta, chars, compact = false, colW = null) => {
@@ -2649,6 +2663,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 const charsToChunk = selectedRaid
                   ? sortedActiveChars.filter(char => (raids[char.id] || []).some(e => e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
                   : sortedActiveChars
+                if (remainFilter && filteredRaidRows.length === 0) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-20">
+                      <p className="text-base text-gray-400 dark:text-gray-500">선택한 필터의 레이드를 모두 완료했어요 😊🎉</p>
+                    </div>
+                  )
+                }
                 const chunks = []
                 for (let i = 0; i < charsToChunk.length; i += charsPerTable)
                   chunks.push(charsToChunk.slice(i, i + charsPerTable))
