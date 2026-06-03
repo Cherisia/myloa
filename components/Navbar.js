@@ -225,58 +225,154 @@ export default function Navbar() {
         <button
           onClick={() => setMobileOpen(v => !v)}
           className={`sm:hidden ml-auto h-8 w-8 flex items-center justify-center rounded-lg transition-colors ${s.navBase}`}
+          aria-label="메뉴"
         >
           {mobileOpen ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
           )}
         </button>
       </div>
-
-      {/* 모바일 메뉴 */}
-      {mobileOpen && (
-        <div className={`sm:hidden border-t px-4 py-3 space-y-0.5 ${s.header.replace('bg-white/90', 'bg-white').replace('bg-\\[#111111\\]\\/95', 'bg-[#111111]')}`}
-          style={theme === 'dark' ? { backgroundColor: '#111111' } : { backgroundColor: '#ffffff' }}
-        >
-          {navLinks.map(({ href, label, onClick, badge }) => onClick ? (
-            <button
-              key={label}
-              type="button"
-              onClick={() => { setMobileOpen(false); onClick() }}
-              className={`block w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${s.navBase}`}
-            >
-              {label}
-            </button>
-          ) : (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-                isActive(href) ? s.navActive : s.navBase
-              }`}
-            >
-              {label}
-              {badge > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] ns-bold rounded-full bg-red-500 text-white leading-none">
-                  {badge}
-                </span>
-              )}
-            </Link>
-          ))}
-          <div className="pt-3 pb-1 flex flex-col gap-3 border-t mt-2" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.07)' : '#f0f0f0' }}>
-            <ThemeDots />
-            <UserArea mobile />
-          </div>
-        </div>
-      )}
     </header>
 
+    {/* 모바일 전체화면 메뉴 오버레이 */}
+    {mobileOpen && (
+      <div
+        className="sm:hidden fixed inset-0 z-[60] flex flex-col"
+        style={theme === 'dark' ? { backgroundColor: '#111111' } : { backgroundColor: '#ffffff' }}
+      >
+        {/* 상단 헤더 — 로고 + 닫기 */}
+        <div className={`flex items-center justify-between px-5 border-b ${s.header}`} style={{ height: 54 }}>
+          <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center">
+            <span className="inline-flex items-baseline tracking-tight select-none gap-px">
+              <span className={`text-[17px] ns-bold ${s.logoMy}`}>my</span>
+              <span className={`text-[22px] ns-extrabold leading-none ${s.logoAccent}`}>loa</span>
+            </span>
+          </Link>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className={`h-9 w-9 flex items-center justify-center rounded-xl transition-colors ${s.navBase}`}
+            aria-label="메뉴 닫기"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* 메뉴 항목들 */}
+        <nav className="flex-1 overflow-y-auto px-4 pt-4 pb-6">
+          <div className="space-y-1">
+            {navLinks.map(({ href, label, onClick, badge }) => onClick ? (
+              <button
+                key={label}
+                type="button"
+                onClick={() => { setMobileOpen(false); onClick() }}
+                className={`flex w-full items-center px-4 py-4 rounded-2xl text-base transition-colors ${s.navBase}`}
+              >
+                {label}
+              </button>
+            ) : (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center justify-between px-4 py-4 rounded-2xl text-base transition-colors ${
+                  isActive(href)
+                    ? `bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 ${s.navActive}`
+                    : s.navBase
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  {label}
+                  {badge > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 text-[11px] ns-bold rounded-full bg-red-500 text-white leading-none">
+                      {badge}
+                    </span>
+                  )}
+                </span>
+                {isActive(href) && (
+                  <span className={`w-1.5 h-1.5 rounded-full bg-[var(--accent-400)]`} />
+                )}
+              </Link>
+            ))}
+          </div>
+
+          {/* 하단 구분선 */}
+          <div className="my-5 h-px" style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.07)' : '#f0f0f0' }} />
+
+          {/* 테마 선택 */}
+          <div className="px-4">
+            <p className={`text-xs ns-bold mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>테마</p>
+            <div className="flex items-center gap-4">
+              {THEMES.map(t => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTheme(t.key)}
+                  aria-label={t.label}
+                  className="flex items-center justify-center"
+                >
+                  <span
+                    className={`w-8 h-8 rounded-full transition-all duration-200 ${
+                      theme === t.key
+                        ? `ring-2 ring-offset-2 scale-110 ${s.dotRing}`
+                        : 'opacity-50 hover:opacity-80'
+                    }`}
+                    style={{ backgroundColor: t.color }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 하단 구분선 */}
+          <div className="my-5 h-px" style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.07)' : '#f0f0f0' }} />
+
+          {/* 유저 영역 */}
+          <div className="px-4">
+            {session ? (
+              <Link
+                href="/settings"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 rounded-2xl py-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10"
+              >
+                {session.user?.image ? (
+                  <Image
+                    src={session.user.image} alt=""
+                    width={40} height={40}
+                    className="h-10 w-10 rounded-full object-cover ring-2 ring-black/10 dark:ring-white/10 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm ns-bold text-gray-600 dark:text-zinc-300">
+                      {(displayNickname || '?')[0].toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <span className={`text-base ns-bold truncate ${s.userText}`}>{displayNickname}</span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => { setMobileOpen(false); signIn('discord', { callbackUrl: '/dashboard' }) }}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm ns-bold text-white transition-all active:scale-95"
+                style={{ backgroundColor: DISCORD_BG }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = DISCORD_HOVER}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = DISCORD_BG}
+              >
+                <DiscordIcon size={16} />
+                디스코드 로그인
+              </button>
+            )}
+          </div>
+        </nav>
+      </div>
+    )}
 </>
   )
 }

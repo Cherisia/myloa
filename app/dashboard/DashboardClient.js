@@ -1316,7 +1316,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       )}
 
       {/* ── 헤더 ── */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
         <div className="min-w-0 flex-1 overflow-hidden">
           {/* 원정대 페이지 탭 */}
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin py-1.5 pl-0.5 pr-2 flex-nowrap">
@@ -1429,16 +1429,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             </h1>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:flex-shrink-0">
           <button onClick={() => setShowRaidSettings(true)}
-            className="flex items-center justify-center gap-1.5 rounded shadow-border-md px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
+            className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded shadow-border-md px-3 py-2 sm:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
             </svg>
             숙제 설정
           </button>
           <button onClick={() => setShowCharEdit(true)}
-            className="flex items-center justify-center gap-1.5 rounded shadow-border-md px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
+            className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded shadow-border-md px-3 py-2 sm:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
             </svg>
@@ -1447,7 +1447,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           <button
             onClick={() => isLoggedIn ? (chars.length === 0 ? setShowNoChar(true) : syncChars()) : setShowLoginGuide(true)}
             disabled={isLoggedIn && (syncing || syncCooldownSec > 0)}
-            className="flex items-center justify-center gap-1.5 rounded shadow-border-md dark:hover:bg-[#2a2a2a] px-3 py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 active:scale-95 transition-all whitespace-nowrap">
+            className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded shadow-border-md dark:hover:bg-[#2a2a2a] px-3 py-2 sm:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 active:scale-95 transition-all whitespace-nowrap">
             <span className={isLoggedIn && syncing ? 'animate-spin' : ''}><IconRefresh /></span>
             {isLoggedIn && syncing ? '갱신 중…' : '캐릭터 갱신'}
           </button>
@@ -1455,7 +1455,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       </div>
 
       {/* ── 요약 카드 + 광고 배너 ── */}
-      <div className="flex items-stretch gap-3 -mt-3">
+      <div className="flex items-stretch gap-3 sm:-mt-3">
       <div className="grid grid-cols-1 gap-2 w-full md:grid-cols-3 md:gap-3 md:max-w-[50%]">
         {/* 원정대 캐릭터 */}
         <div className="rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 flex flex-col min-h-[80px] md:min-h-0">
@@ -2424,10 +2424,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   }, [])
                   raidGroups.forEach(g => g.diffs.sort((a, b) => (DIFF_PRIORITY[a.diffKey] ?? 99) - (DIFF_PRIORITY[b.diffKey] ?? 99)))
                   return (
-                    <div className="flex flex-col px-2.5 py-2 gap-1">
+                    <div className="flex flex-col px-2.5 py-2 gap-1.5">
                       {/* 첫 번째 줄 — 미완료 필터 버튼 */}
-                      <div className="flex items-center gap-y-1">
-                        <div className="flex items-center gap-1 pr-2.5 mr-0.5 border-r border-gray-100 dark:border-[#2e2e2e] self-center">
+                      <div className="flex items-center flex-wrap gap-y-1.5">
+                        <div className="flex items-center gap-1 pr-2.5 mr-0.5 border-r border-gray-100 dark:border-[#2e2e2e] self-center flex-shrink-0">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600 flex-shrink-0">
                             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
                           </svg>
@@ -2488,9 +2488,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         >미완료 전체</button>
                       </div>
                       {/* 두 번째 줄 — 레이드 필터 버튼 */}
-                      <div className="flex items-center flex-wrap gap-y-1">
+                      <div className="flex items-center flex-wrap gap-y-1.5">
                         {raidGroups.map((group, gi) => (
-                          <div key={group.raidId} className="flex items-center">
+                          <div key={group.raidId} className="flex items-center flex-shrink-0">
                             {gi > 0 && <div className="w-px h-4 bg-gray-200 dark:bg-[#3a3a3a] mx-2 flex-shrink-0" />}
                             <div className="flex items-center gap-0.5">
                               <span className="text-[11px] min-[1920px]:text-[13px] text-gray-400 dark:text-gray-500 whitespace-nowrap px-1">{group.raidName}</span>
