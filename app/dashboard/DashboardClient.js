@@ -94,6 +94,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [dropExpId,  setDropExpId]              = useState(null) // 드롭 대상 원정대 id
   const [selectedRaid, setSelectedRaid]         = useState(null) // { raidId, diffKey } — 레이드 필터
   const [remainFilter, setRemainFilter]         = useState(null) // null | 'gold' | 'all' — 남은 레이드 필터
+  const frozenRemainRaidsRef = useRef(null) // 필터 활성 시점 스냅샷: Set<'charId:raidId:difficulty'>
   const [gearMenuCharId, setGearMenuCharId]     = useState(null) // 카드 톱니바퀴 메뉴
   const [raidSettingsCharId, setRaidSettingsCharId] = useState(null)
   const [allTabSort, setAllTabSort]                 = useState(() => {
@@ -173,7 +174,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     }
   }, [expPages]) // eslint-disable-line react-hooks/exhaustive-deps
   // 탭 변경 시 remainFilter 초기화
-  useEffect(() => { setRemainFilter(null) }, [activePageId])
+  useEffect(() => { setRemainFilter(null); frozenRemainRaidsRef.current = null }, [activePageId])
   // 탭 전환 시 선택된 레이드가 새 탭에 없으면 초기화
   useEffect(() => {
     if (!selectedRaid) return
@@ -1190,23 +1191,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       .map(raid => ({ key: raid.id, raidId: raid.id, raidName: raid.name }))
   }, [raids])
 
-  // remainFilter 적용 — 미완료 레이드 행만 남김
+  // remainFilter 적용 — 미완료 레이드 행만 남김 (스냅샷 기준으로 필터링 — 체크해도 즉시 사라지지 않음)
   const filteredRaidRows = useMemo(() => {
     if (!remainFilter) return raidRows
-    const activeIds = new Set(activeChars.map(c => c.id))
-    return raidRows.filter(row =>
-      Object.entries(raids).some(([charId, list]) => {
-        if (!activeIds.has(charId)) return false
-        return list.some(e => {
-          if (e.raidId !== row.raidId) return false
-          const isDone = e.gateClears.length > 0 && e.gateClears.every(Boolean)
-          if (isDone) return false
-          if (remainFilter === 'gold') return e.isGoldCheck
-          return true // 'all'
-        })
-      })
-    )
-  }, [raidRows, remainFilter, raids, activeChars])
+    const frozen = frozenRemainRaidsRef.current
+    if (!frozen) return raidRows
+    // 스냅샷에 포함된 raidId 집합
+    const frozenRaidIds = new Set()
+    frozen.forEach(key => { const [, raidId] = key.split(':'); frozenRaidIds.add(raidId) })
+    return raidRows.filter(row => frozenRaidIds.has(row.raidId))
+  }, [raidRows, remainFilter])
 
   // 요약 통계 — activeChars 기준 (계정 탭에 따라 필터링)
   const { earnedBound, earnedTrade, totalBound, totalTrade, completedCount, totalCount, allCompletedCount, allTotalCount } = useMemo(() => {
@@ -1735,6 +1729,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 .filter(e => !selectedRaid || (e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
                 .filter(e => {
                   if (!remainFilter) return true
+                  const frozen = frozenRemainRaidsRef.current
+                  if (frozen) return frozen.has(`${char.id}:${e.raidId}:${e.difficulty}`)
                   const isDone = e.gateClears.length > 0 && e.gateClears.every(Boolean)
                   if (isDone) return false
                   if (remainFilter === 'gold') return e.isGoldCheck
@@ -2424,7 +2420,26 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           <span className="text-[10px] min-[1920px]:text-[12px] text-gray-300 dark:text-gray-600 ns-bold tracking-wide whitespace-nowrap">필터</span>
                         </div>
                         <button
-                          onClick={() => setRemainFilter(f => f === 'gold' ? null : 'gold')}
+                          onClick={() => {
+                            const next = remainFilter === 'gold' ? null : 'gold'
+                            if (next) {
+                              const activeIds = new Set(activeChars.map(c => c.id))
+                              const keys = new Set()
+                              Object.entries(raids).forEach(([charId, list]) => {
+                                if (!activeIds.has(charId)) return
+                                list.forEach(e => {
+                                  const isDone = e.gateClears.length > 0 && e.gateClears.every(Boolean)
+                                  if (isDone) return
+                                  if (!e.isGoldCheck) return
+                                  keys.add(`${charId}:${e.raidId}:${e.difficulty}`)
+                                })
+                              })
+                              frozenRemainRaidsRef.current = keys
+                            } else {
+                              frozenRemainRaidsRef.current = null
+                            }
+                            setRemainFilter(next)
+                          }}
                           className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] min-[1920px]:text-[13px] transition-all duration-150 whitespace-nowrap cursor-pointer select-none mr-1 ${
                             remainFilter === 'gold'
                               ? 'bg-[var(--accent-200)] dark:bg-[var(--accent-800)]/60 text-[var(--accent-700)] dark:text-[var(--accent-200)]'
@@ -2432,7 +2447,25 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           }`}
                         >미완료 골드</button>
                         <button
-                          onClick={() => setRemainFilter(f => f === 'all' ? null : 'all')}
+                          onClick={() => {
+                            const next = remainFilter === 'all' ? null : 'all'
+                            if (next) {
+                              const activeIds = new Set(activeChars.map(c => c.id))
+                              const keys = new Set()
+                              Object.entries(raids).forEach(([charId, list]) => {
+                                if (!activeIds.has(charId)) return
+                                list.forEach(e => {
+                                  const isDone = e.gateClears.length > 0 && e.gateClears.every(Boolean)
+                                  if (isDone) return
+                                  keys.add(`${charId}:${e.raidId}:${e.difficulty}`)
+                                })
+                              })
+                              frozenRemainRaidsRef.current = keys
+                            } else {
+                              frozenRemainRaidsRef.current = null
+                            }
+                            setRemainFilter(next)
+                          }}
                           className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] min-[1920px]:text-[13px] transition-all duration-150 whitespace-nowrap cursor-pointer select-none ${
                             remainFilter === 'all'
                               ? 'bg-blue-200 dark:bg-blue-800/60 text-blue-700 dark:text-blue-200'
@@ -2525,9 +2558,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       </div>
                     )
                   }
+                  const visibleChars = remainFilter
+                    ? orderedChars.filter(c => incompleteIds.has(c.id))
+                    : orderedChars
                   return (
                     <div className="border-t border-gray-100 dark:border-[#2a2a2a] bg-gray-50/50 dark:bg-[#191919]/60 px-2.5 py-2 flex flex-wrap gap-1.5">
-                      {orderedChars.map(c => renderBadge(c, incompleteIds.has(c.id)))}
+                      {visibleChars.map(c => renderBadge(c, incompleteIds.has(c.id)))}
                     </div>
                   )
                 })()}
