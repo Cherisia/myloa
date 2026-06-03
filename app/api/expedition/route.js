@@ -37,11 +37,15 @@ export async function POST(request) {
   if (!session?.user?.id) return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
 
   const { name } = await request.json()
-  if (!name?.trim()) return NextResponse.json({ error: '원정대 이름을 입력하세요' }, { status: 400 })
+  const trimmedName = name?.trim().slice(0, 12) || ''
+  if (!trimmedName) return NextResponse.json({ error: '원정대 이름을 입력하세요' }, { status: 400 })
+  if (!/^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]+$/.test(trimmedName)) {
+    return NextResponse.json({ error: '한글, 영어, 숫자만 사용 가능합니다.' }, { status: 400 })
+  }
 
   const expedition = await prisma.expedition.create({
     data: {
-      name: name.trim(),
+      name: trimmedName,
       leaderId: session.user.id,
       inviteCode: generateInviteCode(),
       maxMembers: 100,

@@ -44,8 +44,12 @@ export async function POST(request) {
   const body = await request.json()
   const { characterId, name, type, image, sortOrder, done, restGauge, deducted } = body
 
-  if (!characterId || !name || !type) {
+  const trimmedName = name?.trim().slice(0, 10) || ''
+  if (!characterId || !trimmedName || !type) {
     return NextResponse.json({ error: '필수 항목 누락' }, { status: 400 })
+  }
+  if (!/^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]+$/.test(trimmedName)) {
+    return NextResponse.json({ error: '한글, 영어, 숫자만 사용 가능합니다.' }, { status: 400 })
   }
 
   const ok = await verifyCharacterOwner(characterId, session.user.id)
@@ -54,10 +58,10 @@ export async function POST(request) {
   const resetAt = type === 'daily' ? getNextDailyResetAt() : getNextResetAt()
 
   const result = await prisma.characterCustomItem.upsert({
-    where: { characterId_name: { characterId, name } },
+    where: { characterId_name: { characterId, name: trimmedName } },
     create: {
       characterId,
-      name,
+      name: trimmedName,
       type,
       image:     image     ?? null,
       sortOrder: sortOrder ?? 0,

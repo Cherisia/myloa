@@ -70,6 +70,9 @@ function Section({ title, children }) {
   )
 }
 
+const NICKNAME_ALLOWED = /^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]*$/
+const NICKNAME_STRIP   = /[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/g
+
 export default function SettingsClient({ user, session }) {
   const { update: updateSession } = useSession()
   const [nickname, setNickname] = useState(user?.nickname || '')
@@ -86,9 +89,13 @@ export default function SettingsClient({ user, session }) {
   const discordUser = user?.discordUsername
 
   const saveNickname = useCallback(async () => {
+    setError('')
+    if (nickname && !NICKNAME_ALLOWED.test(nickname)) {
+      setError('한글, 영어, 숫자만 사용 가능합니다.')
+      return
+    }
     setNickSaving(true)
     setNickSaved(false)
-    setError('')
     try {
       const res = await fetch('/api/user/profile', {
         method: 'PATCH',
@@ -100,7 +107,8 @@ export default function SettingsClient({ user, session }) {
         setTimeout(() => setNickSaved(false), 2000)
         await updateSession()
       } else {
-        setError('저장에 실패했습니다.')
+        const json = await res.json().catch(() => ({}))
+        setError(json.error || '저장에 실패했습니다.')
       }
     } catch {
       setError('저장에 실패했습니다.')
@@ -189,7 +197,12 @@ export default function SettingsClient({ user, session }) {
                 ref={inputRef}
                 type="text"
                 value={nickname}
-                onChange={e => { setNickname(e.target.value); setNickSaved(false) }}
+                onChange={e => {
+                  const filtered = e.target.value.replace(NICKNAME_STRIP, '')
+                  setNickname(filtered)
+                  setNickSaved(false)
+                  setError('')
+                }}
                 onKeyDown={e => e.key === 'Enter' && saveNickname()}
                 maxLength={12}
                 placeholder={displayName}
@@ -226,7 +239,13 @@ export default function SettingsClient({ user, session }) {
                 </span>
               </button>
             </div>
-            {error && <p className="text-xs text-red-400 mt-1.5">{error}</p>}
+            <div className="flex items-center justify-between mt-1.5">
+              {error
+                ? <p className="text-xs text-red-400">{error}</p>
+                : <p className="text-xs text-gray-300 dark:text-zinc-600">한글, 영어, 숫자만 사용 가능</p>
+              }
+              <p className="text-xs text-gray-300 dark:text-zinc-600 ml-auto">{nickname.length}/12</p>
+            </div>
           </div>
 
           {/* 길드원에게 레이드 현황 공개 */}

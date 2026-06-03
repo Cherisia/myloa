@@ -26,7 +26,11 @@ export async function PATCH(request) {
   const data = {}
 
   if (typeof body.nickname === 'string') {
-    data.nickname = body.nickname.trim().slice(0, 12) || null
+    const trimmed = body.nickname.trim().slice(0, 12)
+    if (trimmed && !/^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]+$/.test(trimmed)) {
+      return NextResponse.json({ error: '한글, 영어, 숫자만 사용 가능합니다.' }, { status: 400 })
+    }
+    data.nickname = trimmed || null
   }
   if (typeof body.raidPublic === 'boolean') {
     data.raidPublic = body.raidPublic

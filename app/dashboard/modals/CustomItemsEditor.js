@@ -173,7 +173,7 @@ export default function CustomItemsEditor({
             <input
               ref={inputRef}
               value={input}
-              onChange={e => setInput(e.target.value.slice(0, 10))}
+              onChange={e => setInput(e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]/g, '').slice(0, 10))}
               onKeyDown={handleKeyDown}
               disabled={isFull}
               placeholder={isFull ? '최대 10개까지' : '숙제 이름 (최대 10자)'}

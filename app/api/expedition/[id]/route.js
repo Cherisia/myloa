@@ -71,12 +71,20 @@ export async function PATCH(request, { params }) {
   if (!expedition) return NextResponse.json({ error: '길드를 찾을 수 없습니다' }, { status: 404 })
   if (expedition.leaderId !== userId) return NextResponse.json({ error: '권한이 없습니다' }, { status: 403 })
 
+  if (name !== undefined) {
+    const trimmedName = name?.trim().slice(0, 12) || ''
+    if (!trimmedName) return NextResponse.json({ error: '이름을 입력하세요' }, { status: 400 })
+    if (!/^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]+$/.test(trimmedName)) {
+      return NextResponse.json({ error: '한글, 영어, 숫자만 사용 가능합니다.' }, { status: 400 })
+    }
+  }
+
   const updated = await prisma.expedition.update({
     where: { id },
     data: {
-      ...(name?.trim() && { name: name.trim() }),
-      ...(description !== undefined && { description: description?.trim() || null }),
-      ...(notice !== undefined && { notice: notice?.trim() || null }),
+      ...(name?.trim() && { name: name.trim().slice(0, 12) }),
+      ...(description !== undefined && { description: description?.trim().slice(0, 200) || null }),
+      ...(notice !== undefined && { notice: notice?.trim().slice(0, 300) || null }),
       ...(autoAccept !== undefined && { autoAccept: Boolean(autoAccept) }),
       ...(regenerateCode && { inviteCode: generateInviteCode() }),
     },

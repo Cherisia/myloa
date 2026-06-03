@@ -1366,12 +1366,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     <input
                       autoFocus
                       value={editingPageName}
-                      onChange={e => setEditingPageName(e.target.value)}
+                      onChange={e => setEditingPageName(e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/g, ''))}
                       onBlur={savePageName}
                       onKeyDown={e => {
                         if (e.key === 'Enter') { e.preventDefault(); savePageName() }
                         if (e.key === 'Escape') { setEditingPageId(null); setEditingPageName('') }
                       }}
+                      maxLength={12}
                       className="px-3 py-1.5 rounded-full text-xs ns-bold bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/30 text-[var(--accent-900)] dark:text-[var(--accent-300)] outline-none w-28"
                     />
                   ) : (

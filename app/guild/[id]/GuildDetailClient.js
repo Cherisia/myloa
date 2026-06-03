@@ -609,6 +609,9 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   }
 
   async function saveSettings() {
+    const trimmedName = settingsForm.name?.trim() || ''
+    if (!trimmedName) { alert('길드 이름을 입력하세요'); return }
+    if (!/^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]+$/.test(trimmedName)) { alert('길드 이름은 한글, 영어, 숫자만 사용 가능합니다.'); return }
     setLoading('settings')
     try {
       const res = await fetch(`/api/expedition/${expedition.id}`, {
@@ -1065,8 +1068,8 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
             <p className="text-xs ns-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">길드 설정</p>
             <div>
               <label className="text-xs ns-bold text-gray-500 dark:text-gray-400 block mb-1.5">길드 이름</label>
-              <input value={settingsForm.name} maxLength={30}
-                onChange={e => setSettingsForm(p => ({ ...p, name: e.target.value }))}
+              <input value={settingsForm.name} maxLength={12}
+                onChange={e => setSettingsForm(p => ({ ...p, name: e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/g, '') }))}
                 className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#252525] border border-transparent focus:border-[var(--accent-400)] focus:bg-white dark:focus:bg-[#1a1a1a] text-sm dark:text-white outline-none transition-all"
               />
             </div>

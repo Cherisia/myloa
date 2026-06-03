@@ -22,9 +22,14 @@ export async function PATCH(request, { params }) {
   })
   if (!expedition) return NextResponse.json({ error: '권한 없음' }, { status: 403 })
 
+  const trimmed = customName?.trim().slice(0, 12) || null
+  if (trimmed && !/^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]+$/.test(trimmed)) {
+    return NextResponse.json({ error: '한글, 영어, 숫자만 사용 가능합니다.' }, { status: 400 })
+  }
+
   await prisma.loaExpedition.update({
     where: { id },
-    data:  { customName: customName?.trim() || null },
+    data:  { customName: trimmed },
   })
 
   return NextResponse.json({ success: true })

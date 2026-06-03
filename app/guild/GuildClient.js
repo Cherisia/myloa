@@ -66,13 +66,14 @@ function CreateModal({ onClose, onCreated }) {
             <label className="text-xs ns-bold text-gray-500 dark:text-gray-400 block mb-1.5">길드 이름</label>
             <input
               value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="레이드 같이 갈 사람!!"
-              maxLength={30}
+              onChange={e => setName(e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/g, ''))}
+              placeholder="레이드 같이 갈 사람"
+              maxLength={12}
               autoFocus
               className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#252525] border border-transparent focus:border-[var(--accent-400)] focus:bg-white dark:focus:bg-[#1a1a1a] text-sm dark:text-white outline-none transition-all"
               onKeyDown={e => e.key === 'Enter' && submit()}
             />
+            <p className="text-[11px] text-gray-300 dark:text-zinc-600 mt-1.5">한글, 영어, 숫자만 사용 가능 (최대 12자)</p>
           </div>
           {error && <p className="text-xs text-red-500">{error}</p>}
           <div className="grid grid-cols-2 gap-3">
