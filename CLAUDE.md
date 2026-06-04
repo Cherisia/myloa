@@ -344,6 +344,39 @@ verification: {
 `app/layout.js` RootLayout 내부에 `WebApplication` 스키마 삽입되어 있음.
 스키마 수정 시 [Schema.org WebApplication](https://schema.org/WebApplication) 스펙 준수.
 
+## UI/CSS 작업 공통 규칙
+
+CSS, JSX 클래스명, 스타일 관련 코드를 수정·추가할 때는 **항상** 아래 규칙을 준수한다.
+
+### 반응형 필수 검수
+
+모든 UI 변경은 다음 5개 뷰포트에서 정상 동작해야 한다:
+- **375px** (iPhone SE) / **390px** (iPhone 14)
+- **768px** (태블릿)
+- **1280px** (데스크톱)
+- **1536px** (2xl 사이드바 광고 레이아웃)
+
+구현 후 반드시 데스크톱·모바일(375px)·다크 모드 스크린샷을 확인하고, 세 화면이 모두 정상일 때만 완료로 간주한다.
+
+### 인터랙션 상태 필수 명시
+
+모든 인터랙티브 요소(버튼, 링크, 토글, 입력 등)에 반드시 포함:
+- `hover:` — 마우스 오버
+- `active:` — 클릭/탭 순간
+- `focus-visible:ring-2 focus-visible:ring-[var(--accent-400)]` — 키보드 포커스
+- `disabled:opacity-50 disabled:cursor-not-allowed` — 비활성 상태
+
+### 모바일 UX 규칙
+- 터치 타깃 최소 **44×44px** 보장
+- 고정 픽셀 너비(`w-[500px]` 등) 금지 → `w-full max-w-*` 사용
+- 긴 텍스트에 반드시 `truncate` 또는 `line-clamp-N` 적용
+- 스크롤 컨테이너에 `overflow-hidden` 또는 명시적 스크롤 처리
+
+### 간격 일관성
+Tailwind 기본 스케일(`p-2`, `gap-3`, `mt-4`)만 사용. 임의 픽셀값(`p-[7px]`, `gap-[13px]`)과 스케일 값 혼용 금지.
+
+---
+
 ## 알려진 제약
 - `AutoSetupModal`: `raidsByName`은 `previewBase`(chars+apiKey) + `strategy`에서 `useMemo`로 파생 — effect로 관리하지 않음
 - 드래그앤드랍(캐릭터 순서): HTML5 DnD API + 커스텀 ghost (`setDragImage`)
