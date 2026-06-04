@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { RAIDS } from '@/lib/raidData'
 
@@ -713,6 +713,15 @@ function RaidDetail({ raid, diffKey, onDiffChange }) {
 
   const hasMoreCol = moreMats && moreMats.some(g => g && g.length > 0)
 
+  const [imgVisible, setImgVisible] = useState(false)
+  const prevRaidId = useRef(null)
+  useEffect(() => {
+    if (prevRaidId.current !== raid.id) {
+      setImgVisible(false)
+      prevRaidId.current = raid.id
+    }
+  }, [raid.id])
+
   return (
     <div>
       {/* 레이드명 헤더 */}
@@ -724,8 +733,12 @@ function RaidDetail({ raid, diffKey, onDiffChange }) {
               alt={raid.name}
               fill
               sizes="(max-width: 768px) 100vw, 800px"
-              className="object-cover"
-              style={{ objectPosition: RAID_IMAGE_POSITION[raid.id] ?? '50% 15%' }}
+              className="object-cover transition-opacity duration-300"
+              style={{
+                objectPosition: RAID_IMAGE_POSITION[raid.id] ?? '50% 15%',
+                opacity: imgVisible ? 1 : 0,
+              }}
+              onLoad={() => setImgVisible(true)}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
             <div className="absolute bottom-0 left-0 p-4">
@@ -929,6 +942,13 @@ export default function RaidRewardClient() {
   const [activeCategory, setActiveCategory] = useState('all')
   const [selectedRaidId, setSelectedRaidId] = useState(RAIDS[0].id)
   const [selectedDiff, setSelectedDiff]     = useState(RAIDS[0].difficulties[0].key)
+
+  useEffect(() => {
+    Object.values(RAID_IMAGE).forEach(src => {
+      const img = new window.Image()
+      img.src = src
+    })
+  }, [])
 
   const filteredRaids = useMemo(() =>
     activeCategory === 'all'
