@@ -100,7 +100,7 @@ export default function Navbar() {
     { href: '/dashboard', label: '원정대' },
     ...(session ? [{ href: '/guild', label: '길드' }] : []),
     ...(session ? [{ href: '/group', label: '그룹', badge: pendingFriendCount }] : []),
-    { href: '/raids', label: '레이드 보상' },
+    { href: '/dictionary', label: '로아 사전' },
   ]
   const isActive = (href) => href && (pathname === href || pathname.startsWith(href + '/'))
 
