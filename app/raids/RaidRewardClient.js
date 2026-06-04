@@ -63,6 +63,42 @@ const MATERIAL_DISPLAY_NAME = {
   '손길-담금질 : 우레의 뇌옥':    '우레의 뇌옥',
 }
 
+// ── 레이드 이미지 매핑 ────────────────────────────────────────────────────────
+const RAID_IMAGE = {
+  'abrel-ex':      '/raids/abrelshud.webp',
+  'serca':         '/raids/serca.webp',
+  'cathedral':     '/raids/cathedral.webp',
+  'kazeros-final': '/raids/kazeros.webp',
+  'armocha':       '/raids/armocha.webp',
+  'mordum':        '/raids/mordum.webp',
+  'abrelshud-2':   '/raids/abrelshud.webp',
+  'egir-1':        '/raids/egir.webp',
+  'behemoth':      '/raids/behemoth.webp',
+  'echidna':       '/raids/echidna.webp',
+  'kamen':         '/raids/kamen.webp',
+  'ivory-tower':   '/raids/ivory-tower.webp',
+  'illiakan':      '/raids/illiakan.webp',
+  'kayangel':      '/raids/kayangel.webp',
+}
+
+// object-position: 인물 얼굴이 상단에 위치한 이미지를 가로 배너로 크롭할 때 조정
+const RAID_IMAGE_POSITION = {
+  'abrel-ex':      '50% 15%',
+  'serca':         '50% 30%',
+  'cathedral':     '50% 12%',
+  'kazeros-final': '50% 10%',
+  'armocha':       '50% 12%',
+  'mordum':        '50% 18%',
+  'abrelshud-2':   '50% 15%',
+  'egir-1':        '50% 8%',
+  'behemoth':      '50% 15%',
+  'echidna':       '50% 12%',
+  'kamen':         '50% 10%',
+  'ivory-tower':   '50% 15%',
+  'illiakan':      '50% 15%',
+  'kayangel':      '50% 15%',
+}
+
 // ── 난이도 ────────────────────────────────────────────────────────────────────
 const DIFF_LABEL = {
   nightmare: '나이트메어', hard: '하드', normal: '노말',
@@ -679,24 +715,59 @@ function RaidDetail({ raid, diffKey, onDiffChange }) {
 
   return (
     <div>
-      {/* 레이드명 헤더 — 추후 이미지 추가 예정 */}
+      {/* 레이드명 헤더 */}
       <div className="mb-5">
-        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${CAT_COLOR[cat]}`}>
-            {CAT_LABEL[cat]}
-          </span>
-          {raid.maxPlayers === 4 && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-[#2a2a2a] dark:text-gray-400 font-medium">
-              4인
-            </span>
-          )}
-        </div>
-        <h2 className="text-2xl font-black text-gray-900 dark:text-gray-50 tracking-tight">
-          {raid.name}
-        </h2>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-          최소 아이템레벨 {(diff.minItemLevel ?? raid.minItemLevel).toLocaleString()}
-        </p>
+        {RAID_IMAGE[raid.id] && (
+          <div className="relative w-full h-48 sm:h-60 rounded-2xl overflow-hidden mb-4">
+            <Image
+              src={RAID_IMAGE[raid.id]}
+              alt={raid.name}
+              fill
+              sizes="(max-width: 768px) 100vw, 800px"
+              className="object-cover"
+              style={{ objectPosition: RAID_IMAGE_POSITION[raid.id] ?? '50% 15%' }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-4">
+              <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${CAT_COLOR[cat]}`}>
+                  {CAT_LABEL[cat]}
+                </span>
+                {raid.maxPlayers === 4 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 text-white font-medium">
+                    4인
+                  </span>
+                )}
+              </div>
+              <h2 className="text-2xl font-black text-white tracking-tight drop-shadow">
+                {raid.name}
+              </h2>
+              <p className="text-xs text-white/70 mt-0.5">
+                최소 아이템레벨 {(diff.minItemLevel ?? raid.minItemLevel).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        )}
+        {!RAID_IMAGE[raid.id] && (
+          <>
+            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${CAT_COLOR[cat]}`}>
+                {CAT_LABEL[cat]}
+              </span>
+              {raid.maxPlayers === 4 && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-[#2a2a2a] dark:text-gray-400 font-medium">
+                  4인
+                </span>
+              )}
+            </div>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-gray-50 tracking-tight">
+              {raid.name}
+            </h2>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              최소 아이템레벨 {(diff.minItemLevel ?? raid.minItemLevel).toLocaleString()}
+            </p>
+          </>
+        )}
       </div>
 
       {/* 난이도 탭 + 골드 비율 */}
