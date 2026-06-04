@@ -39,7 +39,11 @@ function DictionaryTabs() {
         </div>
       </div>
 
-      {tab === 'synergy' && <SynergyClient />}
+      {tab === 'synergy' && (
+        <div className="pt-4">
+          <SynergyClient />
+        </div>
+      )}
       {tab === 'raids' && (
         <div className="pt-4">
           <RaidRewardClient />
