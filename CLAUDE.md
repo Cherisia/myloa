@@ -14,11 +14,16 @@
 ```
 app/
   layout.js            # 루트 레이아웃 — metadata, JSON-LD, 2xl 사이드바 레이아웃
-  page.js              # / → /dashboard permanentRedirect (308)
-  sitemap.js           # 공개 페이지 sitemap
+  page.js              # 홈페이지 — HomeClient 렌더링 (공지사항·이벤트·게임 일정·히어로)
+  HomeClient.js        # 홈 클라이언트 — 히어로 배너, 공지사항, 이벤트, 오늘의 일정 패널
+  sitemap.js           # 공개 페이지 sitemap (/ dashboard dictionary privacy)
   robots.js            # robots.txt — /api/ /settings /guild/ /group/ /history disallow
   globals.css          # 테마 CSS 변수, Tailwind 설정
   opengraph-image.js   # 기본 OG 이미지
+  raids/
+    page.js            # /dictionary?tab=raids 로 permanentRedirect (308)
+  synergy/
+    page.js            # /dictionary?tab=synergy 로 permanentRedirect (308)
   dashboard/
     page.js              # 서버 컴포넌트 — DB 조회 후 DashboardClient에 전달
     DashboardClient.js   # 메인 대시보드 (~2830줄)
@@ -82,6 +87,7 @@ app/
     history/route.js           # GET — 주간 숙제 기록 조회 (최근 10주)
     user/profile/route.js      # GET/PATCH — 프로필 조회·수정 (닉네임·설정)
     loa/route.js               # 로스트아크 OpenAPI 프록시 (서버사이드 rate limit)
+    loa-content/route.js       # GET — 공지사항·이벤트·게임 일정 통합 프록시 (홈페이지용)
     cron/daily-reset/route.js  # POST — 일일 숙제 초기화 (06:00 KST)
     cron/weekly-reset/route.js # POST — 주간 숙제 초기화 (수 06:00 KST)
 lib/
@@ -91,7 +97,7 @@ lib/
   db.js                # Prisma 클라이언트 (Neon serverless adapter)
   encrypt.js           # API 키 AES-256 암호화
 components/
-  Navbar.js
+  Navbar.js            # 상단 네비게이션 — 로고(/) 클릭 시 홈페이지 이동, 테마 선택, Discord 로그인
   ThemeProvider.js
   SessionProvider.js   # NextAuth 세션 래퍼
   DiscordIcon.js       # 공유 Discord SVG 아이콘
@@ -283,9 +289,11 @@ npx prisma migrate deploy
 ### 페이지별 인덱싱 정책
 | 페이지 | 인덱싱 | 이유 |
 |--------|--------|------|
-| `/dashboard` | ✅ index | 비로그인 데모 접근 가능 — 핵심 랜딩 페이지 |
-| `/raids` | ✅ index | 공개 페이지 |
+| `/` | ✅ index | 홈페이지 — 공지사항·이벤트·게임 일정, 비로그인 접근 가능 |
+| `/dashboard` | ✅ index | 비로그인 데모 접근 가능 |
+| `/dictionary` | ✅ index | 공개 페이지 |
 | `/privacy` | ✅ index | 공개 페이지 |
+| `/raids`, `/synergy` | ❌ noindex | `/dictionary`로 리다이렉트 — sitemap 불필요 |
 | `/guild`, `/guild/[id]` | ❌ noindex | 로그인 필수 |
 | `/group` | ❌ noindex | 로그인 필수 |
 | `/settings` | ❌ noindex | 로그인 필수 |
@@ -318,7 +326,7 @@ openGraph: { title: '로스트아크 레이드 보상 정보 - myloa' }  // ✅ 
 - **description**: 공개(index) 페이지는 80자 이상, 핵심 키워드(로스트아크, 레이드 숙제, 골드 계산 등) 포함
 - **canonical**: 공개 페이지에는 `alternates: { canonical: 'https://myloa.app/경로' }` 추가
 - `metadataBase`는 `layout.js`의 `metadata` 객체 안에만 선언 (standalone export 금지)
-- 루트(`/`) 리다이렉트는 `permanentRedirect` 사용 (308 — SEO 신호 전달)
+- 서브페이지 리다이렉트(`/raids`, `/synergy` 등)는 `permanentRedirect` 사용 (308 — SEO 신호 전달)
 
 ### 검색엔진 인증 코드
 `app/layout.js` `verification` 필드에 설정되어 있음:

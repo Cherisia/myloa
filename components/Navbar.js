@@ -97,6 +97,7 @@ export default function Navbar() {
   const s = THEME_STYLE[theme] || THEME_STYLE.yellow
 
   const navLinks = [
+    { href: '/', label: '홈' },
     { href: '/dashboard', label: '원정대' },
     ...(session ? [{ href: '/guild', label: '길드' }] : []),
     ...(session ? [{ href: '/group', label: '그룹', badge: pendingFriendCount }] : []),
@@ -153,7 +154,7 @@ export default function Navbar() {
     </div>
   ) : (
     <button
-      onClick={() => signIn('discord', { callbackUrl: '/dashboard' })}
+      onClick={() => signIn('discord', { callbackUrl: '/' })}
       className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] ns-bold text-white transition-all active:scale-95 ${mobile ? 'w-full justify-center py-2 text-xs' : ''}`}
       style={{ backgroundColor: DISCORD_BG }}
       onMouseEnter={e => e.currentTarget.style.backgroundColor = DISCORD_HOVER}
@@ -170,7 +171,7 @@ export default function Navbar() {
       <div className="px-4 2xl:pl-52 2xl:pr-52 flex items-center gap-6" style={{ height: 50 }}>
 
         {/* 로고 */}
-        <Link href="/dashboard" className="flex items-center flex-shrink-0">
+        <Link href="/" className="flex items-center flex-shrink-0">
           <span className="inline-flex items-baseline tracking-tight select-none gap-px">
             <span className={`text-[17px] ns-bold ${s.logoMy}`}>my</span>
             <span className={`text-[22px] ns-extrabold leading-none ${s.logoAccent}`}>loa</span>
@@ -248,7 +249,7 @@ export default function Navbar() {
       >
         {/* 상단 헤더 — 로고 + 닫기 */}
         <div className={`flex items-center justify-between px-5 border-b ${s.header}`} style={{ height: 54 }}>
-          <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center">
+          <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center">
             <span className="inline-flex items-baseline tracking-tight select-none gap-px">
               <span className={`text-[17px] ns-bold ${s.logoMy}`}>my</span>
               <span className={`text-[22px] ns-extrabold leading-none ${s.logoAccent}`}>loa</span>
@@ -359,7 +360,7 @@ export default function Navbar() {
               </Link>
             ) : (
               <button
-                onClick={() => { setMobileOpen(false); signIn('discord', { callbackUrl: '/dashboard' }) }}
+                onClick={() => { setMobileOpen(false); signIn('discord', { callbackUrl: '/' }) }}
                 className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm ns-bold text-white transition-all active:scale-95"
                 style={{ backgroundColor: DISCORD_BG }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = DISCORD_HOVER}
