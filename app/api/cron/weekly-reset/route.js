@@ -9,7 +9,7 @@ import { RAID_MAP, getDifficulty, calcGold, getNextResetAt } from '@/lib/raidDat
 export async function GET(request) {
   const authHeader = request.headers.get('authorization')
   const secret = process.env.CRON_SECRET
-  if (secret && authHeader !== `Bearer ${secret}`) {
+  if (!secret || authHeader !== `Bearer ${secret}`) {
     return NextResponse.json({ error: '인증 실패' }, { status: 401 })
   }
 

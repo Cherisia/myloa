@@ -12,7 +12,7 @@ const REST_GAUGE_NAMES = new Set(['혼돈의 균열', '쿠르잔 전선', '카�
 export async function GET(request) {
   const authHeader = request.headers.get('authorization')
   const secret = process.env.CRON_SECRET
-  if (secret && authHeader !== `Bearer ${secret}`) {
+  if (!secret || authHeader !== `Bearer ${secret}`) {
     return NextResponse.json({ error: '인증 실패' }, { status: 401 })
   }
 
