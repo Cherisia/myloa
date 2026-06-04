@@ -34,17 +34,15 @@ export async function GET(request) {
   // 초기화 시간 지난 항목 자동 리셋
   const resetIds = raids.filter(r => isResetPassed(r.resetAt)).map(r => r.id)
   if (resetIds.length > 0) {
-    await prisma.$transaction(
-      resetIds.map(id => prisma.characterRaid.update({
-        where: { id },
-        data: {
-          gateClears: [],
-          moreDone: false,
-          moreFrom: 'bound',
-          resetAt: getNextResetAt(),
-        },
-      }))
-    )
+    await prisma.characterRaid.updateMany({
+      where: { id: { in: resetIds } },
+      data: {
+        gateClears: [],
+        moreDone: false,
+        moreFrom: 'bound',
+        resetAt: getNextResetAt(),
+      },
+    })
   }
 
   const fresh = await prisma.characterRaid.findMany({

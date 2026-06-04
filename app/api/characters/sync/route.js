@@ -52,10 +52,13 @@ export async function POST() {
   }
 
   let updatedCount = 0
+  const CONCURRENCY = 5
 
-  await Promise.all(
-    expeditions.flatMap(exp =>
-      exp.characters.map(async (char) => {
+  const allChars = expeditions.flatMap(exp => exp.characters)
+
+  for (let i = 0; i < allChars.length; i += CONCURRENCY) {
+    await Promise.all(
+      allChars.slice(i, i + CONCURRENCY).map(async (char) => {
         try {
           const data = await fetchProfile(char.name, apiKey)
           if (!data?.ArmoryProfile) return
@@ -77,7 +80,7 @@ export async function POST() {
         }
       })
     )
-  )
+  }
 
   // 마지막 동기화 시각 갱신
   await prisma.user.update({
