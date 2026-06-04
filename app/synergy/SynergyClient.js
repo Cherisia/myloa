@@ -256,6 +256,77 @@ const SYNERGY_DATA = [
 
 const GROUPS = ['전체', '전사(남)', '전사(여)', '무도가(남)', '무도가(여)', '헌터(남)', '헌터(여)', '마법사', '암살자', '스페셜리스트']
 
+// ── 시너지 타입 필터 ──────────────────────────────────────────────────────────
+function TypeFilter({ active, onChange }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {SYNERGY_TYPES.map(({ key, label }) => (
+        <button
+          key={key}
+          onClick={() => onChange(key)}
+          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors
+            ${active === key
+              ? 'bg-[var(--accent-400)] text-[var(--accent-900)]'
+              : 'bg-gray-100 text-gray-500 dark:bg-[#1e1e1e] dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#252525]'
+            }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function ClassCard({ data, highlightType }) {
+  const { class: name, icon, skills, synergies } = data
+
+  return (
+    <div className="bg-white dark:bg-[#1c1c1c] rounded-xl shadow-border p-3 flex flex-col gap-2 hover:shadow-md transition-shadow h-full">
+      {/* 아이콘 + 이름 */}
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#151515] flex items-center justify-center flex-shrink-0">
+          <Image
+            src={`/class/${icon}.svg`}
+            alt={name}
+            width={26}
+            height={26}
+            className="object-contain"
+            style={{ filter: 'brightness(0) saturate(100%) invert(40%) sepia(10%) saturate(500%) hue-rotate(180deg)' }}
+            unoptimized
+          />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight truncate">{name}</p>
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight truncate" title={skills.join(' / ')}>
+            {skills.join(' / ')}
+          </p>
+        </div>
+      </div>
+
+      {/* 시너지 뱃지들 */}
+      <div className="flex flex-col gap-1">
+        {synergies.map((s, i) => {
+          const badge = SYNERGY_BADGE[s.type]
+          if (!badge) return null
+          return (
+            <div key={i} className={`rounded-md px-2 py-1 ${badge.bg}`}>
+              <div className="flex items-center justify-between gap-1">
+                <span className={`text-xs ${badge.text}`}>{badge.label}</span>
+                <span className={`text-xs font-bold ${badge.text}`}>{s.value}</span>
+              </div>
+              {s.condition !== '공통' && (
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 truncate" title={s.condition}>
+                  {s.condition}
+                </p>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function SynergyClient() {
   const [filterType, setFilterType]   = useState('all')
   const [filterGroup, setFilterGroup] = useState('전체')
@@ -270,127 +341,99 @@ export default function SynergyClient() {
     })
   }, [filterType, filterGroup, search])
 
-
   return (
-    <div className="min-h-screen">
-      <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 pt-2 pb-6 sm:pb-10">
 
-        {/* 헤더 */}
-        <div className="mb-6">
-          <h1 className="text-2xl ns-bold text-gray-900 dark:text-gray-100">직업 시너지</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            파티 구성 시 참고하세요. 각인 선택에 따라 시너지가 달라질 수 있습니다.
-          </p>
-        </div>
+      {/* 페이지 헤더 */}
+      <div className="mb-5 flex items-baseline gap-3">
+        <h1 className="text-3xl font-black text-gray-900 dark:text-gray-50 tracking-tight">직업 시너지</h1>
+        <p className="text-sm text-gray-400 dark:text-gray-500 shrink-0">파티 구성 시 참고하세요</p>
+      </div>
 
-        {/* 시너지 타입 탭 */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          {SYNERGY_TYPES.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setFilterType(key)}
-              className={[
-                'px-3 py-1.5 rounded-full text-sm transition-all',
-                filterType === key
-                  ? 'bg-[var(--accent-400)] text-[var(--accent-900)] ns-bold shadow-sm'
-                  : 'bg-white dark:bg-[#242424] text-gray-500 dark:text-gray-400 shadow-border hover:bg-gray-50 dark:hover:bg-[#2a2a2a]',
-              ].join(' ')}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* 직업군 탭 + 검색 */}
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          <div className="flex flex-wrap gap-1.5">
-            {GROUPS.map((g) => (
-              <button
-                key={g}
-                onClick={() => setFilterGroup(g)}
-                className={[
-                  'px-2.5 py-1 rounded-md text-xs transition-all',
-                  filterGroup === g
-                    ? 'bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 text-[var(--accent-700)] dark:text-[var(--accent-300)] ns-bold'
-                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300',
-                ].join(' ')}
-              >
-                {g}
-              </button>
+      {/* ── 모바일 네비게이션 ── */}
+      <div className="md:hidden space-y-3 mb-6">
+        <TypeFilter active={filterType} onChange={setFilterType} />
+        <div className="flex gap-2">
+          <select
+            value={filterGroup}
+            onChange={e => setFilterGroup(e.target.value)}
+            className="flex-1 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 appearance-none"
+          >
+            {GROUPS.map(g => (
+              <option key={g} value={g}>{g}</option>
             ))}
-          </div>
+          </select>
           <input
             type="text"
             placeholder="직업 검색…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="ml-auto w-36 px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-[#242424] shadow-border text-gray-700 dark:text-gray-300 placeholder-gray-300 dark:placeholder-gray-600 outline-none focus:shadow-[0_0_0_2px_var(--accent-400)]"
+            className="w-32 px-3 py-2.5 text-sm rounded-xl bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] text-gray-700 dark:text-gray-300 placeholder-gray-300 dark:placeholder-gray-600 outline-none focus:border-[var(--accent-400)]"
           />
-        </div>
-
-        {filtered.length === 0
-          ? <p className="text-sm text-gray-400 dark:text-gray-600 text-center py-16">해당하는 직업이 없습니다.</p>
-          : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-              {filtered.map((c) => (
-                <ClassCard key={c.class} data={c} highlightType={filterType} />
-              ))}
-            </div>
-          )
-        }
-      </div>
-    </div>
-  )
-}
-
-function ClassCard({ data, highlightType }) {
-  const { class: name, icon, skills, synergies } = data
-  const displaySynergies = highlightType === 'all'
-    ? synergies
-    : synergies.filter((s) => s.type === highlightType)
-
-  return (
-    <div className="bg-white dark:bg-[#242424] rounded-xl shadow-border p-3 flex flex-col gap-2 hover:shadow-md transition-shadow">
-      {/* 아이콘 + 이름 */}
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
-          <Image
-            src={`/class/${icon}.svg`}
-            alt={name}
-            width={26}
-            height={26}
-            className="object-contain"
-            style={{ filter: 'brightness(0) saturate(100%) invert(40%) sepia(10%) saturate(500%) hue-rotate(180deg)' }}
-            unoptimized
-          />
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm ns-bold text-gray-800 dark:text-gray-100 leading-tight truncate">{name}</p>
-          <p className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight truncate" title={skills.join(' / ')}>
-            {skills.join(' / ')}
-          </p>
         </div>
       </div>
 
-      {/* 시너지 뱃지들 */}
-      <div className="flex flex-col gap-1">
-        {displaySynergies.map((s, i) => {
-          const badge = SYNERGY_BADGE[s.type]
-          if (!badge) return null
-          return (
-            <div key={i} className={`rounded-md px-2 py-1 ${badge.bg}`}>
-              <div className="flex items-center justify-between gap-1">
-                <span className={`text-xs ${badge.text}`}>{badge.label}</span>
-                <span className={`text-xs ns-bold ${badge.text}`}>{s.value}</span>
+      {/* ── 레이아웃 ── */}
+      <div className="md:flex gap-8 items-start">
+
+        {/* 사이드바 (데스크탑) */}
+        <div className="hidden md:flex flex-col w-52 shrink-0 gap-4">
+          <TypeFilter active={filterType} onChange={setFilterType} />
+
+          {/* 검색 */}
+          <input
+            type="text"
+            placeholder="직업 검색…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-xl bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] text-gray-700 dark:text-gray-300 placeholder-gray-300 dark:placeholder-gray-600 outline-none focus:border-[var(--accent-400)]"
+          />
+
+          {/* 직업군 목록 */}
+          <div className="space-y-0.5">
+            {GROUPS.map(g => {
+              const isSelected = filterGroup === g
+              const count = g === '전체'
+                ? SYNERGY_DATA.length
+                : SYNERGY_DATA.filter(c => c.group === g).length
+              return (
+                <button
+                  key={g}
+                  onClick={() => setFilterGroup(g)}
+                  className={`w-full text-left flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all
+                    ${isSelected
+                      ? 'bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 text-[var(--accent-800)] dark:text-[var(--accent-300)]'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] hover:text-gray-900 dark:hover:text-gray-200'
+                    }`}
+                >
+                  <span className="text-sm font-semibold truncate flex-1">{g}</span>
+                  <span className={`text-[11px] font-bold shrink-0 tabular-nums
+                    ${isSelected ? 'text-[var(--accent-600)] dark:text-[var(--accent-400)]' : 'text-gray-300 dark:text-gray-600'}`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* 구분선 (데스크탑) */}
+        <div className="hidden md:block w-px self-stretch bg-gray-200 dark:bg-[#2d2d2d] shrink-0" />
+
+        {/* 메인 패널 */}
+        <div className="flex-1 min-w-0">
+          {filtered.length === 0
+            ? <p className="text-sm text-gray-400 dark:text-gray-600 text-center py-16">해당하는 직업이 없습니다.</p>
+            : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 items-stretch">
+                {filtered.map((c) => (
+                  <ClassCard key={c.class} data={c} highlightType={filterType} />
+                ))}
               </div>
-              {s.condition !== '공통' && (
-                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 truncate" title={s.condition}>
-                  {s.condition}
-                </p>
-              )}
-            </div>
-          )
-        })}
+            )
+          }
+        </div>
       </div>
     </div>
   )
