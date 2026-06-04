@@ -11,7 +11,7 @@ export default function AdSense({ slot, className = '', sidebar = false }) {
   useEffect(() => {
     if (pushedRef.current) return
     const ins = insRef.current
-    if (!ins) return
+    if (!ins || ins.getBoundingClientRect().width === 0) return
     pushedRef.current = true
     try {
       ;(window.adsbygoogle = window.adsbygoogle || []).push({})
