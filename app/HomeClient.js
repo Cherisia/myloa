@@ -385,7 +385,7 @@ function CategoryTimerChip({ cat, allTimes, loading }) {
       {loading
         ? <Skeleton className="w-16 h-4" />
         : countdown
-          ? <span className="text-sm ns-bold tabular-nums" style={{ color: meta.accent ?? '#888' }}>{countdown}</span>
+          ? <span className="text-sm ns-bold tabular-nums" style={{ color: meta.accent ?? '#888' }} suppressHydrationWarning>{countdown}</span>
           : <span className="text-xs text-gray-400 dark:text-zinc-500">오늘 일정이 없습니다</span>
       }
     </div>
@@ -448,11 +448,7 @@ function CalendarSection({ calendar, loading }) {
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
-export default function HomeClient({ initialNotices = [], initialEvents = [], initialCalendar = [] }) {
-  const [notices] = useState(initialNotices)
-  const [events] = useState(initialEvents)
-  const [calendar] = useState(initialCalendar)
-
+export default function HomeClient({ initialNotices: notices = [], initialEvents: events = [], initialCalendar: calendar = [] }) {
   return (
     <div className="max-w-screen-xl mx-auto px-4 py-6 space-y-6">
 
