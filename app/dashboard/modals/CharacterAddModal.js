@@ -107,8 +107,9 @@ export default function CharacterAddModal({ existingNames, existingGoldChars = [
     setLoading(true); setError(''); setResults(null); setSelected(new Set()); setIsNewExpedition(false); setMatchedExpeditionId(null); setTargetTabName(null)
     try {
       const loaParams = new URLSearchParams({ characterName: charName.trim() })
-      if (apiKey.trim()) loaParams.set('apiKey', apiKey.trim())
-      const res  = await fetch(`/api/loa?${loaParams}`)
+      const res  = await fetch(`/api/loa?${loaParams}`, {
+        headers: apiKey.trim() ? { 'X-Loa-Api-Key': apiKey.trim() } : {},
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '알 수 없는 오류')
       if (apiKey.trim()) {

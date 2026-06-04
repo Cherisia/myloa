@@ -90,7 +90,8 @@ async function loaFetchWith429Fallback(path, keys) {
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
   const characterName = searchParams.get('characterName')
-  let apiKey = (searchParams.get('apiKey') || '').trim()
+  // apiKey는 헤더로 수신 (URL 노출 방지). 하위 호환을 위해 쿼리스트링도 fallback으로 허용
+  let apiKey = (request.headers.get('x-loa-api-key') || searchParams.get('apiKey') || '').trim()
 
   if (!characterName) {
     return NextResponse.json({ error: '캐릭터명이 필요합니다' }, { status: 400 })

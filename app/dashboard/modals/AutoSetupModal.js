@@ -37,7 +37,9 @@ export default function AutoSetupModal({ onApply, onClose, existingRaids, existi
     if (!apiKey.trim()) return setError('API 키를 입력하세요')
     setLoading(true); setError('')
     try {
-      const res  = await fetch(`/api/loa?characterName=${encodeURIComponent(charName.trim())}&apiKey=${encodeURIComponent(apiKey.trim())}`)
+      const res  = await fetch(`/api/loa?characterName=${encodeURIComponent(charName.trim())}`, {
+        headers: { 'X-Loa-Api-Key': apiKey.trim() },
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '오류 발생')
       const top6 = [...data].sort((a, b) => b.itemLevel - a.itemLevel).slice(0, 6)
