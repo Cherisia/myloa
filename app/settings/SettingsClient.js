@@ -146,7 +146,7 @@ export default function SettingsClient({ user, session }) {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#111111]">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-lg px-4 py-10 space-y-4">
 
         {/* 헤더 */}

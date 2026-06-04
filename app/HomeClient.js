@@ -296,7 +296,7 @@ function ContentCard({ item }) {
 
   return (
     <div
-      className="relative flex gap-3 p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-700/50 hover:bg-zinc-200/70 dark:hover:bg-zinc-700 transition-colors cursor-default"
+      className="relative flex items-center gap-3 p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-700/50 hover:bg-zinc-200/70 dark:hover:bg-zinc-700 transition-colors cursor-default"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -421,7 +421,7 @@ function CalendarSection({ calendar, loading }) {
       <SectionHeader icon="📅" title="오늘의 일정" />
 
       {/* 카테고리 타이머 헤더 3개 */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         {FIXED_CATEGORIES.map(cat => (
           <CategoryTimerChip
             key={cat}
@@ -477,7 +477,7 @@ export default function HomeClient() {
     <div className="max-w-screen-xl mx-auto px-4 py-6 space-y-6">
 
       {/* 히어로 배너 */}
-      <section className="relative rounded-2xl overflow-hidden shadow-xl" style={{ minHeight: 320 }}>
+      <section className="relative rounded-2xl overflow-hidden shadow-xl min-h-[220px] sm:min-h-[192px] md:min-h-[224px] lg:min-h-[256px]">
         {/* 배경 이미지 */}
         <Image
           src="/hero-bg.webp"
@@ -489,9 +489,11 @@ export default function HomeClient() {
         />
         {/* 오버레이 그라디언트 */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/25 to-black/5" />
+        {/* 하단 copyright 가리기 */}
+        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black/70 to-transparent" />
 
         {/* 콘텐츠 */}
-        <div className="relative z-10 px-8 py-12 md:px-14 md:py-16 flex flex-col items-center justify-center text-center" style={{ minHeight: 320 }}>
+        <div className="relative z-10 px-8 py-10 md:px-14 md:py-12 flex flex-col items-center justify-center text-center min-h-[220px] sm:min-h-[192px] md:min-h-[224px] lg:min-h-[256px]">
           <h1 className="text-2xl md:text-3xl ns-extrabold drop-shadow mb-4 leading-tight" style={{ color: '#ffffff' }}>
             로스트아크 숙제 관리
           </h1>

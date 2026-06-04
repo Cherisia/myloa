@@ -63,7 +63,7 @@ const THEME_STYLE = {
     logoutText:   'text-gray-400 hover:text-gray-700',
   },
   dark: {
-    header:       'bg-[#111111]/95 border-white/[0.06]',
+    header:       'bg-[#1e1e1e]/95 border-white/[0.06]',
     logo:         'text-white',
     logoMy:       'text-zinc-600',
     logoAccent:   'text-zinc-100',
@@ -126,6 +126,26 @@ export default function Navbar() {
 
   const displayNickname = session?.user?.nickname || session?.user?.name || session?.user?.email || ''
 
+  useEffect(() => {
+    if (mobileOpen) {
+      document.documentElement.style.overflow = 'hidden'
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+    } else {
+      document.documentElement.style.overflow = ''
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
+    return () => {
+      document.documentElement.style.overflow = ''
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
+  }, [mobileOpen])
+
   const UserArea = ({ mobile = false }) => session ? (
     <div className={`flex items-center gap-1 ${mobile ? 'w-full justify-between' : ''}`}>
       {/* 아바타 + 닉네임 → 설정 페이지 */}
@@ -136,17 +156,17 @@ export default function Navbar() {
         {session.user?.image ? (
           <Image
             src={session.user.image} alt=""
-            width={24} height={24}
-            className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10"
+            width={28} height={28}
+            className="h-7 w-7 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10"
           />
         ) : (
-          <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center">
-            <span className="text-[10px] ns-bold text-gray-600 dark:text-zinc-300">
+          <div className="h-7 w-7 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center">
+            <span className="text-[11px] ns-bold text-gray-600 dark:text-zinc-300">
               {(displayNickname || '?')[0].toUpperCase()}
             </span>
           </div>
         )}
-        <span className={`text-[11px] max-w-[80px] truncate ${s.userText}`}>
+        <span className={`text-xs max-w-[96px] truncate ${s.userText}`}>
           {displayNickname}
         </span>
       </Link>
@@ -155,7 +175,7 @@ export default function Navbar() {
   ) : (
     <button
       onClick={() => signIn('discord', { callbackUrl: '/' })}
-      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] ns-bold text-white transition-all active:scale-95 ${mobile ? 'w-full justify-center py-2 text-xs' : ''}`}
+      className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs ns-bold text-white transition-all active:scale-95 ${mobile ? 'w-full justify-center py-2 text-xs' : ''}`}
       style={{ backgroundColor: DISCORD_BG }}
       onMouseEnter={e => e.currentTarget.style.backgroundColor = DISCORD_HOVER}
       onMouseLeave={e => e.currentTarget.style.backgroundColor = DISCORD_BG}
@@ -167,14 +187,22 @@ export default function Navbar() {
 
   return (
     <>
-    <header className={`sticky top-0 z-50 border-b backdrop-blur-md ${s.header}`}>
-      <div className="px-4 2xl:pl-52 2xl:pr-52 flex items-center gap-6" style={{ height: 50 }}>
+    <header
+      className={`z-50 border-b ${s.header} ${
+        mobileOpen
+          ? 'sm:sticky sm:top-0 fixed inset-0 flex flex-col'
+          : 'sticky top-0 backdrop-blur-md'
+      }`}
+      style={mobileOpen ? { backgroundColor: theme === 'dark' ? '#1e1e1e' : '#ffffff' } : undefined}
+    >
+      {/* 상단 바 */}
+      <div className="px-4 2xl:pl-52 2xl:pr-52 flex items-center gap-6 flex-shrink-0" style={{ height: 61 }}>
 
         {/* 로고 */}
-        <Link href="/" className="flex items-center flex-shrink-0">
+        <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center flex-shrink-0">
           <span className="inline-flex items-baseline tracking-tight select-none gap-px">
-            <span className={`text-[17px] ns-bold ${s.logoMy}`}>my</span>
-            <span className={`text-[22px] ns-extrabold leading-none ${s.logoAccent}`}>loa</span>
+            <span className={`text-[17px] sm:text-[21px] ns-bold ${s.logoMy}`}>my</span>
+            <span className={`text-[22px] sm:text-[30px] ns-extrabold leading-none ${s.logoAccent}`}>loa</span>
           </span>
         </Link>
 
@@ -188,7 +216,7 @@ export default function Navbar() {
               key={label}
               type="button"
               onClick={onClick}
-              className={`relative px-2.5 py-1 text-xs transition-colors duration-150 ${s.navBase}`}
+              className={`relative px-3 py-1 text-sm sm:text-[15px] transition-colors duration-150 ${s.navBase}`}
             >
               {label}
             </button>
@@ -196,7 +224,7 @@ export default function Navbar() {
             <Link
               key={href}
               href={href}
-              className={`relative flex items-center gap-1 px-2.5 py-1 text-xs transition-colors duration-150 ${
+              className={`relative flex items-center gap-1 px-3 py-1 text-sm sm:text-[15px] transition-colors duration-150 ${
                 isActive(href) ? s.navActive : s.navBase
               }`}
             >
@@ -222,11 +250,11 @@ export default function Navbar() {
           <UserArea />
         </div>
 
-        {/* 모바일 버튼 */}
+        {/* 모바일 햄버거 / 닫기 버튼 */}
         <button
           onClick={() => setMobileOpen(v => !v)}
           className={`sm:hidden ml-auto h-8 w-8 flex items-center justify-center rounded-lg transition-colors ${s.navBase}`}
-          aria-label="메뉴"
+          aria-label={mobileOpen ? '메뉴 닫기' : '메뉴'}
         >
           {mobileOpen ? (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -239,35 +267,10 @@ export default function Navbar() {
           )}
         </button>
       </div>
-    </header>
 
-    {/* 모바일 전체화면 메뉴 오버레이 */}
-    {mobileOpen && (
-      <div
-        className="sm:hidden fixed inset-0 z-[60] flex flex-col"
-        style={theme === 'dark' ? { backgroundColor: '#111111' } : { backgroundColor: '#ffffff' }}
-      >
-        {/* 상단 헤더 — 로고 + 닫기 */}
-        <div className={`flex items-center justify-between px-5 border-b ${s.header}`} style={{ height: 54 }}>
-          <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center">
-            <span className="inline-flex items-baseline tracking-tight select-none gap-px">
-              <span className={`text-[17px] ns-bold ${s.logoMy}`}>my</span>
-              <span className={`text-[22px] ns-extrabold leading-none ${s.logoAccent}`}>loa</span>
-            </span>
-          </Link>
-          <button
-            onClick={() => setMobileOpen(false)}
-            className={`h-9 w-9 flex items-center justify-center rounded-xl transition-colors ${s.navBase}`}
-            aria-label="메뉴 닫기"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-
-        {/* 메뉴 항목들 */}
-        <nav className="flex-1 overflow-y-auto px-4 pt-4 pb-6">
+      {/* 모바일 풀스크린 메뉴 — 헤더 확장 */}
+      {mobileOpen && (
+        <nav className="sm:hidden flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-6">
           <div className="space-y-1">
             {navLinks.map(({ href, label, onClick, badge }) => onClick ? (
               <button
@@ -298,13 +301,13 @@ export default function Navbar() {
                   )}
                 </span>
                 {isActive(href) && (
-                  <span className={`w-1.5 h-1.5 rounded-full bg-[var(--accent-400)]`} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-400)]" />
                 )}
               </Link>
             ))}
           </div>
 
-          {/* 하단 구분선 */}
+          {/* 구분선 */}
           <div className="my-5 h-px" style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.07)' : '#f0f0f0' }} />
 
           {/* 테마 선택 */}
@@ -332,7 +335,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* 하단 구분선 */}
+          {/* 구분선 */}
           <div className="my-5 h-px" style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.07)' : '#f0f0f0' }} />
 
           {/* 유저 영역 */}
@@ -372,8 +375,8 @@ export default function Navbar() {
             )}
           </div>
         </nav>
-      </div>
-    )}
+      )}
+    </header>
 </>
   )
 }
