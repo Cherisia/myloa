@@ -1319,14 +1319,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
         <div className="min-w-0 flex-1 overflow-hidden">
           {/* 원정대 페이지 탭 */}
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin py-1.5 pl-0.5 pr-2 flex-nowrap">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin py-1 pl-0.5 pr-2 flex-nowrap">
             {/* 전체보기 탭 */}
             <button
               onClick={() => { setActivePageId(null); setEditingPageId(null) }}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors whitespace-nowrap ${
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs ns-bold transition-all duration-200 whitespace-nowrap ${
                 activePageId === null
-                  ? 'bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/30 text-[var(--accent-900)] dark:text-[var(--accent-300)]'
-                  : 'shadow-border-md text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                  ? 'bg-[var(--accent-400)] text-[var(--accent-900)] shadow-[0_2px_8px_var(--accent-glow)]'
+                  : 'bg-white dark:bg-[#252525] border border-gray-200 dark:border-[#3a3a3a] text-gray-500 dark:text-gray-400 hover:border-[var(--accent-400)] dark:hover:border-[var(--accent-600)] hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               전체
@@ -1373,15 +1373,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         if (e.key === 'Escape') { setEditingPageId(null); setEditingPageName('') }
                       }}
                       maxLength={12}
-                      className="px-3 py-1.5 rounded-full text-xs ns-bold bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/30 text-[var(--accent-900)] dark:text-[var(--accent-300)] outline-none w-28"
+                      className="px-3.5 py-1.5 rounded-full text-xs ns-bold bg-[var(--accent-400)] text-[var(--accent-900)] outline-none w-28 shadow-[0_2px_8px_var(--accent-glow)]"
                     />
                   ) : (
                     <button
                       onClick={() => { setActivePageId(page.id); setEditingPageId(null) }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ns-bold transition-all duration-150 ${
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs ns-bold transition-all duration-200 ${
                         isActive
-                          ? 'bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/30 text-[var(--accent-900)] dark:text-[var(--accent-300)]'
-                          : 'shadow-border-md text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                          ? 'bg-[var(--accent-400)] text-[var(--accent-900)] shadow-[0_2px_8px_var(--accent-glow)]'
+                          : 'bg-white dark:bg-[#252525] border border-gray-200 dark:border-[#3a3a3a] text-gray-500 dark:text-gray-400 hover:border-[var(--accent-400)] dark:hover:border-[var(--accent-600)] hover:text-gray-800 dark:hover:text-gray-200'
                       } ${isDragOver ? 'translate-x-1' : ''}`}
                     >
                       <span>{page.name}</span>
@@ -1423,12 +1423,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               )
             })}
           </div>
-          {/* 현재 페이지 제목 + 캐릭터 수 */}
-          <div className="flex items-center gap-2 mt-2">
-            <h1 className="ns-extrabold text-lg text-gray-900 dark:text-white">
-              {activePageId === null ? '전체' : (expPages.find(p => p.id === activePageId)?.name || '원정대')}
-            </h1>
-          </div>
         </div>
         <div className="flex items-center gap-1.5 sm:flex-shrink-0">
           <button onClick={() => setShowRaidSettings(true)}
@@ -1456,10 +1450,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       </div>
 
       {/* ── 요약 카드 + 광고 배너 ── */}
-      <div className="flex items-stretch gap-3 sm:-mt-3">
+      <div className="flex items-stretch gap-3 sm:mt-1">
       <div className="grid grid-cols-1 gap-2 w-full md:grid-cols-3 md:gap-3 md:max-w-[50%]">
         {/* 원정대 캐릭터 */}
-        <div className="rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 flex flex-col min-h-[80px] md:min-h-0">
+        <div className="relative rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 pt-4 pb-3.5 flex flex-col min-h-[88px] md:min-h-0 overflow-hidden">
+          <span className="absolute inset-x-0 top-0 h-[3px] bg-[var(--accent-400)] opacity-70" />
           {isLoggedIn && activeChars.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full gap-1.5 py-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600">
@@ -1473,31 +1468,35 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             const repChar = activeChars.find(c => c.id === repCharId)
               || activeChars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b)
             return (
-              <div className="flex items-start gap-1.5 flex-1">
-                <span className="text-[var(--accent-400)] flex-shrink-0 mt-px"><IconCrown /></span>
+              <div className="flex items-start gap-2.5 flex-1">
+                <div className="mt-0.5 p-1.5 rounded-lg bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/25 text-[var(--accent-500)] flex-shrink-0">
+                  <IconCrown />
+                </div>
                 {repChar ? (
                   <div className="min-w-0 flex-1 flex flex-col justify-between h-full">
                     <div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <p className="text-xs min-[1920px]:text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{repChar.name}</p>
-                      </div>
+                      <p className="text-[13px] min-[1920px]:text-sm ns-bold text-gray-900 dark:text-gray-100 truncate leading-tight">{repChar.name}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{repChar.class}</p>
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-400">{repChar.class}</span>
                         {repChar.itemLevel != null && (
                           <span className="flex items-center gap-0.5">
                             <span className="flex items-center justify-center text-gray-400 dark:text-gray-500"><IconItemLevel /></span>
-                            <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-200">{repChar.itemLevel.toFixed(2)}</span>
+                            <span className="text-[11px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-200">{repChar.itemLevel.toFixed(2)}</span>
                           </span>
                         )}
                         {repChar.combatPower != null && (
                           <span className="flex items-center gap-0.5">
                             <Image src="/combat-power.svg" alt="" width={10} height={10} unoptimized className="w-[10px] h-[10px] object-contain flex-shrink-0" />
-                            <span className="text-[10px] min-[1920px]:text-xs text-gray-600 dark:text-gray-300">{Math.round(repChar.combatPower).toLocaleString()}</span>
+                            <span className="text-[11px] min-[1920px]:text-xs text-gray-600 dark:text-gray-300">{Math.round(repChar.combatPower).toLocaleString()}</span>
                           </span>
                         )}
                       </div>
                     </div>
-                    <p className="text-[11px] min-[1920px]:text-[13px] text-gray-600 dark:text-gray-400 mt-auto pt-3">{activePageId === null ? '전체 캐릭터' : '원정대 캐릭터'} <span className="ns-bold text-gray-700 dark:text-gray-200">{activeChars.length}개</span></p>
+                    <div className="mt-auto pt-2.5 flex items-center gap-1.5">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500">{activePageId === null ? '전체 캐릭터' : '원정대 캐릭터'}</span>
+                      <span className="w-px h-2.5 bg-gray-200 dark:bg-[#3a3a3a] flex-shrink-0" />
+                      <span className="text-[11px] ns-bold text-gray-700 dark:text-gray-200">{activeChars.length}개</span>
+                    </div>
                   </div>
                 ) : (
                   <p className="text-[11px] text-gray-400 dark:text-gray-500">미설정</p>
@@ -1508,84 +1507,98 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
 
         {/* 이번 주 획득 골드 */}
-        <div className="rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 overflow-hidden flex flex-col justify-center">
-          <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 mb-2">이번 주 획득</p>
-          <div className="flex flex-col gap-1.5">
+        <div className="relative rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 pt-4 pb-3.5 overflow-hidden flex flex-col justify-center">
+          <span className="absolute inset-x-0 top-0 h-[3px] bg-[var(--accent-400)] opacity-70" />
+          <p className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-400 dark:text-gray-500 mb-2.5 uppercase tracking-wide">이번 주 획득</p>
+          <div className="flex flex-col gap-2.5">
             {/* 귀속 행 */}
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">귀속</span>
-              <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 ml-auto justify-end">
-                <AnimatedGold value={earnedBound} className="ns-bold text-xs min-[1920px]:text-sm text-[var(--accent-600)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0" />
-                <span className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0">/ {totalBound.toLocaleString()}G</span>
+            <div>
+              <div className="flex items-center gap-1.5 mb-1 min-w-0">
+                <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md bg-[var(--accent-100)] dark:bg-zinc-700/50 text-[var(--accent-600)] dark:text-zinc-300 whitespace-nowrap shrink-0">귀속</span>
+                <div className="flex flex-wrap items-baseline gap-x-1 ml-auto justify-end">
+                  <AnimatedGold value={earnedBound} className="ns-bold text-xs min-[1920px]:text-sm text-[var(--accent-600)] dark:text-zinc-200 tabular-nums whitespace-nowrap shrink-0" />
+                  <span className="text-[10px] min-[1920px]:text-xs text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap shrink-0">/ {totalBound.toLocaleString()}G</span>
+                </div>
               </div>
+              {totalBound > 0 && (
+                <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[var(--accent-400)] to-[var(--accent-200)] dark:from-zinc-500 dark:to-zinc-400 transition-all duration-700" style={{ width: `${Math.min((earnedBound / totalBound) * 100, 100)}%` }} />
+                </div>
+              )}
             </div>
             {/* 거래 행 */}
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem]">거래</span>
-              <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 ml-auto justify-end">
-                <AnimatedGold value={earnedTrade} className="ns-bold text-xs min-[1920px]:text-sm text-[var(--accent-600)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0" />
-                <span className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0">/ {totalTrade.toLocaleString()}G</span>
+            <div>
+              <div className="flex items-center gap-1.5 mb-1 min-w-0">
+                <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md bg-purple-50 dark:bg-zinc-700/50 text-purple-400 dark:text-zinc-300 whitespace-nowrap shrink-0">거래</span>
+                <div className="flex flex-wrap items-baseline gap-x-1 ml-auto justify-end">
+                  <AnimatedGold value={earnedTrade} className="ns-bold text-xs min-[1920px]:text-sm text-purple-400 dark:text-zinc-200 tabular-nums whitespace-nowrap shrink-0" />
+                  <span className="text-[10px] min-[1920px]:text-xs text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap shrink-0">/ {totalTrade.toLocaleString()}G</span>
+                </div>
               </div>
+              {totalTrade > 0 && (
+                <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-purple-300 to-violet-200 dark:from-zinc-500 dark:to-zinc-400 transition-all duration-700" style={{ width: `${Math.min((earnedTrade / totalTrade) * 100, 100)}%` }} />
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* 완료 레이드 */}
-        <div className="rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 py-3 overflow-hidden flex flex-col justify-center">
+        <div className="relative rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 pt-4 pb-3.5 overflow-hidden flex flex-col min-h-[124px]">
+          <span className="absolute inset-x-0 top-0 h-[3px] bg-[var(--accent-400)] opacity-70" />
+          <p className="text-[10px] ns-bold text-gray-400 dark:text-gray-500 mb-2.5 uppercase tracking-wide flex-shrink-0">완료 레이드</p>
           {allTotalCount <= totalCount ? (
-            /* 모든 레이드가 골드 레이드 — 기존 단일 바 */
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400">완료 레이드</p>
-                <span className="text-xs min-[1920px]:text-sm ns-bold text-gray-700 dark:text-gray-300">
-                  {completedCount} / {totalCount}
+            /* 골드만 — 남은 세로 공간 중앙 정렬 */
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="flex items-center gap-1.5 mb-1 min-w-0">
+                <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)]">골드</span>
+                <span className="text-[10px] ns-bold text-gray-500 dark:text-gray-400 tabular-nums ml-auto">{completedCount} / {totalCount}</span>
+                <span className="text-[13px] ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
+                  {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
                 </span>
               </div>
-              <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden mb-1.5">
+              <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-[var(--accent-400)] transition-all duration-500"
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent-500)] to-[var(--accent-300)] transition-all duration-700"
                   style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
                 />
               </div>
-              <p className="ns-extrabold text-xl min-[1920px]:text-2xl text-gray-900 dark:text-white">
-                {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
-              </p>
-            </>
+            </div>
           ) : (
             /* 골드 + 전체 두 개 바 */
-            <>
-              <p className="text-xs min-[1920px]:text-sm text-gray-600 dark:text-gray-400 mb-2">완료 레이드</p>
-              <div className="flex flex-col gap-1.5">
-                {/* 골드 행 */}
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem] bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)]">골드</span>
-                  <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden min-w-0">
-                    <div
-                      className="h-full rounded-full bg-[var(--accent-400)] transition-all duration-500"
-                      style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
-                    />
-                  </div>
-                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-300 tabular-nums whitespace-nowrap shrink-0 min-w-[2.75rem] text-right">{completedCount} / {totalCount}</span>
-                  <span className="text-[14px] min-[1920px]:text-base ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0 min-w-[2.5rem] text-right">
+            <div className="flex flex-col gap-2.5">
+              <div>
+                <div className="flex items-center gap-1.5 mb-1 min-w-0">
+                  <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)]">골드</span>
+                  <span className="text-[10px] ns-bold text-gray-500 dark:text-gray-400 tabular-nums ml-auto">{completedCount} / {totalCount}</span>
+                  <span className="text-[13px] ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
                     {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
                   </span>
                 </div>
-                {/* 전체 행 */}
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-[10px] min-[1920px]:text-xs ns-bold px-1.5 rounded whitespace-nowrap shrink-0 flex items-center justify-center min-h-[1.75rem] min-w-[2.25rem] bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400">전체</span>
-                  <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden min-w-0">
-                    <div
-                      className="h-full rounded-full bg-blue-400 transition-all duration-500"
-                      style={{ width: allTotalCount > 0 ? `${(allCompletedCount / allTotalCount) * 100}%` : '0%' }}
-                    />
-                  </div>
-                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-700 dark:text-gray-300 tabular-nums whitespace-nowrap shrink-0 min-w-[2.75rem] text-right">{allCompletedCount} / {allTotalCount}</span>
-                  <span className="text-[14px] min-[1920px]:text-base ns-bold text-blue-400 tabular-nums whitespace-nowrap shrink-0 min-w-[2.5rem] text-right">
+                <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[var(--accent-500)] to-[var(--accent-300)] transition-all duration-700"
+                    style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 mb-1 min-w-0">
+                  <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400">전체</span>
+                  <span className="text-[10px] ns-bold text-gray-500 dark:text-gray-400 tabular-nums ml-auto">{allCompletedCount} / {allTotalCount}</span>
+                  <span className="text-[13px] ns-bold text-gray-400 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
                     {allTotalCount > 0 ? Math.round((allCompletedCount / allTotalCount) * 100) : 0}%
                   </span>
                 </div>
+                <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-500 dark:to-gray-400 transition-all duration-700"
+                    style={{ width: allTotalCount > 0 ? `${(allCompletedCount / allTotalCount) * 100}%` : '0%' }}
+                  />
+                </div>
               </div>
-            </>
+            </div>
           )}
         </div>
 
@@ -1956,26 +1969,26 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                       >
                                         <div className={`flex items-center rounded-full border transition-colors duration-300 ${
                                           moreFrom === 'bound'
-                                            ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800/40'
-                                            : 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800/40'
+                                            ? 'bg-[var(--accent-100)] dark:bg-zinc-700/50 border-[var(--accent-200)] dark:border-zinc-600/40'
+                                            : 'bg-purple-50 dark:bg-zinc-700/50 border-purple-200 dark:border-zinc-600/40'
                                         }`} style={{ height: 17, padding: 2, gap: 2 }}>
                                           {moreFrom === 'bound' ? (
                                             <>
-                                              <span className="text-[9px] ns-bold select-none leading-none pl-1.5 text-orange-500 dark:text-orange-400 whitespace-nowrap">귀속</span>
-                                              <div className="flex-shrink-0 rounded-full bg-orange-400 dark:bg-orange-500 shadow" style={{ width: 13, height: 13 }} />
+                                              <span className="text-[9px] ns-bold select-none leading-none pl-1.5 text-[var(--accent-600)] dark:text-zinc-300 whitespace-nowrap">귀속</span>
+                                              <div className="flex-shrink-0 rounded-full bg-[var(--accent-400)] dark:bg-zinc-500 shadow" style={{ width: 13, height: 13 }} />
                                             </>
                                           ) : (
                                             <>
-                                              <div className="flex-shrink-0 rounded-full bg-blue-400 dark:bg-blue-500 shadow" style={{ width: 13, height: 13 }} />
-                                              <span className="text-[9px] ns-bold select-none leading-none pr-1.5 text-blue-500 dark:text-blue-400 whitespace-nowrap">거래</span>
+                                              <div className="flex-shrink-0 rounded-full bg-purple-200 dark:bg-zinc-500 shadow" style={{ width: 13, height: 13 }} />
+                                              <span className="text-[9px] ns-bold select-none leading-none pr-1.5 text-purple-400 dark:text-zinc-300 whitespace-nowrap">거래</span>
                                             </>
                                           )}
                                         </div>
                                       </button>
                                       <div className={`pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-[8px] ns-bold shadow-md opacity-0 group-hover/moretip:opacity-100 transition-opacity z-10 ${
                                         moreFrom === 'bound'
-                                          ? 'bg-orange-50 dark:bg-orange-950/60 border-orange-200 dark:border-orange-800/50 text-orange-600 dark:text-orange-300'
-                                          : 'bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800/50 text-sky-600 dark:text-sky-300'
+                                          ? 'bg-[var(--accent-50)] dark:bg-zinc-800 border-[var(--accent-200)] dark:border-zinc-600/50 text-[var(--accent-600)] dark:text-zinc-300'
+                                          : 'bg-purple-50 dark:bg-zinc-800 border-purple-200 dark:border-zinc-600/50 text-purple-500 dark:text-zinc-300'
                                       }`}>
                                         더보기 -{moreGold.toLocaleString()}G
                                       </div>
