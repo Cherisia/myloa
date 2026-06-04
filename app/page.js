@@ -1,5 +1,29 @@
 import HomeClient from './HomeClient'
 
+export const revalidate = 3600 // 1시간마다 ISR 재생성
+
+const LOA_BASE = process.env.LOA_API_BASE || 'https://developer-lostark.game.onstove.com'
+
+async function loaFetch(path) {
+  const key = (
+    process.env.LOA_PUBLIC_SEARCH_API_KEY ||
+    process.env.LOA_PUBLIC_SEARCH_API_KEY_FALLBACK ||
+    process.env.LOA_API_KEY ||
+    ''
+  ).trim()
+  if (!key) return null
+  try {
+    const res = await fetch(`${LOA_BASE}${path}`, {
+      headers: { Authorization: `bearer ${key}`, Accept: 'application/json' },
+      next: { revalidate: 3600 },
+    })
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
 export const metadata = {
   title: { absolute: '로스트아크 숙제 관리 & 게임 정보 - myloa' },
   description:
@@ -21,6 +45,18 @@ export const metadata = {
   },
 }
 
-export default function HomePage() {
-  return <HomeClient />
+export default async function HomePage() {
+  const [notices, events, calendar] = await Promise.all([
+    loaFetch('/news/notices'),
+    loaFetch('/news/events'),
+    loaFetch('/gamecontents/calendar'),
+  ])
+
+  return (
+    <HomeClient
+      initialNotices={notices ?? []}
+      initialEvents={events ?? []}
+      initialCalendar={calendar ?? []}
+    />
+  )
 }

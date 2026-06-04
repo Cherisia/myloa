@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -448,30 +448,10 @@ function CalendarSection({ calendar, loading }) {
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
-export default function HomeClient() {
-  const [notices, setNotices] = useState([])
-  const [events, setEvents] = useState([])
-  const [calendar, setCalendar] = useState([])
-  const [loadingNotices, setLoadingNotices] = useState(true)
-  const [loadingEvents, setLoadingEvents] = useState(true)
-  const [loadingCalendar, setLoadingCalendar] = useState(true)
-
-  const fetchData = useCallback(async () => {
-    const [n, e, c] = await Promise.allSettled([
-      fetch('/api/loa-content?type=notices').then(r => r.ok ? r.json() : []),
-      fetch('/api/loa-content?type=events').then(r => r.ok ? r.json() : []),
-      fetch('/api/loa-content?type=calendar').then(r => r.ok ? r.json() : []),
-    ])
-    setNotices(n.status === 'fulfilled' && Array.isArray(n.value) ? n.value : [])
-    setLoadingNotices(false)
-    setEvents(e.status === 'fulfilled' && Array.isArray(e.value) ? e.value : [])
-    setLoadingEvents(false)
-    const calData = c.status === 'fulfilled' && Array.isArray(c.value) ? c.value : []
-    setCalendar(calData)
-    setLoadingCalendar(false)
-  }, [])
-
-  useEffect(() => { fetchData() }, [fetchData])
+export default function HomeClient({ initialNotices = [], initialEvents = [], initialCalendar = [] }) {
+  const [notices] = useState(initialNotices)
+  const [events] = useState(initialEvents)
+  const [calendar] = useState(initialCalendar)
 
   return (
     <div className="max-w-screen-xl mx-auto px-4 py-6 space-y-6">
@@ -505,12 +485,12 @@ export default function HomeClient() {
       </section>
 
       {/* 오늘의 게임 일정 */}
-      <CalendarSection calendar={calendar} loading={loadingCalendar} />
+      <CalendarSection calendar={calendar} loading={false} />
 
       {/* 공지사항 + 이벤트 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <NoticesPanel notices={notices} loading={loadingNotices} />
-        <EventsPanel events={events} loading={loadingEvents} />
+        <NoticesPanel notices={notices} loading={false} />
+        <EventsPanel events={events} loading={false} />
       </div>
 
     </div>

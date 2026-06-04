@@ -20,7 +20,7 @@ async function loaFetch(path) {
   if (!key) return null
   const res = await fetch(`${LOA_BASE}${path}`, {
     headers: { Authorization: `bearer ${key}`, Accept: 'application/json' },
-    next: { revalidate: 300 }, // 5분 캐시
+    next: { revalidate: 3600 }, // 1시간 캐시
   })
   if (!res.ok) return null
   return res.json()
@@ -31,24 +31,36 @@ export async function GET(request) {
   const type = searchParams.get('type')
 
   try {
+    if (type === 'all') {
+      const [notices, events, calendar] = await Promise.all([
+        loaFetch('/news/notices'),
+        loaFetch('/news/events'),
+        loaFetch('/gamecontents/calendar'),
+      ])
+      return NextResponse.json(
+        { notices: notices ?? [], events: events ?? [], calendar: calendar ?? [] },
+        { headers: { 'Cache-Control': 'public, max-age=3600, stale-while-revalidate=300' } },
+      )
+    }
+
     if (type === 'notices') {
       const data = await loaFetch('/news/notices')
       return NextResponse.json(data ?? [], {
-        headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=60' },
+        headers: { 'Cache-Control': 'public, max-age=3600, stale-while-revalidate=300' },
       })
     }
 
     if (type === 'events') {
       const data = await loaFetch('/news/events')
       return NextResponse.json(data ?? [], {
-        headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=60' },
+        headers: { 'Cache-Control': 'public, max-age=3600, stale-while-revalidate=300' },
       })
     }
 
     if (type === 'calendar') {
       const data = await loaFetch('/gamecontents/calendar')
       return NextResponse.json(data ?? [], {
-        headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=60' },
+        headers: { 'Cache-Control': 'public, max-age=3600, stale-while-revalidate=300' },
       })
     }
 
