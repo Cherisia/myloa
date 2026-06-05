@@ -1507,10 +1507,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
 
         {/* 이번 주 획득 골드 */}
-        <div className="relative rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 pt-4 pb-3.5 overflow-hidden flex flex-col justify-center">
+        <div className="relative rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 pt-4 pb-3.5 overflow-hidden flex flex-col">
           <span className="absolute inset-x-0 top-0 h-[3px] bg-[var(--accent-400)] opacity-70" />
-          <p className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-400 dark:text-gray-500 mb-2.5 uppercase tracking-wide">이번 주 획득</p>
-          <div className="flex flex-col gap-2.5">
+          <p className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-400 dark:text-gray-500 mb-2.5 uppercase tracking-wide shrink-0">이번 주 획득</p>
+          <div className="flex-1 flex flex-col justify-center gap-2.5">
             {/* 귀속 행 */}
             <div>
               <div className="flex items-center gap-1.5 mb-1 min-w-0">
@@ -1545,18 +1545,20 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
 
         {/* 완료 레이드 */}
-        <div className="relative rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 pt-4 pb-3.5 overflow-hidden flex flex-col min-h-[124px]">
+        <div className="relative rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 pt-4 pb-3.5 overflow-hidden flex flex-col">
           <span className="absolute inset-x-0 top-0 h-[3px] bg-[var(--accent-400)] opacity-70" />
-          <p className="text-[10px] ns-bold text-gray-400 dark:text-gray-500 mb-2.5 uppercase tracking-wide flex-shrink-0">완료 레이드</p>
+          <p className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-400 dark:text-gray-500 mb-2.5 uppercase tracking-wide shrink-0">완료 레이드</p>
           {allTotalCount <= totalCount ? (
-            /* 골드만 — 남은 세로 공간 중앙 정렬 */
-            <div className="flex-1 flex flex-col justify-center">
+            /* 골드만 — 뱃지+카운트+퍼센트 한 줄, 바 전체 너비 */
+            <div className="flex-1 flex flex-col justify-center gap-1.5">
               <div className="flex items-center gap-1.5 mb-1 min-w-0">
                 <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)]">골드</span>
-                <span className="text-[10px] ns-bold text-gray-500 dark:text-gray-400 tabular-nums ml-auto">{completedCount} / {totalCount}</span>
-                <span className="text-[13px] ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
-                  {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
-                </span>
+                <div className="flex items-baseline gap-1 ml-auto shrink-0">
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-500 dark:text-gray-400 tabular-nums whitespace-nowrap">{completedCount} / {totalCount}</span>
+                  <span className="text-xs min-[1920px]:text-sm ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap min-w-[2.25rem] text-right">
+                    {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
+                  </span>
+                </div>
               </div>
               <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
                 <div
@@ -1567,12 +1569,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             </div>
           ) : (
             /* 골드 + 전체 두 개 바 */
-            <div className="flex flex-col gap-2.5">
+            <div className="flex-1 flex flex-col justify-center gap-2.5">
               <div>
                 <div className="flex items-center gap-1.5 mb-1 min-w-0">
                   <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)]">골드</span>
-                  <span className="text-[10px] ns-bold text-gray-500 dark:text-gray-400 tabular-nums ml-auto">{completedCount} / {totalCount}</span>
-                  <span className="text-[13px] ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-500 dark:text-gray-400 tabular-nums ml-auto whitespace-nowrap shrink-0">{completedCount} / {totalCount}</span>
+                  <span className="text-xs min-[1920px]:text-sm ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
                     {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
                   </span>
                 </div>
@@ -1586,8 +1588,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               <div>
                 <div className="flex items-center gap-1.5 mb-1 min-w-0">
                   <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400">전체</span>
-                  <span className="text-[10px] ns-bold text-gray-500 dark:text-gray-400 tabular-nums ml-auto">{allCompletedCount} / {allTotalCount}</span>
-                  <span className="text-[13px] ns-bold text-gray-400 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
+                  <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-500 dark:text-gray-400 tabular-nums ml-auto whitespace-nowrap shrink-0">{allCompletedCount} / {allTotalCount}</span>
+                  <span className="text-xs min-[1920px]:text-sm ns-bold text-gray-400 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
                     {allTotalCount > 0 ? Math.round((allCompletedCount / allTotalCount) * 100) : 0}%
                   </span>
                 </div>
