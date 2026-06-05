@@ -1319,14 +1319,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
         <div className="min-w-0 flex-1 overflow-hidden">
           {/* 원정대 페이지 탭 */}
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin py-1 pl-0.5 pr-2 flex-nowrap">
+          <div className="relative flex items-end gap-0.5 overflow-x-auto scrollbar-thin flex-nowrap pb-px pt-2">
+            {/* 하단 구분선 */}
+            <span className="absolute bottom-0 left-0 right-0 h-px bg-gray-200 dark:bg-[#2a2a2a] pointer-events-none" />
             {/* 전체보기 탭 */}
             <button
               onClick={() => { setActivePageId(null); setEditingPageId(null) }}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs ns-bold transition-all duration-200 whitespace-nowrap ${
+              className={`relative flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs ns-bold transition-all duration-200 whitespace-nowrap rounded-t-lg ${
                 activePageId === null
-                  ? 'bg-[var(--accent-400)] text-[var(--accent-900)] shadow-[0_2px_8px_var(--accent-glow)]'
-                  : 'bg-white dark:bg-[#252525] border border-gray-200 dark:border-[#3a3a3a] text-gray-500 dark:text-gray-400 hover:border-[var(--accent-400)] dark:hover:border-[var(--accent-600)] hover:text-gray-800 dark:hover:text-gray-200'
+                  ? 'text-[var(--accent-600)] dark:text-[var(--accent-300)] bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[var(--accent-400)] after:rounded-t-full'
+                  : 'text-gray-400 dark:text-gray-500 hover:text-[var(--accent-500)] dark:hover:text-[var(--accent-300)] hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/10'
               }`}
             >
               전체
@@ -1357,12 +1359,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onDragEnd={() => { setDragExpId(null); setDropExpId(null) }}
                   className={`group/tab relative flex-shrink-0 transition-all duration-150 ${isDragging ? 'opacity-20 scale-95' : ''}`}
                 >
-                  {/* 드롭 위치 인디케이터 — 타겟 탭 왼쪽에 세로선 표시 */}
+                  {/* 드롭 위치 인디케이터 */}
                   {isDragOver && (
-                    <span className="absolute -left-1 top-1 bottom-1 w-0.5 rounded-full bg-[var(--accent-400)] pointer-events-none" />
+                    <span className="absolute -left-px top-2 bottom-0 w-0.5 rounded-full bg-[var(--accent-400)] pointer-events-none z-10" />
                   )}
                   {editingPageId === page.id ? (
-                    /* 이름 편집 중: input을 button 밖에 독립적으로 렌더 */
                     <input
                       autoFocus
                       value={editingPageName}
@@ -1373,25 +1374,25 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         if (e.key === 'Escape') { setEditingPageId(null); setEditingPageName('') }
                       }}
                       maxLength={12}
-                      className="px-3.5 py-1.5 rounded-full text-xs ns-bold bg-[var(--accent-400)] text-[var(--accent-900)] outline-none w-28 shadow-[0_2px_8px_var(--accent-glow)]"
+                      className="px-3 py-2 rounded-t-lg text-xs ns-bold bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/20 text-[var(--accent-600)] dark:text-[var(--accent-300)] outline-none w-24 border-b-2 border-[var(--accent-400)]"
                     />
                   ) : (
                     <button
                       onClick={() => { setActivePageId(page.id); setEditingPageId(null) }}
-                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs ns-bold transition-all duration-200 ${
+                      className={`relative flex items-center gap-1.5 px-4 py-2 text-xs ns-bold transition-all duration-200 rounded-t-lg whitespace-nowrap ${
                         isActive
-                          ? 'bg-[var(--accent-400)] text-[var(--accent-900)] shadow-[0_2px_8px_var(--accent-glow)]'
-                          : 'bg-white dark:bg-[#252525] border border-gray-200 dark:border-[#3a3a3a] text-gray-500 dark:text-gray-400 hover:border-[var(--accent-400)] dark:hover:border-[var(--accent-600)] hover:text-gray-800 dark:hover:text-gray-200'
+                          ? 'text-[var(--accent-600)] dark:text-[var(--accent-300)] bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[var(--accent-400)] after:rounded-t-full'
+                          : 'text-gray-400 dark:text-gray-500 hover:text-[var(--accent-500)] dark:hover:text-[var(--accent-300)] hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/10'
                       } ${isDragOver ? 'translate-x-1' : ''}`}
                     >
                       <span>{page.name}</span>
                       {isActive && (
                         <span
                           onClick={e => { e.stopPropagation(); setEditingPageId(page.id); setEditingPageName(page.name) }}
-                          className="opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+                          className="flex-shrink-0 opacity-50 hover:opacity-100 transition-opacity cursor-pointer"
                           title="이름 편집"
                         >
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                           </svg>
@@ -1412,7 +1413,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         }
                       }}
                       title="원정대 삭제"
-                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gray-200 dark:bg-[#444] text-gray-500 dark:text-gray-400 hover:bg-red-400 dark:hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors opacity-0 group-hover/tab:opacity-100"
+                      className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-100 dark:bg-red-900/40 text-red-400 dark:text-red-400 hover:bg-red-300 dark:hover:bg-red-500/70 hover:text-red-600 dark:hover:text-red-200 flex items-center justify-center transition-colors opacity-0 group-hover/tab:opacity-100 z-10"
                     >
                       <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -1424,25 +1425,28 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             })}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 sm:flex-shrink-0">
+        <div className="flex items-center gap-2 sm:flex-shrink-0">
+          {/* 숙제 설정 */}
           <button onClick={() => setShowRaidSettings(true)}
-            className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded shadow-border-md px-3 py-2 sm:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
+            className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1e1e1e] px-3.5 py-2 sm:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] hover:border-gray-300 dark:hover:border-[#444] active:scale-95 transition-all whitespace-nowrap shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-400)]">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
             </svg>
             숙제 설정
           </button>
+          {/* 캐릭터 설정 — 보조 액션: 중립 */}
           <button onClick={() => setShowCharEdit(true)}
-            className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded shadow-border-md px-3 py-2 sm:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] active:scale-95 transition-all whitespace-nowrap">
+            className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1e1e1e] px-3.5 py-2 sm:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] hover:border-gray-300 dark:hover:border-[#444] active:scale-95 transition-all whitespace-nowrap shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-400)]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
             </svg>
             캐릭터 설정
           </button>
+          {/* 캐릭터 갱신 — 보조 액션: 중립 */}
           <button
             onClick={() => isLoggedIn ? (chars.length === 0 ? setShowNoChar(true) : syncChars()) : setShowLoginGuide(true)}
             disabled={isLoggedIn && (syncing || syncCooldownSec > 0)}
-            className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded shadow-border-md dark:hover:bg-[#2a2a2a] px-3 py-2 sm:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-50 active:scale-95 transition-all whitespace-nowrap">
+            className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1e1e1e] px-3.5 py-2 sm:py-1.5 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] hover:border-gray-300 dark:hover:border-[#444] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all whitespace-nowrap shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-400)]">
             <span className={isLoggedIn && syncing ? 'animate-spin' : ''}><IconRefresh /></span>
             {isLoggedIn && syncing ? '갱신 중…' : '캐릭터 갱신'}
           </button>
