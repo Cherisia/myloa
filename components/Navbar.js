@@ -63,18 +63,18 @@ const THEME_STYLE = {
     logoutText:   'text-gray-400 hover:text-gray-700',
   },
   dark: {
-    header:       'bg-[#1e1e1e]/95 border-white/[0.06]',
+    header:       'bg-[#111116]/95 border-white/[0.08]',
     logo:         'text-white',
-    logoMy:       'text-zinc-600',
+    logoMy:       'text-zinc-500',
     logoAccent:   'text-zinc-100',
-    logoMark:     'bg-zinc-600',
-    navBase:      'text-zinc-500 hover:text-zinc-100',
+    logoMark:     'bg-zinc-500',
+    navBase:      'text-zinc-400 hover:text-white',
     navActive:    'text-white ns-bold',
     navUnderline: 'bg-zinc-400',
-    divider:      'bg-white/[0.07]',
-    dotRing:      'ring-zinc-400 ring-offset-[#111111]',
-    userText:     'text-zinc-400',
-    logoutText:   'text-zinc-600 hover:text-zinc-300',
+    divider:      'bg-white/[0.08]',
+    dotRing:      'ring-zinc-400 ring-offset-[#111116]',
+    userText:     'text-zinc-300',
+    logoutText:   'text-zinc-500 hover:text-zinc-200',
   },
 }
 
@@ -193,7 +193,7 @@ export default function Navbar() {
           ? 'sm:sticky sm:top-0 fixed inset-0 flex flex-col'
           : 'sticky top-0 backdrop-blur-md'
       }`}
-      style={mobileOpen ? { backgroundColor: theme === 'dark' ? '#1e1e1e' : '#ffffff' } : undefined}
+      style={mobileOpen ? { backgroundColor: theme === 'dark' ? '#111116' : '#ffffff' } : undefined}
     >
       {/* 상단 바 */}
       <div className="px-4 2xl:pl-52 2xl:pr-52 flex items-center gap-6 flex-shrink-0" style={{ height: 61 }}>

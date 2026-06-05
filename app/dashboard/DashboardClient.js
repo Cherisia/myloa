@@ -2612,7 +2612,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     onClick={() => { setAllTabSort('itemLevel'); localStorage.setItem('dashboard_allTabSort', 'itemLevel') }}
                     className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                       allTabSort === 'itemLevel'
-                        ? 'bg-[var(--accent-200)] text-[var(--accent-900)] shadow-sm'
+                        ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
                         : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
                     }`}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -2624,7 +2624,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     onClick={() => { setAllTabSort('expedition'); localStorage.setItem('dashboard_allTabSort', 'expedition') }}
                     className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                       allTabSort === 'expedition'
-                        ? 'bg-[var(--accent-200)] text-[var(--accent-900)] shadow-sm'
+                        ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
                         : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
                     }`}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -2641,7 +2641,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onClick={() => { setCardView(false); localStorage.setItem('dashboard_cardView', 'false') }}
                   className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                     !cardView
-                      ? 'bg-[var(--accent-200)] text-[var(--accent-900)] shadow-sm'
+                      ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
                       : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
                   }`}
                 >
@@ -2656,7 +2656,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onClick={() => { setCardView(true); localStorage.setItem('dashboard_cardView', 'true') }}
                   className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                     cardView
-                      ? 'bg-[var(--accent-200)] text-[var(--accent-900)] shadow-sm'
+                      ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
                       : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
                   }`}
                 >

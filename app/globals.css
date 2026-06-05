@@ -40,20 +40,20 @@
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.09);
 }
 .dark .shadow-border {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.11);
 }
 .shadow-border-md {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.13);
 }
 .dark .shadow-border-md {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 /* 테이블 행 하단 구분선 (border-b 대체 — 단방향 box-shadow) */
 .shadow-row {
   box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.08);
 }
 .dark .shadow-row {
-  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.07);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.09);
 }
 @media (min-width: 640px) {
   .sm\:shadow-border {
@@ -84,8 +84,8 @@ body {
 }
 
 .dark body {
-  background-color: #181818;
-  color: #e0e0e0;
+  background-color: #111116;
+  color: #ededed;
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -366,67 +366,86 @@ body {
    ─ 버튼/배경/텍스트 전반 재정의
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── 텍스트: 노랑 → 회색 계열 ── */
-.dark .text-yellow-400  { color: #b0b0b0 !important; }
-.dark .text-yellow-500  { color: #aaaaaa !important; }
-.dark .text-yellow-600  { color: #c0c0c0 !important; }
-.dark .text-yellow-700  { color: #a0a0a0 !important; }
-.dark .text-yellow-800  { color: #d0d0d0 !important; }
-.dark .text-yellow-900  { color: #d0d0d0 !important; }
-.dark .hover\:text-yellow-600:hover { color: #c0c0c0 !important; }
-.dark .hover\:text-yellow-700:hover { color: #c0c0c0 !important; }
+/* ── 폰트 두께 조정: 밝은 텍스트의 광번짐 현상 보정 ── */
+.dark .font-bold, .dark .ns-bold { font-weight: 600; }
+.dark .font-extrabold, .dark .ns-extrabold { font-weight: 700; }
+.dark h1, .dark h2, .dark h3 { font-weight: 600; }
+
+/* ── 텍스트: 노랑 → 밝은 중립 ── */
+.dark .text-yellow-400  { color: #c8c8d4 !important; }
+.dark .text-yellow-500  { color: #b8b8c8 !important; }
+.dark .text-yellow-600  { color: #d4d4e0 !important; }
+.dark .text-yellow-700  { color: #b0b0c0 !important; }
+.dark .text-yellow-800  { color: #e0e0e8 !important; }
+.dark .text-yellow-900  { color: #e0e0e8 !important; }
+.dark .hover\:text-yellow-600:hover { color: #d4d4e0 !important; }
+.dark .hover\:text-yellow-700:hover { color: #d4d4e0 !important; }
 
 /* ── 배경: 노랑 → 회색/중립 ── */
 /* 체크박스·프로그레스바 등 강조 fill */
-.dark .bg-yellow-500          { background-color: #666666 !important; } /* 더보기: 완료보다 조금 더 진한 회색 */
-.dark .bg-yellow-400          { background-color: #888888 !important; }
-.dark .bg-yellow-300          { background-color: #707070 !important; }
+.dark .bg-yellow-500          { background-color: #787888 !important; } /* 더보기: 완료보다 조금 더 진한 회색 */
+.dark .bg-yellow-400          { background-color: #9898a8 !important; }
+.dark .bg-yellow-300          { background-color: #7a7a8a !important; }
 /* 버튼 (bg-yellow-200) */
-.dark .bg-yellow-200          { background-color: #2e2e2e !important; }
+.dark .bg-yellow-200          { background-color: #2a2a32 !important; }
 /* 완료 셀 배경 */
-.dark .bg-yellow-50           { background-color: rgba(160,160,160,0.06) !important; }
-.dark .bg-yellow-100          { background-color: rgba(160,160,160,0.10) !important; }
-.dark .bg-yellow-900\/10      { background-color: rgba(160,160,160,0.07) !important; }
+.dark .bg-yellow-50           { background-color: rgba(200,200,220,0.06) !important; }
+.dark .bg-yellow-100          { background-color: rgba(200,200,220,0.09) !important; }
+.dark .bg-yellow-900\/10      { background-color: rgba(200,200,220,0.06) !important; }
 
 /* ── hover 배경 ── */
-.dark .hover\:bg-yellow-400:hover  { background-color: #707070 !important; }
-.dark .hover\:bg-yellow-300:hover  { background-color: #383838 !important; }
-.dark .hover\:bg-yellow-100:hover  { background-color: rgba(160,160,160,0.10) !important; }
-.dark .hover\:bg-yellow-50:hover   { background-color: rgba(160,160,160,0.06) !important; }
+.dark .hover\:bg-yellow-400:hover  { background-color: #7a7a8a !important; }
+.dark .hover\:bg-yellow-300:hover  { background-color: #353540 !important; }
+.dark .hover\:bg-yellow-100:hover  { background-color: rgba(200,200,220,0.09) !important; }
+.dark .hover\:bg-yellow-50:hover   { background-color: rgba(200,200,220,0.06) !important; }
 
 /* ── 테두리 ── */
-.dark .border-yellow-500      { border-color: #666666 !important; } /* 더보기 */
-.dark .border-yellow-400      { border-color: #666666 !important; }
-.dark .border-yellow-400\/60  { border-color: rgba(140,140,140,0.6) !important; }
-.dark .focus\:border-yellow-400:focus { border-color: #666666 !important; }
+.dark .border-yellow-500      { border-color: #707080 !important; } /* 더보기 */
+.dark .border-yellow-400      { border-color: #6e6e7e !important; }
+.dark .border-yellow-400\/60  { border-color: rgba(160,160,180,0.4) !important; }
+.dark .focus\:border-yellow-400:focus { border-color: #8080a0 !important; }
 
 /* ── 기타 ── */
-.dark .ring-yellow-400        { --tw-ring-color: #666666 !important; }
-.dark .accent-yellow-500      { accent-color: #888888 !important; }
-.dark .bg-yellow-400\/40      { background-color: rgba(160,160,160,0.15) !important; }
+.dark .ring-yellow-400        { --tw-ring-color: #8080a0 !important; }
+.dark .accent-yellow-500      { accent-color: #9898a8 !important; }
+.dark .bg-yellow-400\/40      { background-color: rgba(180,180,200,0.14) !important; }
 
 /* ── 완료 셀 hover ── */
-.dark .hover\:bg-yellow-900\/20:hover { background-color: rgba(160,160,160,0.10) !important; }
+.dark .hover\:bg-yellow-900\/20:hover { background-color: rgba(200,200,220,0.09) !important; }
 
 
 /* ═══════════════════════════════════════════════════════════════
-   다크 테마 — 흰색/밝은 텍스트 → 회색 톤
+   다크 테마 — 텍스트 계층 (명도 기반, WCAG AA 준수)
+   ─ 밝은 배경(#111116) 위에서 충분한 대비를 확보
+   ─ primary: near-white / secondary: cool-gray / muted: 적절한 대비
    ═══════════════════════════════════════════════════════════════ */
-.dark .text-white       { color: #c8c8c8 !important; }
-.dark .text-gray-100    { color: #c0c0c0 !important; }
-.dark .text-gray-200    { color: #b4b4b4 !important; }
-.dark .text-gray-300    { color: #9a9a9a !important; }
-.dark .text-gray-400    { color: #828282 !important; }
-.dark .text-gray-500    { color: #6e6e6e !important; }
+.dark .text-white       { color: #f0f0f6 !important; }   /* 14:1+ — 제목·주요 강조 */
+.dark .text-gray-100    { color: #e4e4ec !important; }   /* 12:1+ — 소제목 */
+.dark .text-gray-200    { color: #c8c8d4 !important; }   /* 8:1+  — 본문 */
+.dark .text-gray-300    { color: #a0a0b0 !important; }   /* 5:1+  — 보조 텍스트 */
+.dark .text-gray-400    { color: #909098 !important; }   /* 4.5:1+ — 힌트·부가정보 */
+.dark .text-gray-500    { color: #818190 !important; }   /* 3.5:1  — 최소 대비 */
 
 /* hover 상태 */
-.dark .hover\:text-gray-200:hover { color: #c0c0c0 !important; }
-.dark .dark\:hover\:text-gray-200:hover { color: #c0c0c0 !important; }
+.dark .hover\:text-gray-200:hover { color: #e4e4ec !important; }
+.dark .dark\:hover\:text-gray-200:hover { color: #e4e4ec !important; }
+.dark .dark\:hover\:text-gray-300:hover { color: #a0a0b0 !important; }
 
-/* 배경 밝기 조정 */
-.dark .bg-white         { background-color: #222222 !important; }
-.dark .bg-gray-50       { background-color: #1e1e1e !important; }
-.dark .bg-gray-100      { background-color: #252525 !important; }
+/* ── dark: 접두 텍스트 오버라이드 ──────────────────────────────
+   Tailwind dark:text-gray-* 는 라이트팔레트 값을 그대로 사용
+   어두운 배경에서 사실상 안 보이는 문제 해결
+   · gray-500(#6b7280) · gray-600(#4b5563) · gray-700(#374151) ── */
+.dark .dark\:text-gray-300 { color: #c8c8d4 !important; }   /* 보조 본문 (text-gray-400 !important 보정용) */
+.dark .dark\:text-gray-400 { color: #909098 !important; }   /* 힌트 텍스트 */
+.dark .dark\:text-gray-500 { color: #888898 !important; }   /* 보조 텍스트 */
+.dark .dark\:text-gray-600 { color: #727282 !important; }   /* 흐린 힌트 */
+.dark .dark\:text-gray-700 { color: #606072 !important; }   /* 매우 흐린 힌트 */
+
+/* 배경 레이어 — 명도 계층 구조 유지
+   body(#111116) → card(#1a1a22) → elevated(#222230) */
+.dark .bg-white         { background-color: #1a1a22 !important; }
+.dark .bg-gray-50       { background-color: #161620 !important; }
+.dark .bg-gray-100      { background-color: #20202c !important; }
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -483,45 +502,45 @@ body {
    누락 border/ring 오버라이드 — 다크 테마 (기본 클래스)
    ═══════════════════════════════════════════════════════════════ */
 /* border */
-.dark .border-yellow-100      { border-color: rgba(80,80,80,0.2) !important; }
-.dark .border-yellow-300      { border-color: #555555 !important; }
-.dark .border-yellow-200\/60  { border-color: rgba(100,100,100,0.3) !important; }
+.dark .border-yellow-100      { border-color: rgba(160,160,180,0.16) !important; }
+.dark .border-yellow-300      { border-color: #606070 !important; }
+.dark .border-yellow-200\/60  { border-color: rgba(160,160,180,0.25) !important; }
 /* hover border */
-.dark .hover\:border-yellow-400:hover      { border-color: #666666 !important; }
-.dark .hover\:border-yellow-200\/80:hover  { border-color: rgba(100,100,100,0.4) !important; }
-.dark .hover\:border-yellow-300\/60:hover  { border-color: rgba(100,100,100,0.35) !important; }
-.dark .hover\:border-yellow-300\/70:hover  { border-color: rgba(100,100,100,0.4) !important; }
+.dark .hover\:border-yellow-400:hover      { border-color: #7070a0 !important; }
+.dark .hover\:border-yellow-200\/80:hover  { border-color: rgba(160,160,180,0.35) !important; }
+.dark .hover\:border-yellow-300\/60:hover  { border-color: rgba(140,140,170,0.3) !important; }
+.dark .hover\:border-yellow-300\/70:hover  { border-color: rgba(140,140,170,0.35) !important; }
 /* ring */
-.dark .ring-yellow-300\/50    { --tw-ring-color: rgba(136,136,136,0.25) !important; }
-.dark .ring-yellow-400\/20    { --tw-ring-color: rgba(136,136,136,0.12) !important; }
-.dark .ring-yellow-400\/25    { --tw-ring-color: rgba(136,136,136,0.15) !important; }
-.dark .ring-yellow-400\/45    { --tw-ring-color: rgba(136,136,136,0.3) !important; }
+.dark .ring-yellow-300\/50    { --tw-ring-color: rgba(160,160,200,0.25) !important; }
+.dark .ring-yellow-400\/20    { --tw-ring-color: rgba(160,160,200,0.15) !important; }
+.dark .ring-yellow-400\/25    { --tw-ring-color: rgba(160,160,200,0.18) !important; }
+.dark .ring-yellow-400\/45    { --tw-ring-color: rgba(160,160,200,0.32) !important; }
 /* focus ring */
-.dark .focus\:ring-yellow-400\/20:focus    { --tw-ring-color: rgba(136,136,136,0.12) !important; }
+.dark .focus\:ring-yellow-400\/20:focus    { --tw-ring-color: rgba(160,160,200,0.15) !important; }
 /* hover ring */
-.dark .hover\:ring-yellow-400\/25:hover    { --tw-ring-color: rgba(136,136,136,0.15) !important; }
+.dark .hover\:ring-yellow-400\/25:hover    { --tw-ring-color: rgba(160,160,200,0.18) !important; }
 
 
 /* ═══════════════════════════════════════════════════════════════
    누락 border/ring 오버라이드 — 다크 테마 (dark: 접두 클래스)
    dark:xxx 형태의 Tailwind 다크모드 변형 클래스 오버라이드
    ═══════════════════════════════════════════════════════════════ */
-.dark .dark\:border-yellow-500\/70  { border-color: rgba(136,136,136,0.6) !important; }
-.dark .dark\:border-yellow-600      { border-color: #555555 !important; }
-.dark .dark\:border-yellow-600\/40  { border-color: rgba(136,136,136,0.4) !important; }
-.dark .dark\:border-yellow-700      { border-color: #444444 !important; }
-.dark .dark\:border-yellow-700\/30  { border-color: rgba(100,100,100,0.2) !important; }
-.dark .dark\:border-yellow-800\/35  { border-color: rgba(80,80,80,0.25) !important; }
-.dark .dark\:border-yellow-900\/40  { border-color: rgba(80,80,80,0.3) !important; }
+.dark .dark\:border-yellow-500\/70  { border-color: rgba(160,160,190,0.5) !important; }
+.dark .dark\:border-yellow-600      { border-color: #606078 !important; }
+.dark .dark\:border-yellow-600\/40  { border-color: rgba(160,160,190,0.32) !important; }
+.dark .dark\:border-yellow-700      { border-color: #505060 !important; }
+.dark .dark\:border-yellow-700\/30  { border-color: rgba(140,140,170,0.2) !important; }
+.dark .dark\:border-yellow-800\/35  { border-color: rgba(120,120,150,0.22) !important; }
+.dark .dark\:border-yellow-900\/40  { border-color: rgba(120,120,150,0.26) !important; }
 /* ring */
-.dark .dark\:ring-yellow-400\/35    { --tw-ring-color: rgba(136,136,136,0.25) !important; }
-.dark .dark\:ring-yellow-700\/30    { --tw-ring-color: rgba(100,100,100,0.2) !important; }
+.dark .dark\:ring-yellow-400\/35    { --tw-ring-color: rgba(160,160,200,0.26) !important; }
+.dark .dark\:ring-yellow-700\/30    { --tw-ring-color: rgba(140,140,180,0.2) !important; }
 /* hover */
-.dark .dark\:hover\:border-yellow-500\/40:hover { border-color: rgba(136,136,136,0.3) !important; }
-.dark .dark\:hover\:ring-yellow-500\/20:hover   { --tw-ring-color: rgba(136,136,136,0.12) !important; }
+.dark .dark\:hover\:border-yellow-500\/40:hover { border-color: rgba(160,160,190,0.3) !important; }
+.dark .dark\:hover\:ring-yellow-500\/20:hover   { --tw-ring-color: rgba(160,160,200,0.15) !important; }
 /* focus */
-.dark .dark\:focus\:border-yellow-500\/70:focus { border-color: #666666 !important; }
-.dark .dark\:focus\:ring-yellow-500\/15:focus   { --tw-ring-color: rgba(136,136,136,0.1) !important; }
+.dark .dark\:focus\:border-yellow-500\/70:focus { border-color: #8080a0 !important; }
+.dark .dark\:focus\:ring-yellow-500\/15:focus   { --tw-ring-color: rgba(160,160,200,0.12) !important; }
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -554,20 +573,20 @@ body {
 [data-theme="sky"] .text-blue-700                { color: #3730a3 !important; } /* indigo-700 */
 
 /* ── 다크 테마 — 불투명도 변형 (기본 클래스) ── */
-.dark .bg-yellow-100\/50       { background-color: rgba(160,160,160,0.07) !important; }
-.dark .bg-yellow-100\/70       { background-color: rgba(160,160,160,0.08) !important; }
-.dark .bg-yellow-100\/80       { background-color: rgba(160,160,160,0.10) !important; }
+.dark .bg-yellow-100\/50       { background-color: rgba(180,180,210,0.06) !important; }
+.dark .bg-yellow-100\/70       { background-color: rgba(180,180,210,0.08) !important; }
+.dark .bg-yellow-100\/80       { background-color: rgba(180,180,210,0.10) !important; }
 
 /* ── 다크 테마 — dark: 접두 클래스 오버라이드 ── */
-.dark .dark\:from-yellow-900\/20  { --tw-gradient-from: rgba(30,30,30,0.2) !important; }
-.dark .dark\:from-yellow-900\/25  { --tw-gradient-from: rgba(30,30,30,0.25) !important; }
-.dark .dark\:to-yellow-900\/5     { --tw-gradient-to: rgba(30,30,30,0.05) !important; }
-.dark .dark\:border-yellow-800\/30 { border-color: rgba(80,80,80,0.2) !important; }
-.dark .dark\:bg-yellow-900\/10    { background-color: rgba(160,160,160,0.07) !important; }
-.dark .dark\:bg-yellow-900\/15    { background-color: rgba(160,160,160,0.08) !important; }
-.dark .dark\:bg-yellow-900\/20    { background-color: rgba(160,160,160,0.10) !important; }
-.dark .dark\:bg-yellow-900\/25    { background-color: rgba(160,160,160,0.12) !important; }
-.dark .dark\:hover\:bg-yellow-900\/20:hover { background-color: rgba(160,160,160,0.10) !important; }
+.dark .dark\:from-yellow-900\/20  { --tw-gradient-from: rgba(26,26,34,0.2) !important; }
+.dark .dark\:from-yellow-900\/25  { --tw-gradient-from: rgba(26,26,34,0.25) !important; }
+.dark .dark\:to-yellow-900\/5     { --tw-gradient-to: rgba(26,26,34,0.05) !important; }
+.dark .dark\:border-yellow-800\/30 { border-color: rgba(120,120,150,0.2) !important; }
+.dark .dark\:bg-yellow-900\/10    { background-color: rgba(180,180,210,0.06) !important; }
+.dark .dark\:bg-yellow-900\/15    { background-color: rgba(180,180,210,0.08) !important; }
+.dark .dark\:bg-yellow-900\/20    { background-color: rgba(180,180,210,0.10) !important; }
+.dark .dark\:bg-yellow-900\/25    { background-color: rgba(180,180,210,0.12) !important; }
+.dark .dark\:hover\:bg-yellow-900\/20:hover { background-color: rgba(180,180,210,0.10) !important; }
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -577,4 +596,4 @@ body {
 :root                { --accent-bar: #facc15; --accent-glow: rgba(250,204,21,0.5); }
 [data-theme="pink"]  { --accent-bar: #f9a8d4; --accent-glow: rgba(244,114,182,0.5); }
 [data-theme="sky"]   { --accent-bar: #7dd3fc; --accent-glow: rgba(56,189,248,0.5); }
-.dark                { --accent-bar: #888888; --accent-glow: rgba(136,136,136,0.3); }
+.dark                { --accent-bar: #9898a8; --accent-glow: rgba(160,160,200,0.3); }

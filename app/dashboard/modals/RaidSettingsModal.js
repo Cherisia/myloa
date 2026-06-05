@@ -181,7 +181,7 @@ export default function RaidSettingsModal({
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#383838] flex-shrink-0">
           <div>
             <span className="ns-bold text-gray-900 dark:text-white">숙제 설정</span>
-            <span className="ml-2 text-xs text-gray-400">원정대와 캐릭터 선택 후 숙제를 설정해주세요</span>
+            <span className="ml-2 text-xs text-gray-400 dark:text-gray-300">원정대와 캐릭터 선택 후 숙제를 설정해주세요</span>
           </div>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
         </div>
@@ -195,12 +195,12 @@ export default function RaidSettingsModal({
               onClick={() => setExpAndPickChar(g.id)}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs ns-bold transition-colors ${
                 g.id === selectedExpId
-                  ? 'bg-[var(--accent-200)] text-[var(--accent-900)]'
+                  ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white'
                   : 'shadow-border-md text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
               }`}
             >
               {g.label}
-              <span className={`ml-1 tabular-nums ${g.id === selectedExpId ? 'text-[var(--accent-800)]' : 'text-gray-400'}`}>
+              <span className={`ml-1 tabular-nums ${g.id === selectedExpId ? 'text-[var(--accent-800)] dark:text-gray-300' : 'text-gray-400'}`}>
                 ({g.chars.length})
               </span>
             </button>
@@ -220,7 +220,7 @@ export default function RaidSettingsModal({
                 onClick={() => setSelectedCharId(char.id)}
                 className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs ns-bold transition-colors border ${
                   active
-                    ? 'bg-[var(--accent-200)] border-[var(--accent-300)] text-[var(--accent-900)]'
+                    ? 'bg-[var(--accent-200)] border-transparent text-[var(--accent-900)] dark:text-white'
                     : 'border-gray-200 dark:border-[#383838] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                 }`}
               >
@@ -234,7 +234,7 @@ export default function RaidSettingsModal({
                 )}
                 {count > 0 && (
                   <span className={`text-[10px] px-1 rounded-full ns-bold ${
-                    active ? 'bg-[var(--accent-400)]/40 text-[var(--accent-900)]' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500'
+                    active ? 'bg-[var(--accent-400)]/40 text-[var(--accent-900)] dark:text-gray-200' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500'
                   }`}>
                     {count}
                   </span>
