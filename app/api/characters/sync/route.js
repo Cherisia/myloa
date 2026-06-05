@@ -99,19 +99,21 @@ export async function POST() {
     },
   })
 
-  const characters = updated.flatMap(exp =>
-    exp.characters.map(c => ({
-      id:           c.id,
-      name:         c.name,
-      class:        c.class,
-      server:       c.server,
-      itemLevel:    c.itemLevel,
-      combatPower:  c.combatPower ?? null,
-      sortOrder:    c.sortOrder,
-      expeditionId:   exp.id,
-      accountRepChar: exp.repCharName ?? null,
-    }))
-  )
+  const characters = updated
+    .flatMap(exp =>
+      exp.characters.map(c => ({
+        id:             c.id,
+        name:           c.name,
+        class:          c.class,
+        server:         c.server,
+        itemLevel:      c.itemLevel,
+        combatPower:    c.combatPower ?? null,
+        sortOrder:      c.sortOrder,
+        expeditionId:   exp.id,
+        accountRepChar: exp.repCharName ?? null,
+      }))
+    )
+    .sort((a, b) => a.sortOrder - b.sortOrder || b.itemLevel - a.itemLevel)
 
   return NextResponse.json({ updatedCount, characters })
 }
