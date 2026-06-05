@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -28,6 +29,18 @@ function getNoticeBadge(n) {
 function todayKST() {
   const now = new Date(Date.now() + 9 * 60 * 60 * 1000)
   return now.toISOString().slice(0, 10)
+}
+
+// 게임 기준 오늘 날짜 (KST 06:00 리셋 기점 — 00:00~05:59 KST는 전날 게임일)
+function todayGameDay() {
+  const kstMs = Date.now() + 9 * 60 * 60 * 1000
+  return new Date(kstMs - 6 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+// 타임스탬프의 게임 기준 날짜
+function timeGameDay(t) {
+  const kstMs = new Date(t).getTime() + 9 * 60 * 60 * 1000
+  return new Date(kstMs - 6 * 60 * 60 * 1000).toISOString().slice(0, 10)
 }
 
 function kstTimeStr(isoStr) {
@@ -208,23 +221,24 @@ function EventsPanel({ events, loading }) {
 }
 
 // ── 오늘의 게임 일정 ─────────────────────────────────────────────
-const FIXED_CATEGORIES = ['모험 섬', '필드 보스', '카오스 게이트']
+// API CategoryName 기준 (띄어쓰기 없음)
+const FIXED_CATEGORIES = ['모험 섬', '필드보스', '카오스게이트']
 
-// 카테고리 메타 (아이콘 이미지 경로 + accent 색)
+// 카테고리 메타 (아이콘 이미지 경로 + accent 색 + 표시용 label)
 const CALENDAR_CATEGORY_META = {
-  '모험 섬':    { icon: '/cal-island.svg',  fallback: '🏝️', accent: '#a855f7' },
-  '필드 보스':  { icon: '/cal-boss.svg',    fallback: '👹', accent: '#ef4444' },
-  '카오스 게이트': { icon: '/cal-chaos.svg', fallback: '🌀', accent: '#8b5cf6' },
+  '모험 섬':    { label: '모험 섬',      icon: '/cal-island.svg',  fallback: '🏝️', accent: '#a855f7' },
+  '필드보스':   { label: '필드 보스',    icon: '/cal-boss.svg',    fallback: '👹', accent: '#ef4444' },
+  '카오스게이트': { label: '카오스 게이트', icon: '/cal-chaos.svg', fallback: '🌀', accent: '#8b5cf6' },
 }
 
 // 등급별 배경색
 const GRADE_BG = {
-  '유물': 'bg-orange-900/70',
-  '전설': 'bg-yellow-800/70',
-  '영웅': 'bg-purple-900/70',
-  '희귀': 'bg-blue-900/70',
-  '고급': 'bg-emerald-900/70',
-  '일반': 'bg-zinc-700/80',
+  '유물': 'bg-orange-900',
+  '전설': 'bg-yellow-800',
+  '영웅': 'bg-purple-900',
+  '희귀': 'bg-blue-900',
+  '고급': 'bg-emerald-900',
+  '일반': 'bg-zinc-700',
 }
 function gradeBg(grade = '') {
   return GRADE_BG[grade] ?? 'bg-zinc-700/80'
@@ -324,10 +338,10 @@ function ContentCard({ item }) {
         {rewards.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
             {rewards.slice(0, 8).map((r, i) => (
-              <div key={i} className={`w-7 h-7 rounded-lg flex items-center justify-center ${gradeBg(r.Grade)}`} title={r.Name}>
+              <div key={i} className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${gradeBg(r.Grade)}`} title={r.Name}>
                 {r.Icon
-                  ? <img src={r.Icon} alt={r.Name} className="w-5 h-5 object-contain" />
-                  : <span className="text-[9px] text-white">{r.Name?.[0]}</span>
+                  ? <img src={r.Icon} alt={r.Name} className="w-6 h-6 object-contain" />
+                  : <span className="text-[10px] text-white">{r.Name?.[0]}</span>
                 }
               </div>
             ))}
@@ -370,7 +384,7 @@ function ContentCard({ item }) {
 }
 
 // ── 카테고리 타이머 헤더 칩 ──────────────────────────────────────
-function CategoryTimerChip({ cat, allTimes, loading }) {
+function CategoryTimerChip({ cat, allTimes, hasToday, loading }) {
   const initialSec = nextSecondsUntil(allTimes)
   const sec = useCountdown(initialSec)
   const countdown = fmtCountdown(sec)
@@ -380,41 +394,62 @@ function CategoryTimerChip({ cat, allTimes, loading }) {
     <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700/80">
       <div className="flex items-center gap-1.5">
         <span className="text-base">{meta.fallback ?? '📌'}</span>
-        <span className="text-sm ns-bold text-gray-800 dark:text-gray-200">{cat}</span>
+        <span className="text-sm ns-bold text-gray-800 dark:text-gray-200">{meta.label ?? cat}</span>
       </div>
       {loading
         ? <Skeleton className="w-16 h-4" />
         : countdown
           ? <span className="text-sm ns-bold tabular-nums" style={{ color: meta.accent ?? '#888' }} suppressHydrationWarning>{countdown}</span>
-          : <span className="text-xs text-gray-400 dark:text-zinc-500">오늘 일정이 없습니다</span>
+          : hasToday
+          ? <span className="text-xs text-gray-400 dark:text-zinc-500">오늘 완료</span>
+          : <span className="text-xs text-gray-400 dark:text-zinc-500">오늘 일정 없음</span>
       }
     </div>
   )
 }
 
 function CalendarSection({ calendar, loading }) {
-  const today = todayKST()
+  const today = todayGameDay()
 
   const byCategory = {}
-  const allTimesByCategory = {}
+  const todayTimesByCategory = {}  // 오늘 게임일 타임만 (칩 카운트다운용)
+  const hasTodayByCategory = {}
 
   for (const item of calendar) {
     const cat = item.CategoryName
     if (!FIXED_CATEGORIES.includes(cat)) continue
 
-    if (!allTimesByCategory[cat]) allTimesByCategory[cat] = []
-    for (const t of (item.StartTimes ?? [])) allTimesByCategory[cat].push(t)
-
-    const todayTimes = (item.StartTimes ?? []).filter(t => {
-      const kst = new Date(new Date(t).getTime() + 9 * 60 * 60 * 1000)
-      return kst.toISOString().slice(0, 10) === today
-    })
+    const todayTimes = (item.StartTimes ?? []).filter(t => timeGameDay(t) === today)
+    if (todayTimes.length > 0) {
+      hasTodayByCategory[cat] = true
+      if (!todayTimesByCategory[cat]) todayTimesByCategory[cat] = []
+      for (const t of todayTimes) todayTimesByCategory[cat].push(t)
+    }
     if (todayTimes.length === 0) continue
     if (!byCategory[cat]) byCategory[cat] = []
     byCategory[cat].push({ ...item, todayTimes })
   }
 
-  const islandItems = byCategory['모험 섬'] ?? []
+  // 주말 모험섬 타임슬롯 필터링
+  // 13:00 KST 이전 → 오전 타임(09~13시) 섬 표시, 이후 → 저녁 타임(19~23시) 섬 표시
+  const kstHour = new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCHours()
+  const kstDay = new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDay()
+  const isWeekend = kstDay === 0 || kstDay === 6
+  let islandItems = byCategory['모험 섬'] ?? []
+  if (isWeekend && islandItems.length > 0) {
+    const targetWindow = kstHour < 13 ? 'morning' : kstHour < 23 ? 'evening' : null
+    if (targetWindow) {
+      const filtered = islandItems.filter(item =>
+        item.todayTimes.some(t => {
+          const h = (new Date(t).getUTCHours() + 9) % 24
+          return targetWindow === 'morning' ? h < 13 : h >= 13
+        })
+      )
+      if (filtered.length > 0) islandItems = filtered
+    } else {
+      islandItems = []
+    }
+  }
 
   return (
     <div className="bg-white dark:bg-zinc-800/60 rounded-xl shadow-border p-4 space-y-4">
@@ -426,7 +461,8 @@ function CalendarSection({ calendar, loading }) {
           <CategoryTimerChip
             key={cat}
             cat={cat}
-            allTimes={allTimesByCategory[cat] ?? []}
+            allTimes={todayTimesByCategory[cat] ?? []}
+            hasToday={!!hasTodayByCategory[cat]}
             loading={loading}
           />
         ))}
@@ -448,7 +484,18 @@ function CalendarSection({ calendar, loading }) {
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
-export default function HomeClient({ initialNotices: notices = [], initialEvents: events = [], initialCalendar: calendar = [] }) {
+export default function HomeClient({ initialNotices: notices = [], initialEvents: events = [], initialCalendar: calendar = [], nextCalendarBoundary }) {
+  const router = useRouter()
+
+  // 다음 캘린더 갱신 시각에 맞춰 자동 새로고침 (주말 모험섬 타임슬롯 전환 대응)
+  useEffect(() => {
+    if (!nextCalendarBoundary) return
+    const ms = nextCalendarBoundary - Date.now()
+    if (ms <= 0) return
+    const timer = setTimeout(() => router.refresh(), ms)
+    return () => clearTimeout(timer)
+  }, [nextCalendarBoundary, router])
+
   return (
     <div className="max-w-screen-xl mx-auto px-4 py-6 space-y-6">
 
