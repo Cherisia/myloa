@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { signOut, useSession } from 'next-auth/react'
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 const IconCheck = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -76,6 +76,30 @@ const NICKNAME_STRIP   = /[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/g
 export default function SettingsClient({ user, session }) {
   const { update: updateSession } = useSession()
   const [nickname, setNickname] = useState(user?.nickname || '')
+  const [avatarSrc, setAvatarSrc] = useState(session?.user?.image || null)
+  const avatarRefreshedRef = useRef(false)
+
+  useEffect(() => {
+    setAvatarSrc(session?.user?.image || null)
+    avatarRefreshedRef.current = false
+  }, [session?.user?.image])
+
+  const handleAvatarError = useCallback(async () => {
+    if (avatarRefreshedRef.current) { setAvatarSrc(null); return }
+    avatarRefreshedRef.current = true
+    try {
+      const res = await fetch('/api/user/refresh-avatar', { method: 'POST' })
+      if (res.ok) {
+        const { image } = await res.json()
+        setAvatarSrc(image)
+        await updateSession()
+      } else {
+        setAvatarSrc(null)
+      }
+    } catch {
+      setAvatarSrc(null)
+    }
+  }, [updateSession])
   const [raidPublic, setRaidPublic]               = useState(user?.raidPublic ?? true)
   const [raidPublicFriends, setRaidPublicFriends] = useState(user?.raidPublicFriends ?? true)
   const [nickSaving, setNickSaving]               = useState(false)
@@ -157,13 +181,14 @@ export default function SettingsClient({ user, session }) {
         {/* 프로필 */}
         <Section>
           <div className="px-5 py-4 flex items-center gap-4">
-            {session?.user?.image ? (
+            {avatarSrc ? (
               <Image
-                src={session.user.image}
+                src={avatarSrc}
                 alt=""
                 width={52}
                 height={52}
                 className="h-13 w-13 rounded-full object-cover ring-2 ring-black/10 dark:ring-white/10 flex-shrink-0"
+                onError={handleAvatarError}
               />
             ) : (
               <div className="h-13 w-13 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0" style={{ width: 52, height: 52 }}>

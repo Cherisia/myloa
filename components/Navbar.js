@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from './ThemeProvider'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import DiscordIcon from './DiscordIcon'
 
@@ -83,8 +83,32 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme()
   const pathname            = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
   const [pendingFriendCount, setPendingFriendCount] = useState(0)
+  const [avatarSrc, setAvatarSrc] = useState(null)
+  const avatarRefreshedRef = useRef(false)
+
+  useEffect(() => {
+    setAvatarSrc(session?.user?.image || null)
+    avatarRefreshedRef.current = false
+  }, [session?.user?.image])
+
+  const handleAvatarError = useCallback(async () => {
+    if (avatarRefreshedRef.current) { setAvatarSrc(null); return }
+    avatarRefreshedRef.current = true
+    try {
+      const res = await fetch('/api/user/refresh-avatar', { method: 'POST' })
+      if (res.ok) {
+        const { image } = await res.json()
+        setAvatarSrc(image)
+        await updateSession()
+      } else {
+        setAvatarSrc(null)
+      }
+    } catch {
+      setAvatarSrc(null)
+    }
+  }, [updateSession])
 
   useEffect(() => {
     if (!session?.user?.id) { setPendingFriendCount(0); return }
@@ -153,11 +177,12 @@ export default function Navbar() {
         href="/settings"
         className={`flex items-center gap-2 rounded-xl px-2 py-1 -mx-2 -my-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${mobile ? 'flex-1' : ''}`}
       >
-        {session.user?.image ? (
+        {avatarSrc ? (
           <Image
-            src={session.user.image} alt=""
+            src={avatarSrc} alt=""
             width={28} height={28}
             className="h-7 w-7 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10"
+            onError={handleAvatarError}
           />
         ) : (
           <div className="h-7 w-7 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center">
@@ -346,11 +371,12 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 rounded-2xl py-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10"
               >
-                {session.user?.image ? (
+                {avatarSrc ? (
                   <Image
-                    src={session.user.image} alt=""
+                    src={avatarSrc} alt=""
                     width={40} height={40}
                     className="h-10 w-10 rounded-full object-cover ring-2 ring-black/10 dark:ring-white/10 flex-shrink-0"
+                    onError={handleAvatarError}
                   />
                 ) : (
                   <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0">
