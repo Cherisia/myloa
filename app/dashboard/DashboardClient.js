@@ -1763,13 +1763,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
               const charCustomList = !selectedRaid ? (customItems[char.id] || []) : []
               // 일일 숙제: 쿠르잔·가디언 고정 순 + type==='daily' 기타
-              const orderedDaily = !selectedRaid ? orderedDailyCustomItems(charCustomList) : []
+              const orderedDaily = (!selectedRaid && !remainFilter) ? orderedDailyCustomItems(charCustomList) : []
               // 주간 레이드 완료 카운트
               const raidDoneCount = charRaids.filter(e => e.gateClears.length > 0 && e.gateClears.every(Boolean)).length
               // 일일 숙제 완료 카운트
               const dailyDoneCount = orderedDaily.filter(it => !!(customChecks[char.id]?.[it.id])).length
               // 주간 숙제 항목
-              const weeklyItems = !selectedRaid ? charCustomList.filter(isWeeklyCustomItem) : []
+              const weeklyItems = (!selectedRaid && !remainFilter) ? charCustomList.filter(isWeeklyCustomItem) : []
               const weeklyDoneCount = weeklyItems.filter(it => !!(customChecks[char.id]?.[it.id])).length
 
               return (
@@ -2204,14 +2204,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             (it) => it.type === 'daily' && !DAILY_PRESET_ORDER.includes(it.name)
           )
           const weeklyMap = buildCustomHomeworkRowMap(filteredChars, customItems, isWeeklyCustomItem)
-          const showDailyHeader = !selectedRaid && (
+          const showDailyHeader = !selectedRaid && !remainFilter && (
             DAILY_PRESET_ORDER.some((n) => restDailyMap.has(n)) || otherDailyMap.size > 0
           )
           const raidsToRender = selectedRaid
             ? chunkRaidRows.filter((row) => row.raidId === selectedRaid.raidId)
             : chunkRaidRows
           const showRaidHeader = raidsToRender.length > 0
-          const showWeeklyHeader = !selectedRaid && weeklyMap.size > 0
+          const showWeeklyHeader = !selectedRaid && !remainFilter && weeklyMap.size > 0
           const raidSectionTitle = selectedRaid ? '레이드 숙제' : '주간 레이드'
 
           const theadSticky = glanceTable
@@ -2337,12 +2337,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 </thead>
                 <tbody>
                   {showDailyHeader && renderSectionHeader('daily', '일일 숙제')}
-                  {!selectedRaid && DAILY_PRESET_ORDER.flatMap((name) => {
+                  {!selectedRaid && !remainFilter && DAILY_PRESET_ORDER.flatMap((name) => {
                     const row = restDailyMap.get(name)
                     if (!row) return []
                     return [renderCustomRow(name, row.charMap, row.meta, filteredChars, glanceTable, colW)]
                   })}
-                  {!selectedRaid && [...otherDailyMap.keys()]
+                  {!selectedRaid && !remainFilter && [...otherDailyMap.keys()]
                     .sort((a, b) => a.localeCompare(b, 'ko'))
                     .map((name) => {
                       const { charMap, meta } = otherDailyMap.get(name)
@@ -2400,7 +2400,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     </tr>
                   )}
                   {showWeeklyHeader && renderSectionHeader('weekly', '주간 숙제')}
-                  {!selectedRaid && [...weeklyMap.keys()]
+                  {!selectedRaid && !remainFilter && [...weeklyMap.keys()]
                     .sort((a, b) => a.localeCompare(b, 'ko'))
                     .map((name) => {
                       const { charMap, meta } = weeklyMap.get(name)
