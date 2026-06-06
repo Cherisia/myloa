@@ -234,7 +234,7 @@ export default function RaidSettingsModal({
                 )}
                 {count > 0 && (
                   <span className={`text-[10px] px-1 rounded-full ns-bold ${
-                    active ? 'bg-[var(--accent-400)]/40 text-[var(--accent-900)] dark:text-gray-200' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500'
+                    active ? 'bg-[var(--accent-400)]/40 text-[var(--accent-900)] dark:text-gray-200' : 'bg-gray-100 dark:bg-[#333] text-gray-500 dark:text-gray-300'
                   }`}>
                     {count}
                   </span>

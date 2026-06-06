@@ -341,7 +341,7 @@ export default function HistoryClient({ history, isDemo = false }) {
                         </span>
                       )}
                       {i === 0 && (
-                        <span className="text-[10px] ns-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 dark:text-gray-500">
+                        <span className="text-[10px] ns-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#333] text-gray-400 dark:text-gray-300">
                           최근
                         </span>
                       )}

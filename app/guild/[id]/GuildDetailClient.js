@@ -121,7 +121,7 @@ const DIFF_COLORS = {
   stage2:    { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300', bar: 'from-violet-400 to-purple-300', pct: 'text-violet-600 dark:text-violet-300' },
   stage1:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300',             bar: 'from-sky-400 to-cyan-300',      pct: 'text-sky-600 dark:text-sky-300' },
 }
-const DIFF_COLOR_DEFAULT = { badge: 'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400', bar: 'from-gray-400 to-gray-300', pct: 'text-gray-700 dark:text-gray-200' }
+const DIFF_COLOR_DEFAULT = { badge: 'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300', bar: 'from-gray-400 to-gray-300', pct: 'text-gray-700 dark:text-gray-200' }
 
 function Avatar({ user, size = 28 }) {
   const name = user?.nickname || user?.name || user?.discordUsername || '?'
@@ -432,8 +432,8 @@ function MemberDetailModal({ member, role, myMember, raidList, visibleMembers, f
                   {t.count > 0 && (
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full ns-bold
                       ${activeTab === t.id
-                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                        : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400'
+                        ? 'bg-gray-900 text-white dark:bg-zinc-400 dark:text-gray-900'
+                        : 'bg-gray-200 dark:bg-zinc-600 text-gray-600 dark:text-white'
                       }`}
                     >
                       {t.count}
@@ -1162,7 +1162,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-base ns-extrabold text-gray-900 dark:text-white">{name.replace(' EX', '')}</h2>
-                  <span className="text-[10px] ns-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400">{diff}</span>
+                  <span className="text-[10px] ns-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#333] text-gray-500 dark:text-gray-300">{diff}</span>
                 </div>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                   미완료{' '}

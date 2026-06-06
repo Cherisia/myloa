@@ -12,10 +12,10 @@ export const DIFF_LABEL = { nightmare: '나메', hard: '하드', normal: '노말
 export const DIFF_COLOR  = {
   nightmare: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
   hard:      'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
-  normal:    'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400',
+  normal:    'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300',
   stage3:    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   stage2:    'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
-  stage1:    'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400',
+  stage1:    'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300',
 }
 
 // 할의 모래시계 아이템 레벨 제한

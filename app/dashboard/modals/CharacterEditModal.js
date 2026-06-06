@@ -222,7 +222,7 @@ export default function CharacterEditModal({ chars, raids, onAdd, onDelete, onCl
                         <Image src="/icons/coin.png" alt="골드 획득 캐릭터" width={12} height={12} className="w-3 h-3 object-contain flex-shrink-0" />
                       )}
                       {!hasRaids && (
-                        <span className="text-[9px] ns-bold px-1 py-0.5 rounded bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 dark:text-gray-500 flex-shrink-0">
+                        <span className="text-[9px] ns-bold px-1 py-0.5 rounded bg-gray-100 dark:bg-[#333] text-gray-400 dark:text-gray-300 flex-shrink-0">
                           레이드 미설정
                         </span>
                       )}

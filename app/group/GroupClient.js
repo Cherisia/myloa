@@ -284,7 +284,7 @@ function FriendRaidRow({ raidId, difficulty, chars, highlight, completed, noWrap
   const name = raid?.name || raidId
   const diffLabel = diff?.label || difficulty
   const image = raid?.image || null
-  const c = DIFF_COLORS_GROUP[difficulty] || { badge: 'bg-gray-100 text-gray-600 dark:bg-[#2a2a2a] dark:text-gray-400' }
+  const c = DIFF_COLORS_GROUP[difficulty] || { badge: 'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300' }
 
   const chips = chars.map((ch, i) => {
     const icon = getClassIcon(ch.class)
@@ -530,8 +530,8 @@ function FriendRaidModal({ friend, me, onClose }) {
               {t.count > 0 && (
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ns-bold ${
                   activeTab === t.id
-                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                    : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400'
+                    ? 'bg-gray-900 text-white dark:bg-zinc-400 dark:text-gray-900'
+                    : 'bg-gray-200 dark:bg-zinc-600 text-gray-600 dark:text-white'
                 }`}>
                   {t.count}
                 </span>
@@ -748,7 +748,7 @@ function SearchResultCard({ user, onSendRequest, sending }) {
         )}
         {repChar && (
           <div className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500 truncate mt-0.5">
-            <span className="text-yellow-400 flex-shrink-0">
+            <span className="text-[var(--accent-400)] flex-shrink-0">
               <IconCrown />
             </span>
             <span className="truncate">{repChar.name}</span>
@@ -1148,7 +1148,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                             )}
                             {repChar && (
                               <div className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500 truncate mt-0.5">
-                                <span className="text-yellow-400 flex-shrink-0"><IconCrown /></span>
+                                <span className="text-[var(--accent-400)] flex-shrink-0"><IconCrown /></span>
                                 <span className="truncate">{repChar.name}</span>
                                 <span className="flex-shrink-0 mx-0.5">·</span>
                                 <span className="text-gray-400 dark:text-gray-500 flex-shrink-0"><IconTrophy /></span>
@@ -1224,7 +1224,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                         )}
                         {repChar && (
                           <div className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500 truncate mt-0.5">
-                            <span className="text-yellow-400 flex-shrink-0"><IconCrown /></span>
+                            <span className="text-[var(--accent-400)] flex-shrink-0"><IconCrown /></span>
                             <span className="truncate">{repChar.name}</span>
                             <span className="flex-shrink-0 mx-0.5">·</span>
                             <span className="text-gray-400 dark:text-gray-500 flex-shrink-0"><IconTrophy /></span>
@@ -1328,7 +1328,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                           )}
                           {repChar && (
                             <div className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500 truncate mt-0.5">
-                              <span className="text-yellow-400 flex-shrink-0"><IconCrown /></span>
+                              <span className="text-[var(--accent-400)] flex-shrink-0"><IconCrown /></span>
                               <span className="truncate">{repChar.name}</span>
                               <span className="flex-shrink-0 mx-0.5">·</span>
                               <span className="text-gray-400 dark:text-gray-500 flex-shrink-0"><IconTrophy /></span>

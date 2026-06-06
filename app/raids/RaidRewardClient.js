@@ -768,7 +768,7 @@ function RaidDetail({ raid, diffKey, onDiffChange }) {
                 {CAT_LABEL[cat]}
               </span>
               {raid.maxPlayers === 4 && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-[#2a2a2a] dark:text-gray-400 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-[#333] dark:text-gray-300 font-medium">
                   4인
                 </span>
               )}
