@@ -233,12 +233,12 @@ const STATUS_LABEL = {
 
 // ── Friend Raid Modal (길드 MemberDetailModal과 동일한 디자인) ────────────────
 const DIFF_COLORS_GROUP = {
-  nightmare: { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300' },
-  hard:      { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300' },
-  normal:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300' },
-  stage3:    { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300' },
-  stage2:    { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300' },
-  stage1:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300' },
+  nightmare: { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300',     text: 'text-rose-500 dark:text-rose-400' },
+  hard:      { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300', text: 'text-violet-500 dark:text-violet-400' },
+  normal:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300',         text: 'text-sky-500 dark:text-sky-400' },
+  stage3:    { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300',     text: 'text-rose-500 dark:text-rose-400' },
+  stage2:    { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300', text: 'text-violet-500 dark:text-violet-400' },
+  stage1:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300',         text: 'text-sky-500 dark:text-sky-400' },
 }
 
 function CharChip({ itemLevel, combatPower, className, children }) {
@@ -765,13 +765,225 @@ function SearchResultCard({ user, onSendRequest, sending }) {
   )
 }
 
+// ── Raid Lookup Panel ────────────────────────────────────────────────────────
+function RaidLookupPanel({ me, friends }) {
+  const [selectedRaid, setSelectedRaid] = useState(null)
+
+  const DIFF_SORT_MAP = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
+
+  const myRaids = useMemo(() => {
+    const seen = new Set()
+    const list = []
+    for (const exp of me?.loaExpeditions || []) {
+      for (const char of exp.characters || []) {
+        for (const raid of char.characterRaids || []) {
+          if (HIDDEN_RAID_IDS.has(raid.raidId)) continue
+          const key = `${raid.raidId}__${raid.difficulty}`
+          if (!seen.has(key)) {
+            seen.add(key)
+            list.push({ raidId: raid.raidId, difficulty: raid.difficulty })
+          }
+        }
+      }
+    }
+    list.sort((a, b) => {
+      const ro = (RAID_ORDER_MAP[a.raidId] ?? 99) - (RAID_ORDER_MAP[b.raidId] ?? 99)
+      if (ro !== 0) return ro
+      return (DIFF_SORT_MAP[a.difficulty] ?? 9) - (DIFF_SORT_MAP[b.difficulty] ?? 9)
+    })
+    return list
+  }, [me])
+
+  const raidResults = useMemo(() => {
+    if (!selectedRaid) return null
+    const { raidId, difficulty } = selectedRaid
+
+    const myChars = []
+    for (const exp of me?.loaExpeditions || []) {
+      for (const char of exp.characters || []) {
+        const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+        if (entry) myChars.push({ ...char, done: raidStatusOf(entry) === 'complete' })
+      }
+    }
+
+    const friendEntries = []
+    for (const friend of friends) {
+      if (!friend.raidPublicFriends) continue
+      let hasRaid = false
+      const chars = []
+      for (const exp of friend.loaExpeditions || []) {
+        for (const char of exp.characters || []) {
+          const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+          if (!entry) continue
+          hasRaid = true
+          chars.push({ ...char, done: raidStatusOf(entry) === 'complete' })
+        }
+      }
+      if (hasRaid) friendEntries.push({ friend, chars })
+    }
+
+    return { myChars, friendEntries }
+  }, [selectedRaid, me, friends])
+
+  return (
+    <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl overflow-hidden
+      shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
+
+      <div className="px-4 pt-3 pb-3 border-b border-gray-50 dark:border-white/[0.04]">
+        <span className="text-[11px] ns-bold text-gray-400 dark:text-zinc-600 uppercase tracking-wider">레이드별 친구 현황</span>
+      </div>
+
+      {myRaids.length === 0 ? (
+        <div className="px-4 py-14 text-center">
+          <p className="text-sm text-gray-400 dark:text-zinc-600">등록된 레이드가 없습니다</p>
+          <p className="text-[11px] text-gray-300 dark:text-zinc-700 mt-1.5">대시보드에서 레이드를 설정하면 친구들의 현황을 확인할 수 있어요</p>
+        </div>
+      ) : (
+        <div className="flex">
+
+          {/* 레이드 버튼 목록 */}
+          <div className="w-44 flex-shrink-0 border-r border-gray-50 dark:border-white/[0.04] overflow-y-auto max-h-[560px]">
+            {myRaids.map(({ raidId, difficulty }) => {
+              const { name, diffLabel, image } = getRaidInfo(raidId, difficulty)
+              const raidKey = `${raidId}__${difficulty}`
+              const isSelected = selectedRaid?.raidId === raidId && selectedRaid?.difficulty === difficulty
+              return (
+                <button
+                  key={raidKey}
+                  type="button"
+                  onClick={() => setSelectedRaid(isSelected ? null : { raidId, difficulty })}
+                  className={`w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-400)]
+                    active:bg-[var(--accent-200)] dark:active:bg-[var(--accent-900)]/30
+                    ${isSelected
+                      ? 'bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20'
+                      : 'hover:bg-gray-50 dark:hover:bg-white/[0.02]'
+                    }`}
+                >
+                  {image && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={image} alt="" className="w-5 h-5 rounded-md object-cover flex-shrink-0 opacity-80" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-[12px] ns-bold truncate leading-tight ${
+                      isSelected ? 'text-[var(--accent-700)] dark:text-[var(--accent-300)]' : 'text-gray-700 dark:text-zinc-300'
+                    }`}>{name}</div>
+                    <div className={`text-[10px] mt-0.5 ${
+                      isSelected
+                        ? 'text-[var(--accent-500)] dark:text-[var(--accent-400)]'
+                        : (DIFF_COLORS_GROUP[difficulty]?.text || 'text-gray-400 dark:text-zinc-600')
+                    }`}>{diffLabel}</div>
+                  </div>
+                  {isSelected && <div className="w-0.5 h-5 rounded-full bg-[var(--accent-400)] flex-shrink-0" />}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* 결과 패널 */}
+          <div className="flex-1 min-w-0 overflow-y-auto max-h-[560px]">
+            {!selectedRaid ? (
+              <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center px-4 py-10">
+                <p className="text-xs text-gray-300 dark:text-zinc-700">레이드를 선택하면<br />친구들의 남은 캐릭터를 볼 수 있어요</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-50 dark:divide-white/[0.04]">
+
+                {/* 나 */}
+                <div className="px-4 py-3">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Avatar src={me?.image} name={getDisplayName(me)} size={22} />
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                      <span className="text-[12px] ns-bold text-gray-800 dark:text-zinc-100 truncate">{getDisplayName(me)}</span>
+                      <span className="flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)]">나</span>
+                    </div>
+                  </div>
+                  {raidResults?.myChars.length === 0 ? (
+                    <p className="text-[11px] text-gray-400 dark:text-zinc-600 ml-7">등록된 캐릭터 없음</p>
+                  ) : (
+                    <div className="ml-7 flex flex-wrap gap-1">
+                      {[...raidResults.myChars].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0)).map((char, i) => {
+                        const icon = getClassIcon(char.class)
+                        return (
+                          <CharChip key={i} itemLevel={char.itemLevel} combatPower={char.combatPower}
+                            className={char.done
+                              ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400'
+                              : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300'}>
+                            {char.done && (
+                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
+                            <span>{char.name}</span>
+                          </CharChip>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 친구들 */}
+                {raidResults?.friendEntries.length === 0 ? (
+                  <div className="px-4 py-6 text-center">
+                    <p className="text-xs text-gray-400 dark:text-zinc-600">이 레이드가 등록된 친구가 없습니다</p>
+                  </div>
+                ) : (
+                  raidResults.friendEntries.map(({ friend, chars }) => {
+                    const name = getDisplayName(friend)
+                    return (
+                      <div key={friend.id} className="px-4 py-3">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <Avatar src={friend.image} name={name} size={22} />
+                          <span className="text-[12px] ns-bold text-gray-800 dark:text-zinc-100 flex-1 truncate min-w-0">{name}</span>
+                          {friend.isFavorite && (
+                            <span className="text-[var(--accent-500)] dark:text-[var(--accent-400)] flex-shrink-0">
+                              <IconStar filled size={10} />
+                            </span>
+                          )}
+                        </div>
+                        <div className="ml-7 flex flex-wrap gap-1">
+                          {[...chars].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0)).map((char, i) => {
+                            const icon = getClassIcon(char.class)
+                            return (
+                              <CharChip key={i} itemLevel={char.itemLevel} combatPower={char.combatPower}
+                                className={char.done
+                                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400'
+                                  : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300'}>
+                                {char.done && (
+                                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
+                                <span>{char.name}</span>
+                              </CharChip>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            )}
+          </div>
+
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function GroupClient({ initialFriends, initialRequests, me }) {
   const [friends, setFriends]     = useState(initialFriends)
   const [requests, setRequests]   = useState(initialRequests)
   const [dragging, setDragging]   = useState(null)
   const [dragOver, setDragOver]   = useState(null)
-  const [activeTab, setActiveTab] = useState('groups')
+  const [activeTab, setActiveTab] = useState('friends')
   const [confirmModal, setConfirmModal] = useState(null)
   const [raidModal, setRaidModal] = useState(null) // { groupFriends, raidId, difficulty }
   const [friendModal, setFriendModal] = useState(null) // { friend }
@@ -935,8 +1147,8 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
   const tabs = [
-    { key: 'groups', label: '그룹' },
     { key: 'friends', label: '친구', count: friends.length },
+    { key: 'groups', label: '그룹' },
     { key: 'requests', label: '받은 요청', count: pendingCount, badge: true },
   ]
 
@@ -988,7 +1200,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         </div>
 
         {/* ── 탭 ─────────────────────────────────────────────────────────── */}
-        <div className="mt-4 flex gap-1 w-[24%]">
+        <div className="mt-4 flex gap-1 w-1/3">
           {tabs.map(tab => (
             <button
               key={tab.key}
@@ -1026,7 +1238,8 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
 
         {/* ── 친구 탭 ──────────────────────────────────────────────────────── */}
         {activeTab === 'friends' && (
-          <div className="max-w-lg space-y-4">
+          <div className="flex gap-4 items-start flex-col xl:flex-row">
+            <div className="w-full xl:w-96 flex-shrink-0 space-y-4">
 
             {/* 친구 추가 검색 */}
             <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
@@ -1042,7 +1255,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                     type="text"
                     value={searchQ}
                     onChange={e => setSearchQ(e.target.value)}
-                    placeholder="원정대 닉네임 또는 대표캐릭터 이름으로 검색"
+                    placeholder="닉네임 또는 대표캐릭터 이름으로 검색"
                     className="w-full pl-9 pr-9 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-white/[0.1]
                       bg-gray-50 dark:bg-[#111] text-gray-800 dark:text-zinc-100 placeholder-gray-300 dark:placeholder-zinc-600
                       focus:outline-none focus:border-[var(--accent-400)] dark:focus:border-[var(--accent-400)] transition-colors"
@@ -1187,6 +1400,10 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                   })}
                 </>
               )}
+            </div>
+            </div>
+            <div className="w-full xl:flex-1 sticky top-4">
+              <RaidLookupPanel me={me} friends={friends} />
             </div>
           </div>
         )}
