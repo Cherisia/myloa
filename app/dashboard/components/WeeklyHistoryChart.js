@@ -1,5 +1,7 @@
 'use client'
 
+import { formatGold } from '@/lib/formatting'
+
 const BAR_MAX_H = 88
 
 // weekStart = 리셋 시각(수요일 06:00 KST), 직전 주 시작은 7일 전
@@ -7,12 +9,6 @@ function formatWeekLabel(weekStartStr) {
   const d = new Date(weekStartStr)
   const weekBegin = new Date(d.getTime() - 7 * 24 * 60 * 60 * 1000)
   return `${weekBegin.getMonth() + 1}/${weekBegin.getDate()}`
-}
-
-function formatGold(g) {
-  if (g >= 100000) return `${Math.round(g / 1000)}k`
-  if (g >= 10000)  return `${(g / 1000).toFixed(1)}k`
-  return g.toLocaleString('ko-KR')
 }
 
 export default function WeeklyHistoryChart({ history }) {

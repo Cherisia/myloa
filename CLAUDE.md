@@ -21,7 +21,7 @@ app/
     page.js              # 서버 컴포넌트 — DB 조회 후 DashboardClient에 전달
     DashboardClient.js   # 메인 대시보드 (~2800줄)
     _constants.js        # EX_RAID_IDS, GOLD_RAID_LIMIT, DIFF_COLOR/LABEL, CLASS_ICON 등
-    _icons.js            # 공용 SVG 아이콘 (IconCrown, IconPlus, IconX, IconTrophy, IconEye/Off 등)
+    _icons.js            # 프로젝트 전역 SVG 아이콘 — 모든 파일이 여기서 import
     _raidHelpers.js      # saveRaid, deleteRaid, computeAutoRaids 등
     _bynnArkIcons.js     # 커스텀 숙제 아이콘 매핑
     modals/              # RaidSettingsModal, CharacterEditModal, CharacterAddModal, AutoSetupModal, CustomItemsEditor
@@ -36,6 +36,9 @@ app/
 lib/
   raidData.js          # RAIDS, RAID_MAP, RAID_ORDER_MAP, calcGold* 함수
   groupRaidShare.js    # raidStatusOf, getMemberRaidStatus, getGroupRaidList, adaptMember
+  loaApi.js            # LOA_BASE, getApiKey, secUntilKST, calendarRevalidate — LoA API 공통 유틸
+  formatting.js        # formatGold — 골드 표기 포맷터 (숫자 → "1.2k" 등)
+  inviteCode.js        # generateInviteCode — 원정대 초대코드 생성
   auth.js / db.js / encrypt.js
 ```
 
@@ -45,12 +48,29 @@ lib/
 모든 SVG 아이콘은 `app/dashboard/_icons.js`에서 import한다. 새 파일에서 로컬 정의 금지.
 
 ```js
-import { IconCrown, IconPlus, IconCheck, IconX, IconTrophy, IconEye, IconEyeOff, IconSearch, IconGrip, IconRefresh, IconPower } from '@/app/dashboard/_icons'
+import {
+  // 기본
+  IconCrown, IconPlus, IconCheck, IconX, IconTrophy, IconEye, IconEyeOff,
+  IconSearch, IconGrip, IconRefresh, IconInfo, IconClass, IconItemLevel,
+  // 전투력/파워
+  IconPower,
+  // 액션
+  IconTrash, IconCopy, IconLogout, IconSpinner, IconRegen,
+  // 레이아웃/네비
+  IconBack, IconChevron,
+  // 유저
+  IconStar, IconUserCheck, IconUsers, IconKey,
+  // 빈 상태
+  IconEmptyGroup, IconEmptyFriends,
+  // 공개/잠금
+  IconGlobe, IconLock,
+} from '@/app/dashboard/_icons'
 ```
 
 - `IconCrown` — className prop 지원 (`fill="currentColor"`, 부모 `text-*`로 색 제어)
 - `IconTrophy` — className prop 지원 (아이템레벨 표시용)
-- `IconPower` — `/combat-power.svg` 이미지 (전투력 표시용)
+- `IconPower` — `/combat-power.svg` 이미지, `size` prop(기본 10) 지원
+- `IconCheck` — `size`(기본 9), `strokeWidth`(기본 3.5), `className` prop 지원
 - `DiscordIcon` — `components/DiscordIcon.js` 에서 import
 
 **아이템레벨·전투력 표시:**

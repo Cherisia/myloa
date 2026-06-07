@@ -1,45 +1,13 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { RAID_MAP } from '@/lib/raidData'
 import { getGroupRaidList, raidStatusOf, adaptMember } from '@/lib/groupRaidShare'
 import { CLASS_ICON } from '@/app/dashboard/_constants'
 import { saveRaid } from '@/app/dashboard/_raidHelpers'
 import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
-import { IconCrown, IconTrophy, IconX } from '@/app/dashboard/_icons'
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
-const IconBack = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-)
-const IconCopy = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-  </svg>
-)
-const IconStar = ({ filled, size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-)
-const IconPower = () => (
-  <Image src="/combat-power.svg" alt="전투력" width={12} height={12} unoptimized />
-)
-const IconCheck = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-)
-const IconRegen = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M23 4v6h-6" /><path d="M1 20v-6h6" />
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-  </svg>
-)
+import { IconCrown, IconTrophy, IconX, IconBack, IconCopy, IconStar, IconPower, IconCheck, IconRegen } from '@/app/dashboard/_icons'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function isHidden(member) {
@@ -612,7 +580,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                         </div>
                         {repChar.combatPower != null && (
                           <div className="flex items-center gap-0.5">
-                            <IconPower />
+                            <IconPower size={12} />
                             <span className="text-xs ns-bold text-gray-500 dark:text-gray-400">
                               {Math.round(Number(repChar.combatPower)).toLocaleString('ko-KR')}
                             </span>
@@ -664,7 +632,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
               <button type="button" disabled={loading === `accept-${m.userId}`}
                 onClick={() => memberAction(m.userId, 'accept')}
                 className="flex items-center gap-1 text-xs ns-bold px-3 py-2 rounded-xl bg-[var(--accent-400)] hover:bg-[var(--accent-300)] active:bg-[var(--accent-500)] text-gray-900 transition-all disabled:opacity-50"
-              ><IconCheck /> 수락</button>
+              ><IconCheck size={12} strokeWidth={2.5} /> 수락</button>
             </div>
           </div>
         ))}

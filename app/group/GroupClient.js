@@ -7,47 +7,7 @@ import { HIDDEN_RAID_IDS, DIFF_LABEL, DIFF_COLOR, getClassIcon } from '@/app/das
 import { raidStatusOf } from '@/lib/groupRaidShare'
 import { saveRaid } from '@/app/dashboard/_raidHelpers'
 import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
-import { IconCrown, IconTrophy, IconX, IconPlus, IconGrip, IconSearch } from '@/app/dashboard/_icons'
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
-const IconTrash = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6l-1 14H6L5 6" />
-    <path d="M10 11v6M14 11v6" />
-    <path d="M9 6V4h6v2" />
-  </svg>
-)
-const IconStar = ({ filled, size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24"
-    fill={filled ? 'currentColor' : 'none'}
-    stroke="currentColor" strokeWidth="2">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-)
-const IconUserCheck = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-    <circle cx="8.5" cy="7" r="4" />
-    <polyline points="17 11 19 13 23 9" />
-  </svg>
-)
-const IconEmptyGroup = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-200 dark:text-zinc-700">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-)
-const IconEmptyFriends = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-200 dark:text-zinc-700">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <line x1="23" y1="11" x2="17" y2="11" />
-    <line x1="20" y1="8" x2="20" y2="14" />
-  </svg>
-)
+import { IconCrown, IconTrophy, IconX, IconPlus, IconGrip, IconSearch, IconTrash, IconStar, IconUserCheck, IconEmptyGroup, IconEmptyFriends } from '@/app/dashboard/_icons'
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 function Avatar({ src, name, size = 36 }) {

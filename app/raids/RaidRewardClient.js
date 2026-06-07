@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { RAIDS } from '@/lib/raidData'
+import { formatGold } from '@/lib/formatting'
 
 // ── 재료 아이콘 매핑 (키 = 실제 게임 아이템명) ────────────────────────────────
 const MATERIAL_ICON = {
@@ -668,10 +669,6 @@ const GATE_MORE_MATERIALS = {
 }
 
 function sum(arr) { return arr.reduce((a, b) => a + b, 0) }
-
-function formatGold(g) {
-  return g.toLocaleString()
-}
 
 // ── 재료 칩 ──────────────────────────────────────────────────────────────────
 function MaterialChip({ name, count }) {

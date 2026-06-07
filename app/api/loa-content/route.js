@@ -3,41 +3,7 @@
 // 인증 불필요 — 서버 API 키로 호출
 
 import { NextResponse } from 'next/server'
-
-const LOA_BASE = process.env.LOA_API_BASE || 'https://developer-lostark.game.onstove.com'
-
-function getApiKey() {
-  return (
-    process.env.LOA_PUBLIC_SEARCH_API_KEY ||
-    process.env.LOA_PUBLIC_SEARCH_API_KEY_FALLBACK ||
-    process.env.LOA_API_KEY ||
-    ''
-  ).trim()
-}
-
-// 다음 targetHour:00 KST까지 남은 초 (최소 60초)
-function secUntilKST(targetHour) {
-  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000)
-  const h = kstNow.getUTCHours()
-  const m = kstNow.getUTCMinutes()
-  const s = kstNow.getUTCSeconds()
-  let secs = (targetHour - h) * 3600 - m * 60 - s
-  if (secs <= 0) secs += 24 * 3600
-  return Math.max(60, secs)
-}
-
-function calendarRevalidate() {
-  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000)
-  const day = kstNow.getUTCDay()
-  const hour = kstNow.getUTCHours()
-  const isWeekend = day === 0 || day === 6
-  if (!isWeekend) return secUntilKST(6)
-  if (hour < 6)  return secUntilKST(6)
-  if (hour < 9)  return secUntilKST(9)
-  if (hour < 13) return secUntilKST(13)
-  if (hour < 19) return secUntilKST(19)
-  return secUntilKST(6)
-}
+import { LOA_BASE, getApiKey, secUntilKST, calendarRevalidate } from '@/lib/loaApi'
 
 async function loaFetch(path, revalidate) {
   const key = getApiKey()

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { formatGold } from '@/lib/formatting'
 
 const BAR_MAX_H = 148
 const TOP_PAD   = 44  // 툴팁 공간
@@ -15,12 +16,6 @@ function formatDateLabel(weekStartStr) {
   const d = new Date(weekStartStr)
   const wb = new Date(d.getTime() - 7 * 24 * 60 * 60 * 1000)
   return `${wb.getMonth() + 1}/${wb.getDate()}`
-}
-
-function formatGold(g) {
-  if (g >= 100000) return `${Math.round(g / 1000)}k`
-  if (g >= 10000)  return `${(g / 1000).toFixed(1)}k`
-  return g.toLocaleString('ko-KR')
 }
 
 function Toggle({ options, value, onChange }) {

@@ -5,11 +5,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { randomBytes } from 'crypto'
-
-function generateInviteCode() {
-  return randomBytes(4).toString('hex').toUpperCase()
-}
+import { generateInviteCode } from '@/lib/inviteCode'
 
 const MEMBER_USER_SELECT = {
   select: {

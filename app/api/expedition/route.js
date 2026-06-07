@@ -4,11 +4,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { randomBytes } from 'crypto'
-
-function generateInviteCode() {
-  return randomBytes(4).toString('hex').toUpperCase() // 8자리 대문자
-}
+import { generateInviteCode } from '@/lib/inviteCode'
 
 export async function GET() {
   const session = await auth()
