@@ -134,7 +134,12 @@ async function _flushOps() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ops }),
-  }).catch(() => {})
+  }).then(async res => {
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      console.error('[saveRaid] batch failed', res.status, body, ops)
+    }
+  }).catch(err => console.error('[saveRaid] batch error', err, ops))
 }
 
 // 페이지 이탈 직전 미전송 op를 sendBeacon으로 보장 전송

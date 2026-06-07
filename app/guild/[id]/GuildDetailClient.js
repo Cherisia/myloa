@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { RAID_MAP } from '@/lib/raidData'
 import { getGroupRaidList, raidStatusOf } from '@/lib/groupRaidShare'
-import { CLASS_ICON, getClassIcon } from '@/app/dashboard/_constants'
+import { CLASS_ICON } from '@/app/dashboard/_constants'
+import { saveRaid } from '@/app/dashboard/_raidHelpers'
+import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 const IconBack = () => (
@@ -24,7 +26,7 @@ const IconStar = ({ filled, size = 14 }) => (
   </svg>
 )
 const IconCrown = () => (
-  <svg width="12" height="11" viewBox="0 0 24 22" fill="currentColor" className="text-[var(--accent-500)] flex-shrink-0">
+  <svg width="12" height="11" viewBox="0 0 24 22" fill="currentColor" className="text-[var(--accent-500)] dark:text-gray-400 flex-shrink-0">
     <path d="M2 19h20v2H2zM22 3.27l-5.5 6.5L12 2 7.5 9.77 2 3.27V18h20V3.27z"/>
   </svg>
 )
@@ -65,6 +67,7 @@ function adaptMember(m) {
     displayName: m.user?.nickname || m.user?.name || m.user?.discordUsername || '알 수 없음',
     expeditions: (m.user?.loaExpeditions || []).map(exp => ({
       characters: (exp.characters || []).map(c => ({
+        id: c.id,
         name: c.name,
         itemLevel: c.itemLevel,
         characterClass: c.class,
@@ -114,12 +117,12 @@ function getRaidLabel(raidId, difficulty) {
 
 // ── 난이도 색상 맵 ───────────────────────────────────────────────────────────
 const DIFF_COLORS = {
-  nightmare: { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300',         bar: 'from-rose-400 to-rose-300',     pct: 'text-rose-600 dark:text-rose-300' },
-  hard:      { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300', bar: 'from-violet-400 to-purple-300', pct: 'text-violet-600 dark:text-violet-300' },
-  normal:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300',             bar: 'from-sky-400 to-cyan-300',      pct: 'text-sky-600 dark:text-sky-300' },
-  stage3:    { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300',         bar: 'from-rose-400 to-rose-300',     pct: 'text-rose-600 dark:text-rose-300' },
-  stage2:    { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300', bar: 'from-violet-400 to-purple-300', pct: 'text-violet-600 dark:text-violet-300' },
-  stage1:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300',             bar: 'from-sky-400 to-cyan-300',      pct: 'text-sky-600 dark:text-sky-300' },
+  nightmare: { badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400', bar: 'from-violet-400 to-purple-300', pct: 'text-violet-600 dark:text-violet-400' },
+  hard:      { badge: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',             bar: 'from-red-400 to-red-300',       pct: 'text-red-600 dark:text-red-400' },
+  normal:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',             bar: 'from-sky-400 to-cyan-300',      pct: 'text-sky-600 dark:text-sky-400' },
+  stage3:    { badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400', bar: 'from-violet-400 to-purple-300', pct: 'text-violet-600 dark:text-violet-400' },
+  stage2:    { badge: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',             bar: 'from-red-400 to-red-300',       pct: 'text-red-600 dark:text-red-400' },
+  stage1:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',             bar: 'from-sky-400 to-cyan-300',      pct: 'text-sky-600 dark:text-sky-400' },
 }
 const DIFF_COLOR_DEFAULT = { badge: 'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300', bar: 'from-gray-400 to-gray-300', pct: 'text-gray-700 dark:text-gray-200' }
 
@@ -136,332 +139,80 @@ function Avatar({ user, size = 28 }) {
   )
 }
 
-// ── CharChip — fixed-position tooltip (overflow-hidden 클리핑 우회) ───────────
-function CharChip({ icon, name, itemLevel, combatPower, className, children }) {
-  const ref = useRef(null)
-  const [pos, setPos] = useState(null)
-  return (
-    <div
-      ref={ref}
-      className={`relative cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold ${className}`}
-      onMouseEnter={() => {
-        if (ref.current) {
-          const r = ref.current.getBoundingClientRect()
-          setPos({ x: r.left, y: r.top })
-        }
-      }}
-      onMouseLeave={() => setPos(null)}
-    >
-      {children}
-      {pos && (
-        <div
-          className="pointer-events-none fixed z-[9999] flex flex-col gap-1 bg-gray-800 dark:bg-gray-700 text-white rounded-md px-2.5 py-2 whitespace-nowrap shadow-md text-[11px] ns-bold"
-          style={{ left: pos.x, top: pos.y - 8, transform: 'translateY(-100%)' }}
-        >
-          <div className="flex items-center gap-1">
-            <IconTrophy />
-            <span>{Number(itemLevel).toFixed(2)}</span>
-          </div>
-          {combatPower != null && (
-            <div className="flex items-center gap-1">
-              <IconPower />
-              <span>{Math.round(Number(combatPower)).toLocaleString('ko-KR')}</span>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
+// ── GuildMemberRaidModal — RaidDetailModal 어댑터 ─────────────────────────────
+function GuildMemberRaidModal({ member, role, myMember, raidList, persistedToggles = {}, onCharToggle, onClose }) {
+  const repChar   = member.expeditions?.[0]?.characters?.[0] || null
+  const myRepChar = myMember?.expeditions?.[0]?.characters?.[0] || null
 
-// ── RaidRow (MemberDetailModal 내부 레이드 행) ────────────────────────────────
-function RaidRow({ raidId, difficulty, chars, highlight, completed, noWrap }) {
-  const { name, diff, image } = getRaidLabel(raidId, difficulty)
-  const c = DIFF_COLORS[difficulty] || DIFF_COLOR_DEFAULT
-
-  const chips = chars.map((ch, i) => {
-    const icon = getClassIcon(ch.characterClass)
-    return (
-      <CharChip
-        key={i}
-        itemLevel={ch.itemLevel}
-        combatPower={ch.combatPower}
-        className={completed ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300'}
-      >
-        {completed && (
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        )}
-        {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
-        <span>{ch.name}</span>
-      </CharChip>
-    )
-  })
-
-  if (highlight) {
-    return (
-      <div className={noWrap ? '' : 'rounded-xl shadow-border'}>
-        <div className={`flex items-center gap-2 px-3.5 py-2.5 bg-gray-50 dark:bg-[#252525] ${noWrap ? 'rounded-t-xl' : 'rounded-t-xl'}`}>
-          {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
-          <span className="text-[13px] ns-bold text-gray-900 dark:text-white flex-1 truncate">{name}</span>
-          <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full flex-shrink-0 ${c.badge}`}>{diff}</span>
-        </div>
-        <div className="px-3.5 py-2.5 bg-white dark:bg-[#1e1e1e] flex flex-wrap gap-1.5">
-          {chips}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="rounded-xl shadow-border shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
-      <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-b from-gray-50 to-gray-50/70 dark:from-[#252525] dark:to-[#212121] rounded-t-xl">
-        {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
-        <span className="text-[13px] ns-bold text-gray-900 dark:text-white flex-1 truncate">{name}</span>
-        <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full flex-shrink-0 ${c.badge}`}>{diff}</span>
-      </div>
-      <div className="px-3.5 py-2.5 flex flex-wrap gap-1.5 bg-white dark:bg-[#1e1e1e] rounded-b-xl">
-        {chips}
-      </div>
-    </div>
-  )
-}
-
-// ── MemberDetailModal ─────────────────────────────────────────────────────────
-function MemberDetailModal({ member, role, myMember, raidList, visibleMembers, favSortIds, onClose }) {
-  const isPrivate = member.visibility === 'none'
-  const repChar = member.expeditions?.[0]?.characters?.[0] || null
-  const [activeTab, setActiveTab] = useState('together')
-  const [expandedRaid, setExpandedRaid] = useState(null)
-
-  const memberRaidData = raidList.map(({ raidId, difficulty }) => {
+  const memberRaidData = useMemo(() => raidList.map(({ raidId, difficulty }) => {
     const chars = []
     for (const exp of member.expeditions || []) {
       for (const c of exp.characters || []) {
         const entry = c.raids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
         if (!entry) continue
-        chars.push({ ...c, status: raidStatusOf(entry) })
+        chars.push({ ...c, charClass: c.characterClass, status: raidStatusOf(entry) })
       }
     }
     return { raidId, difficulty, chars }
-  }).filter(r => r.chars.length > 0)
+  }).filter(r => r.chars.length > 0), [member, raidList])
 
-  const incompleteRaids = memberRaidData
-    .map(r => ({ ...r, chars: r.chars.filter(c => c.status !== 'complete') }))
-    .filter(r => r.chars.length > 0)
+  const incompleteRaids = useMemo(() =>
+    memberRaidData.map(r => ({ ...r, chars: r.chars.filter(c => c.status !== 'complete') })).filter(r => r.chars.length > 0),
+    [memberRaidData])
 
-  const completedRaids = memberRaidData
-    .map(r => ({ ...r, chars: r.chars.filter(c => c.status === 'complete') }))
-    .filter(r => r.chars.length > 0)
+  const completedRaids = useMemo(() =>
+    memberRaidData.map(r => ({ ...r, chars: r.chars.filter(c => c.status === 'complete') })).filter(r => r.chars.length > 0),
+    [memberRaidData])
 
-  const togetherRaids = incompleteRaids.filter(({ raidId, difficulty }) => {
-    for (const exp of myMember?.expeditions || []) {
+  const togetherRaids = useMemo(() =>
+    incompleteRaids.filter(({ raidId, difficulty }) => {
+      for (const exp of myMember?.expeditions || []) {
+        for (const c of exp.characters || []) {
+          const entry = c.raids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+          if (entry && raidStatusOf(entry) !== 'complete') return true
+        }
+      }
+      return false
+    }),
+    [incompleteRaids, myMember])
+
+  const headerBadge = role === 'leader'
+    ? <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">길드장</span>
+    : role === 'officer'
+    ? <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부길드장</span>
+    : null
+
+  function myCharsForRaid(raidId, difficulty) {
+    if (!myMember) return []
+    const result = []
+    for (const exp of myMember.expeditions || []) {
       for (const c of exp.characters || []) {
         const entry = c.raids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
-        if (!entry) continue
-        if (raidStatusOf(entry) !== 'complete') return true
+        if (!entry || raidStatusOf(entry) === 'complete') continue
+        result.push({ ...c, charClass: c.characterClass, characterRaids: c.raids })
       }
     }
-    return false
-  })
-
-  const MODAL_TABS = [
-    { id: 'together',   label: '함께할 수 있는 레이드', count: togetherRaids.reduce((s, r) => s + r.chars.length, 0) },
-    { id: 'incomplete', label: '미완료한 레이드',        count: incompleteRaids.reduce((s, r) => s + r.chars.length, 0) },
-    { id: 'completed',  label: '완료한 레이드',          count: completedRaids.reduce((s, r) => s + r.chars.length, 0) },
-  ]
-
-  const tabEmptyMsg = {
-    together:   '함께할 수 있는 레이드가 없어요',
-    incomplete: '미완료한 레이드가 없어요',
-    completed:  '완료한 레이드가 없어요',
-  }
-
-  function renderTabContent() {
-    if (activeTab === 'together') {
-      if (!togetherRaids.length) return <EmptyTabMsg msg={tabEmptyMsg.together} />
-      return togetherRaids.map(r => {
-        const raidKey = `${r.raidId}__${r.difficulty}`
-        const isExpanded = expandedRaid === raidKey
-
-        const memberRows = myMember
-          ? [{ m: myMember, chars: getMemberIncompleteChars(myMember, r.raidId, r.difficulty) }]
-              .filter(({ chars }) => chars.length > 0)
-          : []
-
-        return (
-          <div key={`${r.raidId}-${r.difficulty}`} className="rounded-xl overflow-hidden shadow-border shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
-            <button
-              type="button"
-              className="w-full text-left"
-              onClick={() => setExpandedRaid(isExpanded ? null : raidKey)}
-            >
-              <RaidRow {...r} highlight noWrap />
-            </button>
-            {isExpanded && (
-              <div className="border-t border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
-                {memberRows.length === 0 ? (
-                  <p className="text-xs text-gray-400 dark:text-gray-500 px-4 py-3">다른 멤버 중 미완료 캐릭터가 없어요</p>
-                ) : (
-                  <div className="divide-y divide-gray-100 dark:divide-[#242424]">
-                    {memberRows.map(({ m, chars }) => {
-                      const isFav = (favSortIds || []).includes(m.userId)
-                      const mRepChar = m.expeditions?.[0]?.characters?.[0] || null
-                      return (
-                        <div key={m.userId} className="px-4 py-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="relative flex-shrink-0">
-                              <Avatar user={m.user} size={22} />
-                              {isFav && (
-                                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-white dark:bg-[#181818] flex items-center justify-center">
-                                  <IconStar filled size={7} />
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-[12px] ns-bold text-gray-800 dark:text-gray-200 truncate flex-1">{m.displayName}</span>
-                            {mRepChar && (
-                              <div className="flex items-center gap-0.5 text-[var(--accent-500)] flex-shrink-0">
-                                <IconCrown />
-                                <span className="text-[10px] ns-bold text-gray-400 dark:text-gray-500 truncate max-w-[80px]">{mRepChar.name}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {chars.map((c, ci) => {
-                              const icon = getClassIcon(c.characterClass)
-                              return (
-                                <CharChip key={ci} itemLevel={c.itemLevel} combatPower={c.combatPower} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300">
-                                  {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
-                                  <span>{c.name}</span>
-                                </CharChip>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )
-      })
-    }
-    if (activeTab === 'incomplete') {
-      if (!incompleteRaids.length) return <EmptyTabMsg msg={tabEmptyMsg.incomplete} />
-      return incompleteRaids.map(r => <RaidRow key={`${r.raidId}-${r.difficulty}`} {...r} />)
-    }
-    if (!completedRaids.length) return <EmptyTabMsg msg={tabEmptyMsg.completed} />
-    return completedRaids.map(r => <RaidRow key={`${r.raidId}-${r.difficulty}`} {...r} completed />)
+    return result
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full sm:max-w-md h-[90vh] sm:h-[82vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:shadow-border overflow-hidden">
-
-        {/* 모바일 핸들 */}
-        <div className="sm:hidden flex justify-center pt-3 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-[#333]" />
-        </div>
-
-        {/* 헤더 */}
-        <div className="px-5 pt-4 pb-4 flex-shrink-0 flex items-center gap-3 border-b border-gray-100 dark:border-[#2a2a2a]">
-          <Avatar user={member.user} size={44} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-base ns-bold text-gray-900 dark:text-white truncate">{member.user?.nickname || member.user?.name || '알 수 없음'}</span>
-              {role === 'leader'  && <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">길드장</span>}
-              {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부길드장</span>}
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
-              {repChar && (
-                <div className="flex items-center gap-0.5 flex-shrink-0 text-[var(--accent-500)]">
-                  <IconCrown />
-                  <span className="text-xs ns-bold text-gray-700 dark:text-gray-300">{repChar.name}</span>
-                </div>
-              )}
-              {repChar && member.user?.discordUsername && (
-                <span className="text-[10px] text-gray-300 dark:text-gray-600 flex-shrink-0">·</span>
-              )}
-              {member.user?.discordUsername && (
-                <p className="text-xs text-gray-400">@{member.user.discordUsername}</p>
-              )}
-            </div>
-          </div>
-          <button type="button" onClick={onClose}
-            className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-gray-400 transition-colors flex-shrink-0"
-          >
-            <IconX />
-          </button>
-        </div>
-
-        {/* 본문 */}
-        {isPrivate ? (
-          <div className="flex-1 flex items-center justify-center py-10">
-            <div className="text-center space-y-3">
-              <div className="w-14 h-14 mx-auto rounded-full bg-gray-100 dark:bg-[#252525] flex items-center justify-center text-2xl">🔒</div>
-              <div>
-                <p className="text-sm ns-bold text-gray-700 dark:text-gray-300">레이드 현황 비공개</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">이 멤버는 레이드 정보를 공유하지 않고 있어요</p>
-              </div>
-            </div>
-          </div>
-        ) : memberRaidData.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-sm text-gray-400 dark:text-gray-500">등록된 레이드가 없어요</p>
-          </div>
-        ) : (
-          <>
-            {/* 탭 바 */}
-            <div className="flex-shrink-0 flex border-b border-gray-100 dark:border-[#2a2a2a] px-3 pt-1">
-              {MODAL_TABS.map(t => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => { setActiveTab(t.id); setExpandedRaid(null) }}
-                  className={`relative flex items-center gap-1.5 px-3 py-2.5 text-[12px] ns-bold transition-colors whitespace-nowrap
-                    ${activeTab === t.id
-                      ? 'text-gray-900 dark:text-white'
-                      : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
-                    }`}
-                >
-                  {t.label}
-                  {t.count > 0 && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ns-bold
-                      ${activeTab === t.id
-                        ? 'bg-gray-900 text-white dark:bg-zinc-400 dark:text-gray-900'
-                        : 'bg-gray-200 dark:bg-zinc-600 text-gray-600 dark:text-white'
-                      }`}
-                    >
-                      {t.count}
-                    </span>
-                  )}
-                  {activeTab === t.id && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 dark:bg-white rounded-full" />
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* 탭 콘텐츠 */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
-              {renderTabContent()}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function EmptyTabMsg({ msg }) {
-  return (
-    <div className="py-10 text-center">
-      <p className="text-sm text-gray-400 dark:text-gray-500">{msg}</p>
-    </div>
+    <RaidDetailModal
+      name={member.user?.nickname || member.user?.name || '알 수 없음'}
+      image={member.user?.image}
+      discordUsername={member.user?.discordUsername}
+      repChar={repChar}
+      headerBadge={headerBadge}
+      isPrivate={member.visibility === 'none'}
+      togetherRaids={togetherRaids}
+      incompleteRaids={incompleteRaids}
+      completedRaids={completedRaids}
+      myUser={{ name: myMember?.displayName, image: myMember?.user?.image }}
+      myRepChar={myRepChar ? { name: myRepChar.name } : null}
+      myCharsForRaid={myCharsForRaid}
+      persistedToggles={persistedToggles}
+      onCharToggle={onCharToggle}
+      onClose={onClose}
+    />
   )
 }
 
@@ -491,8 +242,11 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [regenLoading, setRegenLoading] = useState(false)
   const [regenConfirm, setRegenConfirm] = useState(false)
-  const [raidModal,     setRaidModal]     = useState(null)
+  const [raidModal,         setRaidModal]         = useState(null)
+  const [raidModalLocalDone, setRaidModalLocalDone] = useState({})
   const [memberModal,   setMemberModal]   = useState(null)
+  const [myCharToggles, setMyCharToggles] = useState({})
+  const handleCharToggle = (key, val) => setMyCharToggles(prev => ({ ...prev, [key]: val }))
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleteInput,   setDeleteInput]   = useState('')
   const [kickConfirm,   setKickConfirm]   = useState(null) // { userId, displayName }
@@ -1124,6 +878,26 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   }
 
   // ── 레이드 모달 ──────────────────────────────────────────────────────────
+  function handleGuildRaidMyCharToggle(char, raidId, difficulty) {
+    const key = `${char.id}:${raidId}:${difficulty}`
+    const entry = char.raids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+    if (!entry) return
+    const currentDone = key in raidModalLocalDone ? raidModalLocalDone[key] : false
+    const newDone = !currentDone
+    setRaidModalLocalDone(prev => ({ ...prev, [key]: newDone }))
+    const gateCount = entry.gateClears?.length
+      || RAID_MAP[entry.raidId]?.difficulties?.find(d => d.key === entry.difficulty)?.gates
+      || 1
+    saveRaid(char.id, {
+      raidId: entry.raidId,
+      difficulty: entry.difficulty,
+      gateClears: Array.from({ length: gateCount }, () => newDone),
+      isGoldCheck: entry.isGoldCheck,
+      moreDone: newDone ? entry.moreDone : false,
+      moreFrom: entry.moreFrom,
+    })
+  }
+
   function renderRaidModal() {
     if (!raidModal) return null
     const [selRaidId, selDiff] = raidModal.split('__')
@@ -1216,6 +990,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                     {rows.map(({ m, chars }) => {
                       const isFav = expedition.favoritedUserIds?.includes(m.userId)
                       const repChar = m.expeditions?.[0]?.characters?.[0] || null
+                      const isMyRow = m.userId === userId
                       return (
                         <div
                           key={m.userId}
@@ -1247,8 +1022,22 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                           <div className="flex flex-wrap gap-1.5">
                             {chars.map((c, ci) => {
                               const iconFile = CLASS_ICON[c.characterClass]
+                              const charKey = `${c.id}:${selRaidId}:${selDiff}`
+                              const effectiveDone = isMyRow ? (charKey in raidModalLocalDone ? raidModalLocalDone[charKey] : false) : false
                               return (
-                                <CharChip key={ci} itemLevel={c.itemLevel} combatPower={c.combatPower} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300">
+                                <CharChip
+                                  key={ci}
+                                  itemLevel={c.itemLevel}
+                                  combatPower={c.combatPower}
+                                  onClick={isMyRow ? () => handleGuildRaidMyCharToggle(c, selRaidId, selDiff) : undefined}
+                                  className={effectiveDone
+                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400'
+                                    : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300'}>
+                                  {effectiveDone && (
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                                      <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                  )}
                                   {iconFile && (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img src={`/class/${iconFile}.svg`} alt={c.characterClass} className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />
@@ -1476,13 +1265,13 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
         </div>
       )}
       {memberModal && (
-        <MemberDetailModal
+        <GuildMemberRaidModal
           member={memberModal.member}
           role={memberModal.role}
           myMember={adaptedActive.find(m => m.userId === userId)}
           raidList={raidList}
-          visibleMembers={visibleMembers}
-          favSortIds={favSortIds}
+          persistedToggles={myCharToggles}
+          onCharToggle={handleCharToggle}
           onClose={() => setMemberModal(null)}
         />
       )}

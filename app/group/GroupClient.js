@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { RAIDS, RAID_MAP, RAID_ORDER_MAP } from '@/lib/raidData'
 import { HIDDEN_RAID_IDS, DIFF_LABEL, DIFF_COLOR, getClassIcon } from '@/app/dashboard/_constants'
 import { raidStatusOf } from '@/lib/groupRaidShare'
+import { saveRaid } from '@/app/dashboard/_raidHelpers'
+import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 const IconTrash = ({ size = 14 }) => (
@@ -233,132 +235,19 @@ const STATUS_LABEL = {
 
 // ── Friend Raid Modal (길드 MemberDetailModal과 동일한 디자인) ────────────────
 const DIFF_COLORS_GROUP = {
-  nightmare: { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300',     text: 'text-rose-500 dark:text-rose-400' },
-  hard:      { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300', text: 'text-violet-500 dark:text-violet-400' },
-  normal:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300',         text: 'text-sky-500 dark:text-sky-400' },
-  stage3:    { badge: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300',     text: 'text-rose-500 dark:text-rose-400' },
-  stage2:    { badge: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300', text: 'text-violet-500 dark:text-violet-400' },
-  stage1:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300',         text: 'text-sky-500 dark:text-sky-400' },
+  nightmare: { badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400', text: 'text-violet-500 dark:text-violet-400' },
+  hard:      { badge: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',             text: 'text-red-500 dark:text-red-400' },
+  normal:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',             text: 'text-sky-500 dark:text-sky-400' },
+  stage3:    { badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400', text: 'text-violet-500 dark:text-violet-400' },
+  stage2:    { badge: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',             text: 'text-red-500 dark:text-red-400' },
+  stage1:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',             text: 'text-sky-500 dark:text-sky-400' },
 }
 
-function CharChip({ itemLevel, combatPower, className, children }) {
-  const ref = useRef(null)
-  const [pos, setPos] = useState(null)
-  return (
-    <div
-      ref={ref}
-      className={`relative cursor-default flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold ${className}`}
-      onMouseEnter={() => {
-        if (ref.current) {
-          const r = ref.current.getBoundingClientRect()
-          setPos({ x: r.left, y: r.top })
-        }
-      }}
-      onMouseLeave={() => setPos(null)}
-    >
-      {children}
-      {pos && (
-        <div
-          className="pointer-events-none fixed z-[9999] flex flex-col gap-1 bg-gray-800 dark:bg-gray-700 text-white rounded-md px-2.5 py-2 whitespace-nowrap shadow-md text-[11px] ns-bold"
-          style={{ left: pos.x, top: pos.y - 8, transform: 'translateY(-100%)' }}
-        >
-          <div className="flex items-center gap-1">
-            <IconTrophy />
-            <span>{Number(itemLevel).toFixed(2)}</span>
-          </div>
-          {combatPower != null && (
-            <div className="flex items-center gap-1">
-              <Image src="/combat-power.svg" alt="전투력" width={10} height={10} unoptimized />
-              <span>{Math.round(Number(combatPower)).toLocaleString('ko-KR')}</span>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
+// ── FriendRaidModal — RaidDetailModal 어댑터 ─────────────────────────────────
+function FriendRaidModal({ friend, me, persistedToggles = {}, onCharToggle, onClose }) {
+  const DIFF_SORT = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
 
-function FriendRaidRow({ raidId, difficulty, chars, highlight, completed, noWrap }) {
-  const raid = RAID_MAP[raidId]
-  const diff = raid?.difficulties?.find(d => d.key === difficulty)
-  const name = raid?.name || raidId
-  const diffLabel = diff?.label || difficulty
-  const image = raid?.image || null
-  const c = DIFF_COLORS_GROUP[difficulty] || { badge: 'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300' }
-
-  const chips = chars.map((ch, i) => {
-    const icon = getClassIcon(ch.class)
-    return (
-      <CharChip
-        key={i}
-        itemLevel={ch.itemLevel}
-        combatPower={ch.combatPower}
-        className={completed
-          ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400'
-          : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300'}
-      >
-        {completed && (
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        )}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
-        <span>{ch.name}</span>
-      </CharChip>
-    )
-  })
-
-  if (highlight) {
-    return (
-      <div className={noWrap ? '' : 'rounded-xl shadow-border shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]'}>
-        <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-b from-gray-50 to-gray-50/70 dark:from-[#252525] dark:to-[#212121] rounded-t-xl">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
-          <span className="text-[13px] ns-bold text-gray-900 dark:text-white flex-1 truncate">{name}</span>
-          <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full flex-shrink-0 ${c.badge}`}>{diffLabel}</span>
-        </div>
-        <div className="px-3.5 py-2.5 bg-white dark:bg-[#1e1e1e] flex flex-wrap gap-1.5">{chips}</div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="rounded-xl shadow-border shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
-      <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-b from-gray-50 to-gray-50/70 dark:from-[#252525] dark:to-[#212121] rounded-t-xl">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
-        <span className="text-[13px] ns-bold text-gray-900 dark:text-white flex-1 truncate">{name}</span>
-        <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full flex-shrink-0 ${c.badge}`}>{diffLabel}</span>
-      </div>
-      <div className="px-3.5 py-2.5 flex flex-wrap gap-1.5 bg-white dark:bg-[#1e1e1e] rounded-b-xl">{chips}</div>
-    </div>
-  )
-}
-
-function EmptyFriendTabMsg({ msg }) {
-  return (
-    <div className="py-10 text-center">
-      <p className="text-sm text-gray-400 dark:text-gray-500">{msg}</p>
-    </div>
-  )
-}
-
-function FriendRaidModal({ friend, me, onClose }) {
-  const [activeTab, setActiveTab] = useState('together')
-  const [expandedRaid, setExpandedRaid] = useState(null)
-
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [])
-
-  const name = getDisplayName(friend)
-  const repChar = getRepChar(friend)
-
-  const { raidData, incompleteRaids, completedRaids, togetherRaids } = useMemo(() => {
-    const DIFF_SORT = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
-
+  const { incompleteRaids, completedRaids, togetherRaids } = useMemo(() => {
     const raidKeys = new Set()
     for (const exp of friend.loaExpeditions || []) {
       for (const char of exp.characters || []) {
@@ -381,7 +270,7 @@ function FriendRaidModal({ friend, me, onClose }) {
         for (const char of exp.characters || []) {
           const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
           if (!entry) continue
-          chars.push({ ...char, status: raidStatusOf(entry) })
+          chars.push({ ...char, charClass: char.class, status: raidStatusOf(entry) })
         }
       }
       return { raidId, difficulty, chars }
@@ -399,166 +288,78 @@ function FriendRaidModal({ friend, me, onClose }) {
       for (const exp of me?.loaExpeditions || []) {
         for (const char of exp.characters || []) {
           const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
-          if (!entry) continue
-          if (raidStatusOf(entry) !== 'complete') return true
+          if (entry && raidStatusOf(entry) !== 'complete') return true
         }
       }
       return false
     })
 
-    return { raidData, incompleteRaids, completedRaids, togetherRaids }
+    return { incompleteRaids, completedRaids, togetherRaids }
   }, [friend, me])
 
-  function getMyIncompleteChars(raidId, difficulty) {
+  function myCharsForRaid(raidId, difficulty) {
     if (!me) return []
     const result = []
     for (const exp of me.loaExpeditions || []) {
       for (const char of exp.characters || []) {
         const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
-        if (entry && raidStatusOf(entry) !== 'complete') result.push(char)
+        if (entry && raidStatusOf(entry) !== 'complete') {
+          result.push({ ...char, charClass: char.class })
+        }
       }
     }
     return result
   }
 
-  const MODAL_TABS = [
-    { id: 'together',   label: '함께할 수 있는 레이드', count: togetherRaids.reduce((s, r) => s + r.chars.length, 0) },
-    { id: 'incomplete', label: '미완료한 레이드',        count: incompleteRaids.reduce((s, r) => s + r.chars.length, 0) },
-    { id: 'completed',  label: '완료한 레이드',          count: completedRaids.reduce((s, r) => s + r.chars.length, 0) },
-  ]
-
-  function renderTabContent() {
-    if (activeTab === 'together') {
-      if (!togetherRaids.length) return <EmptyFriendTabMsg msg="함께할 수 있는 레이드가 없어요" />
-      return togetherRaids.map(r => {
-        const raidKey = `${r.raidId}__${r.difficulty}`
-        const isExpanded = expandedRaid === raidKey
-        const myChars = getMyIncompleteChars(r.raidId, r.difficulty)
-        return (
-          <div key={raidKey} className="rounded-xl overflow-hidden shadow-border shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
-            <button type="button" className="w-full text-left" onClick={() => setExpandedRaid(isExpanded ? null : raidKey)}>
-              <FriendRaidRow raidId={r.raidId} difficulty={r.difficulty} chars={r.chars} highlight noWrap />
-            </button>
-            {isExpanded && (
-              <div className="border-t border-gray-100 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#181818]">
-                {myChars.length === 0 ? (
-                  <p className="text-xs text-gray-400 dark:text-gray-500 px-4 py-3">내 미완료 캐릭터가 없어요</p>
-                ) : (
-                  <div className="px-4 py-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Avatar src={me?.image} name={getDisplayName(me)} size={22} />
-                      <span className="text-[12px] ns-bold text-gray-800 dark:text-gray-200 flex-1">나</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {myChars.map((c, ci) => {
-                        const icon = getClassIcon(c.class)
-                        return (
-                          <div key={ci} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] ns-bold bg-white dark:bg-[#242424] text-gray-700 dark:text-gray-300 shadow-border">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />}
-                            <span>{c.name}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )
-      })
-    }
-    if (activeTab === 'incomplete') {
-      if (!incompleteRaids.length) return <EmptyFriendTabMsg msg="미완료한 레이드가 없어요" />
-      return incompleteRaids.map(r => <FriendRaidRow key={`${r.raidId}-${r.difficulty}`} raidId={r.raidId} difficulty={r.difficulty} chars={r.chars} />)
-    }
-    if (!completedRaids.length) return <EmptyFriendTabMsg msg="완료한 레이드가 없어요" />
-    return completedRaids.map(r => <FriendRaidRow key={`${r.raidId}-${r.difficulty}`} raidId={r.raidId} difficulty={r.difficulty} chars={r.chars} completed />)
-  }
+  const repChar = getRepChar(friend)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full sm:max-w-md h-[90vh] sm:h-[82vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1a1a1a] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:shadow-border overflow-hidden">
-
-        {/* 모바일 핸들 */}
-        <div className="sm:hidden flex justify-center pt-3 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-[#333]" />
-        </div>
-
-        {/* 헤더 */}
-        <div className="px-5 pt-4 pb-4 flex-shrink-0 flex items-center gap-3 border-b border-gray-100 dark:border-[#2a2a2a]">
-          <Avatar src={friend.image} name={name} size={44} />
-          <div className="flex-1 min-w-0">
-            <div className="text-base ns-bold text-gray-900 dark:text-white truncate">{name}</div>
-            <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
-              {repChar && (
-                <div className="flex items-center gap-0.5 flex-shrink-0 text-[var(--accent-500)]">
-                  <IconCrown />
-                  <span className="text-xs ns-bold text-gray-700 dark:text-gray-300">{repChar.name}</span>
-                </div>
-              )}
-              {repChar && friend.discordUsername && (
-                <span className="text-[10px] text-gray-300 dark:text-gray-600 flex-shrink-0">·</span>
-              )}
-              {friend.discordUsername && (
-                <p className="text-xs text-gray-400">@{friend.discordUsername}</p>
-              )}
-            </div>
-          </div>
-          <button type="button" onClick={onClose}
-            className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-gray-400 transition-colors flex-shrink-0">
-            <IconX />
-          </button>
-        </div>
-
-        {/* 탭 바 */}
-        <div className="flex-shrink-0 flex border-b border-gray-100 dark:border-[#2a2a2a] px-3 pt-1">
-          {MODAL_TABS.map(t => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => { setActiveTab(t.id); setExpandedRaid(null) }}
-              className={`relative flex items-center gap-1.5 px-3 py-2.5 text-[12px] ns-bold transition-colors whitespace-nowrap ${
-                activeTab === t.id
-                  ? 'text-gray-900 dark:text-white'
-                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
-              }`}
-            >
-              {t.label}
-              {t.count > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ns-bold ${
-                  activeTab === t.id
-                    ? 'bg-gray-900 text-white dark:bg-zinc-400 dark:text-gray-900'
-                    : 'bg-gray-200 dark:bg-zinc-600 text-gray-600 dark:text-white'
-                }`}>
-                  {t.count}
-                </span>
-              )}
-              {activeTab === t.id && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 dark:bg-white rounded-full" />
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* 탭 콘텐츠 */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
-          {renderTabContent()}
-        </div>
-      </div>
-    </div>
+    <RaidDetailModal
+      name={getDisplayName(friend)}
+      image={friend.image}
+      discordUsername={friend.discordUsername}
+      repChar={repChar ? { name: repChar.name } : null}
+      togetherRaids={togetherRaids}
+      incompleteRaids={incompleteRaids}
+      completedRaids={completedRaids}
+      myUser={{ name: '나', image: me?.image }}
+      myCharsForRaid={myCharsForRaid}
+      persistedToggles={persistedToggles}
+      onCharToggle={onCharToggle}
+      onClose={onClose}
+    />
   )
 }
 
 // ── Raid Members Modal ────────────────────────────────────────────────────────
-function RaidMembersModal({ modal, me, onClose }) {
+function RaidMembersModal({ modal, me, persistedToggles = {}, onCharToggle, onClose }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
+  const [localDone, setLocalDone] = useState({})
   const { groupFriends, raidId, difficulty } = modal
+
+  function handleMyCharToggle(char) {
+    const key = `${char.id}:${raidId}:${difficulty}`
+    const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+    if (!entry) return
+    const currentDone = key in localDone ? localDone[key] : (persistedToggles[key] ?? false)
+    const newDone = !currentDone
+    setLocalDone(prev => ({ ...prev, [key]: newDone }))
+    onCharToggle?.(key, newDone)
+    const gateCount = entry.gateClears?.length
+      || RAID_MAP[entry.raidId]?.difficulties?.find(d => d.key === entry.difficulty)?.gates
+      || 1
+    saveRaid(char.id, {
+      raidId: entry.raidId,
+      difficulty: entry.difficulty,
+      gateClears: Array.from({ length: gateCount }, () => newDone),
+      isGoldCheck: entry.isGoldCheck,
+      moreDone: newDone ? entry.moreDone : false,
+      moreFrom: entry.moreFrom,
+    })
+  }
   const { name, image } = getRaidInfo(raidId, difficulty)
   const mePublic = me ? { ...me, raidPublicFriends: true } : null
   const participants = [mePublic, ...groupFriends].filter(Boolean)
@@ -604,9 +405,18 @@ function RaidMembersModal({ modal, me, onClose }) {
                   <div className="ml-7 flex flex-col gap-1.5">
                     {chars.map(char => {
                       const classIcon = getClassIcon(char.class)
+                      const charKey = `${char.id}:${raidId}:${difficulty}`
+                      const effectiveDone = isMe ? (charKey in localDone ? localDone[charKey] : (persistedToggles[charKey] ?? false)) : false
                       return (
                         <div key={char.id}
-                          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 dark:bg-zinc-900/60 border border-gray-100 dark:border-white/[0.05]">
+                          onClick={isMe ? () => handleMyCharToggle(char) : undefined}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-colors ${
+                            effectiveDone
+                              ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 dark:border-emerald-600 cursor-pointer'
+                              : isMe
+                              ? 'bg-gray-50 dark:bg-zinc-900/60 border-gray-100 dark:border-white/[0.05] cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800/60'
+                              : 'bg-gray-50 dark:bg-zinc-900/60 border-gray-100 dark:border-white/[0.05]'
+                          }`}>
                           {classIcon ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={classIcon} alt={char.class} width={18} height={18}
@@ -615,8 +425,13 @@ function RaidMembersModal({ modal, me, onClose }) {
                           ) : (
                             <div className="w-[18px] h-[18px] flex-shrink-0" />
                           )}
-                          <span className="text-[12px] ns-bold text-gray-700 dark:text-zinc-200 flex-1 truncate min-w-0">{char.name}</span>
+                          <span className={`text-[12px] ns-bold flex-1 truncate min-w-0 ${effectiveDone ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-700 dark:text-zinc-200'}`}>{char.name}</span>
                           <div className="flex items-center gap-2.5 flex-shrink-0">
+                            {effectiveDone && (
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500 flex-shrink-0">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
                             <div className="flex items-center gap-0.5 text-[11px] text-gray-500 dark:text-zinc-400">
                               <IconTrophy />
                               <span>{Number(char.itemLevel).toFixed(2)}</span>
@@ -768,8 +583,31 @@ function SearchResultCard({ user, onSendRequest, sending }) {
 // ── Raid Lookup Panel ────────────────────────────────────────────────────────
 function RaidLookupPanel({ me, friends }) {
   const [selectedRaid, setSelectedRaid] = useState(null)
+  const [localDone, setLocalDone] = useState({})
 
   const DIFF_SORT_MAP = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
+
+  function handleMyCharToggle(char) {
+    if (!selectedRaid) return
+    const { raidId, difficulty } = selectedRaid
+    const key = `${char.id}:${raidId}:${difficulty}`
+    const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+    if (!entry) return
+    const currentDone = key in localDone ? localDone[key] : char.done
+    const newDone = !currentDone
+    setLocalDone(prev => ({ ...prev, [key]: newDone }))
+    const gateCount = entry.gateClears?.length
+      || RAID_MAP[entry.raidId]?.difficulties?.find(d => d.key === entry.difficulty)?.gates
+      || 1
+    saveRaid(char.id, {
+      raidId: entry.raidId,
+      difficulty: entry.difficulty,
+      gateClears: Array.from({ length: gateCount }, () => newDone),
+      isGoldCheck: entry.isGoldCheck,
+      moreDone: newDone ? entry.moreDone : false,
+      moreFrom: entry.moreFrom,
+    })
+  }
 
   const myRaids = useMemo(() => {
     const seen = new Set()
@@ -793,6 +631,27 @@ function RaidLookupPanel({ me, friends }) {
     })
     return list
   }, [me])
+
+  const myRaidAllDone = useMemo(() => {
+    const result = {}
+    for (const { raidId, difficulty } of myRaids) {
+      const key = `${raidId}__${difficulty}`
+      let hasChar = false
+      let allDone = true
+      for (const exp of me?.loaExpeditions || []) {
+        for (const char of exp.characters || []) {
+          const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
+          if (!entry) continue
+          hasChar = true
+          const charKey = `${char.id}:${raidId}:${difficulty}`
+          const done = charKey in localDone ? localDone[charKey] : raidStatusOf(entry) === 'complete'
+          if (!done) allDone = false
+        }
+      }
+      result[key] = hasChar && allDone
+    }
+    return result
+  }, [myRaids, me, localDone])
 
   const raidResults = useMemo(() => {
     if (!selectedRaid) return null
@@ -842,7 +701,7 @@ function RaidLookupPanel({ me, friends }) {
         <div className="flex">
 
           {/* 레이드 버튼 목록 */}
-          <div className="w-44 flex-shrink-0 border-r border-gray-50 dark:border-white/[0.04] overflow-y-auto max-h-[560px]">
+          <div className="w-44 flex-shrink-0 border-r border-gray-50 dark:border-white/[0.04] overflow-y-auto max-h-[calc(100vh-240px)]">
             {myRaids.map(({ raidId, difficulty }) => {
               const { name, diffLabel, image } = getRaidInfo(raidId, difficulty)
               const raidKey = `${raidId}__${difficulty}`
@@ -865,9 +724,16 @@ function RaidLookupPanel({ me, friends }) {
                     <img src={image} alt="" className="w-5 h-5 rounded-md object-cover flex-shrink-0 opacity-80" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className={`text-[12px] ns-bold truncate leading-tight ${
+                    <div className={`text-[12px] ns-bold truncate leading-tight flex items-center gap-1 ${
                       isSelected ? 'text-[var(--accent-700)] dark:text-[var(--accent-300)]' : 'text-gray-700 dark:text-zinc-300'
-                    }`}>{name}</div>
+                    }`}>
+                      <span className="truncate">{name}</span>
+                      {myRaidAllDone[raidKey] && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 text-emerald-500 dark:text-emerald-400">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
                     <div className={`text-[10px] mt-0.5 ${
                       isSelected
                         ? 'text-[var(--accent-500)] dark:text-[var(--accent-400)]'
@@ -881,7 +747,7 @@ function RaidLookupPanel({ me, friends }) {
           </div>
 
           {/* 결과 패널 */}
-          <div className="flex-1 min-w-0 overflow-y-auto max-h-[560px]">
+          <div className="flex-1 min-w-0 overflow-y-auto max-h-[calc(100vh-240px)]">
             {!selectedRaid ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center px-4 py-10">
                 <p className="text-xs text-gray-300 dark:text-zinc-700">레이드를 선택하면<br />친구들의 남은 캐릭터를 볼 수 있어요</p>
@@ -903,13 +769,16 @@ function RaidLookupPanel({ me, friends }) {
                   ) : (
                     <div className="ml-7 flex flex-wrap gap-1">
                       {[...raidResults.myChars].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0)).map((char, i) => {
+                        const charKey = `${char.id}:${selectedRaid.raidId}:${selectedRaid.difficulty}`
+                        const effectiveDone = charKey in localDone ? localDone[charKey] : char.done
                         const icon = getClassIcon(char.class)
                         return (
                           <CharChip key={i} itemLevel={char.itemLevel} combatPower={char.combatPower}
-                            className={char.done
+                            onClick={() => handleMyCharToggle(char)}
+                            className={effectiveDone
                               ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400'
                               : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300'}>
-                            {char.done && (
+                            {effectiveDone && (
                               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>
@@ -987,6 +856,8 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
   const [confirmModal, setConfirmModal] = useState(null)
   const [raidModal, setRaidModal] = useState(null) // { groupFriends, raidId, difficulty }
   const [friendModal, setFriendModal] = useState(null) // { friend }
+  const [myCharToggles, setMyCharToggles] = useState({})
+  const handleCharToggle = (key, val) => setMyCharToggles(prev => ({ ...prev, [key]: val }))
 
   // 그룹 — localStorage 영속화
   const [groups, setGroupsRaw] = useState([])
@@ -1165,6 +1036,8 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         <RaidMembersModal
           modal={raidModal}
           me={me}
+          persistedToggles={myCharToggles}
+          onCharToggle={handleCharToggle}
           onClose={() => setRaidModal(null)}
         />
       )}
@@ -1172,6 +1045,8 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         <FriendRaidModal
           friend={friendModal.friend}
           me={me}
+          persistedToggles={myCharToggles}
+          onCharToggle={handleCharToggle}
           onClose={() => setFriendModal(null)}
         />
       )}

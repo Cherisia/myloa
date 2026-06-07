@@ -10,12 +10,12 @@ export const LOA_KEY_STORAGE = 'myloa_api_key'
 
 export const DIFF_LABEL = { nightmare: '나메', hard: '하드', normal: '노말', stage3: '3단계', stage2: '2단계', stage1: '1단계' }
 export const DIFF_COLOR  = {
-  nightmare: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  nightmare: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
   hard:      'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
-  normal:    'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300',
-  stage3:    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  stage2:    'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
-  stage1:    'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300',
+  normal:    'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
+  stage3:    'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+  stage2:    'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+  stage1:    'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
 }
 
 // 할의 모래시계 아이템 레벨 제한
