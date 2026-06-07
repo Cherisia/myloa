@@ -1,8 +1,8 @@
 import Image from 'next/image'
 
 // ── 아이콘 ────────────────────────────────────────────────────────────────────
-export const IconCrown = () => (
-  <svg width="12" height="11" viewBox="0 0 24 22" fill="currentColor">
+export const IconCrown = ({ className = '' }) => (
+  <svg width="12" height="11" viewBox="0 0 24 22" fill="currentColor" className={className}>
     <path d="M2 19h20v2H2zM22 3.27l-5.5 6.5L12 2 7.5 9.77 2 3.27V18h20V3.27z"/>
   </svg>
 )
@@ -14,6 +14,40 @@ export const IconPlus = ({ size = 13 }) => (
 export const IconCheck = () => (
   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
     <polyline points="20 6 9 17 4 12"/>
+  </svg>
+)
+export const IconX = ({ size = 12 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+)
+export const IconTrophy = ({ className = '' }) => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+    <path d="M4 22h16"/>
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+  </svg>
+)
+export const IconEye = ({ className = '' }) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+)
+export const IconEyeOff = ({ className = '' }) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+)
+export const IconSearch = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="11" cy="11" r="8"/>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
   </svg>
 )
 export const IconRefresh = () => (

@@ -3,41 +3,11 @@
 import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { RAID_MAP } from '@/lib/raidData'
-import { getClassIcon } from '@/app/dashboard/_constants'
+import { getClassIcon, DIFF_COLOR } from '@/app/dashboard/_constants'
 import { saveRaid } from '@/app/dashboard/_raidHelpers'
+import { IconX, IconTrophy, IconCrown } from '@/app/dashboard/_icons'
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
-const IconX = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-)
-const IconTrophy = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 flex-shrink-0">
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-    <path d="M4 22h16"/>
-    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-    <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
-  </svg>
-)
-const IconCrown = () => (
-  <svg width="12" height="11" viewBox="0 0 24 22" fill="currentColor">
-    <path d="M2 19h20v2H2zM22 3.27l-5.5 6.5L12 2 7.5 9.77 2 3.27V18h20V3.27z"/>
-  </svg>
-)
-
-// ── 난이도 색상 ────────────────────────────────────────────────────────────────
-const DIFF_COLORS = {
-  nightmare: { badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' },
-  hard:      { badge: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' },
-  normal:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400' },
-  stage3:    { badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' },
-  stage2:    { badge: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' },
-  stage1:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400' },
-}
-const DIFF_COLOR_DEFAULT = { badge: 'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300' }
+const DIFF_BADGE_DEFAULT = 'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300'
 
 // ── AvatarImg ─────────────────────────────────────────────────────────────────
 function AvatarImg({ src, name, size = 36 }) {
@@ -79,7 +49,7 @@ export function CharChip({ itemLevel, combatPower, className, children, onClick 
           style={{ left: pos.x, top: pos.y - 8, transform: 'translateY(-100%)' }}
         >
           <div className="flex items-center gap-1">
-            <IconTrophy />
+            <IconTrophy className="text-gray-400 flex-shrink-0" />
             <span>{Number(itemLevel).toFixed(2)}</span>
           </div>
           {combatPower != null && (
@@ -102,7 +72,7 @@ export function RaidRow({ raidId, difficulty, chars, highlight, completed, noWra
   const name = raid?.name || raidId
   const diffLabel = diff?.label || difficulty
   const image = raid?.image || null
-  const c = DIFF_COLORS[difficulty] || DIFF_COLOR_DEFAULT
+  const badgeCls = DIFF_COLOR[difficulty] || DIFF_BADGE_DEFAULT
 
   const chips = chars.map((ch, i) => {
     const icon = getClassIcon(ch.charClass)
@@ -129,7 +99,7 @@ export function RaidRow({ raidId, difficulty, chars, highlight, completed, noWra
       {/* eslint-disable-next-line @next/next/no-img-element */}
       {image && <img src={image} alt={name} className="w-4 h-4 rounded object-cover flex-shrink-0 opacity-70" />}
       <span className="text-[13px] ns-bold text-gray-900 dark:text-white flex-1 truncate">{name}</span>
-      <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full flex-shrink-0 ${c.badge}`}>{diffLabel}</span>
+      <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full flex-shrink-0 ${badgeCls}`}>{diffLabel}</span>
     </div>
   )
 

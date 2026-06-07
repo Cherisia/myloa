@@ -3,12 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { IconPlus, IconCrown } from '@/app/dashboard/_icons'
 
-const IconPlus = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-)
 const IconKey = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <circle cx="7.5" cy="15.5" r="5.5" /><path d="M21 2L13 10M21 2v6M21 2h-6" />
@@ -23,11 +19,6 @@ const IconUsers = () => (
 const IconChevron = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <polyline points="9 18 15 12 9 6" />
-  </svg>
-)
-const IconCrown = ({ className }) => (
-  <svg width="12" height="11" viewBox="0 0 24 22" fill="currentColor" className={className}>
-    <path d="M2 19h20v2H2zM22 3.27l-5.5 6.5L12 2 7.5 9.77 2 3.27V18h20V3.27z"/>
   </svg>
 )
 

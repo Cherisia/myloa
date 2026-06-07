@@ -7,6 +7,7 @@ import { HIDDEN_RAID_IDS, DIFF_LABEL, DIFF_COLOR, getClassIcon } from '@/app/das
 import { raidStatusOf } from '@/lib/groupRaidShare'
 import { saveRaid } from '@/app/dashboard/_raidHelpers'
 import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
+import { IconCrown, IconTrophy, IconX, IconPlus, IconGrip, IconSearch } from '@/app/dashboard/_icons'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 const IconTrash = ({ size = 14 }) => (
@@ -15,44 +16,6 @@ const IconTrash = ({ size = 14 }) => (
     <path d="M19 6l-1 14H6L5 6" />
     <path d="M10 11v6M14 11v6" />
     <path d="M9 6V4h6v2" />
-  </svg>
-)
-const IconX = ({ size = 12 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-)
-const IconPlus = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-)
-const IconGrip = () => (
-  <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
-    <circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/>
-    <circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/>
-    <circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/>
-  </svg>
-)
-const IconSearch = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-  </svg>
-)
-const IconCrown = () => (
-  <svg width="12" height="11" viewBox="0 0 24 22" fill="currentColor">
-    <path d="M2 19h20v2H2zM22 3.27l-5.5 6.5L12 2 7.5 9.77 2 3.27V18h20V3.27z"/>
-  </svg>
-)
-const IconTrophy = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-    <path d="M4 22h16"/>
-    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-    <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
   </svg>
 )
 const IconStar = ({ filled, size = 14 }) => (
@@ -233,14 +196,14 @@ const STATUS_LABEL = {
   complete: '완료', partial: '일부완료', incomplete: '미완료', none: '없음', hidden: '비공개',
 }
 
-// ── Friend Raid Modal (길드 MemberDetailModal과 동일한 디자인) ────────────────
-const DIFF_COLORS_GROUP = {
-  nightmare: { badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400', text: 'text-violet-500 dark:text-violet-400' },
-  hard:      { badge: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',             text: 'text-red-500 dark:text-red-400' },
-  normal:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',             text: 'text-sky-500 dark:text-sky-400' },
-  stage3:    { badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400', text: 'text-violet-500 dark:text-violet-400' },
-  stage2:    { badge: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',             text: 'text-red-500 dark:text-red-400' },
-  stage1:    { badge: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',             text: 'text-sky-500 dark:text-sky-400' },
+// ── Friend Raid Modal ──────────────────────────────────────────────────────────
+const DIFF_TEXT_COLOR = {
+  nightmare: 'text-violet-500 dark:text-violet-400',
+  hard:      'text-red-500 dark:text-red-400',
+  normal:    'text-sky-500 dark:text-sky-400',
+  stage3:    'text-violet-500 dark:text-violet-400',
+  stage2:    'text-red-500 dark:text-red-400',
+  stage1:    'text-sky-500 dark:text-sky-400',
 }
 
 // ── FriendRaidModal — RaidDetailModal 어댑터 ─────────────────────────────────
@@ -737,7 +700,7 @@ function RaidLookupPanel({ me, friends }) {
                     <div className={`text-[10px] mt-0.5 ${
                       isSelected
                         ? 'text-[var(--accent-500)] dark:text-[var(--accent-400)]'
-                        : (DIFF_COLORS_GROUP[difficulty]?.text || 'text-gray-400 dark:text-zinc-600')
+                        : (DIFF_TEXT_COLOR[difficulty] || 'text-gray-400 dark:text-zinc-600')
                     }`}>{diffLabel}</div>
                   </div>
                   {isSelected && <div className="w-0.5 h-5 rounded-full bg-[var(--accent-400)] flex-shrink-0" />}

@@ -4,10 +4,11 @@ import { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { RAID_MAP } from '@/lib/raidData'
-import { getGroupRaidList, raidStatusOf } from '@/lib/groupRaidShare'
+import { getGroupRaidList, raidStatusOf, adaptMember } from '@/lib/groupRaidShare'
 import { CLASS_ICON } from '@/app/dashboard/_constants'
 import { saveRaid } from '@/app/dashboard/_raidHelpers'
 import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
+import { IconCrown, IconTrophy, IconX } from '@/app/dashboard/_icons'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 const IconBack = () => (
@@ -25,32 +26,12 @@ const IconStar = ({ filled, size = 14 }) => (
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 )
-const IconCrown = () => (
-  <svg width="12" height="11" viewBox="0 0 24 22" fill="currentColor" className="text-[var(--accent-500)] dark:text-gray-400 flex-shrink-0">
-    <path d="M2 19h20v2H2zM22 3.27l-5.5 6.5L12 2 7.5 9.77 2 3.27V18h20V3.27z"/>
-  </svg>
-)
-const IconTrophy = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 flex-shrink-0">
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-    <path d="M4 22h16"/>
-    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-    <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
-  </svg>
-)
 const IconPower = () => (
   <Image src="/combat-power.svg" alt="전투력" width={12} height={12} unoptimized />
 )
 const IconCheck = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
     <polyline points="20 6 9 17 4 12" />
-  </svg>
-)
-const IconX = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 )
 const IconRegen = () => (
@@ -61,23 +42,6 @@ const IconRegen = () => (
 )
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function adaptMember(m) {
-  return {
-    ...m,
-    displayName: m.user?.nickname || m.user?.name || m.user?.discordUsername || '알 수 없음',
-    expeditions: (m.user?.loaExpeditions || []).map(exp => ({
-      characters: (exp.characters || []).map(c => ({
-        id: c.id,
-        name: c.name,
-        itemLevel: c.itemLevel,
-        characterClass: c.class,
-        combatPower: c.combatPower,
-        raids: c.characterRaids || [],
-      })),
-    })),
-  }
-}
-
 function isHidden(member) {
   return member.visibility === 'none' || member.user?.raidPublic === false
 }
@@ -641,7 +605,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                     {repChar && (
                       <div className="flex items-center gap-2.5 mt-1">
                         <div className="flex items-center gap-0.5">
-                          <IconTrophy />
+                          <IconTrophy className="text-gray-400 flex-shrink-0" />
                           <span className="text-xs ns-bold text-gray-700 dark:text-gray-300">
                             {Number(repChar.itemLevel).toFixed(2)}
                           </span>
