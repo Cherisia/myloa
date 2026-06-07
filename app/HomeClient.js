@@ -423,7 +423,13 @@ function CalendarSection({ calendar, loading }) {
     if (todayTimes.length > 0) {
       hasTodayByCategory[cat] = true
       if (!todayTimesByCategory[cat]) todayTimesByCategory[cat] = []
-      for (const t of todayTimes) todayTimesByCategory[cat].push(t)
+      for (const t of todayTimes) {
+        // 카오스게이트는 API가 정시 10분 전(:50)을 반환 — 가장 가까운 정시로 보정
+        const adjusted = cat === '카오스게이트'
+          ? new Date(Math.round(new Date(t).getTime() / 3_600_000) * 3_600_000).toISOString()
+          : t
+        todayTimesByCategory[cat].push(adjusted)
+      }
     }
     if (todayTimes.length === 0) continue
     if (!byCategory[cat]) byCategory[cat] = []
