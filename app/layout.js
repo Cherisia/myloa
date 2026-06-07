@@ -76,10 +76,18 @@ export default async function RootLayout({ children }) {
               {/* 본문 */}
               <main className="flex-1 min-w-0 px-4 py-6 min-h-[calc(100dvh-82px)]">
                 {children}
-                <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-white/[0.06] text-center">
-                  <Link href="/privacy" className="text-[11px] text-gray-400 dark:text-zinc-600 hover:text-gray-600 dark:hover:text-zinc-400 transition-colors">
-                    개인정보처리방침
-                  </Link>
+                <footer className="mt-12 pt-8 pb-2 border-t border-gray-200 dark:border-white/[0.06] text-center space-y-3">
+                  <div className="space-y-1">
+                    <div className="text-lg font-bold tracking-tight text-[var(--accent-400)] ns-extrabold">myloa</div>
+                    <p className="text-[12px] text-gray-400 dark:text-zinc-500">로스트아크 레이드 숙제 관리 & 공유</p>
+                  </div>
+                  <div className="flex items-center justify-center gap-3 text-[11px]">
+                    <Link href="/privacy" className="text-gray-400 dark:text-zinc-600 hover:text-gray-600 dark:hover:text-zinc-400 transition-colors">
+                      개인정보처리방침
+                    </Link>
+                    <span className="text-gray-300 dark:text-zinc-700">|</span>
+                    <span className="text-gray-400 dark:text-zinc-600">© 2026 myloa</span>
+                  </div>
                 </footer>
               </main>
               {/* 우측 사이드바 — 2xl only (160×600 sticky) */}
