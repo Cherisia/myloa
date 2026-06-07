@@ -270,8 +270,10 @@ export default function Navbar() {
 
         {/* 우측 — 데스크탑 */}
         <div className="hidden sm:flex items-center gap-4">
-          <ThemeDots />
-          <div className={`h-3.5 w-px ${s.divider}`} />
+          <div className="hidden md:flex items-center gap-4">
+            <ThemeDots />
+            <div className={`h-3.5 w-px ${s.divider}`} />
+          </div>
           <UserArea />
         </div>
 

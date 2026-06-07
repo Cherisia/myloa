@@ -420,6 +420,88 @@ function RaidMembersModal({ modal, me, persistedToggles = {}, onCharToggle, onCl
   )
 }
 
+// ── Friend Picker Modal (모바일 그룹 추가용) ──────────────────────────────────
+function FriendPickerModal({ groupId, groups, friends, onAdd, onClose }) {
+  const group = groups.find(g => g.id === groupId)
+  const alreadyIn = new Set(group?.memberIds || [])
+  const isFull = (group?.memberIds?.length || 0) >= MAX_GROUP_SIZE
+  const groupIdx = groups.findIndex(g => g.id === groupId)
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white dark:bg-[#1e1e1e] rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-sm flex flex-col overflow-hidden max-h-[75vh]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/[0.08] flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm ns-bold text-gray-800 dark:text-zinc-100">그룹 {groupIdx + 1}에 친구 추가</span>
+            {isFull && (
+              <span className="text-[11px] px-2 py-0.5 rounded-md bg-red-50 dark:bg-red-500/10 text-red-400 ns-bold">{MAX_GROUP_SIZE}명 꽉 참</span>
+            )}
+          </div>
+          <button type="button" onClick={onClose}
+            className="p-1 rounded-lg text-gray-300 dark:text-zinc-600 hover:text-gray-500 dark:hover:text-zinc-400 transition-colors">
+            <IconX size={14} />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 divide-y divide-gray-50 dark:divide-white/[0.03]">
+          {friends.length === 0 ? (
+            <div className="px-4 py-10 text-center">
+              <p className="text-xs text-gray-400 dark:text-zinc-600">친구가 없습니다</p>
+              <p className="text-[11px] text-gray-300 dark:text-zinc-700 mt-1">친구 탭에서 친구를 먼저 추가하세요</p>
+            </div>
+          ) : friends.map(friend => {
+            const inGroup = alreadyIn.has(friend.id)
+            const name = getDisplayName(friend)
+            const repChar = getRepChar(friend)
+            return (
+              <div key={friend.id} className="flex items-center gap-3 px-4 py-3">
+                <Avatar src={friend.image} name={name} size={36} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] ns-bold text-gray-800 dark:text-zinc-100 truncate leading-tight">{name}</div>
+                  {friend.discordUsername && (
+                    <div className="text-[11px] text-gray-400 dark:text-zinc-500 truncate leading-tight">@{friend.discordUsername}</div>
+                  )}
+                  {repChar && (
+                    <div className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500 truncate mt-0.5">
+                      <span className="text-[var(--accent-400)] flex-shrink-0"><IconCrown /></span>
+                      <span className="truncate">{repChar.name}</span>
+                      <span className="flex-shrink-0 mx-0.5">·</span>
+                      <span className="text-gray-400 dark:text-gray-500 flex-shrink-0"><IconTrophy /></span>
+                      <span className="flex-shrink-0">{Number(repChar.itemLevel).toFixed(0)}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-shrink-0">
+                  {inGroup ? (
+                    <span className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ns-bold">추가됨</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { onAdd(groupId, friend.id) }}
+                      disabled={isFull}
+                      className="flex items-center gap-1 text-[12px] px-3 py-1.5 rounded-lg ns-bold
+                        bg-[var(--accent-400)] hover:bg-[var(--accent-300)] active:bg-[var(--accent-500)]
+                        text-gray-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <IconPlus size={10} />
+                      추가
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Confirm Modal ──────────────────────────────────────────────────────────────
 function ConfirmModal({ modal, onConfirm, onCancel }) {
   useEffect(() => {
@@ -661,10 +743,11 @@ function RaidLookupPanel({ me, friends }) {
           <p className="text-[11px] text-gray-300 dark:text-zinc-700 mt-1.5">대시보드에서 레이드를 설정하면 친구들의 현황을 확인할 수 있어요</p>
         </div>
       ) : (
-        <div className="flex">
+        <div className="flex flex-col md:flex-row">
 
-          {/* 레이드 버튼 목록 */}
-          <div className="w-44 flex-shrink-0 border-r border-gray-50 dark:border-white/[0.04] overflow-y-auto max-h-[calc(100vh-240px)]">
+          {/* 레이드 버튼 목록 — 모바일: 상단 가로 스크롤, 데스크탑: 좌측 세로 목록 */}
+          <div className="md:w-44 md:flex-shrink-0 md:border-r border-b md:border-b-0 border-gray-50 dark:border-white/[0.04] overflow-x-auto md:overflow-x-hidden md:overflow-y-auto md:max-h-[calc(100vh-240px)]">
+            <div className="flex md:flex-col min-w-max md:min-w-0 px-2 py-2 md:px-0 md:py-0 gap-1.5 md:gap-0">
             {myRaids.map(({ raidId, difficulty }) => {
               const { name, diffLabel, image } = getRaidInfo(raidId, difficulty)
               const raidKey = `${raidId}__${difficulty}`
@@ -674,7 +757,7 @@ function RaidLookupPanel({ me, friends }) {
                   key={raidKey}
                   type="button"
                   onClick={() => setSelectedRaid(isSelected ? null : { raidId, difficulty })}
-                  className={`w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors
+                  className={`flex items-center gap-1.5 md:gap-2 md:w-full md:px-3 md:py-2.5 px-2.5 py-2 md:rounded-none rounded-xl text-left flex-shrink-0 md:flex-shrink transition-colors
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-400)]
                     active:bg-[var(--accent-200)] dark:active:bg-[var(--accent-900)]/30
                     ${isSelected
@@ -686,11 +769,11 @@ function RaidLookupPanel({ me, friends }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={image} alt="" className="w-5 h-5 rounded-md object-cover flex-shrink-0 opacity-80" />
                   )}
-                  <div className="flex-1 min-w-0">
-                    <div className={`text-[12px] ns-bold truncate leading-tight flex items-center gap-1 ${
+                  <div className="min-w-0">
+                    <div className={`text-[12px] ns-bold leading-tight flex items-center gap-1 ${
                       isSelected ? 'text-[var(--accent-700)] dark:text-[var(--accent-300)]' : 'text-gray-700 dark:text-zinc-300'
                     }`}>
-                      <span className="truncate">{name}</span>
+                      <span className="truncate max-w-[80px] md:max-w-none">{name}</span>
                       {myRaidAllDone[raidKey] && (
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 text-emerald-500 dark:text-emerald-400">
                           <polyline points="20 6 9 17 4 12" />
@@ -703,14 +786,15 @@ function RaidLookupPanel({ me, friends }) {
                         : (DIFF_TEXT_COLOR[difficulty] || 'text-gray-400 dark:text-zinc-600')
                     }`}>{diffLabel}</div>
                   </div>
-                  {isSelected && <div className="w-0.5 h-5 rounded-full bg-[var(--accent-400)] flex-shrink-0" />}
+                  {isSelected && <div className="hidden md:block w-0.5 h-5 rounded-full bg-[var(--accent-400)] flex-shrink-0 ml-auto" />}
                 </button>
               )
             })}
+            </div>
           </div>
 
           {/* 결과 패널 */}
-          <div className="flex-1 min-w-0 overflow-y-auto max-h-[calc(100vh-240px)]">
+          <div className="flex-1 min-w-0 overflow-y-auto md:max-h-[calc(100vh-240px)]">
             {!selectedRaid ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center px-4 py-10">
                 <p className="text-xs text-gray-300 dark:text-zinc-700">레이드를 선택하면<br />친구들의 남은 캐릭터를 볼 수 있어요</p>
@@ -821,6 +905,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
   const [friendModal, setFriendModal] = useState(null) // { friend }
   const [myCharToggles, setMyCharToggles] = useState({})
   const handleCharToggle = (key, val) => setMyCharToggles(prev => ({ ...prev, [key]: val }))
+  const [addToGroupModal, setAddToGroupModal] = useState(null) // groupId | null
 
   // 그룹 — localStorage 영속화
   const [groups, setGroupsRaw] = useState([])
@@ -1013,6 +1098,15 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
           onClose={() => setFriendModal(null)}
         />
       )}
+      {addToGroupModal && (
+        <FriendPickerModal
+          groupId={addToGroupModal}
+          groups={groups}
+          friends={friends}
+          onAdd={(groupId, friendId) => { addToGroup(groupId, friendId) }}
+          onClose={() => setAddToGroupModal(null)}
+        />
+      )}
 
       {/* ── 페이지 헤더 ─────────────────────────────────────────────────── */}
       <div className="border-b border-gray-100 dark:border-white/[0.05] bg-white dark:bg-[#111] px-4 sm:px-8 py-5">
@@ -1038,7 +1132,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         </div>
 
         {/* ── 탭 ─────────────────────────────────────────────────────────── */}
-        <div className="mt-4 flex gap-1 w-1/3">
+        <div className="mt-4 flex gap-1 w-full sm:w-auto sm:min-w-[280px]">
           {tabs.map(tab => (
             <button
               key={tab.key}
@@ -1320,8 +1414,8 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         {activeTab === 'groups' && (
           <div className="flex gap-6 items-start flex-col lg:flex-row">
 
-            {/* ── 그룹원 사이드바 ──────────────────────────────────────────── */}
-            <div className="w-full lg:w-64 flex-shrink-0 sticky top-4">
+            {/* ── 그룹원 사이드바 — 데스크탑 전용 ──────────────────────────── */}
+            <div className="hidden lg:block lg:w-64 flex-shrink-0 sticky top-4">
               <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
                 <div className="px-4 pt-4 pb-3">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -1331,7 +1425,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-400 dark:text-zinc-600">
-                    카드를 드래그해서 그룹에 추가하세요
+                    드래그해서 그룹에 추가하세요
                   </p>
                 </div>
 
@@ -1399,7 +1493,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
             </div>
 
             {/* ── 그룹 영역 ─────────────────────────────────────────────── */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 w-full">
               {groups.length === 0 ? (
                 <div className="flex flex-col items-center justify-center bg-white dark:bg-[#1a1a1a]
                   rounded-2xl border-2 border-dashed border-gray-200 dark:border-[#2a2a2a]
@@ -1423,7 +1517,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                   </button>
                 </div>
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {groups.map((group, idx) => {
                     const groupFriends = group.memberIds
                       .map(id => friends.find(f => f.id === id))
@@ -1457,14 +1551,29 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                               <span className="text-[10px] text-gray-400 dark:text-zinc-600">{groupFriends.length}/{MAX_GROUP_SIZE}명</span>
                             )}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => deleteGroup(group.id)}
-                            className="p-1.5 rounded-lg text-gray-300 dark:text-zinc-700
-                              hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                          >
-                            <IconX size={12} />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            {!isFull && (
+                              <button
+                                type="button"
+                                onClick={() => setAddToGroupModal(group.id)}
+                                title="친구 추가"
+                                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] ns-bold
+                                  text-[var(--accent-700)] dark:text-[var(--accent-300)]
+                                  hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20 transition-colors"
+                              >
+                                <IconPlus size={11} />
+                                <span className="hidden sm:inline">친구 추가</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => deleteGroup(group.id)}
+                              className="p-1.5 rounded-lg text-gray-300 dark:text-zinc-700
+                                hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                            >
+                              <IconX size={12} />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="px-4 py-3">
@@ -1480,7 +1589,8 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                                     ? 'text-[var(--accent-500)] dark:text-[var(--accent-400)]'
                                     : 'text-gray-300 dark:text-zinc-700'
                                 }`}>
-                                  친구를 여기에 드래그하세요
+                                  <span className="hidden lg:inline">친구를 여기에 드래그하거나 위 + 버튼을 누르세요</span>
+                                  <span className="lg:hidden">위 + 버튼으로 친구를 추가하세요</span>
                                 </span>
                               </div>
                             ) : isFull ? (
