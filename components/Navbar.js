@@ -235,7 +235,7 @@ export default function Navbar() {
         <div className={`hidden sm:block h-3.5 w-px ${s.divider}`} />
 
         {/* 데스크탑 Nav */}
-        <nav className="hidden sm:flex items-center gap-1">
+        <nav className="hidden sm:flex items-center gap-5">
           {navLinks.map(({ href, label, onClick, badge }) => onClick ? (
             <button
               key={label}
