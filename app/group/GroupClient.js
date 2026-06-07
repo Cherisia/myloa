@@ -1092,7 +1092,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         </div>
 
         {/* ── 탭 ─────────────────────────────────────────────────────────── */}
-        <div className="mt-4 flex gap-1 w-full sm:w-auto sm:min-w-[280px]">
+        <div className="mt-4 flex gap-1 w-full lg:w-1/2">
           {tabs.map(tab => (
             <button
               key={tab.key}
