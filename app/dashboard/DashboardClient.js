@@ -1621,25 +1621,24 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         const COL_RAID = 160
         const COL_CHAR = 150
 
-        const nameSize = (name) => {
-          const korLen = [...name].filter(c => /[가-힣ᄀ-ᇿ㄰-㆏]/.test(c)).length
-          if (korLen <= 5) return 'text-sm'
-          if (korLen <= 8) return 'text-xs'
-          if (korLen <= 12) return 'text-[11px]'
+        const maxKorLen = Math.max(0, ...chars.map(c => [...c.name].filter(ch => /[가-힣ᄀ-ᇿ㄰-㆏]/.test(ch)).length))
+
+        const nameSize = () => {
+          if (maxKorLen <= 5) return 'text-sm'
+          if (maxKorLen <= 8) return 'text-xs'
+          if (maxKorLen <= 12) return 'text-[11px]'
           return 'text-[10px]'
         }
-        const nameSizeMd = (name) => {
-          const korLen = [...name].filter(c => /[가-힣ᄀ-ᇿ㄰-㆏]/.test(c)).length
-          if (korLen <= 5) return 'md:max-[1920px]:text-[14px]'
-          if (korLen <= 8) return 'md:max-[1920px]:text-[12px]'
-          if (korLen <= 12) return 'md:max-[1920px]:text-[11px]'
+        const nameSizeMd = () => {
+          if (maxKorLen <= 5) return 'md:max-[1920px]:text-[14px]'
+          if (maxKorLen <= 8) return 'md:max-[1920px]:text-[12px]'
+          if (maxKorLen <= 12) return 'md:max-[1920px]:text-[11px]'
           return 'md:max-[1920px]:text-[10px]'
         }
-        const nameSizeXl = (name) => {
-          const korLen = [...name].filter(c => /[가-힣ᄀ-ᇿ㄰-㆏]/.test(c)).length
-          if (korLen <= 5) return 'min-[1920px]:text-base'
-          if (korLen <= 8) return 'min-[1920px]:text-[14px]'
-          if (korLen <= 12) return 'min-[1920px]:text-[13px]'
+        const nameSizeXl = () => {
+          if (maxKorLen <= 5) return 'min-[1920px]:text-base'
+          if (maxKorLen <= 8) return 'min-[1920px]:text-[14px]'
+          if (maxKorLen <= 12) return 'min-[1920px]:text-[13px]'
           return 'min-[1920px]:text-[12px]'
         }
 
@@ -1794,7 +1793,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     }
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-0.5">
-                        <p className={`${nameSize(char.name)} ${nameSizeMd(char.name)} ${nameSizeXl(char.name)} ns-bold text-gray-900 dark:text-white whitespace-nowrap`}>{char.name}</p>
+                        <p className={`${nameSize()} ${nameSizeMd()} ${nameSizeXl()} ns-bold text-gray-900 dark:text-white whitespace-nowrap`}>{char.name}</p>
                         {charGoldMap[char.id]?.isGoldChar && (
                           <Image src="/icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" width={10} height={10} className="w-2.5 h-2.5 md:w-[13px] md:h-[13px] object-contain flex-shrink-0" />
                         )}
@@ -1883,7 +1882,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                       </div>
                                     </div>
                                   </div>
-                                  <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                                  <div className={`h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                     checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
                                   }`}>
                                     {checked && <IconCheck />}
@@ -1904,7 +1903,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
                                 checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
-                              <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                              <div className={`h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
                               }`}>
                                 {checked && <IconCheck />}
@@ -2003,7 +2002,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 </div>
                               </div>
                               {/* 체크박스 — 오른쪽 */}
-                              <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                              <div className={`h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 moreDone ? 'bg-[var(--accent-500)] border-[var(--accent-500)] text-[var(--accent-900)]'
                                 : allDone ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]'
                                 : 'border-gray-300 dark:border-[#383838]'
@@ -2039,7 +2038,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
                                 checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
-                              <div className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                              <div className={`h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
                               }`}>
                                 {checked && <IconCheck />}
@@ -2073,7 +2072,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         }
 
         // ── 테이블 뷰 ────────────────────────────────────────────────────────
-        const renderCustomRow = (name, charMap, meta, chars, compact = false, colW = null) => {
+        const renderCustomRow = (name, charMap, meta, chars, compact = false, colW = null, isDaily = false) => {
           const rw = colW?.raid ?? COL_RAID
           const cw = colW?.char ?? COL_CHAR
           const stretch = colW?.stretch ?? false
@@ -2134,7 +2133,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
                         }`}
                       >
-                        <div className={`h-[26px] w-[26px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${
+                        <div className={`${isDaily ? 'h-[26px] w-[26px]' : 'h-[20px] w-[20px]'} flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${
                           checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)] shadow-sm' : 'border-gray-200 dark:border-[#383838]'
                         }`}>
                           {checked && <IconCheck />}
@@ -2284,7 +2283,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               : <span className="w-5 h-5 flex items-center justify-center text-gray-400 dark:text-gray-500 flex-shrink-0"><IconClass /></span>
                             }
                             <div className="flex items-center gap-0.5 w-full justify-center overflow-hidden">
-                              <span className={`${nameSize(char.name)} ns-bold text-gray-800 dark:text-gray-100 leading-tight text-center truncate`}>{char.name}</span>
+                              <span className={`${nameSize()} ns-bold text-gray-800 dark:text-gray-100 leading-tight text-center truncate`}>{char.name}</span>
                               {charGoldMap[char.id]?.isGoldChar && (
                                 <Image src="/icons/coin.png" alt="골드 획득 캐릭터" title="골드 획득 캐릭터" width={8} height={8} className="w-[10px] h-[10px] object-contain flex-shrink-0" />
                               )}
@@ -2340,13 +2339,13 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {!selectedRaid && !remainFilter && DAILY_PRESET_ORDER.flatMap((name) => {
                     const row = restDailyMap.get(name)
                     if (!row) return []
-                    return [renderCustomRow(name, row.charMap, row.meta, filteredChars, glanceTable, colW)]
+                    return [renderCustomRow(name, row.charMap, row.meta, filteredChars, glanceTable, colW, true)]
                   })}
                   {!selectedRaid && !remainFilter && [...otherDailyMap.keys()]
                     .sort((a, b) => a.localeCompare(b, 'ko'))
                     .map((name) => {
                       const { charMap, meta } = otherDailyMap.get(name)
-                      return renderCustomRow(name, charMap, meta, filteredChars, glanceTable, colW)
+                      return renderCustomRow(name, charMap, meta, filteredChars, glanceTable, colW, true)
                     })}
                   {showRaidHeader && renderSectionHeader('raid', raidSectionTitle)}
                   {raidsToRender.map(row => {

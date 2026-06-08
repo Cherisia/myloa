@@ -45,7 +45,7 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
         }`}
     >
       {/* 왼쪽: 체크박스 */}
-      <div className={`h-[24px] w-[24px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all
+      <div className={`h-[20px] w-[20px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all
         ${moreDone
           ? 'bg-[var(--accent-500)] border-[var(--accent-500)] text-[var(--accent-900)] shadow-sm'
           : allDone
