@@ -260,13 +260,9 @@ body {
 [data-theme="pink"] .text-blue-500         { color: #a855f7 !important; }
 [data-theme="pink"] .text-blue-600         { color: #9333ea !important; }
 
-/* ── 거래 iOS 토글 + 난이도 배지: 스카이 → 퍼플 ── */
-[data-theme="pink"] .bg-sky-100            { background-color: #f3e8ff !important; } /* purple-100: 노멀 배지 배경 */
-[data-theme="pink"] .bg-sky-300            { background-color: #d8b4fe !important; } /* purple-300 */
+/* ── 난이도 배지: 스카이 색상 유지 (노말 난이도) ── */
 [data-theme="pink"] .bg-sky-50             { background-color: #faf5ff !important; }
 [data-theme="pink"] .border-sky-200        { border-color: #e9d5ff !important; }
-[data-theme="pink"] .text-sky-300          { color: #d8b4fe !important; }
-[data-theme="pink"] .text-sky-600          { color: #9333ea !important; }
 
 
 /* ═══════════════════════════════════════════════════════════════
