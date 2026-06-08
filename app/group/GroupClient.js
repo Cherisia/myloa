@@ -741,7 +741,7 @@ function RaidLookupPanel({ me, friends, isDemo = false }) {
         <div className="flex flex-col md:flex-row">
 
           {/* 레이드 버튼 목록 — 모바일: 상단 가로 스크롤, 데스크탑: 좌측 세로 목록 */}
-          <div className="md:w-44 md:flex-shrink-0 md:border-r border-b md:border-b-0 border-gray-50 dark:border-white/[0.04] overflow-x-auto md:overflow-x-hidden md:overflow-y-auto md:max-h-[calc(100vh-240px)]">
+          <div className="md:w-44 md:flex-shrink-0 md:border-r border-b md:border-b-0 border-gray-50 dark:border-white/[0.04] overflow-x-auto md:overflow-x-hidden">
             <div className="flex md:flex-col min-w-max md:min-w-0 px-2 py-2 md:px-0 md:py-0 gap-1.5 md:gap-0">
             {myRaids.map(({ raidId, difficulty }) => {
               const { name, diffLabel, image } = getRaidInfo(raidId, difficulty)
@@ -789,7 +789,7 @@ function RaidLookupPanel({ me, friends, isDemo = false }) {
           </div>
 
           {/* 결과 패널 */}
-          <div className="flex-1 min-w-0 overflow-y-auto md:max-h-[calc(100vh-240px)]">
+          <div className="flex-1 min-w-0">
             {!selectedRaid ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center px-4 py-10">
                 <p className="text-xs text-gray-300 dark:text-zinc-700">레이드를 선택하면<br />친구들의 남은 캐릭터를 볼 수 있어요</p>
