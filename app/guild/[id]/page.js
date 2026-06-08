@@ -2,6 +2,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { notFound, redirect } from 'next/navigation'
 import GuildDetailClient from './GuildDetailClient'
+import { DEMO_GUILDS } from '@/app/guild/_demoGuild'
+import { DEMO_FRIENDS } from '@/app/group/_demoGroup'
 
 export const metadata = {
   title: '길드 상세',
@@ -11,9 +13,34 @@ export const metadata = {
 
 export default async function GuildDetailPage({ params }) {
   const session = await auth()
-  if (!session?.user?.id) redirect('/dashboard')
-
   const { id } = await params
+
+  if (!session?.user?.id) {
+    const demoGuild = DEMO_GUILDS.find(g => g.id === id)
+    if (!demoGuild) redirect('/guild')
+
+    const demoExpedition = {
+      id: demoGuild.id,
+      name: demoGuild.name,
+      description: demoGuild.description || null,
+      leaderId: 'demo-friend-lea',
+      inviteCode: 'DEMO1234',
+      autoAccept: false,
+      notice: null,
+      maxMembers: demoGuild.maxMembers,
+      favoritedUserIds: [],
+      members: DEMO_FRIENDS.map((f, i) => ({
+        userId: f.id,
+        status: 'active',
+        role: i === 0 ? 'leader' : 'member',
+        visibility: 'all',
+        joinedAt: new Date().toISOString(),
+        user: f,
+      })),
+    }
+    const demoMyMembership = { userId: 'demo-friend-lea', role: 'leader', status: 'active', visibility: 'all' }
+    return <GuildDetailClient expedition={demoExpedition} userId="demo-friend-lea" myMembership={demoMyMembership} isDemo />
+  }
 
   const expedition = await prisma.expedition.findUnique({
     where: { id },

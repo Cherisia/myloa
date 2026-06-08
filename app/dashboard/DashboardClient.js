@@ -1019,7 +1019,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           ).forEach(existing => {
             ;(raids[existing.id] || [])
               .filter(e => EX_RAID_IDS.has(e.raidId))
-              .forEach(e => deleteRaid(existing.id, e.raidId, e.difficulty))
+              .forEach(e => persistDelete(existing.id, e.raidId, e.difficulty))
             exRemovals[existing.id] = (raids[existing.id] || []).filter(e => !EX_RAID_IDS.has(e.raidId))
           })
         })
@@ -1646,7 +1646,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         // ── 드래그앤드랍 순서 변경 ────────────────────────────────────────
         const saveCharOrder = async (ordered) => {
           // tmp ID(낙관적 업데이트 중)가 섞인 경우 스킵
-          if (ordered.some(c => String(c.id).startsWith('tmp-'))) return
+          if (!isLoggedIn || ordered.some(c => String(c.id).startsWith('tmp-'))) return
           try {
             await fetch('/api/characters', {
               method: 'PATCH',

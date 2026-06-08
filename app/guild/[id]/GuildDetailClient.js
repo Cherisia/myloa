@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import { RAID_MAP } from '@/lib/raidData'
 import { getGroupRaidList, raidStatusOf, adaptMember } from '@/lib/groupRaidShare'
 import { CLASS_ICON } from '@/app/dashboard/_constants'
@@ -158,7 +159,7 @@ const TABS = [
 ]
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function GuildDetailClient({ expedition: init, userId, myMembership }) {
+export default function GuildDetailClient({ expedition: init, userId, myMembership, isDemo = false }) {
   const router = useRouter()
   const [expedition,   setExpedition]   = useState(init)
   const [favSortIds,   setFavSortIds]   = useState(() => init.favoritedUserIds || [])
@@ -178,6 +179,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   const [raidModalLocalDone, setRaidModalLocalDone] = useState({})
   const [memberModal,   setMemberModal]   = useState(null)
   const [myCharToggles, setMyCharToggles] = useState({})
+  const [demoVis, setDemoVis] = useState('all')
   const handleCharToggle = (key, val) => setMyCharToggles(prev => ({ ...prev, [key]: val }))
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleteInput,   setDeleteInput]   = useState('')
@@ -469,8 +471,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   }
 
   function renderMembers() {
-    const myVis = expedition.members.find(m => m.userId === userId)?.visibility || 'all'
-
+    const myVis = isDemo ? demoVis : (expedition.members.find(m => m.userId === userId)?.visibility || 'all')
     const q = memberSearch.trim().toLowerCase()
     const sorted = [...activeMembers]
       .filter(m => {
@@ -496,8 +497,8 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
           </div>
           <button
             type="button"
-            onClick={() => changeVisibility(myVis === 'all' ? 'none' : 'all')}
-            className={`relative w-12 h-6.5 rounded-full flex-shrink-0 transition-colors ${myVis === 'all' ? 'bg-[var(--accent-400)]' : 'bg-gray-200 dark:bg-[#383838]'}`}
+            onClick={() => isDemo ? setDemoVis(myVis === 'all' ? 'none' : 'all') : changeVisibility(myVis === 'all' ? 'none' : 'all')}
+            className={`relative flex-shrink-0 rounded-full transition-colors ${myVis === 'all' ? 'bg-[var(--accent-400)]' : 'bg-gray-200 dark:bg-[#383838]'}`}
             style={{ height: '26px', width: '46px' }}
           >
             <span className={`absolute top-[3px] left-[3px] w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${myVis === 'all' ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -542,7 +543,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                 }}
               >
                 {/* 즐겨찾기 별표 */}
-                {!isSelf && (
+                {!isSelf && !isDemo && (
                   <button type="button"
                     onClick={e => { e.stopPropagation(); toggleFavorite(m.userId) }}
                     className={`absolute top-3 right-3 p-1.5 rounded-xl transition-colors ${isFav ? 'text-[var(--accent-400)]' : 'text-gray-200 dark:text-gray-700 hover:text-[var(--accent-300)]'}`}
@@ -1064,6 +1065,22 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   return (
     <>
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-5">
+        {/* 데모 미리보기 배너 */}
+        {isDemo && (
+          <div className="flex items-center gap-3 rounded-lg shadow-border-md bg-white dark:bg-[#222222] px-3.5 py-2.5 text-xs">
+            <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent-400)]" />
+            <span className="text-gray-500 dark:text-gray-400">
+              <span className="ns-bold text-gray-700 dark:text-gray-200">미리보기 모드</span>
+              {' '}· 샘플 데이터가 표시되고 있어요. 길드 기능은 로그인 후 이용할 수 있어요.
+            </span>
+            <button
+              onClick={() => signIn('discord', { callbackUrl: '/guild' })}
+              className="ml-auto flex-shrink-0 ns-bold text-[var(--accent-500)] hover:text-[var(--accent-600)] transition-colors"
+            >
+              로그인하기 →
+            </button>
+          </div>
+        )}
         {/* 헤더 */}
         <div>
           <button type="button" onClick={() => router.push('/guild')}
@@ -1092,7 +1109,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
 
         {/* 탭 바 — 세그먼트 컨트롤 */}
         <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#252525] rounded-2xl">
-          {TABS.filter(t => !t.leaderOnly || isLeader).map(t => (
+          {TABS.filter(t => (!t.leaderOnly || isLeader) && (!isDemo || t.id === 'raids' || t.id === 'members')).map(t => (
             <button key={t.id} type="button" onClick={() => setTab(t.id)}
               className={`flex-1 relative rounded-xl px-2 py-2.5 text-xs ns-bold transition-all duration-150 ${
                 tab === t.id

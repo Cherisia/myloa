@@ -2,8 +2,40 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import Image from 'next/image'
 import { IconPlus, IconCrown, IconKey, IconUsers, IconChevron } from '@/app/dashboard/_icons'
+
+function DemoLoginModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:border sm:border-gray-200/50 dark:sm:border-[#2d2d2d]" onClick={e => e.stopPropagation()}>
+        <div className="sm:hidden flex justify-center pt-3 pb-0">
+          <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-[#333]" />
+        </div>
+        <div className="px-6 pt-5 pb-6 text-center space-y-5">
+          <div className="space-y-1.5">
+            <p className="text-lg ns-extrabold text-gray-900 dark:text-white">로그인이 필요해요</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+              길드 만들기 & 참가 및 상세 보기는<br />디스코드 로그인 후 이용할 수 있어요
+            </p>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            <button type="button" onClick={() => signIn('discord', { callbackUrl: '/guild' })}
+              className="w-full rounded-2xl py-3.5 text-sm ns-bold text-white transition-all hover:opacity-90 active:opacity-80"
+              style={{ backgroundColor: '#5865F2' }}>
+              디스코드로 로그인
+            </button>
+            <button type="button" onClick={onClose}
+              className="w-full rounded-2xl py-3 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+              닫기
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function CreateModal({ onClose, onCreated }) {
   const [name, setName] = useState('')
@@ -140,10 +172,13 @@ function JoinModal({ onClose }) {
   )
 }
 
-export default function GuildClient({ initialGroups }) {
+export default function GuildClient({ initialGroups, isDemo = false }) {
   const router = useRouter()
   const [showCreate, setShowCreate] = useState(false)
   const [showJoin, setShowJoin] = useState(false)
+  const [showDemoLogin, setShowDemoLogin] = useState(false)
+
+  const requireLogin = () => { setShowDemoLogin(true) }
 
   useEffect(() => {
     document.body.style.overflow = (showCreate || showJoin) ? 'hidden' : ''
@@ -157,23 +192,44 @@ export default function GuildClient({ initialGroups }) {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
+      {/* 미리보기 배너 */}
+      {isDemo && (
+        <div className="flex items-center gap-3 rounded-lg shadow-border-md bg-white dark:bg-[#222222] px-3.5 py-2.5 text-xs">
+          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent-400)]" />
+          <span className="text-gray-500 dark:text-gray-400">
+            <span className="ns-bold text-gray-700 dark:text-gray-200">미리보기 모드</span>
+            {' '}· 샘플 데이터가 표시되고 있어요. 길드 기능은 로그인 후 이용할 수 있어요.
+          </span>
+          <button
+            onClick={() => signIn('discord', { callbackUrl: '/guild' })}
+            className="ml-auto flex-shrink-0 flex items-center gap-1 ns-bold text-[var(--accent-500)] hover:text-[var(--accent-600)] transition-colors"
+          >
+            로그인하기 →
+          </button>
+        </div>
+      )}
       {/* 헤더 */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl ns-extrabold text-gray-900 dark:text-white">길드</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl ns-extrabold text-gray-900 dark:text-white">길드</h1>
+            {isDemo && (
+              <span className="text-[10px] ns-bold px-2.5 py-1 rounded-full bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-400)]">미리보기</span>
+            )}
+          </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">팀원과 레이드 현황을 함께 확인해요</p>
         </div>
         <div className="flex gap-2 flex-shrink-0 pt-1">
           <button
             type="button"
-            onClick={() => setShowJoin(true)}
+            onClick={() => isDemo ? requireLogin() : setShowJoin(true)}
             className="flex items-center gap-1.5 rounded-xl shadow-border px-3.5 py-2 text-xs ns-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors"
           >
             <IconKey /> 코드 입력
           </button>
           <button
             type="button"
-            onClick={() => setShowCreate(true)}
+            onClick={() => isDemo ? requireLogin() : setShowCreate(true)}
             className="flex items-center gap-1.5 rounded-xl bg-[var(--accent-400)] hover:bg-[var(--accent-300)] active:bg-[var(--accent-500)] px-3.5 py-2 text-xs ns-bold text-gray-900 transition-all"
           >
             <IconPlus /> 만들기
@@ -190,10 +246,10 @@ export default function GuildClient({ initialGroups }) {
             <p className="text-xs text-gray-400 dark:text-gray-500">길드를 만들거나 초대 코드로 참가해보세요</p>
           </div>
           <div className="flex flex-col gap-2.5 pt-2 max-w-[200px] mx-auto">
-            <button type="button" onClick={() => setShowCreate(true)}
+            <button type="button" onClick={() => isDemo ? requireLogin() : setShowCreate(true)}
               className="rounded-2xl py-3 text-sm ns-bold bg-[var(--accent-400)] hover:bg-[var(--accent-300)] active:bg-[var(--accent-500)] text-gray-900 transition-all"
             >길드 만들기</button>
-            <button type="button" onClick={() => setShowJoin(true)}
+            <button type="button" onClick={() => isDemo ? requireLogin() : setShowJoin(true)}
               className="rounded-2xl py-3 text-sm ns-bold shadow-border text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors"
             >코드로 참가</button>
           </div>
@@ -266,6 +322,7 @@ export default function GuildClient({ initialGroups }) {
 
       {showCreate && <CreateModal onClose={() => setShowCreate(false)} onCreated={handleCreated} />}
       {showJoin   && <JoinModal   onClose={() => setShowJoin(false)} />}
+      {showDemoLogin && <DemoLoginModal onClose={() => setShowDemoLogin(false)} />}
     </div>
   )
 }

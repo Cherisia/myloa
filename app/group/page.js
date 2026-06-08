@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { redirect } from 'next/navigation'
 import GroupClient from './GroupClient'
+import { DEMO_FRIENDS, DEMO_ME, DEMO_INCOMING_REQUESTS } from './_demoGroup'
 
 export const metadata = {
   title: '로스트아크 그룹원 레이드 현황',
@@ -31,7 +31,9 @@ const FRIEND_USER_SELECT = {
 
 export default async function GroupPage() {
   const session = await auth()
-  if (!session?.user?.id) redirect('/dashboard')
+  if (!session?.user?.id) {
+    return <GroupClient initialFriends={DEMO_FRIENDS} initialRequests={DEMO_INCOMING_REQUESTS} me={DEMO_ME} isDemo />
+  }
 
   const userId = session.user.id
 

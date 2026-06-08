@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { redirect } from 'next/navigation'
 import GuildClient from './GuildClient'
+import { DEMO_GUILDS } from './_demoGuild'
 
 export const metadata = {
   title: '로스트아크 길드 레이드 현황',
@@ -13,7 +13,7 @@ export default async function GuildPage() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect('/dashboard')
+    return <GuildClient initialGroups={DEMO_GUILDS} isDemo />
   }
 
   const memberships = await prisma.expeditionMember.findMany({
@@ -58,7 +58,7 @@ export default async function GuildPage() {
     const isOfficer  = isLeader || m.role === 'officer'
     const activeMembers = exp.members.filter(mem => mem.status === 'active')
     const pendingCount  = exp.members.filter(mem => mem.status === 'pending').length
-    const memberAvatars = activeMembers.map(mem => mem.user?.image).filter(Boolean)
+    const memberAvatars = activeMembers.map(mem => mem.user?.image || '/default-avatar.svg')
     const leaderNickname = exp.leader?.nickname
       || exp.leader?.loaExpeditions?.[0]?.repCharName
       || exp.leader?.name

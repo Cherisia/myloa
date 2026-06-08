@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
+import { signIn } from 'next-auth/react'
 import Image from 'next/image'
 import { RAIDS, RAID_MAP, RAID_ORDER_MAP } from '@/lib/raidData'
 import { HIDDEN_RAID_IDS, DIFF_LABEL, DIFF_COLOR, getClassIcon } from '@/app/dashboard/_constants'
@@ -8,6 +9,38 @@ import { raidStatusOf } from '@/lib/groupRaidShare'
 import { saveRaid } from '@/app/dashboard/_raidHelpers'
 import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
 import { IconCrown, IconTrophy, IconX, IconPlus, IconGrip, IconSearch, IconTrash, IconStar, IconUserCheck, IconEmptyGroup, IconEmptyFriends } from '@/app/dashboard/_icons'
+
+// ── Demo Login Modal ──────────────────────────────────────────────────────────
+function DemoLoginModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:border sm:border-gray-200/50 dark:sm:border-[#2d2d2d]" onClick={e => e.stopPropagation()}>
+        <div className="sm:hidden flex justify-center pt-3 pb-0">
+          <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-[#333]" />
+        </div>
+        <div className="px-6 pt-5 pb-6 text-center space-y-5">
+          <div className="space-y-1.5">
+            <p className="text-lg ns-extrabold text-gray-900 dark:text-white">로그인이 필요해요</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+              친구 추가 & 관리 기능은<br />디스코드 로그인 후 이용할 수 있어요
+            </p>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            <button type="button" onClick={() => signIn('discord', { callbackUrl: '/group' })}
+              className="w-full rounded-2xl py-3.5 text-sm ns-bold text-white transition-all hover:opacity-90 active:opacity-80"
+              style={{ backgroundColor: '#5865F2' }}>
+              디스코드로 로그인
+            </button>
+            <button type="button" onClick={onClose}
+              className="w-full rounded-2xl py-3 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+              닫기
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 function Avatar({ src, name, size = 36 }) {
@@ -255,7 +288,7 @@ function FriendRaidModal({ friend, me, persistedToggles = {}, onCharToggle, onCl
 }
 
 // ── Raid Members Modal ────────────────────────────────────────────────────────
-function RaidMembersModal({ modal, me, persistedToggles = {}, onCharToggle, onClose }) {
+function RaidMembersModal({ modal, me, persistedToggles = {}, onCharToggle, onClose, isDemo = false }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
@@ -271,6 +304,7 @@ function RaidMembersModal({ modal, me, persistedToggles = {}, onCharToggle, onCl
     const newDone = !currentDone
     setLocalDone(prev => ({ ...prev, [key]: newDone }))
     onCharToggle?.(key, newDone)
+    if (isDemo) return
     const gateCount = entry.gateClears?.length
       || RAID_MAP[entry.raidId]?.difficulties?.find(d => d.key === entry.difficulty)?.gates
       || 1
@@ -586,7 +620,7 @@ function SearchResultCard({ user, onSendRequest, sending }) {
 }
 
 // ── Raid Lookup Panel ────────────────────────────────────────────────────────
-function RaidLookupPanel({ me, friends }) {
+function RaidLookupPanel({ me, friends, isDemo = false }) {
   const [selectedRaid, setSelectedRaid] = useState(null)
   const [localDone, setLocalDone] = useState({})
 
@@ -601,6 +635,7 @@ function RaidLookupPanel({ me, friends }) {
     const currentDone = key in localDone ? localDone[key] : char.done
     const newDone = !currentDone
     setLocalDone(prev => ({ ...prev, [key]: newDone }))
+    if (isDemo) return
     const gateCount = entry.gateClears?.length
       || RAID_MAP[entry.raidId]?.difficulties?.find(d => d.key === entry.difficulty)?.gates
       || 1
@@ -854,7 +889,7 @@ function RaidLookupPanel({ me, friends }) {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function GroupClient({ initialFriends, initialRequests, me }) {
+export default function GroupClient({ initialFriends, initialRequests, me, isDemo = false }) {
   const [friends, setFriends]     = useState(initialFriends)
   const [requests, setRequests]   = useState(initialRequests)
   const [dragging, setDragging]   = useState(null)
@@ -866,6 +901,8 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
   const [myCharToggles, setMyCharToggles] = useState({})
   const handleCharToggle = (key, val) => setMyCharToggles(prev => ({ ...prev, [key]: val }))
   const [addToGroupModal, setAddToGroupModal] = useState(null) // groupId | null
+  const [showDemoLogin, setShowDemoLogin] = useState(false)
+  const requireLogin = () => setShowDemoLogin(true)
 
   // 그룹 — localStorage 영속화
   const [groups, setGroupsRaw] = useState([])
@@ -916,6 +953,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
 
   // ── Actions ────────────────────────────────────────────────────────────────
   const sendRequest = useCallback(async (receiverId) => {
+    if (isDemo) { requireLogin(); return }
     setSending(receiverId)
     try {
       const res = await fetch('/api/group/requests', {
@@ -943,16 +981,19 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
   }, [])
 
   const handleAccept = useCallback((req) => {
+    if (isDemo) { requireLogin(); return }
     setConfirmModal({ type: 'accept', target: req.sender, requestId: req.id })
-  }, [])
+  }, [isDemo])
 
   const handleReject = useCallback((req) => {
+    if (isDemo) { requireLogin(); return }
     setConfirmModal({ type: 'reject', target: req.sender, requestId: req.id })
-  }, [])
+  }, [isDemo])
 
   const handleUnfriend = useCallback((friend) => {
+    if (isDemo) { requireLogin(); return }
     setConfirmModal({ type: 'unfriend', target: friend })
-  }, [])
+  }, [isDemo])
 
   const handleConfirm = useCallback(async () => {
     if (!confirmModal) return
@@ -994,6 +1035,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
   }, [confirmModal])
 
   const toggleFavorite = useCallback(async (friend) => {
+    if (isDemo) { requireLogin(); return }
     const nowFav = !friend.isFavorite
     setFriends(prev =>
       prev
@@ -1047,6 +1089,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
           persistedToggles={myCharToggles}
           onCharToggle={handleCharToggle}
           onClose={() => setRaidModal(null)}
+          isDemo={isDemo}
         />
       )}
       {friendModal && (
@@ -1068,11 +1111,32 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         />
       )}
 
+      {/* ── 미리보기 배너 ────────────────────────────────────────────────── */}
+      {isDemo && (
+        <div className="flex items-center gap-3 mx-4 sm:mx-8 mt-4 mb-4 rounded-lg shadow-border-md bg-white dark:bg-[#222222] px-3.5 py-2.5 text-xs">
+          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent-400)]" />
+          <span className="text-gray-500 dark:text-gray-400">
+            <span className="ns-bold text-gray-700 dark:text-gray-200">미리보기 모드</span>
+            {' '}· 샘플 데이터가 표시되고 있어요. 그룹 기능은 로그인 후 이용할 수 있어요.
+          </span>
+          <button
+            onClick={() => signIn('discord', { callbackUrl: '/group' })}
+            className="ml-auto flex-shrink-0 flex items-center gap-1 ns-bold text-[var(--accent-500)] hover:text-[var(--accent-600)] transition-colors"
+          >
+            로그인하기 →
+          </button>
+        </div>
+      )}
       {/* ── 페이지 헤더 ─────────────────────────────────────────────────── */}
-      <div className="border-b border-gray-100 dark:border-white/[0.05] bg-white dark:bg-[#111] px-4 sm:px-8 py-5">
+      <div className="mx-4 sm:mx-8 py-5 border-b border-gray-100 dark:border-white/[0.05] bg-white dark:bg-[#111] rounded-t-xl px-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg ns-bold text-gray-900 dark:text-white">그룹</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg ns-bold text-gray-900 dark:text-white">그룹</h1>
+              {isDemo && (
+                <span className="text-[10px] ns-bold px-2 py-0.5 rounded-full bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-400)]">미리보기</span>
+              )}
+            </div>
             <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
               친구와 함께 갈 수 있는 레이드를 확인하세요
             </p>
@@ -1126,7 +1190,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         </div>
       </div>
 
-      <div className="max-w-[1400px] px-4 sm:px-8 py-6">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-8 py-6">
 
         {/* ── 친구 탭 ──────────────────────────────────────────────────────── */}
         {activeTab === 'friends' && (
@@ -1146,11 +1210,14 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
                   <input
                     type="text"
                     value={searchQ}
-                    onChange={e => setSearchQ(e.target.value)}
-                    placeholder="닉네임 또는 대표캐릭터 이름으로 검색"
-                    className="w-full pl-9 pr-9 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-white/[0.1]
+                    onChange={e => !isDemo && setSearchQ(e.target.value)}
+                    onFocus={() => isDemo && requireLogin()}
+                    readOnly={isDemo}
+                    placeholder={isDemo ? '로그인 후 친구를 추가할 수 있어요' : '닉네임 또는 대표캐릭터 이름으로 검색'}
+                    className={`w-full pl-9 pr-9 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-white/[0.1]
                       bg-gray-50 dark:bg-[#111] text-gray-800 dark:text-zinc-100 placeholder-gray-300 dark:placeholder-zinc-600
-                      focus:outline-none focus:border-[var(--accent-400)] dark:focus:border-[var(--accent-400)] transition-colors"
+                      focus:outline-none focus:border-[var(--accent-400)] dark:focus:border-[var(--accent-400)] transition-colors
+                      ${isDemo ? 'cursor-pointer' : ''}`}
                   />
                   {searching && (
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 animate-spin text-sm leading-none">⟳</span>
@@ -1295,7 +1362,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
             </div>
             </div>
             <div className="w-full xl:flex-1 sticky top-4">
-              <RaidLookupPanel me={me} friends={friends} />
+              <RaidLookupPanel me={me} friends={friends} isDemo={isDemo} />
             </div>
           </div>
         )}
@@ -1657,6 +1724,7 @@ export default function GroupClient({ initialFriends, initialRequests, me }) {
         )}
 
       </div>
+      {showDemoLogin && <DemoLoginModal onClose={() => setShowDemoLogin(false)} />}
     </div>
   )
 }

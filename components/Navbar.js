@@ -123,8 +123,8 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: '홈' },
     { href: '/dashboard', label: '원정대' },
-    ...(session ? [{ href: '/guild', label: '길드' }] : []),
-    ...(session ? [{ href: '/group', label: '그룹', badge: pendingFriendCount }] : []),
+    { href: '/guild', label: '길드' },
+    { href: '/group', label: '그룹', badge: session ? pendingFriendCount : 0 },
     { href: '/dictionary', label: '로아 사전' },
   ]
   const isActive = (href) => href && (pathname === href || pathname.startsWith(href + '/'))

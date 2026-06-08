@@ -9,61 +9,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { isResetPassed, getNextResetAt, getNextDailyResetAt } from '@/lib/raidData'
 import DashboardClient from './DashboardClient'
-
-// ── 비로그인 미리보기용 더미 데이터 ───────────────────────────────────────────
-const DEMO_CHARS = [
-  { id: 'demo-1', name: '팍지니',           class: '배틀마스터', server: '루페온', itemLevel: 1773.33, combatPower: 6127.42, expeditionId: 'demo', accountRepChar: '팍지니' },
-  { id: 'demo-2', name: '로헨델카지노박마담', class: '아르카나',   server: '루페온', itemLevel: 1755.00, combatPower: 4619.88, expeditionId: 'demo', accountRepChar: '팍지니' },
-  { id: 'demo-3', name: '절구주는비치',      class: '바드',       server: '루페온', itemLevel: 1740.00, combatPower: 3648.97, expeditionId: 'demo', accountRepChar: '팍지니' },
-  { id: 'demo-4', name: '질풍노도훈수사',    class: '환수사',     server: '루페온', itemLevel: 1732.50, combatPower: 2557.27, expeditionId: 'demo', accountRepChar: '팍지니' },
-  { id: 'demo-5', name: '다베어버릴거에요',  class: '소울이터',   server: '루페온', itemLevel: 1730.00, combatPower: 3504.42, expeditionId: 'demo', accountRepChar: '팍지니' },
-  { id: 'demo-6', name: '도화가장인김우림',  class: '도화가',     server: '루페온', itemLevel: 1720.83, combatPower: 1314.27, expeditionId: 'demo', accountRepChar: '팍지니' },
-]
-const DEMO_RAIDS = {
-  'demo-1': [
-    { raidId: 'abrel-ex',      difficulty: 'nightmare', gateClears: [false],         isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'serca',         difficulty: 'nightmare', gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'cathedral',     difficulty: 'stage3',    gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-  ],
-  'demo-2': [
-    { raidId: 'serca',         difficulty: 'nightmare', gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'cathedral',     difficulty: 'stage3',    gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-  ],
-  'demo-3': [
-    { raidId: 'serca',         difficulty: 'nightmare', gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-  ],
-  'demo-4': [
-    { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'serca',         difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-  ],
-  'demo-5': [
-    { raidId: 'kazeros-final', difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'serca',         difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-  ],
-  'demo-6': [
-    { raidId: 'armocha',       difficulty: 'hard',      gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'cathedral',     difficulty: 'stage2',    gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-    { raidId: 'kazeros-final', difficulty: 'normal',    gateClears: [false, false],  isGoldCheck: true, moreDone: false, moreFrom: 'bound' },
-  ],
-}
-
-const HAL_MIN_LEVEL = 1730
-const mkPresets = (id, itemLevel) => [
-  { id: `d-kurzan-${id}`,  name: '쿠르잔 전선',   type: 'daily',  image: '/schedule/kurzan.png'   },
-  { id: `d-guardian-${id}`,name: '가디언 토벌',   type: 'daily',  image: '/schedule/guardian.png' },
-  ...(itemLevel >= HAL_MIN_LEVEL ? [{ id: `d-hal-${id}`, name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png' }] : []),
-  { id: `d-paradise-${id}`,name: '낙원',          type: 'weekly', image: '/schedule/paradise.png' },
-  { id: `d-cube-${id}`,    name: '큐브',          type: 'weekly', image: '/schedule/cube.webp'     },
-]
-const DEMO_CUSTOM_ITEMS = Object.fromEntries(
-  DEMO_CHARS.map(char => [char.id, mkPresets(char.id, char.itemLevel)])
-)
+import { DEMO_CHARS, DEMO_EXP_NAMES, DEMO_RAIDS, DEMO_CUSTOM_ITEMS } from './_demoDashboard'
 
 const EXPEDITION_INCLUDE = {
   characters: {
@@ -77,7 +23,7 @@ export default async function DashboardPage() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    return <DashboardClient initialChars={DEMO_CHARS} initialRaids={DEMO_RAIDS} initialCustomItems={DEMO_CUSTOM_ITEMS} initialRepCharId="demo-1" />
+    return <DashboardClient initialChars={DEMO_CHARS} initialRaids={DEMO_RAIDS} initialCustomItems={DEMO_CUSTOM_ITEMS} initialExpNames={DEMO_EXP_NAMES} initialRepCharId="demo-1" />
   }
 
   const userId = session.user.id
