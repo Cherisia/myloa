@@ -1559,14 +1559,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)]">골드</span>
                 <div className="flex items-baseline gap-1 ml-auto shrink-0">
                   <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-500 dark:text-gray-400 tabular-nums whitespace-nowrap">{completedCount} / {totalCount}</span>
-                  <span className="text-xs min-[1920px]:text-sm ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap min-w-[2.25rem] text-right">
+                  <span className="text-xs min-[1920px]:text-sm ns-bold text-[var(--accent-300)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap min-w-[2.25rem] text-right">
                     {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
                   </span>
                 </div>
               </div>
               <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent-500)] to-[var(--accent-300)] transition-all duration-700"
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent-300)] to-[var(--accent-200)] transition-all duration-700"
                   style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
                 />
               </div>
@@ -1578,28 +1578,28 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 <div className="flex items-center gap-1.5 mb-1 min-w-0">
                   <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-600)] dark:text-[var(--accent-400)]">골드</span>
                   <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-500 dark:text-gray-400 tabular-nums ml-auto whitespace-nowrap shrink-0">{completedCount} / {totalCount}</span>
-                  <span className="text-xs min-[1920px]:text-sm ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
+                  <span className="text-xs min-[1920px]:text-sm ns-bold text-[var(--accent-300)] dark:text-[var(--accent-400)] tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
                     {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
                   </span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[var(--accent-500)] to-[var(--accent-300)] transition-all duration-700"
+                    className="h-full rounded-full bg-gradient-to-r from-[var(--accent-300)] to-[var(--accent-200)] transition-all duration-700"
                     style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
                   />
                 </div>
               </div>
               <div>
                 <div className="flex items-center gap-1.5 mb-1 min-w-0">
-                  <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400">전체</span>
+                  <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 bg-sky-50 dark:bg-gray-700/50 text-sky-600 dark:text-gray-400">전체</span>
                   <span className="text-[10px] min-[1920px]:text-xs ns-bold text-gray-500 dark:text-gray-400 tabular-nums ml-auto whitespace-nowrap shrink-0">{allCompletedCount} / {allTotalCount}</span>
-                  <span className="text-xs min-[1920px]:text-sm ns-bold text-gray-400 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
+                  <span className="text-xs min-[1920px]:text-sm ns-bold text-sky-500 dark:text-gray-400 tabular-nums whitespace-nowrap shrink-0 min-w-[2.25rem] text-right">
                     {allTotalCount > 0 ? Math.round((allCompletedCount / allTotalCount) * 100) : 0}%
                   </span>
                 </div>
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-500 dark:to-gray-400 transition-all duration-700"
+                    className="h-full rounded-full bg-gradient-to-r from-sky-500 to-sky-300 dark:from-gray-500 dark:to-gray-400 transition-all duration-700"
                     style={{ width: allTotalCount > 0 ? `${(allCompletedCount / allTotalCount) * 100}%` : '0%' }}
                   />
                 </div>
