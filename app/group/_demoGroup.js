@@ -877,7 +877,7 @@ export const DEMO_ME = {
   "id": "demo-friend-7",
   "name": "흐아아아압",
   "nickname": "흐아아아압",
-  "discordUsername": "cherisia_",
+  "discordUsername": "haaaaab_",
   "image": "https://cdn.discordapp.com/avatars/298456574249271298/03981ba8a257434da47357fc63077577.png",
   "raidPublic": true,
   "raidPublicFriends": true,
