@@ -4,135 +4,6 @@ export const DEMO_INCOMING_REQUESTS = []
 
 export const DEMO_FRIENDS = [
   {
-    "id": "demo-friend-lea",
-    "name": "흐아아아압",
-    "nickname": "흐아아아압",
-    "discordUsername": "haaaaaap",
-    "image": "https://cdn.discordapp.com/avatars/298456574249271298/03981ba8a257434da47357fc63077577.png",
-    "raidPublic": true,
-    "raidPublicFriends": true,
-    "loaExpeditions": [
-      {
-        "id": "demo-fexp-lea",
-        "repCharName": "흐아아아압",
-        "customName": null,
-        "characters": [
-          {
-            "id": "demo-fchar-lea-1",
-            "name": "흐아아아압",
-            "class": "기공사",
-            "server": "루페온",
-            "itemLevel": 1784.16,
-            "combatPower": 6499.65,
-            "sortOrder": 0,
-            "characterRaids": [
-              { "id": "demo-fraid-lea-1", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-2", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-3", "raidId": "serca", "difficulty": "nightmare", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-4", "raidId": "armocha", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-5", "raidId": "abrel-ex", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
-            ]
-          },
-          {
-            "id": "demo-fchar-lea-2",
-            "name": "다베어버릴거에요",
-            "class": "소울이터",
-            "server": "루페온",
-            "itemLevel": 1753.33,
-            "combatPower": 4763.24,
-            "sortOrder": 1,
-            "characterRaids": [
-              { "id": "demo-fraid-lea-6", "raidId": "serca", "difficulty": "nightmare", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-7", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-8", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-9", "raidId": "armocha", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
-            ]
-          },
-          {
-            "id": "demo-fchar-lea-3",
-            "name": "소환수로얍얍",
-            "class": "서머너",
-            "server": "루페온",
-            "itemLevel": 1753.33,
-            "combatPower": 5035.24,
-            "sortOrder": 2,
-            "characterRaids": [
-              { "id": "demo-fraid-lea-10", "raidId": "serca", "difficulty": "nightmare", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-11", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-12", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-13", "raidId": "armocha", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
-            ]
-          },
-          {
-            "id": "demo-fchar-lea-4",
-            "name": "크와앙곰",
-            "class": "환수사",
-            "server": "루페온",
-            "itemLevel": 1750.83,
-            "combatPower": 4513.63,
-            "sortOrder": 3,
-            "characterRaids": [
-              { "id": "demo-fraid-lea-14", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-15", "raidId": "serca", "difficulty": "nightmare", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-16", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-17", "raidId": "armocha", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
-            ]
-          },
-          {
-            "id": "demo-fchar-lea-5",
-            "name": "종언의비이잇",
-            "class": "발키리",
-            "server": "루페온",
-            "itemLevel": 1752.5,
-            "combatPower": 4512.7,
-            "sortOrder": 4,
-            "characterRaids": [
-              { "id": "demo-fraid-lea-18", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-19", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-20", "raidId": "serca", "difficulty": "nightmare", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-21", "raidId": "armocha", "difficulty": "normal", "gateClears": [], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
-            ]
-          },
-          {
-            "id": "demo-fchar-lea-6",
-            "name": "호왕청년",
-            "class": "스트라이커",
-            "server": "루페온",
-            "itemLevel": 1733.33,
-            "combatPower": 3580.54,
-            "sortOrder": 5,
-            "characterRaids": [
-              { "id": "demo-fraid-lea-22", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-23", "raidId": "armocha", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-24", "raidId": "serca", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-25", "raidId": "cathedral", "difficulty": "stage2", "gateClears": [true, true], "isGoldCheck": false, "moreDone": true, "moreFrom": "bound" }
-            ]
-          },
-          {
-            "id": "demo-fchar-lea-7",
-            "name": "로헨델카지노박마담",
-            "class": "아르카나",
-            "server": "루페온",
-            "itemLevel": 1710,
-            "combatPower": 1980.09,
-            "sortOrder": 6,
-            "characterRaids": [
-              { "id": "demo-fraid-lea-26", "raidId": "cathedral", "difficulty": "stage1", "gateClears": [false, false], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-27", "raidId": "mordum", "difficulty": "hard", "gateClears": [true, true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-28", "raidId": "armocha", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-29", "raidId": "egir-1", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-30", "raidId": "abrelshud-2", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-31", "raidId": "serca", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-lea-32", "raidId": "kazeros-final", "difficulty": "normal", "gateClears": [false, false], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
-            ]
-          }
-        ]
-      }
-    ],
-    "isFavorite": false,
-    "requestId": "demo-req-lea0"
-  },
-  {
     "id": "demo-friend-1",
     "name": "김우림",
     "nickname": "김우림",
@@ -1004,8 +875,8 @@ export const DEMO_FRIENDS = [
 
 export const DEMO_ME = {
   "id": "demo-friend-7",
-  "name": "세베라",
-  "nickname": "세베라",
+  "name": "흐아아아압",
+  "nickname": "흐아아아압",
   "discordUsername": "cherisia_",
   "image": "https://cdn.discordapp.com/avatars/298456574249271298/03981ba8a257434da47357fc63077577.png",
   "raidPublic": true,
