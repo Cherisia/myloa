@@ -112,6 +112,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [restGaugeDeducted, setRestGaugeDeducted] = useState(initialRestGaugeDeducted) // {charId: {itemId: bool}} — 체크 시 실제 차감 여부
   const [lsReady, setLsReady]                   = useState(false) // localStorage 로드 완료 여부
   const [isMobile, setIsMobile]                 = useState(false) // 모바일 여부 (< 768px)
+  const [cardColCount, setCardColCount]         = useState(6)     // 카드 뷰 컬럼 수
   const wasCompleteRef                          = useRef(false)
   const wasGoldCompleteRef                      = useRef(false)
   const confettiInitRef                         = useRef(false)
@@ -184,9 +185,21 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     if (!stillExists) setSelectedRaid(null)
   }, [activePageId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 모바일 감지 (< 768px)
+  // 모바일 감지 + 카드 컬럼 수 추적
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
+    const getCardCols = () => {
+      const w = window.innerWidth
+      if (w >= 1536) return 6  // 2xl
+      if (w >= 1280) return 5  // xl
+      if (w >= 1024) return 4  // lg
+      if (w >= 768)  return 3  // md
+      if (w >= 480)  return 2  // xs
+      return 1
+    }
+    const check = () => {
+      setIsMobile(window.innerWidth < 768)
+      setCardColCount(getCardCols())
+    }
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
@@ -1741,8 +1754,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
         // ── 카드 뷰 ────────────────────────────────────────────────────────
         const renderCardView = () => {
-          const cards = sortedActiveChars.map(char => {
-            const charRaids = [...(raids[char.id] || [])]
+          // 캐릭터별 charRaids를 미리 계산하고, 원정대별 raidId 합집합을 정렬하여 구성
+          const charRaidsMap = new Map()
+          sortedActiveChars.forEach(char => {
+            const cr = [...(raids[char.id] || [])]
               .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
               .filter(e => !selectedRaid || (e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
               .filter(e => {
@@ -1755,6 +1770,32 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 return true
               })
               .sort((a, b) => (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1))
+            charRaidsMap.set(char.id, cr)
+          })
+          // 전체 visible chars의 raidId 합집합 (글로벌, 난이도 무관)
+          const globalRaidIdSet = new Set()
+          sortedActiveChars.forEach(char => {
+            ;(charRaidsMap.get(char.id) || []).forEach(e => globalRaidIdSet.add(e.raidId))
+          })
+          const allRaidKeys = [...globalRaidIdSet].sort((a, b) => (RAID_ORDER_MAP[a] ?? -1) - (RAID_ORDER_MAP[b] ?? -1))
+
+          // 일일 숙제 placeholder template: 같은 grid row의 캐릭터 중 가장 많은 daily items 기준
+          // cardColCount로 행을 청크하여, 같은 줄에 아무도 일일숙제가 없으면 placeholder 미출력
+          const charDailyTemplateMap = new Map()
+          if (!selectedRaid && !remainFilter) {
+            for (let i = 0; i < sortedActiveChars.length; i += cardColCount) {
+              const rowChars = sortedActiveChars.slice(i, i + cardColCount)
+              let rowTemplate = []
+              rowChars.forEach(char => {
+                const ordered = orderedDailyCustomItems(customItems[char.id] || [])
+                if (ordered.length > rowTemplate.length) rowTemplate = ordered
+              })
+              rowChars.forEach(char => charDailyTemplateMap.set(char.id, rowTemplate))
+            }
+          }
+
+          const cards = sortedActiveChars.map(char => {
+            const charRaids = charRaidsMap.get(char.id)
             if ((selectedRaid || remainFilter) && charRaids.length === 0) return null
 
               const isDragging = dragCharId === char.id
@@ -1765,6 +1806,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               const orderedDaily = (!selectedRaid && !remainFilter) ? orderedDailyCustomItems(charCustomList) : []
               // 주간 레이드 완료 카운트
               const raidDoneCount = charRaids.filter(e => e.gateClears.length > 0 && e.gateClears.every(Boolean)).length
+              // 이 캐릭터의 최저 티어 레이드 ORDER 값 (placeholder 범위 제한용)
+              const charMaxRaidOrder = charRaids.length > 0
+                ? Math.max(...charRaids.map(e => RAID_ORDER_MAP[e.raidId] ?? 0))
+                : 0
+              // 같은 grid row 기준 일일 숙제 placeholder template
+              const dailyTemplate = charDailyTemplateMap.get(char.id) || []
               // 일일 숙제 완료 카운트
               const dailyDoneCount = orderedDaily.filter(it => !!(customChecks[char.id]?.[it.id])).length
               // 주간 숙제 항목
@@ -1841,6 +1888,50 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     />
                   </div>
 
+                  {/* ── 일일 숙제 섹션 placeholder (다른 카드와 높이 맞춤용) ── */}
+                  {orderedDaily.length === 0 && dailyTemplate.length > 0 && (
+                    <div className="opacity-0 pointer-events-none select-none" aria-hidden="true">
+                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
+                        <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)]">일일 숙제</span>
+                        <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">(0/{dailyTemplate.length})</span>
+                      </div>
+                      <div className="divide-y divide-gray-100 dark:divide-[#272727]">
+                        {dailyTemplate.map(item => {
+                          const isRest = REST_GAUGE_NAMES.has(item.name)
+                          return isRest ? (
+                            <div key={item.id} className="transition-colors">
+                              <div className="flex items-center gap-1.5 px-2.5 py-1.5">
+                                {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] md:text-[12px] ns-bold truncate">{item.name}</p>
+                                  <div className="mt-0.5">
+                                    <div className="flex gap-px mb-0.5">
+                                      {Array.from({ length: 10 }).map((_, i) => (
+                                        <div key={i} className="h-1.5 flex-1 bg-gray-200 dark:bg-[#2e2e2e]" />
+                                      ))}
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <button className="text-[9px] md:text-[11px] px-0.5 text-gray-400">−</button>
+                                      <span className="text-[9px] md:text-[11px] tabular-nums ns-bold text-green-500">0</span>
+                                      <button className="text-[9px] md:text-[11px] px-0.5 text-gray-400">+</button>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 border-gray-300 dark:border-[#555]" />
+                              </div>
+                            </div>
+                          ) : (
+                            <div key={item.id} className="flex items-center gap-1.5 px-2.5 py-1.5">
+                              {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
+                              <p className="flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate">{item.name}</p>
+                              <div className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 border-gray-300 dark:border-[#555]" />
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* ── 일일 숙제 섹션 ── */}
                   {orderedDaily.length > 0 && (
                     <div>
@@ -1916,7 +2007,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   )}
 
                   {/* ── 주간 레이드 섹션 ── */}
-                  <div className="flex-1 flex flex-col">
+                  <div className="flex flex-col">
                     <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
                       <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)] dark:text-[var(--accent-400)]">주간 레이드</span>
                       <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({raidDoneCount}/{charRaids.length})</span>
@@ -1925,7 +2016,27 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       <div className="py-3 text-center text-[10px] md:text-[12px] text-gray-300 dark:text-gray-600">레이드 미설정</div>
                     ) : (
                       <div className="divide-y divide-gray-100 dark:divide-[#272727]">
-                        {charRaids.map(entry => {
+                        {allRaidKeys.map((rk) => {
+                          const entry = charRaids.find(e => e.raidId === rk)
+                          if (!entry) {
+                            if ((RAID_ORDER_MAP[rk] ?? -1) > charMaxRaidOrder) return null
+                            const phRaid = RAID_MAP[rk]
+                            const phDiff = phRaid?.difficulties[0]
+                            return (
+                              <div key={rk} className="opacity-0 pointer-events-none select-none flex items-center gap-1.5 px-2.5 py-1.5" aria-hidden="true">
+                                {phRaid?.image && <div className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] flex-shrink-0" />}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-0.5">
+                                    <p className="text-[10px] md:text-[12px] ns-bold truncate">{phRaid?.name ?? rk}</p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[8px] md:text-[10px] ns-bold px-1 py-px rounded leading-tight">{phDiff?.label ?? ''}</span>
+                                  </div>
+                                </div>
+                                <div className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2" />
+                              </div>
+                            )
+                          }
                           const raid = RAID_MAP[entry.raidId]
                           const diff = raid?.difficulties.find(d => d.key === entry.difficulty)
                           if (!raid || !diff) return null
