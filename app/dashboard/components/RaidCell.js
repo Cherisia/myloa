@@ -44,17 +44,7 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
           : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
         }`}
     >
-      {/* 왼쪽: 체크박스 */}
-      <div className={`h-[20px] w-[20px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all
-        ${moreDone
-          ? 'bg-[var(--accent-500)] border-[var(--accent-500)] text-[var(--accent-900)] shadow-sm'
-          : allDone
-          ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)] shadow-sm'
-          : 'border-gray-200 dark:border-[#383838]'}`}>
-        {allDone && <IconCheck />}
-      </div>
-
-      {/* 오른쪽: 토글(상단) + 난이도·골드(하단) */}
+      {/* 왼쪽: 토글(상단) + 난이도·골드(하단) */}
       <div className="flex-1 min-w-0 flex flex-col gap-0.5 items-center">
         {/* 토글 행 — 항상 공간 예약 */}
         <div
@@ -113,6 +103,16 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
             <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-3 h-3 object-contain flex-shrink-0" />
           )}
         </div>
+      </div>
+
+      {/* 오른쪽: 체크박스 */}
+      <div className={`h-[20px] w-[20px] flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all
+        ${moreDone
+          ? 'bg-[var(--accent-500)] border-[var(--accent-500)] text-[var(--accent-900)] shadow-sm'
+          : allDone
+          ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)] shadow-sm'
+          : 'border-gray-200 dark:border-[#383838]'}`}>
+        {allDone && <IconCheck />}
       </div>
     </div>
   )
