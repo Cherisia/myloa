@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { notFound, redirect } from 'next/navigation'
 import GuildDetailClient from './GuildDetailClient'
 import { DEMO_GUILDS } from '@/app/guild/_demoGuild'
-import { DEMO_FRIENDS } from '@/app/group/_demoGroup'
+import { DEMO_FRIENDS, DEMO_ME } from '@/app/group/_demoGroup'
 
 export const metadata = {
   title: '길드 상세',
@@ -19,27 +19,31 @@ export default async function GuildDetailPage({ params }) {
     const demoGuild = DEMO_GUILDS.find(g => g.id === id)
     if (!demoGuild) redirect('/guild')
 
+    const demoUserId = DEMO_ME.id
     const demoExpedition = {
       id: demoGuild.id,
       name: demoGuild.name,
       description: demoGuild.description || null,
-      leaderId: 'demo-friend-lea',
+      leaderId: demoUserId,
       inviteCode: 'DEMO1234',
       autoAccept: false,
       notice: null,
       maxMembers: demoGuild.maxMembers,
       favoritedUserIds: [],
-      members: DEMO_FRIENDS.map((f, i) => ({
-        userId: f.id,
-        status: 'active',
-        role: i === 0 ? 'leader' : 'member',
-        visibility: 'all',
-        joinedAt: new Date().toISOString(),
-        user: f,
-      })),
+      members: [
+        { userId: DEMO_ME.id, status: 'active', role: 'leader', visibility: 'all', joinedAt: new Date().toISOString(), user: DEMO_ME },
+        ...DEMO_FRIENDS.map(f => ({
+          userId: f.id,
+          status: 'active',
+          role: 'member',
+          visibility: 'all',
+          joinedAt: new Date().toISOString(),
+          user: f,
+        })),
+      ],
     }
-    const demoMyMembership = { userId: 'demo-friend-lea', role: 'leader', status: 'active', visibility: 'all' }
-    return <GuildDetailClient expedition={demoExpedition} userId="demo-friend-lea" myMembership={demoMyMembership} isDemo />
+    const demoMyMembership = { userId: demoUserId, role: 'leader', status: 'active', visibility: 'all' }
+    return <GuildDetailClient expedition={demoExpedition} userId={demoUserId} myMembership={demoMyMembership} isDemo />
   }
 
   const expedition = await prisma.expedition.findUnique({
