@@ -1772,12 +1772,17 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               .sort((a, b) => (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1))
             charRaidsMap.set(char.id, cr)
           })
-          // 전체 visible chars의 raidId 합집합 (글로벌, 난이도 무관)
-          const globalRaidIdSet = new Set()
-          sortedActiveChars.forEach(char => {
-            ;(charRaidsMap.get(char.id) || []).forEach(e => globalRaidIdSet.add(e.raidId))
-          })
-          const allRaidKeys = [...globalRaidIdSet].sort((a, b) => (RAID_ORDER_MAP[a] ?? -1) - (RAID_ORDER_MAP[b] ?? -1))
+          // 행별 raidId 합집합 (같은 행의 카드끼리만 정렬 맞춤)
+          const charRaidKeysMap = new Map()
+          for (let i = 0; i < sortedActiveChars.length; i += cardColCount) {
+            const rowChars = sortedActiveChars.slice(i, i + cardColCount)
+            const rowRaidIdSet = new Set()
+            rowChars.forEach(char => {
+              ;(charRaidsMap.get(char.id) || []).forEach(e => rowRaidIdSet.add(e.raidId))
+            })
+            const rowRaidKeys = [...rowRaidIdSet].sort((a, b) => (RAID_ORDER_MAP[a] ?? -1) - (RAID_ORDER_MAP[b] ?? -1))
+            rowChars.forEach(char => charRaidKeysMap.set(char.id, rowRaidKeys))
+          }
 
           // 일일 숙제 placeholder template: 같은 grid row의 캐릭터 중 가장 많은 daily items 기준
           // cardColCount로 행을 청크하여, 같은 줄에 아무도 일일숙제가 없으면 placeholder 미출력
@@ -1791,6 +1796,20 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 if (ordered.length > rowTemplate.length) rowTemplate = ordered
               })
               rowChars.forEach(char => charDailyTemplateMap.set(char.id, rowTemplate))
+            }
+          }
+
+          // 주간 숙제 placeholder template: 같은 grid row의 캐릭터 중 가장 많은 weekly items 기준
+          const charWeeklyTemplateMap = new Map()
+          if (!selectedRaid && !remainFilter) {
+            for (let i = 0; i < sortedActiveChars.length; i += cardColCount) {
+              const rowChars = sortedActiveChars.slice(i, i + cardColCount)
+              let rowTemplate = []
+              rowChars.forEach(char => {
+                const weekly = (customItems[char.id] || []).filter(isWeeklyCustomItem)
+                if (weekly.length > rowTemplate.length) rowTemplate = weekly
+              })
+              rowChars.forEach(char => charWeeklyTemplateMap.set(char.id, rowTemplate))
             }
           }
 
@@ -1826,7 +1845,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   onDragOver={!isMobile ? (e) => handleCharDragOver(e, char.id) : undefined}
                   onDrop={!isMobile ? (e) => handleCharDrop(e, char.id) : undefined}
                   onDragEnd={!isMobile ? handleCharDragEnd : undefined}
-                  className={`relative rounded-xl border bg-white dark:bg-[#222222] overflow-hidden transition-all select-none flex flex-col ${
+                  className={`relative rounded-xl border bg-gray-50 dark:bg-[#1e1e1e] overflow-hidden transition-all select-none flex flex-col ${
                     isDragging  ? 'opacity-40 border-gray-200 dark:border-[#383838] shadow-none' :
                     isDragOver  ? 'border-[var(--accent-400)] dark:border-[var(--accent-600)] ring-2 ring-[var(--accent-300)]/50 dark:ring-[var(--accent-700)]/30 shadow-[0_4px_20px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.55)]' :
                                   'border-gray-200 dark:border-[#2d2d2d] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1),0_2px_6px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_6px_24px_rgba(0,0,0,0.58)] hover:-translate-y-px'
@@ -1878,7 +1897,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   </div>
 
                   {/* 골드 요약 */}
-                  <div className="px-2.5 py-1.5 border-t border-gray-200 dark:border-[#2d2d2d] bg-gray-50/80 dark:bg-[#1c1c1c]/70">
+                  <div className="px-2.5 py-1.5 border-t border-b border-gray-200 dark:border-[#2d2d2d] bg-gray-50/80 dark:bg-[#1c1c1c]/70">
                     <CharGoldBadges
                       bound={charGoldMap[char.id]?.bound ?? 0}
                       trade={charGoldMap[char.id]?.trade ?? 0}
@@ -1890,16 +1909,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
                   {/* ── 일일 숙제 섹션 placeholder (다른 카드와 높이 맞춤용) ── */}
                   {orderedDaily.length === 0 && dailyTemplate.length > 0 && (
-                    <div className="opacity-0 pointer-events-none select-none" aria-hidden="true">
-                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
-                        <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)]">일일 숙제</span>
-                        <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">(0/{dailyTemplate.length})</span>
+                    <div className="pointer-events-none select-none" aria-hidden="true">
+                      <div className="flex items-center gap-1 px-2.5 py-1.5">
+                        <span className="invisible text-[10px] md:text-[12px] ns-bold">일일 숙제</span>
+                        <span className="invisible text-[10px] md:text-[12px]">(0/{dailyTemplate.length})</span>
                       </div>
                       <div className="divide-y divide-gray-100 dark:divide-[#272727]">
                         {dailyTemplate.map(item => {
                           const isRest = REST_GAUGE_NAMES.has(item.name)
                           return isRest ? (
-                            <div key={item.id} className="transition-colors">
+                            <div key={item.id} className="opacity-0 transition-colors">
                               <div className="flex items-center gap-1.5 px-2.5 py-1.5">
                                 {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                                 <div className="flex-1 min-w-0">
@@ -1917,14 +1936,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                     </div>
                                   </div>
                                 </div>
-                                <div className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 border-gray-300 dark:border-[#555]" />
+                                <div className="h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2 border-gray-300 dark:border-[#555]" />
                               </div>
                             </div>
                           ) : (
-                            <div key={item.id} className="flex items-center gap-1.5 px-2.5 py-1.5">
+                            <div key={item.id} className="opacity-0 flex items-center gap-1.5 px-2.5 py-1.5">
                               {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                               <p className="flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate">{item.name}</p>
-                              <div className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 border-gray-300 dark:border-[#555]" />
+                              <div className="h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2 border-gray-300 dark:border-[#555]" />
                             </div>
                           )
                         })}
@@ -1935,7 +1954,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {/* ── 일일 숙제 섹션 ── */}
                   {orderedDaily.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
+                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-b border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
                         <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)] dark:text-[var(--accent-400)]">일일 숙제</span>
                         <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({dailyDoneCount}/{orderedDaily.length})</span>
                       </div>
@@ -1946,11 +1965,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           const showRestGauge = REST_GAUGE_NAMES.has(item.name)
                           if (showRestGauge) {
                             return (
-                              <div key={item.id} className={`transition-colors ${checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10' : ''}`}>
+                              <div key={item.id} className={`transition-colors ${checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10' : 'bg-white dark:bg-[#222222]'}`}>
                                 <div
                                   onClick={() => toggleCustomCheck(char.id, item.id)}
                                   className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer ${
-                                    checked ? 'hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                                    checked ? 'hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                                   }`}
                                 >
                                   {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
@@ -1973,7 +1992,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                       </div>
                                     </div>
                                   </div>
-                                  <div className={`h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                                  <div className={`h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                     checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
                                   }`}>
                                     {checked && <IconCheck />}
@@ -1987,14 +2006,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               key={item.id}
                               onClick={() => toggleCustomCheck(char.id, item.id)}
                               className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
-                                checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                                checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'bg-white dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
                               {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
                                 checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
-                              <div className={`h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                              <div className={`h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
                               }`}>
                                 {checked && <IconCheck />}
@@ -2008,7 +2027,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
                   {/* ── 주간 레이드 섹션 ── */}
                   <div className="flex flex-col">
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
+                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-b border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
                       <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)] dark:text-[var(--accent-400)]">주간 레이드</span>
                       <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({raidDoneCount}/{charRaids.length})</span>
                     </div>
@@ -2016,10 +2035,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       <div className="py-3 text-center text-[10px] md:text-[12px] text-gray-300 dark:text-gray-600">레이드 미설정</div>
                     ) : (
                       <div className="divide-y divide-gray-100 dark:divide-[#272727]">
-                        {allRaidKeys.map((rk) => {
+                        {(charRaidKeysMap.get(char.id) || []).map((rk) => {
                           const entry = charRaids.find(e => e.raidId === rk)
                           if (!entry) {
-                            if ((RAID_ORDER_MAP[rk] ?? -1) > charMaxRaidOrder) return null
                             const phRaid = RAID_MAP[rk]
                             const phDiff = phRaid?.difficulties[0]
                             return (
@@ -2029,11 +2047,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                   <div className="flex items-center gap-0.5">
                                     <p className="text-[10px] md:text-[12px] ns-bold truncate">{phRaid?.name ?? rk}</p>
                                   </div>
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-1 min-h-[17px]">
                                     <span className="text-[8px] md:text-[10px] ns-bold px-1 py-px rounded leading-tight">{phDiff?.label ?? ''}</span>
                                   </div>
                                 </div>
-                                <div className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2" />
+                                <div className="h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2" />
                               </div>
                             )
                           }
@@ -2057,7 +2075,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
                                 moreDone ? 'bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20'
                                 : allDone ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20'
-                                : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                                : 'bg-white dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
                               {raid.image && <Image src={raid.image} alt={raid.name} width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
@@ -2066,7 +2084,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                   <p className={`text-[10px] md:text-[12px] ns-bold truncate ${allDone ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)]' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
                                   {entry.isGoldCheck && <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-2.5 h-2.5 md:w-[13px] md:h-[13px] object-contain flex-shrink-0" />}
                                 </div>
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 min-h-[17px]">
                                   <span className={`text-[8px] md:text-[10px] ns-bold px-1 py-px rounded leading-tight ${diffBadge}`}>{diff.label}</span>
                                   {entry.isGoldCheck && (
                                     <span className={`text-[9px] md:text-[11px] ns-bold tabular-nums ${
@@ -2113,7 +2131,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 </div>
                               </div>
                               {/* 체크박스 — 오른쪽 */}
-                              <div className={`h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                              <div className={`h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 moreDone ? 'bg-[var(--accent-500)] border-[var(--accent-500)] text-[var(--accent-900)]'
                                 : allDone ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]'
                                 : 'border-gray-300 dark:border-[#383838]'
@@ -2130,7 +2148,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   {/* ── 주간 숙제 섹션 ── */}
                   {weeklyItems.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
+                      <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-b border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
                         <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)] dark:text-[var(--accent-400)]">주간 숙제</span>
                         <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({weeklyDoneCount}/{weeklyItems.length})</span>
                       </div>
@@ -2142,14 +2160,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               key={item.id}
                               onClick={() => toggleCustomCheck(char.id, item.id)}
                               className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
-                                checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                                checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'bg-white dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
                               {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
                                 checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
-                              <div className={`h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                              <div className={`h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                                 checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
                               }`}>
                                 {checked && <IconCheck />}
@@ -2157,6 +2175,25 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                             </div>
                           )
                         })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── 주간 숙제 placeholder (다른 카드와 높이 맞춤용) ── */}
+                  {weeklyItems.length === 0 && (charWeeklyTemplateMap.get(char.id) || []).length > 0 && (
+                    <div className="pointer-events-none select-none" aria-hidden="true">
+                      <div className="flex items-center gap-1 px-2.5 py-1.5">
+                        <span className="invisible text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)]">주간 숙제</span>
+                        <span className="invisible text-[10px] md:text-[12px] text-[var(--accent-500)]">(0/{(charWeeklyTemplateMap.get(char.id) || []).length})</span>
+                      </div>
+                      <div className="divide-y divide-gray-100 dark:divide-[#272727]">
+                        {(charWeeklyTemplateMap.get(char.id) || []).map(item => (
+                          <div key={item.id} className="opacity-0 flex items-center gap-1.5 px-2.5 py-1.5">
+                            {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
+                            <p className="flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate">{item.name}</p>
+                            <div className="h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2" />
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
