@@ -260,12 +260,18 @@ function getPrimaryBadge(rewards) {
   return null
 }
 
-// RewardItems 구조 평탄화
+// RewardItems 구조 평탄화 — todayTimes로 오늘 해당하는 보상만 필터
 // RewardItems[{ ItemLevel, Items:[{ Name, Icon, Grade, StartTimes }] }]
-function flatRewards(rewardItems = []) {
+function flatRewards(rewardItems = [], todayTimes = []) {
+  const todayDays = new Set((todayTimes ?? []).map(t => timeGameDay(t)))
   const out = []
   for (const group of (rewardItems ?? [])) {
-    for (const item of (group.Items ?? [])) out.push(item)
+    for (const item of (group.Items ?? [])) {
+      if (item.StartTimes?.length > 0 && todayDays.size > 0) {
+        if (!item.StartTimes.some(t => todayDays.has(timeGameDay(t)))) continue
+      }
+      out.push(item)
+    }
   }
   return out
 }
@@ -305,7 +311,7 @@ function fmtCountdown(sec) {
 // ── 콘텐츠 카드 ─────────────────────────────────────────────────
 function ContentCard({ item }) {
   const [hovered, setHovered] = useState(false)
-  const rewards = flatRewards(item.RewardItems)
+  const rewards = flatRewards(item.RewardItems, item.todayTimes)
   const badge = getPrimaryBadge(rewards)
 
   return (
