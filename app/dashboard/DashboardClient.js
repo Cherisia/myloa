@@ -87,6 +87,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     const saved = localStorage.getItem('dashboard_cardView')
     return saved === null ? true : saved === 'true'
   })
+  const [cardAlignMode, setCardAlignMode]       = useState(() => {
+    if (typeof window === 'undefined') return 'aligned'
+    return localStorage.getItem('dashboard_cardAlignMode') || 'aligned'
+  }) // 'aligned' | 'compact'
 
   const [dragCharId, setDragCharId]             = useState(null) // 드래그 중인 캐릭터 id
   const [dropCharId, setDropCharId]             = useState(null) // 드롭 대상 캐릭터 id
@@ -1772,22 +1776,26 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               .sort((a, b) => (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1))
             charRaidsMap.set(char.id, cr)
           })
-          // 행별 raidId 합집합 (같은 행의 카드끼리만 정렬 맞춤)
+          const isCompact = cardAlignMode === 'compact'
+
+          // 행별 raidId 합집합 (같은 행의 카드끼리만 정렬 맞춤) — compact 모드에서는 불필요
           const charRaidKeysMap = new Map()
-          for (let i = 0; i < sortedActiveChars.length; i += cardColCount) {
-            const rowChars = sortedActiveChars.slice(i, i + cardColCount)
-            const rowRaidIdSet = new Set()
-            rowChars.forEach(char => {
-              ;(charRaidsMap.get(char.id) || []).forEach(e => rowRaidIdSet.add(e.raidId))
-            })
-            const rowRaidKeys = [...rowRaidIdSet].sort((a, b) => (RAID_ORDER_MAP[a] ?? -1) - (RAID_ORDER_MAP[b] ?? -1))
-            rowChars.forEach(char => charRaidKeysMap.set(char.id, rowRaidKeys))
+          if (!isCompact) {
+            for (let i = 0; i < sortedActiveChars.length; i += cardColCount) {
+              const rowChars = sortedActiveChars.slice(i, i + cardColCount)
+              const rowRaidIdSet = new Set()
+              rowChars.forEach(char => {
+                ;(charRaidsMap.get(char.id) || []).forEach(e => rowRaidIdSet.add(e.raidId))
+              })
+              const rowRaidKeys = [...rowRaidIdSet].sort((a, b) => (RAID_ORDER_MAP[a] ?? -1) - (RAID_ORDER_MAP[b] ?? -1))
+              rowChars.forEach(char => charRaidKeysMap.set(char.id, rowRaidKeys))
+            }
           }
 
           // 일일 숙제 placeholder template: 같은 grid row의 캐릭터 중 가장 많은 daily items 기준
           // cardColCount로 행을 청크하여, 같은 줄에 아무도 일일숙제가 없으면 placeholder 미출력
           const charDailyTemplateMap = new Map()
-          if (!selectedRaid && !remainFilter) {
+          if (!isCompact && !selectedRaid && !remainFilter) {
             for (let i = 0; i < sortedActiveChars.length; i += cardColCount) {
               const rowChars = sortedActiveChars.slice(i, i + cardColCount)
               let rowTemplate = []
@@ -1801,7 +1809,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
           // 주간 숙제 placeholder template: 같은 grid row의 캐릭터 중 가장 많은 weekly items 기준
           const charWeeklyTemplateMap = new Map()
-          if (!selectedRaid && !remainFilter) {
+          if (!isCompact && !selectedRaid && !remainFilter) {
             for (let i = 0; i < sortedActiveChars.length; i += cardColCount) {
               const rowChars = sortedActiveChars.slice(i, i + cardColCount)
               let rowTemplate = []
@@ -1908,7 +1916,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   </div>
 
                   {/* ── 일일 숙제 섹션 placeholder (다른 카드와 높이 맞춤용) ── */}
-                  {orderedDaily.length === 0 && dailyTemplate.length > 0 && (
+                  {!isCompact && orderedDaily.length === 0 && dailyTemplate.length > 0 && (
                     <div className="pointer-events-none select-none" aria-hidden="true">
                       <div className="flex items-center gap-1 px-2.5 py-1.5">
                         <span className="invisible text-[10px] md:text-[12px] ns-bold">일일 숙제</span>
@@ -2035,7 +2043,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                       <div className="py-3 text-center text-[10px] md:text-[12px] text-gray-300 dark:text-gray-600">레이드 미설정</div>
                     ) : (
                       <div className="divide-y divide-gray-100 dark:divide-[#272727]">
-                        {(charRaidKeysMap.get(char.id) || []).map((rk) => {
+                        {(isCompact ? charRaids.map(e => e.raidId) : (charRaidKeysMap.get(char.id) || [])).map((rk) => {
                           const entry = charRaids.find(e => e.raidId === rk)
                           if (!entry) {
                             const phRaid = RAID_MAP[rk]
@@ -2180,7 +2188,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   )}
 
                   {/* ── 주간 숙제 placeholder (다른 카드와 높이 맞춤용) ── */}
-                  {weeklyItems.length === 0 && (charWeeklyTemplateMap.get(char.id) || []).length > 0 && (
+                  {!isCompact && weeklyItems.length === 0 && (charWeeklyTemplateMap.get(char.id) || []).length > 0 && (
                     <div className="pointer-events-none select-none" aria-hidden="true">
                       <div className="flex items-center gap-1 px-2.5 py-1.5">
                         <span className="invisible text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)]">주간 숙제</span>
@@ -2213,8 +2221,41 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             )
           }
           return (
-            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 2xl:gap-4">
-              {cards}
+            <div className="flex flex-col gap-3 2xl:gap-4">
+              {/* 모바일 전용 정렬 모드 토글 */}
+              <div className="flex md:hidden justify-end">
+                <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200/80 dark:border-[#282828] p-0.5">
+                  <button
+                    onClick={() => { setCardAlignMode('aligned'); localStorage.setItem('dashboard_cardAlignMode', 'aligned') }}
+                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
+                      cardAlignMode === 'aligned'
+                        ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
+                    }`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                    레이드별
+                  </button>
+                  <button
+                    onClick={() => { setCardAlignMode('compact'); localStorage.setItem('dashboard_cardAlignMode', 'compact') }}
+                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
+                      cardAlignMode === 'compact'
+                        ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
+                    }`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="3" y1="4" x2="21" y2="4"/><rect x="3" y="8" width="7" height="4" rx="1"/><rect x="3" y="15" width="7" height="4" rx="1"/><rect x="13" y="8" width="8" height="4" rx="1"/>
+                    </svg>
+                    빈칸없이
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 2xl:gap-4">
+                {cards}
+              </div>
             </div>
           )
         }
@@ -2780,6 +2821,58 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     </svg>
                     원정대순
                   </button>
+                </div>
+              )}
+
+              {/* 카드 셀 정렬 모드 — 카드 뷰일 때만 */}
+              {cardView && (
+                <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200/80 dark:border-[#282828] p-0.5">
+                  <div className="relative group/compact">
+                    <button
+                      onClick={() => { setCardAlignMode('compact'); localStorage.setItem('dashboard_cardAlignMode', 'compact') }}
+                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
+                        cardAlignMode === 'compact'
+                          ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
+                          : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
+                      }`}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="4" x2="21" y2="4"/><rect x="3" y="8" width="7" height="4" rx="1"/><rect x="3" y="15" width="7" height="4" rx="1"/><rect x="13" y="8" width="8" height="4" rx="1"/>
+                      </svg>
+                      빈칸없이
+                    </button>
+                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 opacity-0 group-hover/compact:opacity-100 transition-opacity duration-200 z-50">
+                      <div className="relative bg-gray-800/90 dark:bg-[#1a1a1a]/95 backdrop-blur-sm text-white rounded-xl px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.22)] border border-white/10 dark:border-white/5 min-w-[130px]">
+                        <p className="text-[11px] ns-bold text-white/95 whitespace-nowrap text-center">빈칸 없이 표시</p>
+                        <p className="text-[10px] text-white/55 whitespace-nowrap text-center mt-0.5 leading-relaxed">숙제가 없는 항목은 생략하고</p>
+                        <p className="text-[10px] text-white/55 whitespace-nowrap text-center leading-relaxed">내용을 위로 붙여 깔끔하게 보여드려요.</p>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-gray-800/90 dark:border-t-[#1a1a1a]/95" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="relative group/aligned">
+                    <button
+                      onClick={() => { setCardAlignMode('aligned'); localStorage.setItem('dashboard_cardAlignMode', 'aligned') }}
+                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
+                        cardAlignMode === 'aligned'
+                          ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
+                          : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
+                      }`}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                      </svg>
+                      레이드별
+                    </button>
+                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 opacity-0 group-hover/aligned:opacity-100 transition-opacity duration-200 z-50">
+                      <div className="relative bg-gray-800/90 dark:bg-[#1a1a1a]/95 backdrop-blur-sm text-white rounded-xl px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.22)] border border-white/10 dark:border-white/5 min-w-[130px]">
+                        <p className="text-[11px] ns-bold text-white/95 whitespace-nowrap text-center">레이드별 줄 맞춤</p>
+                        <p className="text-[10px] text-white/55 whitespace-nowrap text-center mt-0.5 leading-relaxed">같은 줄의 캐릭터끼리 레이드 항목을 맞춰</p>
+                        <p className="text-[10px] text-white/55 whitespace-nowrap text-center leading-relaxed">한눈에 비교하기 편하게 보여드려요.</p>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-gray-800/90 dark:border-t-[#1a1a1a]/95" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
