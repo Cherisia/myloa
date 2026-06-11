@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db'
 import { isResetPassed, getNextResetAt, getNextDailyResetAt } from '@/lib/raidData'
 import DashboardClient from './DashboardClient'
 import { DEMO_CHARS, DEMO_EXP_NAMES, DEMO_RAIDS, DEMO_CUSTOM_ITEMS } from './_demoDashboard'
+import { REST_GAUGE_NAMES } from './_constants'
 
 const EXPEDITION_INCLUDE = {
   characters: {
@@ -59,7 +60,6 @@ export default async function DashboardPage() {
   const now = new Date()
   const expiredCustomIds = customItemsRaw.filter(it => it.type === 'daily' && it.resetAt && it.resetAt < now).map(it => it.id)
   if (expiredCustomIds.length > 0) {
-    const REST_GAUGE_NAMES = new Set(['쿠르잔 전선', '가디언 토벌'])
     const nextDaily = getNextDailyResetAt()
     await prisma.$transaction(
       customItemsRaw

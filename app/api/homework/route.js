@@ -6,14 +6,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { getNextResetAt, isResetPassed } from '@/lib/raidData'
-
-// 소유권 검증
-async function verifyCharacterOwner(characterId, userId) {
-  const char = await prisma.character.findFirst({
-    where: { id: characterId, expedition: { userId } },
-  })
-  return !!char
-}
+import { verifyCharacterOwner } from '@/lib/apiHelpers'
 
 export async function GET(request) {
   const session = await auth()

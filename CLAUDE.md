@@ -17,26 +17,69 @@ app/
   page.js / HomeClient.js  # 홈페이지 — 공지사항·이벤트·게임 일정·히어로
   sitemap.js / robots.js
   globals.css          # 테마 CSS 변수, Tailwind 설정
+  opengraph-image.js   # OG 이미지 생성
   dashboard/
     page.js              # 서버 컴포넌트 — DB 조회 후 DashboardClient에 전달
-    DashboardClient.js   # 메인 대시보드 (~2800줄)
+    DashboardClient.js   # 메인 대시보드 (~3200줄)
+    loading.js           # Suspense fallback
     _constants.js        # EX_RAID_IDS, GOLD_RAID_LIMIT, DIFF_COLOR/LABEL, CLASS_ICON 등
     _icons.js            # 프로젝트 전역 SVG 아이콘 — 모든 파일이 여기서 import
     _raidHelpers.js      # saveRaid, deleteRaid, computeAutoRaids 등
     _bynnArkIcons.js     # 커스텀 숙제 아이콘 매핑
-    modals/              # RaidSettingsModal, CharacterEditModal, CharacterAddModal, AutoSetupModal, CustomItemsEditor
+    _demoDashboard.js    # 비로그인 데모용 캐릭터·레이드·커스텀 데이터 조합
+    _demoData.js         # 데모 원시 데이터
+    modals/              # RaidSettingsModal, CharacterEditModal, CharacterAddModal, AutoSetupModal, CustomItemsEditor, BynnArkIconPicker
     components/          # RaidCell, AnimatedGold, CharGoldBadges, Confetti, WeeklyHistoryChart
   components/
     RaidDetailModal.js   # 레이드 상세 모달 (길드/그룹 공용)
     Navbar.js / ThemeProvider.js / SessionProvider.js / DiscordIcon.js
     AdSense.js / SidebarAds.js
-  history/ guild/ group/ settings/
-    # 각 page.js(서버) + *Client.js(클라이언트) 구조
-  api/                   # route.js 핸들러 — /homework /characters /expedition /group /history 등
+  dictionary/
+    page.js              # 레이드 보상·직업 시너지 사전 (서버, generateMetadata)
+    DictionaryClient.js  # 탭 기반 UI (raids / synergy)
+  guide/
+    page.js              # noindex — 사용 가이드
+    GuideClient.js
+  history/
+    page.js              # 서버 컴포넌트 (noindex)
+    HistoryClient.js     # 주간 숙제 히스토리 차트
+  guild/
+    page.js              # 길드 목록 (서버, noindex)
+    GuildClient.js
+    GuildDemoClient.js   # 비로그인 데모
+    [id]/
+      page.js            # 길드 상세 (서버, noindex)
+      GuildDetailClient.js
+    _demoGuild.js / _demoListData.js
+  group/
+    page.js              # 그룹 목록 (서버, noindex)
+    GroupClient.js       # (~1700줄)
+    _demoGroup.js
+  raids/                 # permanentRedirect → /dictionary?tab=raids
+  synergy/               # permanentRedirect → /dictionary?tab=synergy
+  settings/
+    page.js              # 서버 컴포넌트 (noindex)
+    SettingsClient.js
+  privacy/
+    page.js              # 개인정보처리방침
+  api/
+    auth/[...nextauth]/  # NextAuth.js Discord OAuth
+    homework/            # GET·POST·DELETE 레이드 숙제, batch/ POST 일괄 저장
+    characters/          # CRUD + sync(LoA API), check-account, apikey
+    custom-items/        # CRUD + [id] PATCH·DELETE
+    expedition/          # CRUD, join, [id], [id]/members, [id]/favorites
+    expeditions/[id]/    # GET (그룹 조회용 별도 엔드포인트)
+    group/               # CRUD, search, requests, requests/[id], favorites, pending-count
+    user/                # profile GET·PATCH, refresh-avatar POST
+    loa/                 # LoA Open API 프록시 (rate limit in-memory)
+    loa-content/         # 캘린더 콘텐츠 조회
+    history/             # 주간 숙제 히스토리
+    cron/                # daily-reset, weekly-reset (Vercel Cron)
 lib/
   raidData.js          # RAIDS, RAID_MAP, RAID_ORDER_MAP, calcGold* 함수
   groupRaidShare.js    # raidStatusOf, getMemberRaidStatus, getGroupRaidList, adaptMember
   loaApi.js            # LOA_BASE, getApiKey, secUntilKST, calendarRevalidate — LoA API 공통 유틸
+  apiHelpers.js        # verifyCharacterOwner 등 API route 공용 헬퍼
   formatting.js        # formatGold — 골드 표기 포맷터 (숫자 → "1.2k" 등)
   inviteCode.js        # generateInviteCode — 원정대 초대코드 생성
   auth.js / db.js / encrypt.js
@@ -169,7 +212,8 @@ npx prisma migrate deploy
 | 페이지 | 인덱싱 |
 |--------|--------|
 | `/`, `/dashboard`, `/dictionary`, `/privacy` | ✅ index |
-| `/guild`, `/group`, `/settings`, `/history`, `/raids`, `/synergy` | ❌ noindex |
+| `/guild`, `/group`, `/settings`, `/history`, `/guide` | ❌ noindex |
+| `/raids`, `/synergy` | `permanentRedirect` → `/dictionary?tab=…` |
 
 - 로그인 필수/noindex 페이지: `robots: { index: false, follow: false }` 명시
 - `app/robots.js` disallow 목록 함께 업데이트
