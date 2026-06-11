@@ -122,7 +122,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/', label: '홈' },
-    { href: '/dashboard', label: '원정대' },
+    { href: '/dashboard', label: '대시보드' },
     { href: '/guild', label: '길드' },
     { href: '/group', label: '그룹', badge: session ? pendingFriendCount : 0 },
     { href: '/dictionary', label: '로아 사전' },
