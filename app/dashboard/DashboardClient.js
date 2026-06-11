@@ -2029,21 +2029,66 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                             </div>
                           )
                         })}
+                        {!isCompact && dailyTemplate.slice(orderedDaily.length).map(item => {
+                          const isRest = REST_GAUGE_NAMES.has(item.name)
+                          return isRest ? (
+                            <div key={`ph-${item.id}`} className="opacity-0 pointer-events-none select-none" aria-hidden="true">
+                              <div className="flex items-center gap-1.5 px-2.5 py-1.5">
+                                {item.image && <div className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] flex-shrink-0" />}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] md:text-[12px] ns-bold truncate">{item.name}</p>
+                                  <div className="mt-0.5">
+                                    <div className="flex gap-px mb-0.5">
+                                      {Array.from({ length: 10 }).map((_, i) => (
+                                        <div key={i} className="h-1.5 flex-1 bg-gray-200 dark:bg-[#2e2e2e]" />
+                                      ))}
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <button className="text-[9px] md:text-[11px] px-0.5">−</button>
+                                      <span className="text-[9px] md:text-[11px] tabular-nums ns-bold">0</span>
+                                      <button className="text-[9px] md:text-[11px] px-0.5">+</button>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2 border-gray-300 dark:border-[#555]" />
+                              </div>
+                            </div>
+                          ) : (
+                            <div key={`ph-${item.id}`} className="opacity-0 pointer-events-none select-none flex items-center gap-1.5 px-2.5 py-1.5" aria-hidden="true">
+                              {item.image && <div className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] flex-shrink-0" />}
+                              <p className="flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate">{item.name}</p>
+                              <div className="h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2 border-gray-300 dark:border-[#555]" />
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
 
                   {/* ── 주간 레이드 섹션 ── */}
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-b border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
-                      <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)] dark:text-[var(--accent-400)]">주간 레이드</span>
-                      <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({raidDoneCount}/{charRaids.length})</span>
-                    </div>
-                    {charRaids.length === 0 ? (
-                      <div className="py-3 text-center text-[10px] md:text-[12px] text-gray-300 dark:text-gray-600">레이드 미설정</div>
-                    ) : (
+                  {(() => {
+                    const rowKeys = isCompact ? charRaids.map(e => e.raidId) : (charRaidKeysMap.get(char.id) || [])
+                    // 레이드별 모드: 해당 줄 전체에 레이드가 없으면 섹션 숨김
+                    if (!isCompact && rowKeys.length === 0) return null
+                    const hasOwn = charRaids.length > 0
+                    // 빈칸없이 모드: 레이드 없으면 섹션 전체 숨김
+                    if (isCompact && !hasOwn) return null
+                    return (
+                    <div className="flex flex-col">
+                      {/* 헤더: 레이드별+레이드없음이면 invisible 플레이스홀더로 높이만 확보 */}
+                      {!isCompact && !hasOwn ? (
+                        <div className="pointer-events-none select-none flex items-center gap-1 px-2.5 py-1.5 border-t border-b border-transparent" aria-hidden="true">
+                          <span className="invisible text-[10px] md:text-[12px] ns-bold">주간 레이드</span>
+                          <span className="invisible text-[10px] md:text-[12px]">(0/0)</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-50)]/40 dark:from-[var(--accent-900)]/25 dark:to-[var(--accent-900)]/5 border-t border-b border-[var(--accent-200)]/70 dark:border-[var(--accent-800)]/30">
+                          <span className="text-[10px] md:text-[12px] ns-bold text-[var(--accent-700)] dark:text-[var(--accent-400)]">주간 레이드</span>
+                          <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({raidDoneCount}/{charRaids.length})</span>
+                        </div>
+                      )}
                       <div className="divide-y divide-gray-100 dark:divide-[#272727]">
-                        {(isCompact ? charRaids.map(e => e.raidId) : (charRaidKeysMap.get(char.id) || [])).map((rk) => {
+                        {rowKeys.map((rk) => {
                           const entry = charRaids.find(e => e.raidId === rk)
                           if (!entry) {
                             const phRaid = RAID_MAP[rk]
@@ -2150,8 +2195,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           )
                         })}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                    )
+                  })()}
 
                   {/* ── 주간 숙제 섹션 ── */}
                   {weeklyItems.length > 0 && (
