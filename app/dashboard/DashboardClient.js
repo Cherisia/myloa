@@ -308,6 +308,22 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     return () => obs.disconnect()
   }, [])
 
+  // 쿠르잔 계열 이름·이미지를 현재 아이템 레벨 기준으로 보정 (표시 전용, 저장값 불변)
+  const resolvedCustomItems = useMemo(() => {
+    const result = {}
+    for (const char of chars) {
+      const items = customItems[char.id]
+      if (!items) continue
+      result[char.id] = items.map(it => {
+        if (!KURZAN_NAMES.has(it.name)) return it
+        const preset = getKurzanPreset(char.itemLevel)
+        if (it.name === preset.name) return it
+        return { ...it, name: preset.name, image: preset.image }
+      })
+    }
+    return result
+  }, [chars, customItems])
+
   // 페이지별 캐릭터 필터링 — activePageId가 null이면 전체보기
   const activeChars = useMemo(() => {
     if (!activePageId) {
@@ -1800,7 +1816,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               const rowChars = sortedActiveChars.slice(i, i + cardColCount)
               let rowTemplate = []
               rowChars.forEach(char => {
-                const ordered = orderedDailyCustomItems(customItems[char.id] || [])
+                const ordered = orderedDailyCustomItems(resolvedCustomItems[char.id] || customItems[char.id] || [])
                 if (ordered.length > rowTemplate.length) rowTemplate = ordered
               })
               rowChars.forEach(char => charDailyTemplateMap.set(char.id, rowTemplate))
@@ -1828,7 +1844,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               const isDragging = dragCharId === char.id
               const isDragOver = dropCharId === char.id && dragCharId !== char.id
 
-              const charCustomList = !selectedRaid ? (customItems[char.id] || []) : []
+              const charCustomList = !selectedRaid ? (resolvedCustomItems[char.id] || customItems[char.id] || []) : []
               // 일일 숙제: 쿠르잔·가디언 고정 순 + type==='daily' 기타
               const orderedDaily = (!selectedRaid && !remainFilter) ? orderedDailyCustomItems(charCustomList) : []
               // 주간 레이드 완료 카운트
@@ -2419,7 +2435,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               : filteredChars.length <= 8
 
           const colSpan = filteredChars.length + 1
-          const restDailyMap = buildCustomHomeworkRowMap(filteredChars, customItems, (it) => REST_GAUGE_NAMES.has(it.name))
+          const restDailyMap = buildCustomHomeworkRowMap(filteredChars, resolvedCustomItems, (it) => REST_GAUGE_NAMES.has(it.name))
           // 쿠르잔 계열(혼돈의 균열·쿠르잔 전선·카오스 던전)을 한 행으로 병합 — 맨 앞 캐릭터의 이름·아이콘 대표 사용
           {
             let primaryKey = null
@@ -2440,10 +2456,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           }
           const otherDailyMap = buildCustomHomeworkRowMap(
             filteredChars,
-            customItems,
+            resolvedCustomItems,
             (it) => it.type === 'daily' && !DAILY_PRESET_ORDER.includes(it.name)
           )
-          const weeklyMap = buildCustomHomeworkRowMap(filteredChars, customItems, isWeeklyCustomItem)
+          const weeklyMap = buildCustomHomeworkRowMap(filteredChars, resolvedCustomItems, isWeeklyCustomItem)
           const showDailyHeader = !selectedRaid && !remainFilter && (
             DAILY_PRESET_ORDER.some((n) => restDailyMap.has(n)) || otherDailyMap.size > 0
           )

@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { decrypt } from '@/lib/encrypt'
+import { getKurzanPreset, KURZAN_NAMES } from '@/app/dashboard/_constants'
 
 const LOA_BASE = process.env.LOA_API_BASE || 'https://developer-lostark.game.onstove.com'
 
@@ -74,6 +75,31 @@ export async function POST() {
             where: { id: char.id },
             data:  { itemLevel, combatPower },
           })
+
+          // 쿠르잔 계열 아이템 이름이 새 레벨과 맞지 않으면 rename (DELETE + recreate)
+          const correctPreset = getKurzanPreset(itemLevel)
+          const kurzanItem = await prisma.characterCustomItem.findFirst({
+            where: { characterId: char.id, name: { in: [...KURZAN_NAMES] } },
+          })
+          if (kurzanItem && kurzanItem.name !== correctPreset.name) {
+            await prisma.$transaction([
+              prisma.characterCustomItem.delete({ where: { id: kurzanItem.id } }),
+              prisma.characterCustomItem.create({
+                data: {
+                  characterId: char.id,
+                  name:        correctPreset.name,
+                  type:        'daily',
+                  image:       correctPreset.image,
+                  sortOrder:   kurzanItem.sortOrder,
+                  done:        kurzanItem.done,
+                  restGauge:   kurzanItem.restGauge,
+                  deducted:    kurzanItem.deducted,
+                  resetAt:     kurzanItem.resetAt,
+                },
+              }),
+            ])
+          }
+
           updatedCount++
         } catch (err) {
           console.error(`[SYNC] ${char.name} 오류:`, err.message)
