@@ -6,7 +6,7 @@ import { signIn } from 'next-auth/react'
 import DiscordIcon from '@/components/DiscordIcon'
 import AdSense from '@/components/AdSense'
 import { RAIDS, RAID_MAP, RAID_ORDER_MAP, CLASS_COLOR, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
-import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, KURZAN_NAMES, DAILY_PRESET_ORDER, orderedDailyCustomItems, isWeeklyCustomItem, getClassIcon, getKurzanPreset, CUSTOM_MAX } from './_constants'
+import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, KURZAN_NAMES, DAILY_PRESET_ORDER, FIXED_WEEKLY_ORDER, orderedDailyCustomItems, isWeeklyCustomItem, orderedWeeklyCustomItems, getClassIcon, getKurzanPreset, CUSTOM_MAX } from './_constants'
 import { IconCrown, IconPlus, IconCheck, IconRefresh, IconInfo, IconClass, IconItemLevel, IconPower, IconGrip } from './_icons'
 import { saveRaid, deleteRaid, computeAutoRaids } from './_raidHelpers'
 import RaidSettingsModal from './modals/RaidSettingsModal'
@@ -1814,7 +1814,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               const rowChars = sortedActiveChars.slice(i, i + cardColCount)
               let rowTemplate = []
               rowChars.forEach(char => {
-                const weekly = (customItems[char.id] || []).filter(isWeeklyCustomItem)
+                const weekly = orderedWeeklyCustomItems(customItems[char.id] || [])
                 if (weekly.length > rowTemplate.length) rowTemplate = weekly
               })
               rowChars.forEach(char => charWeeklyTemplateMap.set(char.id, rowTemplate))
@@ -1842,7 +1842,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               // 일일 숙제 완료 카운트
               const dailyDoneCount = orderedDaily.filter(it => !!(customChecks[char.id]?.[it.id])).length
               // 주간 숙제 항목
-              const weeklyItems = (!selectedRaid && !remainFilter) ? charCustomList.filter(isWeeklyCustomItem) : []
+              const weeklyItems = (!selectedRaid && !remainFilter) ? orderedWeeklyCustomItems(charCustomList) : []
               const weeklyDoneCount = weeklyItems.filter(it => !!(customChecks[char.id]?.[it.id])).length
 
               return (
@@ -1980,7 +1980,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                     checked ? 'hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                                   }`}
                                 >
-                                  {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
+                                  {item.image
+                                    ? <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />
+                                    : <span className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] flex-shrink-0" />}
                                   <div className="flex-1 min-w-0">
                                     <p className={`text-[10px] md:text-[12px] ns-bold truncate ${checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
                                     <div className="mt-0.5">
@@ -2017,7 +2019,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'bg-white dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
+                              {item.image
+                                ? <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />
+                                : <span className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
                                 checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
@@ -2217,7 +2221,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'bg-white dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {item.image && <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
+                              {item.image
+                                ? <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />
+                                : <span className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
                                 checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
@@ -2634,12 +2640,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     </tr>
                   )}
                   {showWeeklyHeader && renderSectionHeader('weekly', '주간 숙제')}
-                  {!selectedRaid && !remainFilter && [...weeklyMap.keys()]
-                    .sort((a, b) => a.localeCompare(b, 'ko'))
-                    .map((name) => {
+                  {!selectedRaid && !remainFilter && (() => {
+                    const allWeeklyNames = [...weeklyMap.keys()]
+                    const fixedNames = FIXED_WEEKLY_ORDER.filter(n => weeklyMap.has(n))
+                    const customNames = allWeeklyNames.filter(n => !FIXED_WEEKLY_ORDER.includes(n)).sort((a, b) => a.localeCompare(b, 'ko'))
+                    return [...fixedNames, ...customNames].map((name) => {
                       const { charMap, meta } = weeklyMap.get(name)
                       return renderCustomRow(name, charMap, meta, filteredChars, glanceTable, colW)
-                    })}
+                    })
+                  })()}
                 </tbody>
               </table>
             </div>

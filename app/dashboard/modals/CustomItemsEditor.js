@@ -2,10 +2,12 @@
 
 import Image from 'next/image'
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { CUSTOM_MAX, HAL_MIN_LEVEL, KURZAN_NAMES, getKurzanPreset } from '../_constants'
+import { CUSTOM_MAX, HAL_MIN_LEVEL, KURZAN_NAMES, FIXED_PRESET_NAMES, DAILY_PRESET_ORDER, FIXED_WEEKLY_ORDER, getKurzanPreset } from '../_constants'
 import { BYNN_ARK_ICONS } from '../_bynnArkIcons'
 import { IconPlus, IconGrip } from '../_icons'
 import BynnArkIconPicker from './BynnArkIconPicker'
+
+const ALL_FIXED_ORDER = [...DAILY_PRESET_ORDER, ...FIXED_WEEKLY_ORDER]
 
 const NON_KURZAN_PRESETS = [
   { name: '가디언 토벌',   type: 'daily',  image: '/schedule/guardian.png' },
@@ -40,6 +42,18 @@ export default function CustomItemsEditor({
 
   const charItems     = (selectedChar ? customItems[selectedChar.id] : null) || []
   const charItemNames = useMemo(() => new Set(charItems.map(it => it.name)), [charItems])
+
+  // 고정 항목(프리셋)을 항상 앞에, 사용자 추가 커스텀 항목을 뒤에 표시
+  const displayList = useMemo(() => {
+    const byName = new Map(charItems.map(it => [it.name, it]))
+    const fixed = ALL_FIXED_ORDER.flatMap(name => {
+      const it = byName.get(name)
+      return it ? [it] : []
+    })
+    const custom = charItems.filter(it => !FIXED_PRESET_NAMES.has(it.name))
+    return [...fixed, ...custom]
+  }, [charItems])
+  const fixedCount = displayList.filter(it => FIXED_PRESET_NAMES.has(it.name)).length
 
   const kurzanPreset = getKurzanPreset(selectedChar?.itemLevel)
   const presetItems  = [kurzanPreset, ...NON_KURZAN_PRESETS]
@@ -102,20 +116,23 @@ export default function CustomItemsEditor({
   }
 
   const handleDragStart = (e, idx) => {
+    if (idx < fixedCount) return
     setDragIdx(idx)
     e.dataTransfer.effectAllowed = 'move'
   }
   const handleDragOver = (e, idx) => {
     e.preventDefault()
+    if (dragIdx === null || idx < fixedCount) return
     if (idx !== dropIdx) setDropIdx(idx)
   }
   const handleDrop = (e, idx) => {
     e.preventDefault()
-    if (dragIdx === null || dragIdx === idx || !selectedChar) return
-    const next = [...charItems]
-    const [moved] = next.splice(dragIdx, 1)
-    next.splice(idx, 0, moved)
-    onReorder(selectedChar.id, next)
+    if (dragIdx === null || dragIdx === idx || !selectedChar || idx < fixedCount) return
+    const fixed = displayList.slice(0, fixedCount)
+    const custom = [...displayList.slice(fixedCount)]
+    const [moved] = custom.splice(dragIdx - fixedCount, 1)
+    custom.splice(idx - fixedCount, 0, moved)
+    onReorder(selectedChar.id, [...fixed, ...custom])
     setDragIdx(null); setDropIdx(null)
   }
   const handleDragEnd = () => { setDragIdx(null); setDropIdx(null) }
@@ -246,25 +263,31 @@ export default function CustomItemsEditor({
           </div>
         ) : (
           <ul>
-            {charItems.map((item, idx) => {
+            {displayList.map((item, idx) => {
+              const isFixed   = FIXED_PRESET_NAMES.has(item.name)
               const isDragging = dragIdx === idx
-              const isOver    = dropIdx === idx && dragIdx !== idx
+              const isOver    = dropIdx === idx && dragIdx !== null && dragIdx !== idx && !isFixed
               return (
                 <li
                   key={item.id}
-                  draggable
-                  onDragStart={e => handleDragStart(e, idx)}
+                  draggable={!isFixed}
+                  onDragStart={!isFixed ? e => handleDragStart(e, idx) : undefined}
                   onDragOver={e => handleDragOver(e, idx)}
                   onDrop={e => handleDrop(e, idx)}
-                  onDragEnd={handleDragEnd}
+                  onDragEnd={!isFixed ? handleDragEnd : undefined}
                   className={`flex items-center gap-2 px-3 py-2 border-b border-gray-50 dark:border-[#2a2a2a] last:border-b-0 select-none transition-colors ${
                     isDragging ? 'opacity-40' : isOver ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10' : ''
                   }`}
                 >
-                  <span className="cursor-default text-gray-300 dark:text-gray-600 flex-shrink-0"><IconGrip /></span>
+                  {isFixed
+                    ? <span className="w-4 flex-shrink-0" />
+                    : <span className="w-4 cursor-default text-gray-300 dark:text-gray-600 flex-shrink-0 flex items-center justify-center"><IconGrip /></span>
+                  }
                   <span className="text-[10px] text-gray-300 dark:text-gray-700 w-4 text-center tabular-nums flex-shrink-0">{idx + 1}</span>
                   <div className="flex-1 flex items-center gap-1.5 min-w-0">
-                    {item.image && <Image src={item.image} alt="" width={18} height={18} className="custom-homework-icon w-[18px] h-[18px] object-contain flex-shrink-0" />}
+                    {item.image
+                    ? <Image src={item.image} alt="" width={18} height={18} className="custom-homework-icon w-[18px] h-[18px] object-contain flex-shrink-0" />
+                    : <span className="w-[18px] h-[18px] flex-shrink-0" />}
                     <span className="text-xs ns-bold text-gray-700 dark:text-gray-200 truncate">{item.name}</span>
                     {item.type && (
                       <span className={`text-[9px] ns-bold flex-shrink-0 ${item.type === 'daily' ? 'text-blue-400' : 'text-purple-400'}`}>

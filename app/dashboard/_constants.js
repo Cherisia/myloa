@@ -93,6 +93,12 @@ export const REST_GAUGE_NAMES = new Set(['혼돈의 균열', '쿠르잔 전선',
 /** 일일 숙제 카드·표에서 쿠르잔 계열 → 가디언 고정 순서 */
 export const DAILY_PRESET_ORDER = ['혼돈의 균열', '쿠르잔 전선', '카오스 던전', '가디언 토벌']
 
+/** 주간 고정 프리셋 표시 순서 */
+export const FIXED_WEEKLY_ORDER = ['낙원', '큐브', '할의 모래시계']
+
+/** 순서 변경 불가 고정 프리셋 이름 집합 */
+export const FIXED_PRESET_NAMES = new Set([...KURZAN_NAMES, '가디언 토벌', '낙원', '큐브', '할의 모래시계'])
+
 /** 캐릭터 커스텀 목록을 일일 섹션 표시 순으로 정렬 */
 export function orderedDailyCustomItems(list) {
   if (!list?.length) return []
@@ -115,6 +121,23 @@ export function isWeeklyCustomItem(it) {
   if (REST_GAUGE_NAMES.has(it.name)) return false
   if (it.type === 'daily') return false
   return true
+}
+
+/** 캐릭터 커스텀 목록을 주간 섹션 표시 순으로 정렬 (고정 프리셋 먼저, 이후 사용자 추가 순) */
+export function orderedWeeklyCustomItems(list) {
+  if (!list?.length) return []
+  const weeklyItems = list.filter(isWeeklyCustomItem)
+  const byName = new Map(weeklyItems.map((it) => [it.name, it]))
+  const out = []
+  for (const name of FIXED_WEEKLY_ORDER) {
+    const it = byName.get(name)
+    if (it) out.push(it)
+  }
+  for (const it of weeklyItems) {
+    if (FIXED_WEEKLY_ORDER.includes(it.name)) continue
+    out.push(it)
+  }
+  return out
 }
 
 export const CUSTOM_MAX = 10
