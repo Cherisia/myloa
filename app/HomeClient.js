@@ -532,10 +532,19 @@ export default function HomeClient({ initialNotices: notices = [], initialEvents
           <h1 className="text-2xl md:text-3xl ns-extrabold drop-shadow mb-4 leading-tight" style={{ color: '#ffffff' }}>
             로스트아크 숙제 관리
           </h1>
-          <p className="text-xs md:text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.8)' }}>
+          <p className="text-xs md:text-sm leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.8)' }}>
             캐릭터별 레이드 관리와 골드 계산<br />
             길드·그룹원과 레이드 현황을 실시간으로 공유하세요
           </p>
+          <Link
+            href="/guide"
+            className="inline-flex items-center px-4 py-2 rounded-lg text-xs ns-bold transition-all active:scale-95"
+            style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.25)' }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'}
+          >
+            사용 가이드 보기
+          </Link>
         </div>
       </section>
 

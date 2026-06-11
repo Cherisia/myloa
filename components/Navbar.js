@@ -126,6 +126,7 @@ export default function Navbar() {
     { href: '/guild', label: '길드' },
     { href: '/group', label: '그룹', badge: session ? pendingFriendCount : 0 },
     { href: '/dictionary', label: '로아 사전' },
+    { href: '/guide', label: '가이드' },
   ]
   const isActive = (href) => href && (pathname === href || pathname.startsWith(href + '/'))
 

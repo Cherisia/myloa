@@ -82,6 +82,10 @@ export default async function RootLayout({ children }) {
                     <p className="text-[12px] text-gray-400 dark:text-zinc-500">로스트아크 레이드 숙제 관리 & 공유</p>
                   </div>
                   <div className="flex items-center justify-center gap-3 text-[11px]">
+                    <Link href="/guide" className="text-gray-400 dark:text-zinc-600 hover:text-gray-600 dark:hover:text-zinc-400 transition-colors">
+                      사용 가이드
+                    </Link>
+                    <span className="text-gray-300 dark:text-zinc-700">|</span>
                     <Link href="/privacy" className="text-gray-400 dark:text-zinc-600 hover:text-gray-600 dark:hover:text-zinc-400 transition-colors">
                       개인정보처리방침
                     </Link>
