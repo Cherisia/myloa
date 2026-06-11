@@ -75,16 +75,27 @@ export async function PATCH(request, { params }) {
     }
   }
 
-  const updated = await prisma.expedition.update({
-    where: { id },
-    data: {
-      ...(name?.trim() && { name: name.trim().slice(0, 12) }),
-      ...(description !== undefined && { description: description?.trim().slice(0, 200) || null }),
-      ...(notice !== undefined && { notice: notice?.trim().slice(0, 300) || null }),
-      ...(autoAccept !== undefined && { autoAccept: Boolean(autoAccept) }),
-      ...(regenerateCode && { inviteCode: generateInviteCode() }),
-    },
-  })
+  const updateData = {
+    ...(name?.trim() && { name: name.trim().slice(0, 12) }),
+    ...(description !== undefined && { description: description?.trim().slice(0, 200) || null }),
+    ...(notice !== undefined && { notice: notice?.trim().slice(0, 300) || null }),
+    ...(autoAccept !== undefined && { autoAccept: Boolean(autoAccept) }),
+  }
+
+  let updated = null
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      updated = await prisma.expedition.update({
+        where: { id },
+        data: { ...updateData, ...(regenerateCode && { inviteCode: generateInviteCode() }) },
+      })
+      break
+    } catch (e) {
+      if (regenerateCode && e.code === 'P2002' && e.meta?.target?.includes('inviteCode')) continue
+      throw e
+    }
+  }
+  if (!updated) return NextResponse.json({ error: '코드 재생성 실패' }, { status: 500 })
   return NextResponse.json(updated)
 }
 

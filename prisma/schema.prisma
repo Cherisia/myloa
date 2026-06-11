@@ -123,6 +123,7 @@ model CharacterRaid {
 
   @@unique([characterId, raidId, difficulty])
   @@index([resetAt])
+  @@index([characterId, resetAt])
 }
 
 // ─── 커스텀 숙제 ──────────────────────────────────────────────────────────────

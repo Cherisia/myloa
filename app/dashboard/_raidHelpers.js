@@ -138,8 +138,16 @@ async function _flushOps() {
     if (!res.ok) {
       const body = await res.text().catch(() => '')
       console.error('[saveRaid] batch failed', res.status, body, ops)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('raidSaveFailed', { detail: { status: res.status } }))
+      }
     }
-  }).catch(err => console.error('[saveRaid] batch error', err, ops))
+  }).catch(err => {
+    console.error('[saveRaid] batch error', err, ops)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('raidSaveFailed', { detail: { error: err.message } }))
+    }
+  })
 }
 
 // 페이지 이탈 직전 미전송 op를 sendBeacon으로 보장 전송

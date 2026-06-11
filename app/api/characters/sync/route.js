@@ -68,7 +68,7 @@ export async function POST() {
           const rawLevel   = profile.ItemMaxLevel ?? profile.ItemAvgLevel ?? '0'
           const itemLevel  = parseFloat(String(rawLevel).replace(/,/g, '')) || char.itemLevel
           const combatPower = profile.CombatPower
-            ? parseFloat(String(profile.CombatPower).replace(/,/g, ''))
+            ? parseFloat(String(profile.CombatPower).replace(/,/g, '')) || char.combatPower
             : char.combatPower
 
           await prisma.character.update({

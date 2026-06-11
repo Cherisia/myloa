@@ -66,11 +66,12 @@ export async function GET(request) {
     select: { id: true, senderId: true, receiverId: true, status: true },
   })
 
+  const requestMap = new Map(
+    allRequests.map(r => [r.senderId === userId ? r.receiverId : r.senderId, r])
+  )
+
   const result = users.map(u => {
-    const req = allRequests.find(
-      r => (r.senderId === userId && r.receiverId === u.id) ||
-           (r.senderId === u.id && r.receiverId === userId)
-    )
+    const req = requestMap.get(u.id)
 
     let relationStatus = 'none' // none | sent | received | friend
     let incomingRequestId = null

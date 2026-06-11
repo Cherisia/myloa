@@ -43,7 +43,9 @@ export async function POST(request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 })
 
-  const { apiKey, repCharName, characters, siblingNames } = await request.json()
+  const body = await request.json().catch(() => null)
+  if (!body) return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
+  const { apiKey, repCharName, characters, siblingNames } = body
   if (!characters?.length) {
     return NextResponse.json({ error: '추가할 캐릭터가 없습니다' }, { status: 400 })
   }
@@ -122,7 +124,9 @@ export async function PATCH(request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
 
-  const { order } = await request.json()
+  const body2 = await request.json().catch(() => null)
+  if (!body2) return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
+  const { order } = body2
   if (!Array.isArray(order) || order.length === 0)
     return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
 

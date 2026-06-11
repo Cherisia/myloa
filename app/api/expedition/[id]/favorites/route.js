@@ -13,6 +13,13 @@ export async function POST(request, { params }) {
   const { targetUserId } = await request.json()
   const viewerUserId = session.user.id
 
+  const membership = await prisma.expeditionMember.findUnique({
+    where: { expeditionId_userId: { expeditionId, userId: viewerUserId } },
+  })
+  if (!membership || membership.status !== 'active') {
+    return NextResponse.json({ error: '접근 권한이 없습니다' }, { status: 403 })
+  }
+
   await prisma.expeditionMemberFavorite.upsert({
     where: { expeditionId_viewerUserId_targetUserId: { expeditionId, viewerUserId, targetUserId } },
     create: { expeditionId, viewerUserId, targetUserId },
@@ -28,6 +35,13 @@ export async function DELETE(request, { params }) {
   const { id: expeditionId } = await params
   const { targetUserId } = await request.json()
   const viewerUserId = session.user.id
+
+  const membership = await prisma.expeditionMember.findUnique({
+    where: { expeditionId_userId: { expeditionId, userId: viewerUserId } },
+  })
+  if (!membership || membership.status !== 'active') {
+    return NextResponse.json({ error: '접근 권한이 없습니다' }, { status: 403 })
+  }
 
   await prisma.expeditionMemberFavorite.deleteMany({
     where: { expeditionId, viewerUserId, targetUserId },

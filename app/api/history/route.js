@@ -13,7 +13,7 @@ export async function GET() {
 
   const history = await prisma.weeklyRaidHistory.findMany({
     where:   { userId: session.user.id },
-    orderBy: { weekStart: 'asc' },
+    orderBy: { weekStart: 'desc' },
     take:    10,
     select: {
       id:         true,

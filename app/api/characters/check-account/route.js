@@ -17,6 +17,9 @@ export async function GET(request) {
   }
 
   const siblingNames = siblingParam.split(',').map(s => s.trim()).filter(Boolean)
+  if (siblingNames.length > 50) {
+    return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
+  }
 
   const matchedChar = await prisma.character.findFirst({
     where: {

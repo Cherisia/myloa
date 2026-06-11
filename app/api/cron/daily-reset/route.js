@@ -5,9 +5,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getNextDailyResetAt } from '@/lib/raidData'
-
-// 휴식 게이지가 적용되는 항목 이름 (쿠르잔 전선 계열 포함)
-const REST_GAUGE_NAMES = new Set(['혼돈의 균열', '쿠르잔 전선', '카오스 던전', '가디언 토벌'])
+import { REST_GAUGE_NAMES } from '@/app/dashboard/_constants'
 
 export async function GET(request) {
   const authHeader = request.headers.get('authorization')

@@ -195,16 +195,17 @@ const persistDelete = (charId, raidId, diffKey) => { if (isLoggedIn) deleteRaid(
 ### DB 마이그레이션 규칙
 `prisma migrate deploy`는 빌드 스크립트에 포함하지 않는다. (Vercel 빌드 서버 → Neon advisory lock 타임아웃)
 
-```bash
-# 로컬 dev DB
-npx prisma migrate deploy
-```
+로컬 `.env.local`도 Neon을 직접 가리키므로 `prisma migrate dev`는 shadow DB 오류가 발생한다.
 
-**운영 DB (Neon MCP):**
-- Neon 프로젝트 ID: `empty-thunder-73282882`
-- `mcp__Neon__run_sql_transaction`으로 SQL 직접 실행, 적용 전 컬럼 존재 여부 확인
+**마이그레이션 절차:**
+1. `prisma/migrations/<timestamp>_<name>/migration.sql` 파일 수동 생성
+2. Neon MCP로 SQL 직접 실행 (적용 전 컬럼/인덱스 존재 여부 확인)
+3. `npx prisma migrate resolve --applied <migration-name>` 으로 적용 완료 표시
+4. git push
 
-**순서:** 로컬 migrate deploy → Neon MCP SQL 실행 → 확인 → git push
+**Neon MCP:**
+- 프로젝트 ID: `empty-thunder-73282882`
+- `mcp__Neon__run_sql` 로 확인, `mcp__Neon__run_sql_transaction` 으로 트랜잭션 실행
 
 ## SEO 규칙
 
@@ -255,6 +256,37 @@ Tailwind 기본 스케일만 사용 (`p-2`, `gap-3`). 임의 픽셀값(`p-[7px]`
 - `AutoSetupModal`: `raidsByName`은 `useMemo`로 파생 (effect 사용 금지)
 - 드래그앤드랍(캐릭터 순서): HTML5 DnD API + 커스텀 ghost (`setDragImage`)
 - `ApiKeyGuideModal`은 `CharacterAddModal.js` 안에 로컬 함수로 포함
-- LoA API 키는 AES-256으로 암호화하여 DB 저장 (`lib/encrypt.js`)
+- LoA API 키는 AES-256으로 암호화하여 DB 저장 (`lib/encrypt.js`) — `ENCRYPTION_KEY` 미설정 시 모듈 로드 단계에서 throw
 - Optimistic UI (toggleCustomCheck, adjustRestGauge 등): fire-and-forget fetch, 실패 시 console.error, UI 롤백 없음
+- `saveRaid` / `deleteRaid` batch 저장 실패 시 `window.dispatchEvent('raidSaveFailed')` → DashboardClient 우하단 토스트 5초 표시
 - `api/loa/route.js` rate limit은 in-memory (서버 재시작 시 초기화)
+
+### 초대코드 생성 패턴
+`generateInviteCode()`는 `randomBytes(8).toString('hex').toUpperCase()` (16자, 64-bit 엔트로피).
+Prisma `@unique` 충돌(P2002) 가능성이 있으므로 create/update 시 retry 루프 적용:
+```js
+for (let attempt = 0; attempt < 5; attempt++) {
+  try { /* prisma.expedition.create/update */ break }
+  catch (e) {
+    if (e.code === 'P2002' && e.meta?.target?.includes('inviteCode')) continue
+    throw e
+  }
+}
+```
+
+### API route 공통 패턴
+- **JSON parse**: `await request.json().catch(() => null)` — null 시 400 반환
+- **배열 선형 탐색 금지**: 관계 조회 결과는 `Map`으로 변환 후 O(1) 접근
+  ```js
+  const map = new Map(items.map(r => [r.targetId, r]))
+  const item = map.get(id)  // ✅
+  items.find(r => r.targetId === id)  // ❌
+  ```
+- **멤버십 검증**: expedition 관련 쓰기 API는 `ExpeditionMember` 조회로 `status === 'active'` 확인 후 처리
+- **`_constants.js` import**: `REST_GAUGE_NAMES` 등 순수 데이터 상수는 서버 사이드 파일에서도 `@/app/dashboard/_constants`에서 import (중복 정의 금지)
+
+---
+
+## 작업 완료 후 행동 규칙
+- **스크린샷·화면 캡처 금지** — 작업 완료 후 결과 확인용 캡처를 시도하지 않는다
+- **개발 서버 재구동 금지** — `npm run dev` 실행·재시작은 사용자가 직접 한다. Claude는 건드리지 않는다

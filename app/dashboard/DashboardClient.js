@@ -82,6 +82,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
   const [showConfetti, setShowConfetti]         = useState(false)
   const [showGoldConfetti, setShowGoldConfetti] = useState(false)
   const [exRaidError, setExRaidError]           = useState(null) // { raidName, conflictCharName }
+  const [saveError, setSaveError]               = useState(false) // batch 저장 실패 토스트
+  const saveErrorTimerRef                       = useRef(null)
   const [cardView, setCardView]                 = useState(() => {
     if (typeof window === 'undefined') return true
     const saved = localStorage.getItem('dashboard_cardView')
@@ -208,6 +210,21 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
+
+  // 레이드 batch 저장 실패 토스트
+  useEffect(() => {
+    if (!isLoggedIn) return
+    const handler = () => {
+      setSaveError(true)
+      if (saveErrorTimerRef.current) clearTimeout(saveErrorTimerRef.current)
+      saveErrorTimerRef.current = setTimeout(() => setSaveError(false), 5000)
+    }
+    window.addEventListener('raidSaveFailed', handler)
+    return () => {
+      window.removeEventListener('raidSaveFailed', handler)
+      if (saveErrorTimerRef.current) clearTimeout(saveErrorTimerRef.current)
+    }
+  }, [isLoggedIn])
 
   // 커스텀 항목 로드/마이그레이션
   // - 비로그인(데모): localStorage에서 로드
@@ -3216,6 +3233,21 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
       )}
       </div>
+
+      {/* ── 레이드 저장 실패 토스트 ── */}
+      {saveError && (
+        <div className="fixed bottom-5 right-5 z-[300] flex items-center gap-3 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 shadow-lg px-4 py-3 text-sm text-red-700 dark:text-red-300">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="flex-shrink-0">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span className="ns-bold">저장 실패 — 잠시 후 다시 시도해 주세요</span>
+          <button
+            onClick={() => setSaveError(false)}
+            className="ml-1 text-red-400 hover:text-red-600 dark:hover:text-red-200 transition-colors leading-none"
+            aria-label="닫기"
+          >×</button>
+        </div>
+      )}
     </>
   )
 }

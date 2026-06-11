@@ -39,23 +39,33 @@ export async function POST(request) {
     return NextResponse.json({ error: '한글, 영어, 숫자만 사용 가능합니다.' }, { status: 400 })
   }
 
-  const expedition = await prisma.expedition.create({
-    data: {
-      name: trimmedName,
-      leaderId: session.user.id,
-      inviteCode: generateInviteCode(),
-      maxMembers: 100,
-      members: {
-        create: {
-          userId: session.user.id,
-          role: 'leader',
-          status: 'active',
-          visibility: 'all',
-          joinedAt: new Date(),
+  let expedition = null
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      expedition = await prisma.expedition.create({
+        data: {
+          name: trimmedName,
+          leaderId: session.user.id,
+          inviteCode: generateInviteCode(),
+          maxMembers: 100,
+          members: {
+            create: {
+              userId: session.user.id,
+              role: 'leader',
+              status: 'active',
+              visibility: 'all',
+              joinedAt: new Date(),
+            },
+          },
         },
-      },
-    },
-  })
+      })
+      break
+    } catch (e) {
+      if (e.code === 'P2002' && e.meta?.target?.includes('inviteCode')) continue
+      throw e
+    }
+  }
+  if (!expedition) return NextResponse.json({ error: '원정대 생성 실패' }, { status: 500 })
 
   return NextResponse.json(expedition, { status: 201 })
 }
