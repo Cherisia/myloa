@@ -36,8 +36,8 @@ export function getKurzanPreset(itemLevel) {
 // 캐릭터 추가 시 자동으로 붙는 프리셋 (쿠르잔 계열은 getKurzanPreset으로 별도 처리)
 export const AUTO_PRESETS = [
   { name: '가디언 토벌',  type: 'daily',  image: '/schedule/guardian.png' },
-  { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
   { name: '낙원',         type: 'weekly', image: '/schedule/paradise.png'  },
+  { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
 ]
 
 // ── 직업 아이콘 (로컬 /public/class/) ────────────────────────────────────────

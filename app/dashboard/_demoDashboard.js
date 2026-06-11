@@ -215,38 +215,38 @@ export const DEMO_CUSTOM_ITEMS = {
   "demo-1": [
     { "id": "dci-1-1", "name": "혼돈의 균열", "type": "daily", "image": "/schedule/chaosrift.png" },
     { "id": "dci-1-2", "name": "가디언 토벌", "type": "daily", "image": "/schedule/guardian.png" },
-    { "id": "dci-1-3", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
-    { "id": "dci-1-4", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" }
+    { "id": "dci-1-3", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
+    { "id": "dci-1-4", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" }
   ],
   "demo-2": [
     { "id": "dci-2-1", "name": "혼돈의 균열", "type": "daily", "image": "/schedule/chaosrift.png" },
-    { "id": "dci-2-2", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
-    { "id": "dci-2-3", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
+    { "id": "dci-2-2", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
+    { "id": "dci-2-3", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
     { "id": "dci-2-4", "name": "가디언 토벌", "type": "daily", "image": "/schedule/guardian.png" }
   ],
   "demo-3": [
     { "id": "dci-3-1", "name": "혼돈의 균열", "type": "daily", "image": "/schedule/chaosrift.png" },
-    { "id": "dci-3-2", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
+    { "id": "dci-3-2", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
     { "id": "dci-3-3", "name": "가디언 토벌", "type": "daily", "image": "/schedule/guardian.png" },
-    { "id": "dci-3-4", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" }
+    { "id": "dci-3-4", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" }
   ],
   "demo-4": [
     { "id": "dci-4-1", "name": "혼돈의 균열", "type": "daily", "image": "/schedule/chaosrift.png" },
-    { "id": "dci-4-2", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
+    { "id": "dci-4-2", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
     { "id": "dci-4-3", "name": "가디언 토벌", "type": "daily", "image": "/schedule/guardian.png" },
-    { "id": "dci-4-4", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" }
+    { "id": "dci-4-4", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" }
   ],
   "demo-5": [
     { "id": "dci-5-1", "name": "혼돈의 균열", "type": "daily", "image": "/schedule/chaosrift.png" },
-    { "id": "dci-5-2", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
+    { "id": "dci-5-2", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
     { "id": "dci-5-3", "name": "가디언 토벌", "type": "daily", "image": "/schedule/guardian.png" },
-    { "id": "dci-5-4", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" }
+    { "id": "dci-5-4", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" }
   ],
   "demo-6": [
     { "id": "dci-6-1", "name": "혼돈의 균열", "type": "daily", "image": "/schedule/chaosrift.png" },
-    { "id": "dci-6-2", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
+    { "id": "dci-6-2", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
     { "id": "dci-6-3", "name": "가디언 토벌", "type": "daily", "image": "/schedule/guardian.png" },
-    { "id": "dci-6-4", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" }
+    { "id": "dci-6-4", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" }
   ],
   "demo-7": [
     { "id": "dci-7-1", "name": "쿠르잔 전선", "type": "daily", "image": "/schedule/kurzan.png" },
@@ -255,8 +255,8 @@ export const DEMO_CUSTOM_ITEMS = {
   ],
   "demo-8": [
     { "id": "dci-8-1", "name": "혼돈의 균열", "type": "daily", "image": "/schedule/chaosrift.png" },
-    { "id": "dci-8-2", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
-    { "id": "dci-8-3", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
+    { "id": "dci-8-2", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
+    { "id": "dci-8-3", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
     { "id": "dci-8-4", "name": "가디언 토벌", "type": "daily", "image": "/schedule/guardian.png" }
   ],
   "demo-9": [
@@ -266,8 +266,8 @@ export const DEMO_CUSTOM_ITEMS = {
   ],
   "demo-10": [
     { "id": "dci-10-1", "name": "혼돈의 균열", "type": "daily", "image": "/schedule/chaosrift.png" },
-    { "id": "dci-10-2", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
-    { "id": "dci-10-3", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
+    { "id": "dci-10-2", "name": "낙원", "type": "weekly", "image": "/schedule/paradise.png" },
+    { "id": "dci-10-3", "name": "할의 모래시계", "type": "weekly", "image": "/schedule/hal.png" },
     { "id": "dci-10-4", "name": "가디언 토벌", "type": "daily", "image": "/schedule/guardian.png" }
   ],
   "demo-11": [
