@@ -7,5 +7,5 @@ export const metadata = {
 }
 
 export default function GuidePage() {
-  return <GuideClient />
+  return <GuideClient initialTab={0} />
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 
 /* ── 스크린샷 헬퍼 ── */
 function Shot({ src, alt, width = '100%' }) {
@@ -316,14 +317,16 @@ function NavBtns({ prev, next, goTab }) {
 /* ══════════════════════════════════════════════
    메인 클라이언트
 ══════════════════════════════════════════════ */
-export default function GuideClient() {
-  const [current, setCurrent] = useState(0)
+const SECTION_PATHS = ['/guide', '/guide/guild', '/guide/group']
+
+export default function GuideClient({ initialTab = 0 }) {
+  const [current, setCurrent] = useState(initialTab)
   const mainRef = useRef(null)
+  const router = useRouter()
 
   function goTab(idx) {
     if (idx < 0 || idx >= TOTAL) return
-    setCurrent(idx)
-    if (mainRef.current) mainRef.current.scrollTop = 0
+    router.push(SECTION_PATHS[idx])
   }
 
   const panels = [
