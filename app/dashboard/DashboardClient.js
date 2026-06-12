@@ -5,6 +5,10 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import DiscordIcon from '@/components/DiscordIcon'
 import AdSense from '@/components/AdSense'
+import KakaoAdFit from '@/components/KakaoAdFit'
+
+// 카카오 애드핏 단위 ID — https://adfit.kakao.com 에서 발급 후 교체
+const ADFIT_UNIT_INLINE = 'DAN-elHXJUANBFHvU8kh'
 import { RAIDS, RAID_MAP, RAID_ORDER_MAP, CLASS_COLOR, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
 import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, KURZAN_NAMES, DAILY_PRESET_ORDER, FIXED_WEEKLY_ORDER, orderedDailyCustomItems, isWeeklyCustomItem, orderedWeeklyCustomItems, getClassIcon, getKurzanPreset, CUSTOM_MAX } from './_constants'
 import { IconCrown, IconPlus, IconCheck, IconRefresh, IconInfo, IconClass, IconItemLevel, IconPower, IconGrip } from './_icons'
@@ -1660,8 +1664,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
       </div>
       {/* 노트북/데스크탑 광고 — md 이상에서 요약카드 오른쪽 빈 공간 */}
-      <div className="hidden md:flex flex-1 min-w-0 overflow-hidden items-center">
-        <AdSense slot="5883193399" />
+      <div className="hidden md:flex flex-1 min-w-0 overflow-hidden items-center justify-center">
+        <KakaoAdFit unit={ADFIT_UNIT_INLINE} width={320} height={100} />
       </div>
       </div>
 

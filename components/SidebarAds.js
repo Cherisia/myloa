@@ -1,12 +1,13 @@
 'use client'
 import { usePathname } from 'next/navigation'
-import AdSense from './AdSense'
+import KakaoAdFit from './KakaoAdFit'
 
-const AD_SLOT_SIDEBAR_L = '7996518124'
-const AD_SLOT_SIDEBAR_R = '7746939400'
+// 카카오 애드핏 단위 ID — https://adfit.kakao.com 에서 발급
+const ADFIT_UNIT_SIDEBAR_L = 'DAN-ukyXEWSmwFuJISxo'
+const ADFIT_UNIT_SIDEBAR_R = 'DAN-KUKGfQgMjxpioCMi'
 
 // 광고 표시 허용 경로 (콘텐츠가 풍부한 페이지만)
-const AD_ALLOWED_PATHS = ['/dashboard', '/guild', '/group']
+const AD_ALLOWED_PATHS = ['/', '/dashboard', '/dictionary', '/guild', '/group']
 
 function shouldShowAds(pathname) {
   return AD_ALLOWED_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
@@ -15,11 +16,11 @@ function shouldShowAds(pathname) {
 export function SidebarAdLeft() {
   const pathname = usePathname()
   if (!shouldShowAds(pathname)) return null
-  return <AdSense slot={AD_SLOT_SIDEBAR_L} sidebar />
+  return <KakaoAdFit unit={ADFIT_UNIT_SIDEBAR_L} width={160} height={600} />
 }
 
 export function SidebarAdRight() {
   const pathname = usePathname()
   if (!shouldShowAds(pathname)) return null
-  return <AdSense slot={AD_SLOT_SIDEBAR_R} sidebar />
+  return <KakaoAdFit unit={ADFIT_UNIT_SIDEBAR_R} width={160} height={600} />
 }
