@@ -1,4 +1,6 @@
 import DictionaryClient from './DictionaryClient'
+import RaidRewardClient from '../raids/RaidRewardClient'
+import SynergyClient from '../synergy/SynergyClient'
 
 const TAB_META = {
   synergy: {
@@ -49,6 +51,8 @@ export async function generateMetadata({ searchParams }) {
   }
 }
 
-export default function DictionaryPage() {
-  return <DictionaryClient />
+export default async function DictionaryPage({ searchParams }) {
+  const tab = (await searchParams)?.tab || 'raids'
+  const content = tab === 'synergy' ? <SynergyClient /> : <RaidRewardClient />
+  return <DictionaryClient initialTab={tab}>{content}</DictionaryClient>
 }

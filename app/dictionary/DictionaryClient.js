@@ -2,18 +2,16 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
-import SynergyClient from '../synergy/SynergyClient'
-import RaidRewardClient from '../raids/RaidRewardClient'
 
 const TABS = [
   { key: 'raids',   label: '레이드 보상' },
   { key: 'synergy', label: '직업 시너지' },
 ]
 
-function DictionaryTabs() {
-  const router     = useRouter()
-  const params     = useSearchParams()
-  const tab        = params.get('tab') || 'raids'
+function DictionaryTabs({ initialTab, children }) {
+  const router = useRouter()
+  const params = useSearchParams()
+  const tab    = params.get('tab') || initialTab || 'raids'
 
   function setTab(key) {
     router.push(`/dictionary?tab=${key}`, { scroll: false })
@@ -38,25 +36,19 @@ function DictionaryTabs() {
           ))}
         </div>
       </div>
-
-      {tab === 'synergy' && (
-        <div className="pt-4">
-          <SynergyClient />
-        </div>
-      )}
-      {tab === 'raids' && (
-        <div className="pt-4">
-          <RaidRewardClient />
-        </div>
-      )}
+      <div className="pt-4">
+        {children}
+      </div>
     </>
   )
 }
 
-export default function DictionaryClient() {
+export default function DictionaryClient({ initialTab, children }) {
   return (
     <Suspense>
-      <DictionaryTabs />
+      <DictionaryTabs initialTab={initialTab}>
+        {children}
+      </DictionaryTabs>
     </Suspense>
   )
 }
