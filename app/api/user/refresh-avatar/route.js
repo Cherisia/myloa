@@ -68,9 +68,12 @@ export async function POST() {
 
   if (!freshImage) return Response.json({ error: 'No avatar' }, { status: 400 })
 
+  const updateData = { image: freshImage }
+  if (typeof discordUser.username === 'string') updateData.discordUsername = discordUser.username
+
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { image: freshImage },
+    data: updateData,
   })
 
   return Response.json({ image: freshImage })

@@ -925,6 +925,7 @@ export default function GroupClient({ initialFriends, initialRequests, me, isDem
   const [searchResults, setSearchResults] = useState(null) // null = 검색 안 함
   const [searching, setSearching]       = useState(false)
   const [sending, setSending]           = useState(null) // userId being sent request
+  const [sendError, setSendError]       = useState('')   // 친구추가 에러 메시지
   const debounceRef = useRef(null)
 
   const pendingCount = requests.length
@@ -955,6 +956,7 @@ export default function GroupClient({ initialFriends, initialRequests, me, isDem
   const sendRequest = useCallback(async (receiverId) => {
     if (isDemo) { requireLogin(); return }
     setSending(receiverId)
+    setSendError('')
     try {
       const res = await fetch('/api/group/requests', {
         method: 'POST',
@@ -962,19 +964,21 @@ export default function GroupClient({ initialFriends, initialRequests, me, isDem
         body: JSON.stringify({ receiverId }),
       })
       const data = await res.json()
-      if (res.ok) {
-        if (data.autoAccepted) {
-          // 자동 수락 — 그룹원 목록 갱신
-          const friendRes = await fetch('/api/group')
-          const friendData = await friendRes.json()
-          setFriends(friendData.friends || [])
-          setRequests(prev => prev.filter(r => r.sender.id !== receiverId))
-        }
-        // 검색 결과에서 상태 업데이트
-        setSearchResults(prev => prev?.map(u =>
-          u.id === receiverId ? { ...u, relationStatus: data.autoAccepted ? 'friend' : 'sent' } : u
-        ))
+      if (!res.ok) {
+        setSendError(data.error || '오류가 발생했습니다')
+        return
       }
+      if (data.autoAccepted) {
+        // 자동 수락 — 그룹원 목록 갱신
+        const friendRes = await fetch('/api/group')
+        const friendData = await friendRes.json()
+        setFriends(friendData.friends || [])
+        setRequests(prev => prev.filter(r => r.sender.id !== receiverId))
+      }
+      // 검색 결과에서 상태 업데이트
+      setSearchResults(prev => prev?.map(u =>
+        u.id === receiverId ? { ...u, relationStatus: data.autoAccepted ? 'friend' : 'sent' } : u
+      ))
     } finally {
       setSending(null)
     }
@@ -1232,6 +1236,10 @@ export default function GroupClient({ initialFriends, initialRequests, me, isDem
                     </button>
                   )}
                 </div>
+
+                {sendError && (
+                  <p className="mt-2 text-xs text-red-500 dark:text-red-400 px-1">{sendError}</p>
+                )}
 
                 {searchResults !== null && (
                   <div className="mt-2 rounded-xl shadow-border overflow-hidden bg-white dark:bg-[#111] shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)]">

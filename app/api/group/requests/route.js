@@ -51,6 +51,13 @@ export async function POST(request) {
     return NextResponse.json({ error: '자기 자신에게 요청할 수 없습니다' }, { status: 400 })
   }
 
+  // 대표캐릭터 없으면 친구추가 불가
+  const hasChar = await prisma.loaExpedition.findFirst({
+    where: { userId: senderId, characters: { some: { isActive: true } } },
+    select: { id: true },
+  })
+  if (!hasChar) return NextResponse.json({ error: '캐릭터를 먼저 등록해야 친구를 추가할 수 있습니다' }, { status: 400 })
+
   // 수신자 존재 확인
   const receiver = await prisma.user.findUnique({ where: { id: receiverId }, select: { id: true } })
   if (!receiver) return NextResponse.json({ error: '사용자를 찾을 수 없습니다' }, { status: 404 })
