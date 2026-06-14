@@ -1508,7 +1508,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       </div>
 
       {/* ── 요약 카드 + 광고 배너 ── */}
-      <div className="flex items-stretch gap-3 sm:mt-1">
+      <div className="flex flex-col md:flex-row items-stretch gap-3 sm:mt-1">
       <div className="grid grid-cols-1 gap-2 w-full md:grid-cols-3 md:gap-3 md:max-w-[50%]">
         {/* 원정대 캐릭터 */}
         <div className="relative rounded-xl shadow-border bg-white dark:bg-[#222222] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] px-4 pt-4 pb-3.5 flex flex-col min-h-[88px] md:min-h-0 overflow-hidden">
@@ -1663,8 +1663,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
 
       </div>
-      {/* 인라인 광고 — 요약카드 오른쪽 빈 공간 */}
-      <div className="flex flex-1 min-w-0 overflow-hidden items-center justify-center">
+      {/* 인라인 광고 — 요약카드 오른쪽(데스크탑) 또는 아래(모바일) 빈 공간 */}
+      <div className="flex md:flex-1 min-w-0 overflow-hidden items-center justify-center">
         <KakaoAdFit unit={ADFIT_UNIT_INLINE} width={320} height={100} />
       </div>
       </div>
