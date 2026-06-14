@@ -1663,8 +1663,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         </div>
 
       </div>
-      {/* 노트북/데스크탑 광고 — md 이상에서 요약카드 오른쪽 빈 공간 */}
-      <div className="hidden md:flex flex-1 min-w-0 overflow-hidden items-center justify-center">
+      {/* 인라인 광고 — 요약카드 오른쪽 빈 공간 */}
+      <div className="flex flex-1 min-w-0 overflow-hidden items-center justify-center">
         <KakaoAdFit unit={ADFIT_UNIT_INLINE} width={320} height={100} />
       </div>
       </div>
