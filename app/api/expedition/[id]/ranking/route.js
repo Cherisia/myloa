@@ -75,5 +75,5 @@ export async function GET(request, { params }) {
     }
   })
 
-  return NextResponse.json(ranking)
+  return NextResponse.json(ranking.filter(m => m.weeks > 0))
 }

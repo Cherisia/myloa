@@ -427,7 +427,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
           <RankToggle
             options={[{ v: 'gold', l: '획득 골드' }, { v: 'raids', l: '완료 레이드' }, { v: 'rate', l: '레이드 완료율' }]}
             value={rankingSort}
-            onChange={v => { setRankingSort(v); setRankingData(null) }}
+            onChange={v => setRankingSort(v)}
           />
         </div>
 

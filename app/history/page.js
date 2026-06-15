@@ -43,7 +43,7 @@ export default async function HistoryPage() {
 
   const history = await prisma.weeklyRaidHistory.findMany({
     where:   { userId: session.user.id },
-    orderBy: { weekStart: 'asc' },
+    orderBy: { weekStart: 'desc' },
     take:    12,
     select:  { id: true, weekStart: true, totalRaids: true, goldRaids: true, totalGold: true, goldMore: true },
   })

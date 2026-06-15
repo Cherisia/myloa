@@ -63,7 +63,13 @@ export default function HistoryClient({ history, isDemo = false }) {
   })()
   const bestItem = chartMode === 'gold'
     ? sorted.reduce((b, h) => getGold(h) > getGold(b ?? {}) ? h : b, null)
-    : sorted.reduce((b, h) => h.totalRaids > (b?.totalRaids ?? 0) ? h : b, null)
+    : chartMode === 'pct'
+      ? sorted.reduce((b, h) => {
+          const pct  = h.totalRaids  > 0 ? h.goldRaids  / h.totalRaids  : 0
+          const bPct = b?.totalRaids > 0 ? b?.goldRaids / b?.totalRaids : 0
+          return pct > bPct ? h : b
+        }, null)
+      : sorted.reduce((b, h) => h.totalRaids > (b?.totalRaids ?? 0) ? h : b, null)
 
   const getXLabel = (h) =>
     xMode === 'week' ? getWeekSeq(h.weekStart, sorted) : formatDateLabel(h.weekStart)
