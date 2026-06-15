@@ -4,7 +4,7 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { RAID_MAP, getDifficulty, calcGold, getNextResetAt } from '@/lib/raidData'
+import { RAID_MAP, getDifficulty, calcGold, calcGoldMore, getNextResetAt } from '@/lib/raidData'
 
 export async function GET(request) {
   const authHeader = request.headers.get('authorization')
@@ -25,6 +25,7 @@ export async function GET(request) {
       difficulty:  true,
       gateClears:  true,
       isGoldCheck: true,
+      moreDone:    true,
       character: {
         select: {
           expedition: { select: { userId: true } },
@@ -37,7 +38,7 @@ export async function GET(request) {
   const userStats = {}
   for (const raid of allRaids) {
     const userId = raid.character.expedition.userId
-    if (!userStats[userId]) userStats[userId] = { totalRaids: 0, goldRaids: 0, totalGold: 0 }
+    if (!userStats[userId]) userStats[userId] = { totalRaids: 0, goldRaids: 0, totalGold: 0, goldMore: 0 }
 
     const raidDef = RAID_MAP[raid.raidId]
     const diff = getDifficulty(raidDef, raid.difficulty)
@@ -54,6 +55,9 @@ export async function GET(request) {
     if (raid.isGoldCheck) {
       userStats[userId].goldRaids++
       userStats[userId].totalGold += calcGold(diff, raid.gateClears)
+      if (raid.moreDone) {
+        userStats[userId].goldMore += calcGoldMore(diff, raid.gateClears)
+      }
     }
   }
 

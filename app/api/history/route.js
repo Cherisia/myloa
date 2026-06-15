@@ -21,6 +21,7 @@ export async function GET() {
       totalRaids: true,
       goldRaids:  true,
       totalGold:  true,
+      goldMore:   true,
     },
   })
 

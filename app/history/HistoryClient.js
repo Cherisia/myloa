@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react'
 import { formatGold } from '@/lib/formatting'
 
 const BAR_MAX_H = 148
-const TOP_PAD   = 44  // 툴팁 공간
-const Y_WIDTH   = 30  // Y축 레이블 너비
+const TOP_PAD   = 44
+const Y_WIDTH   = 36
 
 function getWeekSeq(weekStartStr, allSorted) {
   const idx = allSorted.findIndex(h => h.weekStart === weekStartStr)
@@ -13,7 +13,7 @@ function getWeekSeq(weekStartStr, allSorted) {
 }
 
 function formatDateLabel(weekStartStr) {
-  const d = new Date(weekStartStr)
+  const d  = new Date(weekStartStr)
   const wb = new Date(d.getTime() - 7 * 24 * 60 * 60 * 1000)
   return `${wb.getMonth() + 1}/${wb.getDate()}`
 }
@@ -40,31 +40,42 @@ function Toggle({ options, value, onChange }) {
 }
 
 export default function HistoryClient({ history, isDemo = false }) {
-  const [display,   setDisplay]   = useState('count') // 'count' | 'pct'
-  const [xMode,     setXMode]     = useState('date')  // 'date'  | 'week'
-  const [hoveredId, setHoveredId] = useState(null)
+  const [chartMode,   setChartMode]   = useState('count') // 'count' | 'pct' | 'gold'
+  const [includeMore, setIncludeMore] = useState(false)
+  const [xMode,       setXMode]       = useState('date')  // 'date' | 'week'
+  const [hoveredId,   setHoveredId]   = useState(null)
 
   const sorted = useMemo(
     () => [...(history || [])].sort((a, b) => new Date(a.weekStart) - new Date(b.weekStart)),
     [history]
   )
 
-  const maxRaids     = Math.max(...sorted.map(h => h.totalRaids), 1)
-  const totalGoldAll = sorted.reduce((s, h) => s + h.totalGold, 0)
-  const avgRaids     = sorted.length > 0
+  const getGold    = (h) => (h.totalGold || 0) + (includeMore ? (h.goldMore || 0) : 0)
+  const maxRaids   = Math.max(...sorted.map(h => h.totalRaids), 1)
+  const maxGold    = Math.max(...sorted.map(h => getGold(h)), 1)
+  const totalGoldAll = sorted.reduce((s, h) => s + getGold(h), 0)
+  const avgRaids   = sorted.length > 0
     ? (sorted.reduce((s, h) => s + h.totalRaids, 0) / sorted.length).toFixed(1) : 0
   const goldPct = (() => {
     const t = sorted.reduce((s, h) => s + h.totalRaids, 0)
     const g = sorted.reduce((s, h) => s + h.goldRaids, 0)
     return t > 0 ? Math.round(g / t * 100) : 0
   })()
-  const bestItem = sorted.reduce((b, h) => h.totalRaids > (b?.totalRaids ?? 0) ? h : b, null)
+  const bestItem = chartMode === 'gold'
+    ? sorted.reduce((b, h) => getGold(h) > getGold(b ?? {}) ? h : b, null)
+    : sorted.reduce((b, h) => h.totalRaids > (b?.totalRaids ?? 0) ? h : b, null)
 
   const getXLabel = (h) =>
     xMode === 'week' ? getWeekSeq(h.weekStart, sorted) : formatDateLabel(h.weekStart)
 
-  // 차트 전체 높이 = 바 영역 + 상단 레이블 패딩
   const chartH = BAR_MAX_H + TOP_PAD
+
+  // Y축 레이블
+  function getYLabel(r) {
+    if (chartMode === 'pct')  return r === 0 ? '0' : `${Math.round(r * 100)}`
+    if (chartMode === 'gold') return r === 0 ? '0' : formatGold(Math.round(maxGold * r))
+    return r === 0 ? '0' : `${Math.round(maxRaids * r)}`
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-5">
@@ -108,10 +119,10 @@ export default function HistoryClient({ history, isDemo = false }) {
           {/* 요약 카드 */}
           <div className="grid grid-cols-4 gap-3">
             {[
-              { label: '기록된 주', value: sorted.length,        unit: '주', color: false },
-              { label: '주간 평균', value: avgRaids,             unit: '개', color: false },
-              { label: '골드 비율', value: `${goldPct}%`,        unit: '',   color: true  },
-              { label: '누적 골드', value: formatGold(totalGoldAll), unit: '', color: true },
+              { label: '기록된 주',  value: sorted.length,            unit: '주', color: false },
+              { label: '주간 평균',  value: avgRaids,                 unit: '개', color: false },
+              { label: '골드 비율',  value: `${goldPct}%`,            unit: '',   color: true  },
+              { label: '누적 골드',  value: formatGold(totalGoldAll), unit: '',   color: true  },
             ].map(c => (
               <div key={c.label} className="rounded-2xl shadow-border bg-white dark:bg-[#1c1c1c] px-3.5 py-3.5 flex flex-col gap-1.5">
                 <span className="text-[11px] text-gray-400 dark:text-gray-500">{c.label}</span>
@@ -127,59 +138,67 @@ export default function HistoryClient({ history, isDemo = false }) {
           <div className="rounded-2xl shadow-border bg-white dark:bg-[#1c1c1c] px-5 pt-5 pb-4 overflow-visible">
 
             {/* 차트 헤더 */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
               <div className="flex items-center gap-4">
                 <span className="text-sm ns-bold text-gray-700 dark:text-gray-200">주간 레이드 현황</span>
-                <div className="flex items-center gap-3 text-[11px] text-gray-400 dark:text-gray-500">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-gray-200 dark:bg-[#3a3a3a]" />
-                    전체
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent-400)]" />
-                    골드
-                  </span>
-                </div>
+                {chartMode === 'count' && (
+                  <div className="flex items-center gap-3 text-[11px] text-gray-400 dark:text-gray-500">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-gray-200 dark:bg-[#3a3a3a]" />
+                      전체
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent-400)]" />
+                      골드
+                    </span>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* 더보기 토글 */}
+                <button
+                  type="button"
+                  onClick={() => setIncludeMore(v => !v)}
+                  className={`text-[11px] px-2.5 py-1 rounded-lg border transition-colors flex-shrink-0 ${
+                    includeMore
+                      ? 'bg-[var(--accent-400)] text-[var(--accent-900)] ns-bold border-[var(--accent-400)]'
+                      : 'bg-white dark:bg-[#1c1c1c] text-gray-500 dark:text-gray-400 border-gray-200 dark:border-[#333] hover:bg-gray-50 dark:hover:bg-[#252525]'
+                  }`}
+                >
+                  더보기 {includeMore ? '포함' : '미포함'}
+                </button>
                 <Toggle
                   options={[{ v: 'date', l: '날짜' }, { v: 'week', l: '주차' }]}
                   value={xMode}
                   onChange={setXMode}
                 />
                 <Toggle
-                  options={[{ v: 'count', l: '개수' }, { v: 'pct', l: '%' }]}
-                  value={display}
-                  onChange={setDisplay}
+                  options={[{ v: 'count', l: '레이드 수' }, { v: 'pct', l: '완료율' }, { v: 'gold', l: '골드' }]}
+                  value={chartMode}
+                  onChange={setChartMode}
                 />
               </div>
             </div>
 
-            {/* 차트 영역 — Y축 + 바 */}
+            {/* 차트 영역 */}
             <div className="flex" style={{ height: chartH }}>
 
               {/* Y축 레이블 */}
               <div className="relative flex-shrink-0" style={{ width: Y_WIDTH, height: chartH }}>
-                {[0, 0.25, 0.5, 0.75, 1.0].map(r => {
-                  const label = display === 'pct'
-                    ? (r === 0 ? '0' : `${Math.round(r * 100)}`)
-                    : (r === 0 ? '0' : `${Math.round(maxRaids * r)}`)
-                  return (
-                    <span
-                      key={r}
-                      className="absolute right-2 text-[10px] text-gray-300 dark:text-[#484848] leading-none select-none"
-                      style={{ bottom: Math.round(r * BAR_MAX_H) - 5 }}
-                    >
-                      {label}
-                    </span>
-                  )
-                })}
-                {/* Y축 단위 */}
+                {[0, 0.25, 0.5, 0.75, 1.0].map(r => (
+                  <span
+                    key={r}
+                    className="absolute right-2 text-[10px] text-gray-300 dark:text-[#484848] leading-none select-none"
+                    style={{ bottom: Math.round(r * BAR_MAX_H) - 5 }}
+                  >
+                    {getYLabel(r)}
+                  </span>
+                ))}
                 <span
                   className="absolute right-2 text-[9px] text-gray-300 dark:text-[#484848] leading-none select-none"
                   style={{ top: 0 }}
                 >
-                  {display === 'pct' ? '%' : '개'}
+                  {chartMode === 'pct' ? '%' : chartMode === 'gold' ? 'G' : '개'}
                 </span>
               </div>
 
@@ -199,97 +218,114 @@ export default function HistoryClient({ history, isDemo = false }) {
                   />
                 ))}
 
-                {/* 바 flex */}
+                {/* 바 */}
                 <div className="absolute inset-0 flex items-end gap-1.5 px-0.5">
-                {sorted.map((h, i) => {
-                  const isBest = bestItem?.id === h.id && h.totalRaids > 0
+                  {sorted.map((h, i) => {
+                    const isBest     = bestItem?.id === h.id
+                    const isHovered  = hoveredId === h.id
+                    const tipAlign   = i === 0 ? 'left-0' : i === sorted.length - 1 ? 'right-0' : 'left-1/2 -translate-x-1/2'
+                    const gold       = getGold(h)
 
-                  const isHovered = hoveredId === h.id
-                  const tooltipAlign = i === 0 ? 'left-0' : i === sorted.length - 1 ? 'right-0' : 'left-1/2 -translate-x-1/2'
-
-                  /* ── 공통 툴팁 ── */
-                  const Tooltip = ({ extra }) => isHovered ? (
-                    <div className={`absolute top-0 ${tooltipAlign} z-20 pointer-events-none`}>
-                      <div className="bg-gray-800/90 dark:bg-[#e8e8e8] rounded-lg px-2.5 py-1.5 shadow-lg whitespace-nowrap">
-                        <div className="text-[10px] ns-bold text-gray-300 dark:text-gray-500 mb-1">{getXLabel(h)}</div>
-                        <div className="flex items-center gap-2 text-[11px] ns-bold">
-                          <span className="text-white dark:text-gray-800">전체 {h.totalRaids}</span>
-                          <span className="text-[var(--accent-300)] dark:text-[var(--accent-500)]">골드 {h.goldRaids}</span>
+                    const Tooltip = ({ extra }) => isHovered ? (
+                      <div className={`absolute top-0 ${tipAlign} z-20 pointer-events-none`}>
+                        <div className="bg-gray-800/90 dark:bg-[#e8e8e8] rounded-lg px-2.5 py-1.5 shadow-lg whitespace-nowrap">
+                          <div className="text-[10px] ns-bold text-gray-300 dark:text-gray-500 mb-1">{getXLabel(h)}</div>
+                          <div className="flex flex-col gap-0.5 text-[11px]">
+                            <span className="ns-bold text-white dark:text-gray-800">
+                              레이드 {h.totalRaids} · 골드 {h.goldRaids}
+                            </span>
+                            <span className="text-[var(--accent-300)] dark:text-[var(--accent-600)] ns-bold">
+                              {gold.toLocaleString('ko-KR')}G
+                              {includeMore && h.goldMore > 0 && (
+                                <span className="text-gray-400 dark:text-gray-500 ns-light ml-1">(+{h.goldMore.toLocaleString('ko-KR')})</span>
+                              )}
+                            </span>
+                          </div>
+                          {extra && <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{extra}</div>}
                         </div>
-                        {extra && <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{extra}</div>}
+                        <div className="w-0 h-0 mx-auto border-l-[5px] border-r-[5px] border-t-[5px] border-l-transparent border-r-transparent border-t-gray-800/90 dark:border-t-[#e8e8e8]" />
                       </div>
-                      <div className="w-0 h-0 mx-auto border-l-[5px] border-r-[5px] border-t-[5px] border-l-transparent border-r-transparent border-t-gray-800/90 dark:border-t-[#e8e8e8]" />
-                    </div>
-                  ) : null
+                    ) : null
 
-                  /* ── % 모드 ── */
-                  if (display === 'pct') {
-                    const pct  = h.totalRaids > 0 ? Math.round(h.goldRaids / h.totalRaids * 100) : 0
-                    const barH = pct === 0 ? 2 : Math.max(8, Math.round(pct / 100 * BAR_MAX_H))
+                    /* ── 완료율 모드 ── */
+                    if (chartMode === 'pct') {
+                      const pct  = h.totalRaids > 0 ? Math.round(h.goldRaids / h.totalRaids * 100) : 0
+                      const barH = pct === 0 ? 2 : Math.max(8, Math.round(pct / 100 * BAR_MAX_H))
+                      return (
+                        <div key={h.id} className="flex-1 min-w-0 relative flex flex-col justify-end cursor-default" style={{ height: chartH }}
+                          onMouseEnter={() => setHoveredId(h.id)} onMouseLeave={() => setHoveredId(null)}>
+                          <Tooltip extra={`완료율 ${pct}%`} />
+                          <div
+                            className={`w-full rounded-t-xl transition-opacity ${isHovered ? 'opacity-75' : ''} ${
+                              isBest ? 'bg-[var(--accent-400)]' : 'bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/70'
+                            }`}
+                            style={{ height: barH }}
+                          />
+                        </div>
+                      )
+                    }
 
+                    /* ── 골드 모드 ── */
+                    if (chartMode === 'gold') {
+                      const barH = gold === 0 ? 2 : Math.max(8, Math.round(gold / maxGold * BAR_MAX_H))
+                      const moreH = (h.goldMore && includeMore && gold > 0)
+                        ? Math.round((h.goldMore / gold) * barH)
+                        : 0
+                      const baseH = barH - moreH
+                      return (
+                        <div key={h.id} className="flex-1 min-w-0 relative flex flex-col justify-end cursor-default" style={{ height: chartH }}
+                          onMouseEnter={() => setHoveredId(h.id)} onMouseLeave={() => setHoveredId(null)}>
+                          <Tooltip />
+                          <div
+                            className={`w-full rounded-t-xl overflow-hidden transition-opacity ${isHovered ? 'opacity-75' : ''}`}
+                            style={{ height: barH }}
+                          >
+                            {baseH > 0 && (
+                              <div
+                                className={isBest ? 'w-full bg-[var(--accent-400)]' : 'w-full bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/80'}
+                                style={{ height: baseH }}
+                              />
+                            )}
+                            {moreH > 0 && (
+                              <div className="w-full bg-emerald-400 dark:bg-emerald-500/80" style={{ height: moreH }} />
+                            )}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    /* ── 레이드 수 모드 (기본) ── */
+                    const totalH = h.totalRaids === 0 ? 2 : Math.max(8, Math.round(h.totalRaids / maxRaids * BAR_MAX_H))
+                    const goldH  = h.totalRaids === 0 ? 0 : Math.round(h.goldRaids / h.totalRaids * totalH)
+                    const grayH  = totalH - goldH
                     return (
-                      <div
-                        key={h.id}
-                        className="flex-1 min-w-0 relative flex flex-col justify-end cursor-default"
-                        style={{ height: chartH }}
-                        onMouseEnter={() => setHoveredId(h.id)}
-                        onMouseLeave={() => setHoveredId(null)}
-                      >
-                        <Tooltip extra={`달성률 ${pct}%`} />
+                      <div key={h.id} className="flex-1 min-w-0 relative flex flex-col justify-end cursor-default" style={{ height: chartH }}
+                        onMouseEnter={() => setHoveredId(h.id)} onMouseLeave={() => setHoveredId(null)}>
+                        <Tooltip />
                         <div
-                          className={`w-full rounded-t-xl transition-opacity ${isHovered ? 'opacity-75' : ''} ${
-                            isBest ? 'bg-[var(--accent-400)]' : 'bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/70'
-                          }`}
-                          style={{ height: barH }}
-                        />
+                          className={`w-full rounded-t-xl overflow-hidden transition-opacity ${isHovered ? 'opacity-75' : ''}`}
+                          style={{ height: totalH }}
+                        >
+                          {grayH > 0 && <div className="w-full bg-gray-200 dark:bg-[#303030]" style={{ height: grayH }} />}
+                          {goldH > 0 && (
+                            <div
+                              className={isBest ? 'w-full bg-[var(--accent-400)]' : 'w-full bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/80'}
+                              style={{ height: goldH }}
+                            />
+                          )}
+                        </div>
                       </div>
                     )
-                  }
-
-                  /* ── 개수 모드 ── */
-                  const totalH = h.totalRaids === 0
-                    ? 2
-                    : Math.max(8, Math.round(h.totalRaids / maxRaids * BAR_MAX_H))
-                  const goldH  = h.totalRaids === 0
-                    ? 0
-                    : Math.round(h.goldRaids / h.totalRaids * totalH)
-                  const grayH  = totalH - goldH
-
-                  return (
-                    <div
-                      key={h.id}
-                      className="flex-1 min-w-0 relative flex flex-col justify-end cursor-default"
-                      style={{ height: chartH }}
-                      onMouseEnter={() => setHoveredId(h.id)}
-                      onMouseLeave={() => setHoveredId(null)}
-                    >
-                      <Tooltip />
-                      {/* 2단 바 */}
-                      <div
-                        className={`w-full rounded-t-xl overflow-hidden transition-opacity ${isHovered ? 'opacity-75' : ''}`}
-                        style={{ height: totalH }}
-                      >
-                        {grayH > 0 && (
-                          <div className="w-full bg-gray-200 dark:bg-[#303030]" style={{ height: grayH }} />
-                        )}
-                        {goldH > 0 && (
-                          <div
-                            className={isBest ? 'w-full bg-[var(--accent-400)]' : 'w-full bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/80'}
-                            style={{ height: goldH }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                  })}
                 </div>
               </div>
             </div>
 
-            {/* X축 레이블 — Y축 너비만큼 들여쓰기 */}
+            {/* X축 레이블 */}
             <div className="flex gap-1.5 mt-2.5" style={{ paddingLeft: Y_WIDTH }}>
               {sorted.map((h, i) => {
-                const isBest = bestItem?.id === h.id && h.totalRaids > 0
+                const isBest = bestItem?.id === h.id
+                const gold   = getGold(h)
                 return (
                   <div key={h.id} className="flex-1 min-w-0 flex flex-col items-center gap-0.5">
                     <span className={`text-[11px] truncate w-full text-center leading-none ${
@@ -297,9 +333,9 @@ export default function HistoryClient({ history, isDemo = false }) {
                     }`}>
                       {getXLabel(h)}
                     </span>
-                    {h.totalGold > 0
+                    {gold > 0
                       ? <span className="text-[10px] ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)] truncate w-full text-center leading-none">
-                          {formatGold(h.totalGold)}
+                          {formatGold(gold)}
                         </span>
                       : <span className="text-[10px] text-gray-200 dark:text-gray-700 text-center leading-none">—</span>
                     }
@@ -307,6 +343,20 @@ export default function HistoryClient({ history, isDemo = false }) {
                 )
               })}
             </div>
+
+            {/* 더보기 범례 (골드 모드 + includeMore일 때) */}
+            {chartMode === 'gold' && includeMore && (
+              <div className="flex items-center gap-4 mt-3 text-[11px] text-gray-400 dark:text-gray-500" style={{ paddingLeft: Y_WIDTH }}>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent-300)] dark:bg-[var(--accent-500)]/80" />
+                  기본 골드
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 dark:bg-emerald-500/80" />
+                  더보기 골드
+                </span>
+              </div>
+            )}
           </div>
 
           {/* 주간 상세 목록 */}
@@ -315,10 +365,11 @@ export default function HistoryClient({ history, isDemo = false }) {
               <span className="text-sm ns-bold text-gray-700 dark:text-gray-200">주간 상세</span>
             </div>
             {[...sorted].reverse().map((h, i) => {
-              const isBest   = bestItem?.id === h.id && h.totalRaids > 0
-              const seqLabel = getWeekSeq(h.weekStart, sorted)
+              const isBest    = bestItem?.id === h.id && h.totalRaids > 0
+              const seqLabel  = getWeekSeq(h.weekStart, sorted)
               const dateLabel = formatDateLabel(h.weekStart)
-              const wGoldPct = h.totalRaids > 0 ? Math.round(h.goldRaids / h.totalRaids * 100) : 0
+              const wGoldPct  = h.totalRaids > 0 ? Math.round(h.goldRaids / h.totalRaids * 100) : 0
+              const gold      = getGold(h)
               return (
                 <div
                   key={h.id}
@@ -326,9 +377,7 @@ export default function HistoryClient({ history, isDemo = false }) {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm ns-bold text-gray-700 dark:text-gray-200">
-                        {seqLabel}
-                      </span>
+                      <span className="text-sm ns-bold text-gray-700 dark:text-gray-200">{seqLabel}</span>
                       <span className="text-[11px] text-gray-400 dark:text-gray-500">{dateLabel} 주</span>
                       {isBest && (
                         <span className="text-[10px] ns-bold px-1.5 py-0.5 rounded-full bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 text-[var(--accent-700)] dark:text-[var(--accent-300)]">
@@ -358,11 +407,16 @@ export default function HistoryClient({ history, isDemo = false }) {
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    {h.totalGold > 0 ? (
+                    {gold > 0 ? (
                       <>
                         <div className="text-sm ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)]">
-                          {h.totalGold.toLocaleString('ko-KR')}
+                          {gold.toLocaleString('ko-KR')}
                         </div>
+                        {includeMore && (h.goldMore || 0) > 0 && (
+                          <div className="text-[10px] text-emerald-500 dark:text-emerald-400">
+                            +{(h.goldMore || 0).toLocaleString('ko-KR')} 더보기
+                          </div>
+                        )}
                         <div className="text-[10px] text-gray-400 dark:text-gray-500">골드</div>
                       </>
                     ) : (

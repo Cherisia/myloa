@@ -14,18 +14,18 @@ function makeDemoHistory() {
   const BASE = new Date('2026-05-27T21:00:00.000Z')
   const WEEK = 7 * 24 * 60 * 60 * 1000
   const weeks = [
-    { totalRaids: 12, goldRaids: 8,  totalGold: 82500  },
-    { totalRaids: 15, goldRaids: 10, totalGold: 107000 },
-    { totalRaids: 10, goldRaids: 7,  totalGold: 71000  },
-    { totalRaids: 16, goldRaids: 11, totalGold: 118500 },
-    { totalRaids: 14, goldRaids: 9,  totalGold: 96000  },
-    { totalRaids: 11, goldRaids: 7,  totalGold: 74500  },
-    { totalRaids: 17, goldRaids: 12, totalGold: 131000 },
-    { totalRaids: 13, goldRaids: 9,  totalGold: 98000  },
-    { totalRaids: 9,  goldRaids: 6,  totalGold: 62000  },
-    { totalRaids: 15, goldRaids: 11, totalGold: 115000 },
-    { totalRaids: 16, goldRaids: 11, totalGold: 121500 },
-    { totalRaids: 18, goldRaids: 13, totalGold: 142000 },
+    { totalRaids: 12, goldRaids: 8,  totalGold: 82500,  goldMore: 4500  },
+    { totalRaids: 15, goldRaids: 10, totalGold: 107000, goldMore: 6000  },
+    { totalRaids: 10, goldRaids: 7,  totalGold: 71000,  goldMore: 3000  },
+    { totalRaids: 16, goldRaids: 11, totalGold: 118500, goldMore: 7500  },
+    { totalRaids: 14, goldRaids: 9,  totalGold: 96000,  goldMore: 4500  },
+    { totalRaids: 11, goldRaids: 7,  totalGold: 74500,  goldMore: 0     },
+    { totalRaids: 17, goldRaids: 12, totalGold: 131000, goldMore: 9000  },
+    { totalRaids: 13, goldRaids: 9,  totalGold: 98000,  goldMore: 6000  },
+    { totalRaids: 9,  goldRaids: 6,  totalGold: 62000,  goldMore: 0     },
+    { totalRaids: 15, goldRaids: 11, totalGold: 115000, goldMore: 7500  },
+    { totalRaids: 16, goldRaids: 11, totalGold: 121500, goldMore: 6000  },
+    { totalRaids: 18, goldRaids: 13, totalGold: 142000, goldMore: 10500 },
   ]
   return weeks.map((w, i) => ({
     id:        `demo-hist-${i}`,
@@ -45,7 +45,7 @@ export default async function HistoryPage() {
     where:   { userId: session.user.id },
     orderBy: { weekStart: 'asc' },
     take:    12,
-    select:  { id: true, weekStart: true, totalRaids: true, goldRaids: true, totalGold: true },
+    select:  { id: true, weekStart: true, totalRaids: true, goldRaids: true, totalGold: true, goldMore: true },
   })
 
   return <HistoryClient history={history} />

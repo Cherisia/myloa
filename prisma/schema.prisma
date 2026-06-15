@@ -218,6 +218,7 @@ model WeeklyRaidHistory {
   totalRaids Int      // 모든 관문 클리어된 레이드 수
   goldRaids  Int      // 골드 체크 + 모든 관문 클리어된 레이드 수
   totalGold  Int      // 골드 레이드 합산 골드 (귀속+거래)
+  goldMore   Int      @default(0) // 더보기 추가 골드 합계
   createdAt  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

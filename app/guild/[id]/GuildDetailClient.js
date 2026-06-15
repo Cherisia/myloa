@@ -7,6 +7,7 @@ import { RAID_MAP } from '@/lib/raidData'
 import { getGroupRaidList, raidStatusOf, adaptMember } from '@/lib/groupRaidShare'
 import { CLASS_ICON } from '@/app/dashboard/_constants'
 import { saveRaid } from '@/app/dashboard/_raidHelpers'
+import { formatGold } from '@/lib/formatting'
 import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
 import { IconCrown, IconTrophy, IconX, IconBack, IconCopy, IconStar, IconPower, IconCheck, IconRegen } from '@/app/dashboard/_icons'
 
@@ -149,10 +150,33 @@ function GuildMemberRaidModal({ member, role, myMember, raidList, persistedToggl
   )
 }
 
+// ── 랭킹 토글 ────────────────────────────────────────────────────────────────
+function RankToggle({ options, value, onChange }) {
+  return (
+    <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-[#333] text-[11px] flex-shrink-0">
+      {options.map(o => (
+        <button
+          key={o.v}
+          type="button"
+          onClick={() => onChange(o.v)}
+          className={`w-24 py-1 transition-colors text-center whitespace-nowrap ${
+            value === o.v
+              ? 'bg-[var(--accent-400)] text-[var(--accent-900)] ns-bold'
+              : 'bg-white dark:bg-[#1e1e1e] text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#252525]'
+          }`}
+        >
+          {o.l}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ── 탭 정의 ──────────────────────────────────────────────────────────────────
 const TABS = [
   { id: 'raids',    label: '레이드현황', leaderOnly: false },
   { id: 'members',  label: '멤버',       leaderOnly: false },
+  { id: 'ranking',  label: '랭킹',       leaderOnly: false },
   { id: 'manage',   label: '멤버관리',   leaderOnly: true  },
   { id: 'pending',  label: '대기중',     leaderOnly: true  },
   { id: 'settings', label: '설정',       leaderOnly: true  },
@@ -187,11 +211,35 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   const [memberSearch,  setMemberSearch]  = useState('')
   const [manageSearch,  setManageSearch]  = useState('')
 
+  // ── 랭킹 탭 상태 ────────────────────────────────────────────────────────
+  const [rankingData,    setRankingData]    = useState(null)
+  const [rankingLoading, setRankingLoading] = useState(false)
+  const [rankingSort,    setRankingSort]    = useState('gold')
+
   const anyModalOpen = !!raidModal || !!memberModal || !!kickConfirm || regenConfirm || deleteConfirm || saveSuccess
   useEffect(() => {
     document.body.style.overflow = anyModalOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [anyModalOpen])
+
+  useEffect(() => {
+    if (tab !== 'ranking' || isDemo || rankingData) return
+    setRankingLoading(true)
+    fetch(`/api/expedition/${expedition.id}/ranking`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setRankingData(data) })
+      .catch(() => {})
+      .finally(() => setRankingLoading(false))
+  }, [tab, expedition.id, isDemo, rankingData])
+
+  const sortedRanking = useMemo(() => {
+    if (!rankingData) return []
+    const sorted = [...rankingData]
+    if (rankingSort === 'raids') sorted.sort((a, b) => b.avgRaids - a.avgRaids)
+    else if (rankingSort === 'rate') sorted.sort((a, b) => b.completionRate - a.completionRate)
+    else sorted.sort((a, b) => b.avgGold - a.avgGold)
+    return sorted
+  }, [rankingData, rankingSort])
 
   const isLeader  = expedition.leaderId === userId
   const isOfficer = isLeader || myMembership.role === 'officer'
@@ -368,6 +416,115 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   }
 
   // ── 탭 컨텐츠 렌더 함수 ──────────────────────────────────────────────────
+
+  function renderRanking() {
+    const RANK_MEDAL = ['🥇', '🥈', '🥉']
+
+    return (
+      <div className="space-y-3">
+        {/* 필터 바 */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <RankToggle
+            options={[{ v: 'gold', l: '획득 골드' }, { v: 'raids', l: '완료 레이드' }, { v: 'rate', l: '레이드 완료율' }]}
+            value={rankingSort}
+            onChange={v => { setRankingSort(v); setRankingData(null) }}
+          />
+        </div>
+
+        {/* 데모 안내 */}
+        {isDemo && (
+          <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] py-16 text-center space-y-2">
+            <p className="text-3xl">🏆</p>
+            <p className="text-sm ns-bold text-gray-500 dark:text-gray-400">로그인 후 랭킹을 확인할 수 있어요</p>
+          </div>
+        )}
+
+        {/* 로딩 */}
+        {!isDemo && rankingLoading && (
+          <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] py-12 text-center">
+            <p className="text-sm text-gray-400 dark:text-gray-500">불러오는 중...</p>
+          </div>
+        )}
+
+        {/* 데이터 없음 */}
+        {!isDemo && !rankingLoading && rankingData && sortedRanking.length === 0 && (
+          <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] py-14 text-center space-y-2">
+            <p className="text-3xl">📊</p>
+            <p className="text-sm ns-bold text-gray-500 dark:text-gray-400">아직 기록이 없어요</p>
+            <p className="text-xs text-gray-400 dark:text-gray-600">주간 초기화가 진행되면 랭킹이 표시돼요</p>
+          </div>
+        )}
+
+        {/* 랭킹 리스트 */}
+        {!isDemo && !rankingLoading && sortedRanking.length > 0 && (
+          <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] overflow-hidden">
+            {sortedRanking.map((member, idx) => {
+              const rank = idx + 1
+              const isMe = member.userId === userId
+              const rankDisplay = rank <= 3
+                ? <span className="text-lg leading-none">{RANK_MEDAL[rank - 1]}</span>
+                : <span className="text-sm ns-bold text-gray-300 dark:text-gray-600 tabular-nums">{rank}</span>
+
+              return (
+                <div
+                  key={member.userId}
+                  className={`flex items-center gap-3 px-5 py-3.5 border-b border-gray-50 dark:border-[#252525] last:border-b-0 ${
+                    isMe ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10' : ''
+                  }`}
+                >
+                  {/* 순위 */}
+                  <div className="w-8 flex items-center justify-center flex-shrink-0">
+                    {rankDisplay}
+                  </div>
+
+                  {/* 아바타 */}
+                  <Avatar user={{ name: member.name, image: member.image }} size={32} />
+
+                  {/* 이름 + 보조 통계 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm ns-bold text-gray-800 dark:text-gray-100 truncate">{member.name}</span>
+                      {isMe && (
+                        <span className="text-[10px] ns-bold px-1.5 py-0.5 rounded-full bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] flex-shrink-0">나</span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+                      <span>{member.weeks}주 기록</span>
+                    </div>
+                  </div>
+
+                  {/* 주요 지표 */}
+                  <div className="text-right flex-shrink-0">
+                    {rankingSort === 'gold' ? (
+                      <div className="text-sm ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)]">
+                        {formatGold(member.avgGold)}
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500 ns-light ml-0.5">주평균</span>
+                      </div>
+                    ) : rankingSort === 'raids' ? (
+                      <div className="text-sm ns-bold text-gray-800 dark:text-gray-100">
+                        {member.avgRaids}
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500 ns-light ml-0.5">개 주평균</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-sm ns-bold text-gray-800 dark:text-gray-100">
+                          {member.completionRate}
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500 ns-light ml-0.5">%</span>
+                        </div>
+                        <div className="text-[10px] text-gray-400 dark:text-gray-500">
+                          {member.totalRaids} / {member.allRaids}개
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   function renderRaids() {
     if (raidList.length === 0 || visibleMembers.length === 0) {
@@ -1109,7 +1266,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
 
         {/* 탭 바 — 세그먼트 컨트롤 */}
         <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#252525] rounded-2xl">
-          {TABS.filter(t => (!t.leaderOnly || isLeader) && (!isDemo || t.id === 'raids' || t.id === 'members')).map(t => (
+          {TABS.filter(t => (!t.leaderOnly || isLeader) && (!isDemo || t.id === 'raids' || t.id === 'members' || t.id === 'ranking')).map(t => (
             <button key={t.id} type="button" onClick={() => setTab(t.id)}
               className={`flex-1 relative rounded-xl px-2 py-2.5 text-xs ns-bold transition-all duration-150 ${
                 tab === t.id
@@ -1129,6 +1286,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
         <div>
           {tab === 'raids'    && renderRaids()}
           {tab === 'members'  && renderMembers()}
+          {tab === 'ranking'  && renderRanking()}
           {tab === 'manage'   && renderManageMembers()}
           {tab === 'pending'  && renderPending()}
           {tab === 'settings' && renderSettings()}
