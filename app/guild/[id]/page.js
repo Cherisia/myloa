@@ -42,8 +42,7 @@ export default async function GuildDetailPage({ params }) {
         })),
       ],
     }
-    const demoMyMembership = { userId: demoUserId, role: 'leader', status: 'active', visibility: 'all' }
-    return <GuildDetailClient expedition={demoExpedition} userId={demoUserId} myMembership={demoMyMembership} isDemo />
+    return <GuildDetailClient expedition={demoExpedition} userId={demoUserId} isDemo />
   }
 
   const expedition = await prisma.expedition.findUnique({
@@ -90,7 +89,6 @@ export default async function GuildDetailPage({ params }) {
     <GuildDetailClient
       expedition={{ ...expedition, favoritedUserIds: expedition.favorites.map(f => f.targetUserId) }}
       userId={session.user.id}
-      myMembership={myMembership}
     />
   )
 }

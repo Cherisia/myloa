@@ -44,25 +44,34 @@ export default async function DashboardPage() {
   // 자동 리셋 건너뜀 — 크론이 스냅샷(WeeklyRaidHistory)을 저장한 뒤 resetAt을
   // 다음 주로 업데이트하면 isResetPassed가 false가 되어 자동으로 비활성화됨
   const CRON_BUFFER_MS = 60 * 60 * 1000 // 60분
-  const now = Date.now()
+  const nowMs = Date.now()
   const expiredIds = []
   expeditions.forEach(exp =>
     exp.characters.forEach(char =>
       char.characterRaids.forEach(r => {
-        if (isResetPassed(r.resetAt) && (now - new Date(r.resetAt).getTime()) > CRON_BUFFER_MS) {
+        if (isResetPassed(r.resetAt) && (nowMs - new Date(r.resetAt).getTime()) > CRON_BUFFER_MS) {
           expiredIds.push(r.id)
         }
       })
     )
   )
   if (expiredIds.length > 0) {
+    const nextResetAt = getNextResetAt()
     await prisma.$transaction(
       expiredIds.map(id => prisma.characterRaid.update({
         where: { id },
-        data: { gateClears: [], moreDone: false, moreFrom: 'bound', resetAt: getNextResetAt() },
+        data: { gateClears: [], moreDone: false, moreFrom: 'bound', resetAt: nextResetAt },
       }))
     )
-    expeditions = await prisma.loaExpedition.findMany({ where: { userId }, include: EXPEDITION_INCLUDE })
+    // 재조회 없이 이미 로드한 그래프를 in-memory로 갱신 (대형 원정대 그래프 재조회 1회 절감)
+    const expiredSet = new Set(expiredIds)
+    expeditions.forEach(exp => exp.characters.forEach(char => char.characterRaids.forEach(r => {
+      if (!expiredSet.has(r.id)) return
+      r.gateClears = []
+      r.moreDone = false
+      r.moreFrom = 'bound'
+      r.resetAt = nextResetAt
+    })))
   }
 
   // 일일 커스텀 숙제 리셋 만료 항목 처리
@@ -70,9 +79,10 @@ export default async function DashboardPage() {
   const expiredCustomIds = customItemsRaw.filter(it => it.type === 'daily' && it.resetAt && it.resetAt < now).map(it => it.id)
   if (expiredCustomIds.length > 0) {
     const nextDaily = getNextDailyResetAt()
+    const expiredCustomSet = new Set(expiredCustomIds)
     await prisma.$transaction(
       customItemsRaw
-        .filter(it => expiredCustomIds.includes(it.id))
+        .filter(it => expiredCustomSet.has(it.id))
         .map(it => {
           const data = { deducted: false, resetAt: nextDaily }
           if (it.done) {
@@ -83,13 +93,17 @@ export default async function DashboardPage() {
           return prisma.characterCustomItem.update({ where: { id: it.id }, data })
         })
     )
-    // 리셋 후 다시 조회
-    const refreshed = await prisma.characterCustomItem.findMany({
-      where: { character: { expedition: { userId } } },
-      orderBy: [{ characterId: 'asc' }, { sortOrder: 'asc' }],
+    // 재조회 없이 동일 로직을 in-memory에 반영 (커스텀 숙제 재조회 1회 절감)
+    customItemsRaw.forEach(it => {
+      if (!expiredCustomSet.has(it.id)) return
+      it.deducted = false
+      it.resetAt = nextDaily
+      if (it.done) {
+        it.done = false
+      } else if (REST_GAUGE_NAMES.has(it.name)) {
+        it.restGauge = Math.min(it.restGauge + 10, 100)
+      }
     })
-    customItemsRaw.length = 0
-    refreshed.forEach(it => customItemsRaw.push(it))
   }
 
   const initialChars = []

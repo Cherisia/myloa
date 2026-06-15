@@ -6,7 +6,7 @@ import { signIn } from 'next-auth/react'
 import { RAID_MAP } from '@/lib/raidData'
 import { getGroupRaidList, raidStatusOf, adaptMember } from '@/lib/groupRaidShare'
 import { CLASS_ICON } from '@/app/dashboard/_constants'
-import { saveRaid } from '@/app/dashboard/_raidHelpers'
+import { saveRaidCompletion } from '@/app/dashboard/_raidHelpers'
 import { formatGold } from '@/lib/formatting'
 import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
 import { IconCrown, IconTrophy, IconX, IconBack, IconCopy, IconStar, IconPower, IconCheck, IconRegen } from '@/app/dashboard/_icons'
@@ -25,19 +25,6 @@ function getMemberIncompleteChars(member, raidId, difficulty) {
       if (!entry) continue
       const s = raidStatusOf(entry)
       if (s === 'incomplete' || s === 'partial') chars.push(c)
-    }
-  }
-  return chars
-}
-
-function getMemberCompletedChars(member, raidId, difficulty) {
-  if (isHidden(member)) return []
-  const chars = []
-  for (const exp of member.expeditions || []) {
-    for (const c of exp.characters || []) {
-      const entry = c.raids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
-      if (!entry) continue
-      if (raidStatusOf(entry) === 'complete') chars.push(c)
     }
   }
   return chars
@@ -74,7 +61,7 @@ function Avatar({ user, size = 28 }) {
 }
 
 // ── GuildMemberRaidModal — RaidDetailModal 어댑터 ─────────────────────────────
-function GuildMemberRaidModal({ member, role, myMember, raidList, persistedToggles = {}, onCharToggle, onClose }) {
+function GuildMemberRaidModal({ member, role, myMember, raidList, persistedToggles = {}, onCharToggle, onClose, isDemo = false }) {
   const repChar   = member.expeditions?.[0]?.characters?.[0] || null
   const myRepChar = myMember?.expeditions?.[0]?.characters?.[0] || null
 
@@ -112,8 +99,6 @@ function GuildMemberRaidModal({ member, role, myMember, raidList, persistedToggl
 
   const headerBadge = role === 'leader'
     ? <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">길드장</span>
-    : role === 'officer'
-    ? <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부길드장</span>
     : null
 
   function myCharsForRaid(raidId, difficulty) {
@@ -146,6 +131,7 @@ function GuildMemberRaidModal({ member, role, myMember, raidList, persistedToggl
       persistedToggles={persistedToggles}
       onCharToggle={onCharToggle}
       onClose={onClose}
+      isDemo={isDemo}
     />
   )
 }
@@ -183,7 +169,7 @@ const TABS = [
 ]
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function GuildDetailClient({ expedition: init, userId, myMembership, isDemo = false }) {
+export default function GuildDetailClient({ expedition: init, userId, isDemo = false }) {
   const router = useRouter()
   const [expedition,   setExpedition]   = useState(init)
   const [favSortIds,   setFavSortIds]   = useState(() => init.favoritedUserIds || [])
@@ -241,8 +227,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
     return sorted
   }, [rankingData, rankingSort])
 
-  const isLeader  = expedition.leaderId === userId
-  const isOfficer = isLeader || myMembership.role === 'officer'
+  const isLeader = expedition.leaderId === userId
 
   const activeMembers  = expedition.members.filter(m => m.status === 'active')
   const pendingMembers = expedition.members.filter(m => m.status === 'pending')
@@ -285,6 +270,9 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
         ? prev.favoritedUserIds.filter(id => id !== targetUserId)
         : [...(prev.favoritedUserIds || []), targetUserId],
     }))
+    setFavSortIds(prev => isFav
+      ? prev.filter(id => id !== targetUserId)
+      : [...prev, targetUserId])
     await fetch(`/api/expedition/${expedition.id}/favorites`, {
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -308,8 +296,6 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
           if (action === 'accept')  return { ...m, status: 'active',   joinedAt: new Date().toISOString() }
           if (action === 'reject')  return { ...m, status: 'rejected' }
           if (action === 'kick')    return { ...m, status: 'rejected' }
-          if (action === 'promote') return { ...m, role: 'officer' }
-          if (action === 'demote')  return { ...m, role: 'member'  }
           return m
         }),
       }))
@@ -715,7 +701,6 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-[15px] ns-bold text-gray-900 dark:text-white truncate">{m.user?.nickname || m.user?.name || '알 수 없음'}</span>
                       {role === 'leader'  && <span className="text-[10px] ns-bold bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/30 text-[var(--accent-700)] dark:text-[var(--accent-300)] px-2 py-0.5 rounded-full">길드장</span>}
-                      {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부길드장</span>}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
                       {repChar && (
@@ -758,7 +743,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
   }
 
   function renderPending() {
-    if (!isOfficer) {
+    if (!isLeader) {
       return (
         <div className="rounded-3xl bg-white dark:bg-[#1e1e1e] shadow-border shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] py-14 text-center space-y-2">
           <p className="text-sm text-gray-400">권한이 없습니다.</p>
@@ -844,7 +829,6 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
           </div>
         )}
         {filteredKickable.map(m => {
-          const role     = expedition.leaderId === m.userId ? 'leader' : m.role
           const repChar  = (m.user?.loaExpeditions?.[0]?.characters || [])[0] || null
           const dispName = m.user?.nickname || m.user?.name || '알 수 없음'
           return (
@@ -853,7 +837,6 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-sm ns-bold text-gray-900 dark:text-white truncate">{dispName}</span>
-                  {role === 'officer' && <span className="text-[10px] ns-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">부길드장</span>}
                 </div>
                 {repChar && (
                   <div className="flex items-center gap-0.5 mt-0.5 text-[var(--accent-500)]">
@@ -975,17 +958,8 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
     const currentDone = key in raidModalLocalDone ? raidModalLocalDone[key] : false
     const newDone = !currentDone
     setRaidModalLocalDone(prev => ({ ...prev, [key]: newDone }))
-    const gateCount = entry.gateClears?.length
-      || RAID_MAP[entry.raidId]?.difficulties?.find(d => d.key === entry.difficulty)?.gates
-      || 1
-    saveRaid(char.id, {
-      raidId: entry.raidId,
-      difficulty: entry.difficulty,
-      gateClears: Array.from({ length: gateCount }, () => newDone),
-      isGoldCheck: entry.isGoldCheck,
-      moreDone: newDone ? entry.moreDone : false,
-      moreFrom: entry.moreFrom,
-    })
+    if (isDemo) return
+    saveRaidCompletion(char.id, entry, newDone)
   }
 
   function renderRaidModal() {
@@ -1005,11 +979,6 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
       .filter(({ chars }) => chars.length > 0)
       .slice(0, 100)
 
-    const completedRows = sorted
-      .map(m => ({ m, chars: getMemberCompletedChars(m, selRaidId, selDiff) }))
-      .filter(({ chars }) => chars.length > 0)
-      .slice(0, 100)
-
     return (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
         <div className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-[2px]" onClick={() => setRaidModal(null)} />
@@ -1026,7 +995,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-base ns-extrabold text-gray-900 dark:text-white">{name.replace(' EX', '')}</h2>
-                  <span className="text-[10px] ns-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#333] text-gray-500 dark:text-gray-300">{diff}</span>
+                  <span className={`text-[10px] ns-bold px-2 py-0.5 rounded-full ${(DIFF_COLORS[selDiff] || DIFF_COLOR_DEFAULT).badge}`}>{diff}</span>
                 </div>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                   미완료{' '}
@@ -1062,7 +1031,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
 
           {/* 본문 스크롤 */}
           <div className="overflow-y-auto flex-1 overscroll-contain">
-            {rows.length === 0 && completedRows.length === 0 ? (
+            {rows.length === 0 ? (
               <div className="py-14 text-center space-y-2">
                 <p className="text-3xl">✅</p>
                 <p className="text-sm ns-bold text-gray-500 dark:text-gray-400">미완료 캐릭터가 없어요</p>
@@ -1070,14 +1039,8 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
             ) : (
               <div>
                 {/* 미완료 멤버 */}
-                {rows.length === 0 ? (
-                  <div className="py-10 text-center space-y-1 border-b border-gray-50 dark:border-[#1f1f1f]">
-                    <p className="text-2xl">✅</p>
-                    <p className="text-sm ns-bold text-gray-500 dark:text-gray-400">미완료 캐릭터가 없어요</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-50 dark:divide-[#1f1f1f]">
-                    {rows.map(({ m, chars }) => {
+                <div className="divide-y divide-gray-50 dark:divide-[#1f1f1f]">
+                  {rows.map(({ m, chars }) => {
                       const isFav = expedition.favoritedUserIds?.includes(m.userId)
                       const repChar = m.expeditions?.[0]?.characters?.[0] || null
                       const isMyRow = m.userId === userId
@@ -1141,75 +1104,6 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
                       )
                     })}
                   </div>
-                )}
-
-                {/* 완료한 멤버 - 숨김 */}
-                {false && completedRows.length > 0 && (
-                  <>
-                    <div className="px-5 pt-4 pb-2 border-t border-gray-200 dark:border-[#2d2d2d]">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-[11px] ns-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider">완료한 레이드</h3>
-                        <span className="text-[10px] ns-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">{completedRows.length}</span>
-                      </div>
-                    </div>
-                    <div className="divide-y divide-gray-50 dark:divide-[#1f1f1f]">
-                      {completedRows.map(({ m, chars }) => {
-                        const isFav = expedition.favoritedUserIds?.includes(m.userId)
-                        const repChar = m.expeditions?.[0]?.characters?.[0] || null
-                        return (
-                          <div
-                            key={m.userId}
-                            className={`px-5 py-4 ${isFav ? 'bg-[var(--accent-50)]/30 dark:bg-[var(--accent-900)]/5' : ''}`}
-                          >
-                            <div className="flex items-center gap-2 mb-2.5">
-                              <div className="relative flex-shrink-0">
-                                <Avatar user={m.user} size={28} />
-                                {isFav && (
-                                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-white dark:bg-[#1a1a1a] flex items-center justify-center shadow-sm">
-                                    <IconStar filled size={8} />
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <span className="text-sm ns-bold text-gray-400 dark:text-gray-500 truncate block">{m.displayName}</span>
-                                {repChar && (
-                                  <div className="flex items-center gap-0.5 text-[var(--accent-500)]/70 mt-0.5">
-                                    <IconCrown />
-                                    <span className="text-[11px] ns-bold text-gray-400 dark:text-gray-500 truncate">{repChar.name}</span>
-                                  </div>
-                                )}
-                              </div>
-                              <span className="text-[10px] ns-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex-shrink-0 flex items-center gap-1">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                {chars.length}캐릭터 완료
-                              </span>
-                            </div>
-
-                            <div className="flex flex-wrap gap-1.5">
-                              {chars.map((c, ci) => {
-                                const iconFile = CLASS_ICON[c.characterClass]
-                                return (
-                                  <CharChip key={ci} itemLevel={c.itemLevel} combatPower={c.combatPower} className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-400 dark:text-gray-500">
-                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                                      <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                    {iconFile && (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img src={`/class/${iconFile}.svg`} alt={c.characterClass} className="w-3.5 h-3.5 object-contain flex-shrink-0 class-icon" />
-                                    )}
-                                    <span>{c.name}</span>
-                                  </CharChip>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </>
-                )}
               </div>
             )}
           </div>
@@ -1380,6 +1274,7 @@ export default function GuildDetailClient({ expedition: init, userId, myMembersh
           persistedToggles={myCharToggles}
           onCharToggle={handleCharToggle}
           onClose={() => setMemberModal(null)}
+          isDemo={isDemo}
         />
       )}
       {saveSuccess && (

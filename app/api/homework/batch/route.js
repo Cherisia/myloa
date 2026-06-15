@@ -4,7 +4,10 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { getNextResetAt } from '@/lib/raidData'
+import { getNextResetAt, validateRaidEntry } from '@/lib/raidData'
+
+// 한 요청에서 처리 가능한 최대 op 수 (캐릭터×레이드 전량 저장도 충분히 수용하는 여유값)
+const MAX_BATCH_OPS = 500
 
 export async function POST(request) {
   const session = await auth()
@@ -19,6 +22,9 @@ export async function POST(request) {
 
   const { ops } = body ?? {}
   if (!Array.isArray(ops) || ops.length === 0) return NextResponse.json({ ok: true })
+  if (ops.length > MAX_BATCH_OPS) {
+    return NextResponse.json({ error: '한 번에 처리할 수 있는 항목 수를 초과했습니다' }, { status: 413 })
+  }
 
   // ── 입력 검증 ────────────────────────────────────────────────────────────────
   for (const op of ops) {
@@ -29,6 +35,8 @@ export async function POST(request) {
       if (!op.entry?.raidId || !op.entry?.difficulty) {
         return NextResponse.json({ error: 'upsert 필수 항목 누락' }, { status: 400 })
       }
+      const entryError = validateRaidEntry(op.entry)
+      if (entryError) return NextResponse.json({ error: entryError }, { status: 400 })
     } else if (op.type === 'delete') {
       if (!op.raidId || !op.difficulty) {
         return NextResponse.json({ error: 'delete 필수 항목 누락' }, { status: 400 })

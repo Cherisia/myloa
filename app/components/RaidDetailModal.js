@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { RAID_MAP } from '@/lib/raidData'
 import { getClassIcon, DIFF_COLOR } from '@/app/dashboard/_constants'
-import { saveRaid } from '@/app/dashboard/_raidHelpers'
+import { saveRaidCompletion } from '@/app/dashboard/_raidHelpers'
 import { IconX, IconTrophy, IconCrown } from '@/app/dashboard/_icons'
 
 const DIFF_BADGE_DEFAULT = 'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300'
@@ -148,7 +148,7 @@ export default function RaidDetailModal({
   isPrivate,
   togetherRaids = [], incompleteRaids = [], completedRaids = [],
   myUser, myRepChar, myCharsForRaid,
-  persistedToggles = {}, onCharToggle, onClose,
+  persistedToggles = {}, onCharToggle, onClose, isDemo = false,
 }) {
   const [activeTab, setActiveTab] = useState('together')
   const [localDone, setLocalDone] = useState({})
@@ -161,17 +161,8 @@ export default function RaidDetailModal({
     const newDone = !currentDone
     setLocalDone(prev => ({ ...prev, [key]: newDone }))
     onCharToggle?.(key, newDone)
-    const gateCount = entry.gateClears?.length
-      || RAID_MAP[entry.raidId]?.difficulties?.find(d => d.key === entry.difficulty)?.gates
-      || 1
-    saveRaid(char.id, {
-      raidId: entry.raidId,
-      difficulty: entry.difficulty,
-      gateClears: Array.from({ length: gateCount }, () => newDone),
-      isGoldCheck: entry.isGoldCheck,
-      moreDone: newDone ? entry.moreDone : false,
-      moreFrom: entry.moreFrom,
-    })
+    if (isDemo) return
+    saveRaidCompletion(char.id, entry, newDone)
   }
 
   const hasAnyRaid = incompleteRaids.length > 0 || completedRaids.length > 0

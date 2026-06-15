@@ -7,6 +7,9 @@ import { prisma } from '@/lib/db'
 import { getNextResetAt, getNextDailyResetAt } from '@/lib/raidData'
 import { verifyCharacterOwner } from '@/lib/apiHelpers'
 
+const CUSTOM_TYPES = ['daily', 'weekly']
+const clampGauge = (v) => Math.max(0, Math.min(100, Math.round(Number(v) || 0)))
+
 export async function GET(request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
@@ -34,12 +37,16 @@ export async function POST(request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
 
-  const body = await request.json()
+  const body = await request.json().catch(() => null)
+  if (!body) return NextResponse.json({ error: '잘못된 요청 형식' }, { status: 400 })
   const { characterId, name, type, image, sortOrder, done, restGauge, deducted } = body
 
   const trimmedName = name?.trim().slice(0, 10) || ''
   if (!characterId || !trimmedName || !type) {
     return NextResponse.json({ error: '필수 항목 누락' }, { status: 400 })
+  }
+  if (!CUSTOM_TYPES.includes(type)) {
+    return NextResponse.json({ error: '잘못된 숙제 타입입니다.' }, { status: 400 })
   }
   if (!/^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]+$/.test(trimmedName)) {
     return NextResponse.json({ error: '한글, 영어, 숫자만 사용 가능합니다.' }, { status: 400 })
@@ -57,18 +64,18 @@ export async function POST(request) {
       name: trimmedName,
       type,
       image:     image     ?? null,
-      sortOrder: sortOrder ?? 0,
+      sortOrder: Number.isInteger(sortOrder) ? sortOrder : 0,
       done:      done      ?? false,
-      restGauge: restGauge ?? 0,
+      restGauge: restGauge !== undefined ? clampGauge(restGauge) : 0,
       deducted:  deducted  ?? false,
       resetAt,
     },
     update: {
       type,
       ...(image     !== undefined && { image }),
-      ...(sortOrder !== undefined && { sortOrder }),
+      ...(Number.isInteger(sortOrder) && { sortOrder }),
       ...(done      !== undefined && { done }),
-      ...(restGauge !== undefined && { restGauge }),
+      ...(restGauge !== undefined && { restGauge: clampGauge(restGauge) }),
       ...(deducted  !== undefined && { deducted }),
     },
   })

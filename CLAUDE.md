@@ -24,14 +24,15 @@ app/
     loading.js           # Suspense fallback
     _constants.js        # EX_RAID_IDS, GOLD_RAID_LIMIT, DIFF_COLOR/LABEL, CLASS_ICON 등
     _icons.js            # 프로젝트 전역 SVG 아이콘 — 모든 파일이 여기서 import
-    _raidHelpers.js      # saveRaid, deleteRaid, computeAutoRaids 등
+    _raidHelpers.js      # saveRaid, deleteRaid, saveRaidCompletion(레이드 전체완료 토글 공용), computeAutoRaids 등
     _bynnArkIcons.js     # 커스텀 숙제 아이콘 매핑
     _demoDashboard.js    # 비로그인 데모용 캐릭터·레이드·커스텀 데이터 조합
     _demoData.js         # 데모 원시 데이터
     modals/              # RaidSettingsModal, CharacterEditModal, CharacterAddModal, AutoSetupModal, CustomItemsEditor, BynnArkIconPicker
-    components/          # RaidCell, AnimatedGold, CharGoldBadges, Confetti, WeeklyHistoryChart
+    components/          # RaidCell, AnimatedGold, CharGoldBadges, Confetti
   components/
     RaidDetailModal.js   # 레이드 상세 모달 (길드/그룹 공용)
+    DemoLoginModal.js    # 비로그인 데모 → 로그인 유도 공용 모달 (description·callbackUrl prop)
     Navbar.js / ThemeProvider.js / SessionProvider.js / DiscordIcon.js
     AdSense.js / SidebarAds.js
   dictionary/
@@ -46,11 +47,10 @@ app/
   guild/
     page.js              # 길드 목록 (서버, noindex)
     GuildClient.js
-    GuildDemoClient.js   # 비로그인 데모
     [id]/
       page.js            # 길드 상세 (서버, noindex)
       GuildDetailClient.js
-    _demoGuild.js / _demoListData.js
+    _demoGuild.js
   group/
     page.js              # 그룹 목록 (서버, noindex)
     GroupClient.js       # (~1700줄)
@@ -76,10 +76,11 @@ app/
     history/             # 주간 숙제 히스토리
     cron/                # daily-reset, weekly-reset (Vercel Cron)
 lib/
-  raidData.js          # RAIDS, RAID_MAP, RAID_ORDER_MAP, calcGold* 함수
+  raidData.js          # RAIDS, RAID_MAP, RAID_ORDER_MAP, calcGold* 함수, validateRaidEntry(API 입력 검증), MORE_FROM_VALUES
   groupRaidShare.js    # raidStatusOf, getMemberRaidStatus, getGroupRaidList, adaptMember
   loaApi.js            # LOA_BASE, getApiKey, secUntilKST, calendarRevalidate — LoA API 공통 유틸
   apiHelpers.js        # verifyCharacterOwner 등 API route 공용 헬퍼
+  friends.js           # getFriendsForUser, FRIEND_USER_SELECT — 그룹원(친구) 조회 공용 (page + api/group 공유)
   formatting.js        # formatGold — 골드 표기 포맷터 (숫자 → "1.2k" 등)
   inviteCode.js        # generateInviteCode — 원정대 초대코드 생성
   auth.js / db.js / encrypt.js
@@ -182,6 +183,11 @@ const raid = RAID_MAP[entry.raidId]                         // ✅ O(1)
 const raid = RAIDS.find(r => r.id === entry.raidId)         // ❌ O(n) 금지
 ```
 
+레이드 숙제를 DB에 쓰는 API(`homework` POST·`homework/batch`)는 저장 전 `validateRaidEntry(entry)`로 검증한다.
+- `raidId`/`difficulty`는 `RAID_MAP` 기준으로만 허용, `gateClears`는 boolean 배열·길이 ≤ 해당 난이도 `gates`
+- `moreFrom`은 `MORE_FROM_VALUES`(`'bound'|'trade'`)만 허용, 그 외 플래그는 타입 검증
+- 반환값이 truthy(오류 메시지)면 400 반환
+
 ### 골드 규칙
 - 캐릭터당 일반 레이드 골드 보상 최대 3개
 - EX 레이드는 별도 카운트, 골드 해제 불가
@@ -206,6 +212,9 @@ const persistDelete = (charId, raidId, diffKey) => { if (isLoggedIn) deleteRaid(
 **Neon MCP:**
 - 프로젝트 ID: `empty-thunder-73282882`
 - `mcp__Neon__run_sql` 로 확인, `mcp__Neon__run_sql_transaction` 으로 트랜잭션 실행
+
+**인덱스(성능):** 핫 쿼리 대비 다음 인덱스를 둔다 — `LoaExpedition([userId])`, `Session([userId])`, `ExpeditionMember([userId])`·`([expeditionId, status])`, `FriendRequest([receiverId, status])`, `CharacterCustomItem([type, resetAt])`, `CharacterRaid([resetAt])`·`([characterId, resetAt])`, `Character([expeditionId])`.
+인덱스 추가 마이그레이션은 `CREATE INDEX IF NOT EXISTS`(비파괴적)이며, 컬럼 변화가 없어 Prisma Client 재생성 없이도 앱 동작에 영향을 주지 않는다(미적용 상태에서도 쿼리는 정상 동작, 적용 시 속도만 개선).
 
 ## SEO 규칙
 
@@ -256,10 +265,11 @@ Tailwind 기본 스케일만 사용 (`p-2`, `gap-3`). 임의 픽셀값(`p-[7px]`
 - `AutoSetupModal`: `raidsByName`은 `useMemo`로 파생 (effect 사용 금지)
 - 드래그앤드랍(캐릭터 순서): HTML5 DnD API + 커스텀 ghost (`setDragImage`)
 - `ApiKeyGuideModal`은 `CharacterAddModal.js` 안에 로컬 함수로 포함
-- LoA API 키는 AES-256으로 암호화하여 DB 저장 (`lib/encrypt.js`) — `ENCRYPTION_KEY` 미설정 시 모듈 로드 단계에서 throw
+- LoA API 키는 AES-256으로 암호화하여 DB 저장 (`lib/encrypt.js`) — `ENCRYPTION_KEY` 미설정 시 모듈 로드 단계에서 throw. `decrypt`는 손상된 입력(형식 불일치)에 대해 명확한 Error를 던지므로 호출부는 try/catch로 감싼다
 - Optimistic UI (toggleCustomCheck, adjustRestGauge 등): fire-and-forget fetch, 실패 시 console.error, UI 롤백 없음
 - `saveRaid` / `deleteRaid` batch 저장 실패 시 `window.dispatchEvent('raidSaveFailed')` → DashboardClient 우하단 토스트 5초 표시
 - `api/loa/route.js` rate limit은 in-memory (서버 재시작 시 초기화)
+- `api/loa`의 LoA API 키는 **`X-Loa-Api-Key` 헤더로만** 전달한다 (URL 로그·Referer 노출 방지 — 쿼리스트링 `apiKey` fallback 제거됨). 프론트(`CharacterAddModal`·`AutoSetupModal`)도 헤더 사용
 
 ### 초대코드 생성 패턴
 `generateInviteCode()`는 `randomBytes(8).toString('hex').toUpperCase()` (16자, 64-bit 엔트로피).
@@ -276,6 +286,10 @@ for (let attempt = 0; attempt < 5; attempt++) {
 
 ### API route 공통 패턴
 - **JSON parse**: `await request.json().catch(() => null)` — null 시 400 반환
+- **입력 검증(신뢰 경계)**: 클라이언트 입력은 DB 쓰기 전 검증한다.
+  - 레이드 숙제: `validateRaidEntry`(위 RAIDS 조회 패턴 참고)
+  - 커스텀 숙제: `type ∈ {'daily','weekly'}`, `restGauge`는 0–100 정수로 clamp, `sortOrder`는 정수만 반영
+  - 일괄 처리(`homework/batch`)는 `ops` 길이 상한(`MAX_BATCH_OPS = 500`) 적용 후 초과 시 413
 - **배열 선형 탐색 금지**: 관계 조회 결과는 `Map`으로 변환 후 O(1) 접근
   ```js
   const map = new Map(items.map(r => [r.targetId, r]))
@@ -283,6 +297,10 @@ for (let attempt = 0; attempt < 5; attempt++) {
   items.find(r => r.targetId === id)  // ❌
   ```
 - **멤버십 검증**: expedition 관련 쓰기 API는 `ExpeditionMember` 조회로 `status === 'active'` 확인 후 처리
+- **길드 역할**: 길드(원정대)의 역할은 **길드장**과 **일반 멤버** 2가지뿐이다. 부길드장(officer) 역할은 없다.
+  - 길드장 판별은 `Expedition.leaderId === userId`로만 한다 (`ExpeditionMember.role`은 항상 `"member"`, 사실상 미사용)
+  - 멤버 수락/거절·강퇴 등 관리 권한은 **길드장에게만** 부여한다 (`isLeader`로 게이트)
+  - 길드장 전용 탭/액션(`멤버관리`, `대기중`, `설정`)은 `leaderOnly`로 노출 제어
 - **`_constants.js` import**: `REST_GAUGE_NAMES` 등 순수 데이터 상수는 서버 사이드 파일에서도 `@/app/dashboard/_constants`에서 import (중복 정의 금지)
 
 ---

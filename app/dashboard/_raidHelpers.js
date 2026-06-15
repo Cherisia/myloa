@@ -1,4 +1,4 @@
-import { RAIDS, calcGoldTrade, calcGoldBound } from '@/lib/raidData'
+import { RAIDS, RAID_MAP, calcGoldTrade, calcGoldBound } from '@/lib/raidData'
 import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT } from './_constants'
 
 // ── 자동 설정 헬퍼 ────────────────────────────────────────────────────────────
@@ -180,4 +180,20 @@ export function deleteRaid(characterId, raidId, difficulty) {
   const key = `${characterId}:${raidId}:${difficulty}`
   _pendingOps.set(key, { type: 'delete', characterId, raidId, difficulty })
   _scheduleFlush()
+}
+
+// 레이드 1개를 "전체 완료/미완료"로 토글 저장 — 모든 관문을 done 상태로 채운다.
+// 친구/길드원 모달의 내 캐릭터 토글에서 공용으로 사용 (entry는 호출부에서 이미 조회한 characterRaid 엔트리).
+export function saveRaidCompletion(characterId, entry, done) {
+  const gateCount = entry.gateClears?.length
+    || RAID_MAP[entry.raidId]?.difficulties?.find(d => d.key === entry.difficulty)?.gates
+    || 1
+  saveRaid(characterId, {
+    raidId: entry.raidId,
+    difficulty: entry.difficulty,
+    gateClears: Array.from({ length: gateCount }, () => done),
+    isGoldCheck: entry.isGoldCheck,
+    moreDone: done ? entry.moreDone : false,
+    moreFrom: entry.moreFrom,
+  })
 }

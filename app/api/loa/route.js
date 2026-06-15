@@ -1,6 +1,6 @@
 // 로스트아크 Open API 프록시
-// GET /api/loa?characterName=칼라디엘&apiKey=... → 원정대 캐릭터 목록
-// apiKey 생략 시: 로그인 사용자 DB 키 → 공용 키 풀(LOA_PUBLIC_SEARCH_API_KEY → FALLBACK → LOA_API_KEY, 중복 제거)
+// GET /api/loa?characterName=칼라디엘  (API 키는 X-Loa-Api-Key 헤더로 전달 — URL 로그/Referer 노출 방지)
+// 키 미전달 시: 로그인 사용자 DB 키 → 공용 키 풀(LOA_PUBLIC_SEARCH_API_KEY → FALLBACK → LOA_API_KEY, 중복 제거)
 // 공용 키: Stove 429(분당 한도) 시 풀에서 다음 키로 재시도. 공용 경로는 계정·IP별 60초 1회 슬롯 유지
 
 import { NextResponse } from 'next/server'
@@ -90,8 +90,8 @@ async function loaFetchWith429Fallback(path, keys) {
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
   const characterName = searchParams.get('characterName')
-  // apiKey는 헤더로 수신 (URL 노출 방지). 하위 호환을 위해 쿼리스트링도 fallback으로 허용
-  let apiKey = (request.headers.get('x-loa-api-key') || searchParams.get('apiKey') || '').trim()
+  // apiKey는 헤더로만 수신 (URL 노출 방지 — 쿼리스트링 fallback 제거됨)
+  let apiKey = (request.headers.get('x-loa-api-key') || '').trim()
 
   if (!characterName) {
     return NextResponse.json({ error: '캐릭터명이 필요합니다' }, { status: 400 })

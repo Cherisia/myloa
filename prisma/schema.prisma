@@ -66,6 +66,8 @@ model Session {
   expires      DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // ─── 원정대 ───────────────────────────────────────────────────────────────────
@@ -80,6 +82,8 @@ model LoaExpedition {
 
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   characters Character[]
+
+  @@index([userId])
 }
 
 // ─── 캐릭터 ──────────────────────────────────────────────────────────────────
@@ -145,6 +149,7 @@ model CharacterCustomItem {
   character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@unique([characterId, name])
+  @@index([type, resetAt])
 }
 
 // ─── 공격대 (공격대 기능용, LoA 원정대와 별개) ──────────────────────────────────
@@ -170,7 +175,7 @@ model ExpeditionMember {
   id           String    @id @default(cuid())
   expeditionId String
   userId       String
-  role         String    @default("member") // "officer" | "member"
+  role         String    @default("member") // "member" — 길드장은 Expedition.leaderId로 판별 (별도 역할 없음)
   status       String    @default("pending") // "pending" | "active" | "rejected" | "left"
   visibility   String    @default("all")    // "all" | "none"
   joinedAt     DateTime?
@@ -180,6 +185,8 @@ model ExpeditionMember {
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([expeditionId, userId])
+  @@index([userId])
+  @@index([expeditionId, status])
 }
 
 model FriendRequest {
@@ -194,6 +201,7 @@ model FriendRequest {
   receiver User @relation("FriendRequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
+  @@index([receiverId, status])
 }
 
 model UserFavorite {

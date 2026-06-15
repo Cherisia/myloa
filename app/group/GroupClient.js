@@ -6,41 +6,10 @@ import Image from 'next/image'
 import { RAIDS, RAID_MAP, RAID_ORDER_MAP } from '@/lib/raidData'
 import { HIDDEN_RAID_IDS, DIFF_LABEL, DIFF_COLOR, getClassIcon } from '@/app/dashboard/_constants'
 import { raidStatusOf } from '@/lib/groupRaidShare'
-import { saveRaid } from '@/app/dashboard/_raidHelpers'
+import { saveRaidCompletion } from '@/app/dashboard/_raidHelpers'
 import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
+import DemoLoginModal from '@/app/components/DemoLoginModal'
 import { IconCrown, IconTrophy, IconX, IconPlus, IconGrip, IconSearch, IconTrash, IconStar, IconUserCheck, IconEmptyGroup, IconEmptyFriends } from '@/app/dashboard/_icons'
-
-// ── Demo Login Modal ──────────────────────────────────────────────────────────
-function DemoLoginModal({ onClose }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#1e1e1e] shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] sm:border sm:border-gray-200/50 dark:sm:border-[#2d2d2d]" onClick={e => e.stopPropagation()}>
-        <div className="sm:hidden flex justify-center pt-3 pb-0">
-          <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-[#333]" />
-        </div>
-        <div className="px-6 pt-5 pb-6 text-center space-y-5">
-          <div className="space-y-1.5">
-            <p className="text-lg ns-extrabold text-gray-900 dark:text-white">로그인이 필요해요</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-              친구 추가 & 관리 기능은<br />디스코드 로그인 후 이용할 수 있어요
-            </p>
-          </div>
-          <div className="flex flex-col gap-2.5">
-            <button type="button" onClick={() => signIn('discord', { callbackUrl: '/group' })}
-              className="w-full rounded-2xl py-3.5 text-sm ns-bold text-white transition-all hover:opacity-90 active:opacity-80"
-              style={{ backgroundColor: '#5865F2' }}>
-              디스코드로 로그인
-            </button>
-            <button type="button" onClick={onClose}
-              className="w-full rounded-2xl py-3 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-              닫기
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 function Avatar({ src, name, size = 36 }) {
@@ -59,6 +28,9 @@ function Avatar({ src, name, size = 36 }) {
 }
 
 const MAX_GROUP_SIZE = 8
+
+// 난이도 정렬 순서 (하드/악몽 → 노말 순). 같은 그룹의 난이도는 동일 가중치.
+const DIFF_SORT_ORDER = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getDisplayName(user) {
@@ -130,34 +102,13 @@ function computeGroupRaids(groupFriends, me) {
     return allParticipants.every(friend => hasIncompleteChar(friend, raidId, difficulty))
   })
 
-  const DIFF_SORT_MAP = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
-
   return intersection
     .map(key => { const [raidId, difficulty] = key.split('__'); return { raidId, difficulty } })
     .sort((a, b) => {
       const ro = (RAID_ORDER_MAP[a.raidId] ?? 99) - (RAID_ORDER_MAP[b.raidId] ?? 99)
       if (ro !== 0) return ro
-      return (DIFF_SORT_MAP[a.difficulty] ?? 9) - (DIFF_SORT_MAP[b.difficulty] ?? 9)
+      return (DIFF_SORT_ORDER[a.difficulty] ?? 9) - (DIFF_SORT_ORDER[b.difficulty] ?? 9)
     })
-}
-
-function getFriendRaidStatus(friend, raidId, difficulty) {
-  if (!friend.raidPublicFriends) return 'hidden'
-  let hasComplete = false, hasIncomplete = false, hasEntry = false
-  for (const exp of friend.loaExpeditions || []) {
-    for (const char of exp.characters || []) {
-      const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
-      if (!entry) continue
-      hasEntry = true
-      const s = raidStatusOf(entry)
-      if (s === 'complete') hasComplete = true
-      else hasIncomplete = true
-    }
-  }
-  if (!hasEntry) return 'none'
-  if (!hasIncomplete) return 'complete'
-  if (hasComplete) return 'partial'
-  return 'incomplete'
 }
 
 function getRaidInfo(raidId, difficulty) {
@@ -165,28 +116,6 @@ function getRaidInfo(raidId, difficulty) {
   if (!raid) return { name: raidId, diffLabel: difficulty, image: null }
   const diff = raid.difficulties?.find(d => d.key === difficulty)
   return { name: raid.name, diffLabel: diff?.label || difficulty, image: raid.image }
-}
-
-function getAllCharsForRaid(friend, raidId, difficulty) {
-  const result = []
-  for (const exp of friend.loaExpeditions || []) {
-    for (const char of exp.characters || []) {
-      const entry = char.characterRaids?.find(r => r.raidId === raidId && r.difficulty === difficulty)
-      if (entry) result.push(char)
-    }
-  }
-  return result
-}
-
-const STATUS_DOT = {
-  complete:   'bg-emerald-400',
-  partial:    'bg-amber-400',
-  incomplete: 'bg-gray-300 dark:bg-zinc-600',
-  none:       'bg-gray-200 dark:bg-zinc-700',
-  hidden:     'bg-gray-100 dark:bg-zinc-800',
-}
-const STATUS_LABEL = {
-  complete: '완료', partial: '일부완료', incomplete: '미완료', none: '없음', hidden: '비공개',
 }
 
 // ── Friend Raid Modal ──────────────────────────────────────────────────────────
@@ -200,9 +129,7 @@ const DIFF_TEXT_COLOR = {
 }
 
 // ── FriendRaidModal — RaidDetailModal 어댑터 ─────────────────────────────────
-function FriendRaidModal({ friend, me, persistedToggles = {}, onCharToggle, onClose }) {
-  const DIFF_SORT = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
-
+function FriendRaidModal({ friend, me, persistedToggles = {}, onCharToggle, onClose, isDemo = false }) {
   const { incompleteRaids, completedRaids, togetherRaids } = useMemo(() => {
     const raidKeys = new Set()
     for (const exp of friend.loaExpeditions || []) {
@@ -216,7 +143,7 @@ function FriendRaidModal({ friend, me, persistedToggles = {}, onCharToggle, onCl
     const sortedKeys = [...raidKeys].sort((a, b) => {
       const [aId, aDiff] = a.split('__'), [bId, bDiff] = b.split('__')
       const ro = (RAID_ORDER_MAP[aId] ?? 99) - (RAID_ORDER_MAP[bId] ?? 99)
-      return ro !== 0 ? ro : (DIFF_SORT[aDiff] ?? 9) - (DIFF_SORT[bDiff] ?? 9)
+      return ro !== 0 ? ro : (DIFF_SORT_ORDER[aDiff] ?? 9) - (DIFF_SORT_ORDER[bDiff] ?? 9)
     })
 
     const raidData = sortedKeys.map(key => {
@@ -283,6 +210,7 @@ function FriendRaidModal({ friend, me, persistedToggles = {}, onCharToggle, onCl
       persistedToggles={persistedToggles}
       onCharToggle={onCharToggle}
       onClose={onClose}
+      isDemo={isDemo}
     />
   )
 }
@@ -305,17 +233,7 @@ function RaidMembersModal({ modal, me, persistedToggles = {}, onCharToggle, onCl
     setLocalDone(prev => ({ ...prev, [key]: newDone }))
     onCharToggle?.(key, newDone)
     if (isDemo) return
-    const gateCount = entry.gateClears?.length
-      || RAID_MAP[entry.raidId]?.difficulties?.find(d => d.key === entry.difficulty)?.gates
-      || 1
-    saveRaid(char.id, {
-      raidId: entry.raidId,
-      difficulty: entry.difficulty,
-      gateClears: Array.from({ length: gateCount }, () => newDone),
-      isGoldCheck: entry.isGoldCheck,
-      moreDone: newDone ? entry.moreDone : false,
-      moreFrom: entry.moreFrom,
-    })
+    saveRaidCompletion(char.id, entry, newDone)
   }
   const { name, image } = getRaidInfo(raidId, difficulty)
   const mePublic = me ? { ...me, raidPublicFriends: true } : null
@@ -624,8 +542,6 @@ function RaidLookupPanel({ me, friends, isDemo = false }) {
   const [selectedRaid, setSelectedRaid] = useState(null)
   const [localDone, setLocalDone] = useState({})
 
-  const DIFF_SORT_MAP = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
-
   function handleMyCharToggle(char) {
     if (!selectedRaid) return
     const { raidId, difficulty } = selectedRaid
@@ -636,17 +552,7 @@ function RaidLookupPanel({ me, friends, isDemo = false }) {
     const newDone = !currentDone
     setLocalDone(prev => ({ ...prev, [key]: newDone }))
     if (isDemo) return
-    const gateCount = entry.gateClears?.length
-      || RAID_MAP[entry.raidId]?.difficulties?.find(d => d.key === entry.difficulty)?.gates
-      || 1
-    saveRaid(char.id, {
-      raidId: entry.raidId,
-      difficulty: entry.difficulty,
-      gateClears: Array.from({ length: gateCount }, () => newDone),
-      isGoldCheck: entry.isGoldCheck,
-      moreDone: newDone ? entry.moreDone : false,
-      moreFrom: entry.moreFrom,
-    })
+    saveRaidCompletion(char.id, entry, newDone)
   }
 
   const myRaids = useMemo(() => {
@@ -667,7 +573,7 @@ function RaidLookupPanel({ me, friends, isDemo = false }) {
     list.sort((a, b) => {
       const ro = (RAID_ORDER_MAP[a.raidId] ?? 99) - (RAID_ORDER_MAP[b.raidId] ?? 99)
       if (ro !== 0) return ro
-      return (DIFF_SORT_MAP[a.difficulty] ?? 9) - (DIFF_SORT_MAP[b.difficulty] ?? 9)
+      return (DIFF_SORT_ORDER[a.difficulty] ?? 9) - (DIFF_SORT_ORDER[b.difficulty] ?? 9)
     })
     return list
   }, [me])
@@ -1103,6 +1009,7 @@ export default function GroupClient({ initialFriends, initialRequests, me, isDem
           persistedToggles={myCharToggles}
           onCharToggle={handleCharToggle}
           onClose={() => setFriendModal(null)}
+          isDemo={isDemo}
         />
       )}
       {addToGroupModal && (
@@ -1732,7 +1639,13 @@ export default function GroupClient({ initialFriends, initialRequests, me, isDem
         )}
 
       </div>
-      {showDemoLogin && <DemoLoginModal onClose={() => setShowDemoLogin(false)} />}
+      {showDemoLogin && (
+        <DemoLoginModal
+          onClose={() => setShowDemoLogin(false)}
+          callbackUrl="/group"
+          description={<>친구 추가 & 관리 기능은<br />디스코드 로그인 후 이용할 수 있어요</>}
+        />
+      )}
     </div>
   )
 }

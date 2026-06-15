@@ -266,7 +266,7 @@ async function main() {
       create: {
         expeditionId: expedition.id,
         userId: user.id,
-        role: i < 2 ? 'officer' : 'member', // 처음 2명은 부공격대장
+        role: 'member',
         status: 'active',
         visibility: randBool(0.9) ? 'all' : 'none', // 90% 공개
         joinedAt,

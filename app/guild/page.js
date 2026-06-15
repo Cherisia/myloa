@@ -55,7 +55,6 @@ export default async function GuildPage() {
   const groups = memberships.map(m => {
     const exp = m.expedition
     const isLeader   = exp.leaderId === session.user.id
-    const isOfficer  = isLeader || m.role === 'officer'
     const activeMembers = exp.members.filter(mem => mem.status === 'active')
     const pendingCount  = exp.members.filter(mem => mem.status === 'pending').length
     const memberAvatars = activeMembers.map(mem => mem.user?.image || '/default-avatar.svg')
@@ -70,8 +69,8 @@ export default async function GuildPage() {
       maxMembers:     exp.maxMembers,
       memberCount:    activeMembers.length,
       totalCharCount: charCountMap[exp.id] ?? 0,
-      pendingCount:   isOfficer ? pendingCount : 0,
-      myRole:         isLeader ? 'leader' : m.role,
+      pendingCount:   isLeader ? pendingCount : 0,
+      myRole:         isLeader ? 'leader' : 'member',
       leaderNickname,
       memberAvatars,
     }
