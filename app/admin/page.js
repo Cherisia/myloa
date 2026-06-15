@@ -80,14 +80,12 @@ export default async function AdminPage() {
                 orderBy: { updatedAt: 'desc' },
                 take: 1,
               },
+              customItems: {
+                select: { type: true, updatedAt: true },
+              },
             },
           },
         },
-      },
-      weeklyRaidHistories: {
-        orderBy: { weekStart: 'desc' },
-        take: 4,
-        select: { weekStart: true, totalRaids: true, totalGold: true },
       },
     },
     orderBy: { createdAt: 'desc' },
@@ -100,7 +98,18 @@ export default async function AdminPage() {
     const lastRaidAt = raidCounts.length > 0
       ? raidCounts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0].updatedAt
       : null
-    const thisWeekHistory = u.weeklyRaidHistories[0] ?? null
+
+    let lastDailyAt = null
+    let lastWeeklyAt = null
+    for (const item of allChars.flatMap(c => c.customItems || [])) {
+      const t = new Date(item.updatedAt)
+      if (item.type === 'daily' && (!lastDailyAt || t > new Date(lastDailyAt))) lastDailyAt = item.updatedAt
+      if (item.type === 'weekly' && (!lastWeeklyAt || t > new Date(lastWeeklyAt))) lastWeeklyAt = item.updatedAt
+    }
+    const homeworkTimes = [lastDailyAt, lastWeeklyAt].filter(Boolean)
+    const lastHomeworkAt = homeworkTimes.length === 0 ? null :
+      homeworkTimes.reduce((max, t) => new Date(t) > new Date(max) ? t : max)
+
     return {
       id: u.id,
       name: u.name,
@@ -112,9 +121,9 @@ export default async function AdminPage() {
       charCount,
       expeditionCount: u.loaExpeditions.length,
       lastRaidAt,
-      recentHistory: u.weeklyRaidHistories,
-      thisWeekRaids: thisWeekHistory?.totalRaids ?? 0,
-      thisWeekGold: thisWeekHistory?.totalGold ?? 0,
+      lastDailyAt,
+      lastWeeklyAt,
+      lastHomeworkAt,
     }
   })
 

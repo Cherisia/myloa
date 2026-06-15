@@ -170,7 +170,7 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
   const [tab, setTab] = useState('users')
   const [userSearch, setUserSearch] = useState('')
   const [guildSearch, setGuildSearch] = useState('')
-  const [userSort, setUserSort] = useState('createdAt_desc')
+  const [userSort, setUserSort] = useState('lastRaidAt_desc')
 
   // 레이드 모달
   const [raidModal, setRaidModal] = useState(null)   // 로딩된 user 객체
@@ -219,7 +219,7 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
       if (field === 'createdAt') { av = new Date(a.createdAt); bv = new Date(b.createdAt) }
       else if (field === 'charCount') { av = a.charCount; bv = b.charCount }
       else if (field === 'lastRaidAt') { av = a.lastRaidAt ? new Date(a.lastRaidAt) : new Date(0); bv = b.lastRaidAt ? new Date(b.lastRaidAt) : new Date(0) }
-      else if (field === 'thisWeekGold') { av = a.thisWeekGold; bv = b.thisWeekGold }
+      else if (field === 'lastHomeworkAt') { av = a.lastHomeworkAt ? new Date(a.lastHomeworkAt) : new Date(0); bv = b.lastHomeworkAt ? new Date(b.lastHomeworkAt) : new Date(0) }
       else { av = a.createdAt; bv = b.createdAt }
       return dir === 'desc' ? (bv > av ? 1 : -1) : (av > bv ? 1 : -1)
     })
@@ -292,11 +292,11 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
                 onChange={e => setUserSort(e.target.value)}
                 className="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-400)]"
               >
+                <option value="lastRaidAt_desc">최근 레이드순</option>
+                <option value="lastHomeworkAt_desc">최근 숙제순</option>
                 <option value="createdAt_desc">가입일 최신순</option>
                 <option value="createdAt_asc">가입일 오래된순</option>
                 <option value="charCount_desc">캐릭터 많은순</option>
-                <option value="lastRaidAt_desc">최근 레이드순</option>
-                <option value="thisWeekGold_desc">이번주 골드순</option>
               </select>
             </div>
 
@@ -311,8 +311,8 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
                     <th className="px-4 py-3 font-medium">이메일</th>
                     <th className="px-4 py-3 font-medium text-right">캐릭터</th>
                     <th className="px-4 py-3 font-medium text-right">원정대</th>
-                    <th className="px-4 py-3 font-medium text-right">이번주 레이드</th>
-                    <th className="px-4 py-3 font-medium text-right">이번주 골드</th>
+                    <th className="px-4 py-3 font-medium text-right">마지막 일일숙제</th>
+                    <th className="px-4 py-3 font-medium text-right">마지막 주간숙제</th>
                     <th className="px-4 py-3 font-medium text-right">마지막 레이드</th>
                     <th className="px-4 py-3 font-medium text-right">가입일</th>
                   </tr>
@@ -358,13 +358,11 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
                       <td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300">
                         {u.expeditionCount}
                       </td>
-                      <td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300">
-                        {u.thisWeekRaids > 0 ? u.thisWeekRaids : <span className="text-gray-300 dark:text-gray-600">-</span>}
+                      <td className="px-4 py-3 text-right text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                        {formatDateTime(u.lastDailyAt)}
                       </td>
-                      <td className="px-4 py-3 text-right text-sm">
-                        {u.thisWeekGold > 0
-                          ? <span className="text-amber-600 dark:text-amber-400 font-medium">{u.thisWeekGold.toLocaleString('ko-KR')}G</span>
-                          : <span className="text-gray-300 dark:text-gray-600">-</span>}
+                      <td className="px-4 py-3 text-right text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                        {formatDateTime(u.lastWeeklyAt)}
                       </td>
                       <td className="px-4 py-3 text-right text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
                         {formatDateTime(u.lastRaidAt)}
@@ -414,20 +412,18 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
                       <div className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{formatDate(u.createdAt)}</div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="text-center">
-                      <div className="font-medium text-gray-900 dark:text-gray-100">{u.charCount}</div>
-                      <div className="text-gray-400 dark:text-gray-500">캐릭터</div>
+                  <div className="grid grid-cols-1 gap-1 text-xs mt-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 dark:text-gray-500">캐릭터</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{u.charCount}</span>
                     </div>
-                    <div className="text-center">
-                      <div className="font-medium text-gray-900 dark:text-gray-100">{u.thisWeekRaids}</div>
-                      <div className="text-gray-400 dark:text-gray-500">이번주 레이드</div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 dark:text-gray-500">마지막 일일숙제</span>
+                      <span className="text-gray-500 dark:text-gray-400">{formatDateTime(u.lastDailyAt)}</span>
                     </div>
-                    <div className="text-center">
-                      <div className={`font-medium ${u.thisWeekGold > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-300 dark:text-gray-600'}`}>
-                        {u.thisWeekGold > 0 ? `${u.thisWeekGold.toLocaleString('ko-KR')}G` : '-'}
-                      </div>
-                      <div className="text-gray-400 dark:text-gray-500">이번주 골드</div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 dark:text-gray-500">마지막 주간숙제</span>
+                      <span className="text-gray-500 dark:text-gray-400">{formatDateTime(u.lastWeeklyAt)}</span>
                     </div>
                   </div>
                   {u.email && (
