@@ -24,8 +24,10 @@ export async function GET(request) {
     orderBy: { createdAt: 'asc' },
   })
 
-  // 초기화 시간 지난 항목 자동 리셋
-  const resetIds = raids.filter(r => isResetPassed(r.resetAt)).map(r => r.id)
+  // 초기화 시간 지난 항목 자동 리셋 (크론 실행 여유 60분 버퍼)
+  const CRON_BUFFER_MS = 60 * 60 * 1000
+  const now = Date.now()
+  const resetIds = raids.filter(r => isResetPassed(r.resetAt) && (now - new Date(r.resetAt).getTime()) > CRON_BUFFER_MS).map(r => r.id)
   if (resetIds.length > 0) {
     await prisma.characterRaid.updateMany({
       where: { id: { in: resetIds } },

@@ -22,6 +22,10 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: '권한 없음' }, { status: 403 })
   }
 
+  // 랭킹 집계 시작 주차: 2026-06-18 06:00 KST (= 2026-06-17T21:00:00Z)
+  // 이전의 0 데이터 주차는 집계에서 제외
+  const RANKING_START_WEEK = new Date('2026-06-17T21:00:00.000Z')
+
   // 멤버 + 히스토리 일괄 조회
   const members = await prisma.expeditionMember.findMany({
     where:  { expeditionId: id, status: 'active' },
@@ -35,6 +39,7 @@ export async function GET(request, { params }) {
           nickname: true,
           image:    true,
           weeklyRaidHistories: {
+            where:   { weekStart: { gte: RANKING_START_WEEK } },
             select:  { weekStart: true, totalRaids: true, goldRaids: true, totalGold: true },
             orderBy: { weekStart: 'desc' },
           },

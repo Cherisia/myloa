@@ -40,10 +40,19 @@ export default async function DashboardPage() {
   let expeditions = expeditionsRaw
 
   // 리셋 만료된 항목 일괄 처리
+  // Vercel Cron이 최대 30~60분 늦게 실행될 수 있으므로, 리셋 시각 이후 60분 이내엔
+  // 자동 리셋 건너뜀 — 크론이 스냅샷(WeeklyRaidHistory)을 저장한 뒤 resetAt을
+  // 다음 주로 업데이트하면 isResetPassed가 false가 되어 자동으로 비활성화됨
+  const CRON_BUFFER_MS = 60 * 60 * 1000 // 60분
+  const now = Date.now()
   const expiredIds = []
   expeditions.forEach(exp =>
     exp.characters.forEach(char =>
-      char.characterRaids.forEach(r => { if (isResetPassed(r.resetAt)) expiredIds.push(r.id) })
+      char.characterRaids.forEach(r => {
+        if (isResetPassed(r.resetAt) && (now - new Date(r.resetAt).getTime()) > CRON_BUFFER_MS) {
+          expiredIds.push(r.id)
+        }
+      })
     )
   )
   if (expiredIds.length > 0) {

@@ -61,19 +61,15 @@ export async function GET(request) {
     }
   }
 
-  // WeeklyRaidHistory upsert (이미 같은 weekStart가 있으면 덮어쓰기)
-  let historySaved = 0
-  await Promise.all(
-    Object.entries(userStats).map(async ([userId, stats]) => {
-      // 완료한 레이드가 하나도 없어도 기록 (0으로)
-      await prisma.weeklyRaidHistory.upsert({
-        where:  { userId_weekStart: { userId, weekStart } },
-        create: { userId, weekStart, ...stats },
-        update: { ...stats },
-      })
-      historySaved++
-    })
-  )
+  // WeeklyRaidHistory 저장 — 이미 같은 weekStart 기록이 있으면 건드리지 않음
+  // (크론 중복 실행, weekStart 오계산 등으로 이전 주 기록이 덮어써지는 것을 방지)
+  const entries = Object.entries(userStats).map(([userId, stats]) => ({
+    userId, weekStart, ...stats,
+  }))
+  const { count: historySaved } = await prisma.weeklyRaidHistory.createMany({
+    data:           entries,
+    skipDuplicates: true,
+  })
 
   // ─── 1. CharacterRaid 전체 리셋 (raw SQL) ────────────────────────────────────
   const raidsReset = await prisma.$executeRaw`
