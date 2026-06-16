@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 
 // ── 로스트아크 경매 시스템 ────────────────────────────────────────────────────
@@ -61,6 +61,11 @@ function SectionBadge({ label, color }) {
 export default function AuctionClient() {
   const [rawPrice, setRawPrice] = useState('')
   const [partySize, setPartySize] = useState(4)
+  const priceInputRef = useRef(null)
+
+  useEffect(() => {
+    priceInputRef.current?.focus()
+  }, [])
 
   const P = Number(rawPrice) || 0
   const N = partySize
@@ -127,12 +132,16 @@ export default function AuctionClient() {
                 <Gold size={15} />
               </div>
               <input
+                ref={priceInputRef}
                 type="number"
                 min="0"
-                max="99999999"
                 placeholder="가격을 입력하세요"
                 value={rawPrice}
-                onChange={e => setRawPrice(e.target.value)}
+                onChange={e => {
+                  const v = e.target.value
+                  if (v === '' || Number(v) <= 99999999) setRawPrice(v)
+                  else setRawPrice('99999999')
+                }}
                 className="w-full pl-4 pr-9 py-2 rounded-xl bg-gray-50 dark:bg-[#111116] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-right ns-bold text-base focus:outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600 placeholder:font-normal [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
