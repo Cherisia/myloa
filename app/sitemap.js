@@ -8,6 +8,7 @@ export default function sitemap() {
     { url: `${base}/guide`,       lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/guide/guild`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/guide/group`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${base}/tools/auction`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: `${base}/privacy`,    lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
   ]
 }

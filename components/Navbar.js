@@ -126,11 +126,11 @@ export default function Navbar() {
     { href: '/guild', label: '길드' },
     { href: '/group', label: '그룹', badge: session ? pendingFriendCount : 0 },
     { href: '/dictionary', label: '로아 사전' },
-    { href: '/guide', label: '가이드' },
+    { href: '/tools', label: '도구' },
   ]
   const isActive = (href) => href && (pathname === href || pathname.startsWith(href + '/'))
 
-  const ThemeDots = () => (
+const ThemeDots = () => (
     <div className="flex items-center gap-2">
       {THEMES.map(t => (
         <button
@@ -265,6 +265,7 @@ export default function Navbar() {
               )}
             </Link>
           ))}
+
         </nav>
 
         <div className="flex-1" />
@@ -333,6 +334,7 @@ export default function Navbar() {
                 )}
               </Link>
             ))}
+
           </div>
 
           {/* 구분선 */}

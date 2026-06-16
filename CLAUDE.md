@@ -55,6 +55,14 @@ app/
     page.js              # 그룹 목록 (서버, noindex)
     GroupClient.js       # (~1700줄)
     _demoGroup.js
+  tools/
+    layout.js            # ToolsNav 공통 레이아웃
+    page.js              # permanentRedirect → /tools/auction
+    ToolsNav.js          # 툴 탭 네비게이션
+    auction/
+      page.js            # 경매 입찰 계산기 (서버, SEO 최적화, FAQ JSON-LD)
+      AuctionClient.js   # 계산기 UI (파티 인원·시장가·입찰가 → 추천 입찰가·손익분기 계산)
+  auction/               # permanentRedirect → /tools/auction
   raids/                 # permanentRedirect → /dictionary?tab=raids
   synergy/               # permanentRedirect → /dictionary?tab=synergy
   settings/
@@ -221,9 +229,10 @@ const persistDelete = (charId, raidId, diffKey) => { if (isLoggedIn) deleteRaid(
 ### 인덱싱 정책
 | 페이지 | 인덱싱 |
 |--------|--------|
-| `/`, `/dashboard`, `/dictionary`, `/privacy` | ✅ index |
+| `/`, `/dashboard`, `/dictionary`, `/tools/auction`, `/privacy` | ✅ index |
 | `/guild`, `/group`, `/settings`, `/history`, `/guide` | ❌ noindex |
 | `/raids`, `/synergy` | `permanentRedirect` → `/dictionary?tab=…` |
+| `/tools`, `/auction` | `permanentRedirect` → `/tools/auction` |
 
 - 로그인 필수/noindex 페이지: `robots: { index: false, follow: false }` 명시
 - `app/robots.js` disallow 목록 함께 업데이트
