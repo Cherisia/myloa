@@ -1,10 +1,53 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+
+/* ── 스크린샷 원본 확대 라이트박스 ── */
+function Lightbox({ src, alt, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [onClose])
+
+  return (
+    <div
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={alt}
+      className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm overflow-auto cursor-zoom-out"
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="닫기"
+        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white text-xl leading-none cursor-pointer transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
+      >
+        ✕
+      </button>
+      <div className="min-h-full grid place-items-center p-4 sm:p-8">
+        <img
+          src={src}
+          alt={alt}
+          onClick={(e) => e.stopPropagation()}
+          className="max-w-none rounded-lg shadow-2xl cursor-default"
+        />
+      </div>
+    </div>
+  )
+}
 
 /* ── 스크린샷 헬퍼 ── */
 function Shot({ src, alt, width = '100%' }) {
+  const [zoom, setZoom] = useState(false)
+
   if (!src) {
     return (
       <div className="border border-gray-200 dark:border-white/[0.08] rounded-lg bg-gray-50 dark:bg-white/[0.03] flex flex-col items-center justify-center gap-2 py-10 px-6 min-h-[140px] text-center">
@@ -14,12 +57,20 @@ function Shot({ src, alt, width = '100%' }) {
     )
   }
   return (
-    <div
-      className="border border-gray-200 dark:border-white/[0.08] rounded-lg overflow-hidden"
-      style={{ width }}
-    >
-      <img src={src} alt={alt} className="w-full block" />
-    </div>
+    <>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`${alt} 원본 크기로 보기`}
+        onClick={() => setZoom(true)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setZoom(true) } }}
+        className="border border-gray-200 dark:border-white/[0.08] rounded-lg overflow-hidden cursor-zoom-in transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-[var(--accent-400)] focus-visible:outline-none"
+        style={{ width }}
+      >
+        <img src={src} alt={alt} className="w-full block" />
+      </div>
+      {zoom && <Lightbox src={src} alt={alt} onClose={() => setZoom(false)} />}
+    </>
   )
 }
 
@@ -107,9 +158,7 @@ function PanelDashboard({ goTab }) {
           <div className="grid gap-4 max-sm:grid-cols-1" style={{ gridTemplateColumns: '1.6fr 1fr' }}>
             <div className="flex flex-col gap-1.5">
               <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 tracking-wider uppercase">카드 뷰</span>
-              <div className="border border-gray-200 dark:border-white/[0.08] rounded-lg overflow-hidden">
-                <img src="/guide/screenshots/features/02-card-view.webp" alt="카드 뷰" className="w-full block" />
-              </div>
+              <Shot src="/guide/screenshots/features/02-card-view.webp" alt="카드 뷰" />
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 tracking-wider uppercase">테이블 뷰</span>
