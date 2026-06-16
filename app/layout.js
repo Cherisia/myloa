@@ -68,9 +68,9 @@ export default async function RootLayout({ children }) {
           <ThemeProvider>
             <Navbar />
             {/* 전체 레이아웃: 2xl(1536px+)에서 좌우 사이드바 포함 데스크탑 레이아웃 */}
-            <div className="2xl:flex 2xl:items-start 2xl:gap-4 2xl:px-4">
-              {/* 좌측 사이드바 — 2xl only (160×600 sticky) */}
-              <aside className="hidden 2xl:flex w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden items-center justify-center" style={{ minHeight: '600px' }}>
+            <div className="xl:flex xl:items-start xl:gap-4 xl:px-4">
+              {/* 좌측 사이드바 — xl only (160×600 sticky) */}
+              <aside className="hidden xl:flex w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden items-center justify-center" style={{ minHeight: '600px' }}>
                 <SidebarAdLeft />
               </aside>
               {/* 본문 */}
@@ -94,8 +94,8 @@ export default async function RootLayout({ children }) {
                   </div>
                 </footer>
               </main>
-              {/* 우측 사이드바 — 2xl only (160×600 sticky) */}
-              <aside className="hidden 2xl:flex w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden items-center justify-center" style={{ minHeight: '600px' }}>
+              {/* 우측 사이드바 — xl only (160×600 sticky) */}
+              <aside className="hidden xl:flex w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden items-center justify-center" style={{ minHeight: '600px' }}>
                 <SidebarAdRight />
               </aside>
             </div>

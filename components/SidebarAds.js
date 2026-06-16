@@ -7,7 +7,7 @@ const ADFIT_UNIT_SIDEBAR_L = 'DAN-ukyXEWSmwFuJISxo'
 const ADFIT_UNIT_SIDEBAR_R = 'DAN-KUKGfQgMjxpioCMi'
 
 // 광고 표시 허용 경로 (콘텐츠가 풍부한 페이지만)
-const AD_ALLOWED_PATHS = ['/', '/dictionary', '/guild', '/group']
+const AD_ALLOWED_PATHS = ['/', '/dictionary', '/guild', '/group', '/tools']
 
 function shouldShowAds(pathname) {
   return AD_ALLOWED_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
