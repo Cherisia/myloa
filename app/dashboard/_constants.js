@@ -1,5 +1,5 @@
 // ── 계정당 1캐릭터만 선택 가능한 EX 레이드
-export const EX_RAID_IDS = new Set(['abrel-ex'])
+export const EX_RAID_IDS = new Set()
 // 아직 출시되지 않아 UI에서 숨기는 레이드 (데이터는 유지)
 export const HIDDEN_RAID_IDS = new Set([])
 

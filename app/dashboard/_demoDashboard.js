@@ -135,8 +135,7 @@ export const DEMO_RAIDS = {
     { "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
     { "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
     { "raidId": "serca", "difficulty": "nightmare", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-    { "raidId": "armocha", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" },
-    { "raidId": "abrel-ex", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
+    { "raidId": "armocha", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
   ],
   "demo-2": [
     { "raidId": "serca", "difficulty": "nightmare", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
@@ -181,7 +180,6 @@ export const DEMO_RAIDS = {
     { "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
     { "raidId": "armocha", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
     { "raidId": "serca", "difficulty": "nightmare", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-    { "raidId": "abrel-ex", "difficulty": "hard", "gateClears": [true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
     { "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
   ],
   "demo-9": [
@@ -193,7 +191,6 @@ export const DEMO_RAIDS = {
   "demo-10": [
     { "raidId": "serca", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
     { "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-    { "raidId": "abrel-ex", "difficulty": "normal", "gateClears": [true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
     { "raidId": "armocha", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
     { "raidId": "cathedral", "difficulty": "stage2", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
   ],
@@ -206,7 +203,6 @@ export const DEMO_RAIDS = {
   "demo-12": [
     { "raidId": "cathedral", "difficulty": "stage2", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
     { "raidId": "armocha", "difficulty": "hard", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-    { "raidId": "abrel-ex", "difficulty": "normal", "gateClears": [true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
     { "raidId": "kazeros-final", "difficulty": "normal", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
   ]
 }

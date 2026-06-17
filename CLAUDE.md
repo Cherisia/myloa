@@ -178,7 +178,7 @@ accent 색상은 반드시 CSS 변수로 사용한다.
 // 캐릭터별 레이드 엔트리
 { raidId, difficulty, gateClears: boolean[], isGoldCheck, moreDone, moreFrom: 'bound'|'trade' }
 // 주간 초기화: 매주 수요일 06:00 KST
-// EX 레이드(abrel-ex): 계정당 1캐릭터만 선택 가능
+// EX 레이드: 계정당 1캐릭터만 선택 가능 (현재 활성 EX 레이드 없음 — EX_RAID_IDS = new Set())
 ```
 
 ### RAIDS 조회 패턴

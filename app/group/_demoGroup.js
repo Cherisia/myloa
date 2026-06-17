@@ -26,7 +26,6 @@ export const DEMO_FRIENDS = [
             "combatPower": 6054.11,
             "sortOrder": 0,
             "characterRaids": [
-              { "id": "demo-fraid-1", "raidId": "abrel-ex", "difficulty": "nightmare", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-2", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-3", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-4", "raidId": "serca", "difficulty": "nightmare", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
@@ -133,8 +132,7 @@ export const DEMO_FRIENDS = [
             "characterRaids": [
               { "id": "demo-fraid-20", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "trade" },
               { "id": "demo-fraid-21", "raidId": "serca", "difficulty": "nightmare", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-22", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-23", "raidId": "abrel-ex", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
+              { "id": "demo-fraid-22", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
             ]
           },
           {
@@ -243,7 +241,6 @@ export const DEMO_FRIENDS = [
             "combatPower": 6367.98,
             "sortOrder": 0,
             "characterRaids": [
-              { "id": "demo-fraid-39", "raidId": "abrel-ex", "difficulty": "hard", "gateClears": [true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-40", "raidId": "serca", "difficulty": "nightmare", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
               { "id": "demo-fraid-41", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
               { "id": "demo-fraid-42", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
@@ -342,7 +339,6 @@ export const DEMO_FRIENDS = [
             "sortOrder": 6,
             "characterRaids": [
               { "id": "demo-fraid-64", "raidId": "armocha", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-65", "raidId": "abrel-ex", "difficulty": "normal", "gateClears": [true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-66", "raidId": "kazeros-final", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-67", "raidId": "serca", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
             ]
@@ -407,8 +403,7 @@ export const DEMO_FRIENDS = [
             "characterRaids": [
               { "id": "demo-fraid-77", "raidId": "serca", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-78", "raidId": "kazeros-final", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-79", "raidId": "armocha", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-80", "raidId": "abrel-ex", "difficulty": "normal", "gateClears": [true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
+              { "id": "demo-fraid-79", "raidId": "armocha", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
             ]
           }
         ]
@@ -489,7 +484,6 @@ export const DEMO_FRIENDS = [
             "sortOrder": 0,
             "characterRaids": [
               { "id": "demo-fraid-89", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
-              { "id": "demo-fraid-90", "raidId": "abrel-ex", "difficulty": "nightmare", "gateClears": [true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-91", "raidId": "serca", "difficulty": "nightmare", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
               { "id": "demo-fraid-92", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" }
             ]
@@ -555,7 +549,6 @@ export const DEMO_FRIENDS = [
             "characterRaids": [
               { "id": "demo-fraid-103", "raidId": "kazeros-final", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-104", "raidId": "cathedral", "difficulty": "stage2", "gateClears": [], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-105", "raidId": "abrel-ex", "difficulty": "normal", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-106", "raidId": "armocha", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-107", "raidId": "serca", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
             ]
@@ -591,8 +584,7 @@ export const DEMO_FRIENDS = [
             "characterRaids": [
               { "id": "demo-fraid-108", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-109", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-110", "raidId": "serca", "difficulty": "nightmare", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-111", "raidId": "abrel-ex", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
+              { "id": "demo-fraid-110", "raidId": "serca", "difficulty": "nightmare", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
             ]
           },
           {
@@ -709,7 +701,6 @@ export const DEMO_FRIENDS = [
             "sortOrder": 0,
             "characterRaids": [
               { "id": "demo-fraid-130", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-              { "id": "demo-fraid-131", "raidId": "abrel-ex", "difficulty": "nightmare", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-132", "raidId": "serca", "difficulty": "nightmare", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "trade" },
               { "id": "demo-fraid-133", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "trade" }
             ]
@@ -801,7 +792,6 @@ export const DEMO_FRIENDS = [
             "combatPower": 2872.53,
             "sortOrder": 8,
             "characterRaids": [
-              { "id": "demo-fraid-150", "raidId": "abrel-ex", "difficulty": "normal", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-151", "raidId": "kazeros-final", "difficulty": "normal", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-152", "raidId": "armocha", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-153", "raidId": "serca", "difficulty": "normal", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
@@ -823,7 +813,6 @@ export const DEMO_FRIENDS = [
             "combatPower": 3228.27,
             "sortOrder": 9,
             "characterRaids": [
-              { "id": "demo-fraid-154", "raidId": "abrel-ex", "difficulty": "normal", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-155", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-156", "raidId": "serca", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-157", "raidId": "armocha", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
@@ -845,7 +834,6 @@ export const DEMO_FRIENDS = [
             "combatPower": 2027.45,
             "sortOrder": 6,
             "characterRaids": [
-              { "id": "demo-fraid-158", "raidId": "abrel-ex", "difficulty": "normal", "gateClears": [false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-159", "raidId": "kazeros-final", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-160", "raidId": "armocha", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
               { "id": "demo-fraid-161", "raidId": "serca", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
@@ -899,8 +887,7 @@ export const DEMO_ME = {
             { "id": "demo-fraid-165", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
             { "id": "demo-fraid-166", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": true, "moreDone": true, "moreFrom": "bound" },
             { "id": "demo-fraid-167", "raidId": "serca", "difficulty": "nightmare", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-            { "id": "demo-fraid-168", "raidId": "armocha", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" },
-            { "id": "demo-fraid-169", "raidId": "abrel-ex", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
+            { "id": "demo-fraid-168", "raidId": "armocha", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
           ]
         },
         {
@@ -1014,7 +1001,6 @@ export const DEMO_ME = {
           "characterRaids": [
             { "id": "demo-fraid-197", "raidId": "serca", "difficulty": "hard", "gateClears": [], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
             { "id": "demo-fraid-198", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-            { "id": "demo-fraid-199", "raidId": "abrel-ex", "difficulty": "normal", "gateClears": [true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
             { "id": "demo-fraid-200", "raidId": "armocha", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
             { "id": "demo-fraid-201", "raidId": "cathedral", "difficulty": "stage2", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
           ]
@@ -1053,7 +1039,6 @@ export const DEMO_ME = {
             { "id": "demo-fraid-206", "raidId": "kazeros-final", "difficulty": "hard", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
             { "id": "demo-fraid-207", "raidId": "armocha", "difficulty": "hard", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
             { "id": "demo-fraid-208", "raidId": "serca", "difficulty": "nightmare", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-            { "id": "demo-fraid-209", "raidId": "abrel-ex", "difficulty": "hard", "gateClears": [true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
             { "id": "demo-fraid-210", "raidId": "cathedral", "difficulty": "stage3", "gateClears": [true, true], "isGoldCheck": false, "moreDone": false, "moreFrom": "bound" }
           ]
         },
@@ -1090,7 +1075,6 @@ export const DEMO_ME = {
           "characterRaids": [
             { "id": "demo-fraid-215", "raidId": "cathedral", "difficulty": "stage2", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
             { "id": "demo-fraid-216", "raidId": "armocha", "difficulty": "hard", "gateClears": [false, false], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
-            { "id": "demo-fraid-217", "raidId": "abrel-ex", "difficulty": "normal", "gateClears": [true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" },
             { "id": "demo-fraid-218", "raidId": "kazeros-final", "difficulty": "normal", "gateClears": [true, true], "isGoldCheck": true, "moreDone": false, "moreFrom": "bound" }
           ]
         }
