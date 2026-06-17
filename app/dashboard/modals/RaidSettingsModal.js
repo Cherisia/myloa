@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react'
-import { RAIDS } from '@/lib/raidData'
+import { RAIDS, RAID_MAP } from '@/lib/raidData'
 import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, getClassIcon } from '../_constants'
 import { IconClass } from '../_icons'
 import CustomItemsEditor from './CustomItemsEditor'
@@ -112,7 +112,7 @@ export default function RaidSettingsModal({
 
   const charRaidList = selectedChar ? (raids[selectedChar.id] || []) : []
   const activeKeys   = useMemo(() => new Set(charRaidList.map(e => `${e.raidId}_${e.difficulty}`)), [charRaidList])
-  const normalGoldCount = charRaidList.filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)).length
+  const normalGoldCount = charRaidList.filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId]).length
   const exGoldCount     = charRaidList.filter(e => e.isGoldCheck &&  EX_RAID_IDS.has(e.raidId)).length
 
   const acctGoldMap = (() => {
@@ -124,19 +124,19 @@ export default function RaidSettingsModal({
         seenKeys.push(key)
         map[key] = { key, label: c.accountRepChar || c.name, count: 0 }
       }
-      if ((raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))) map[key].count++
+      if ((raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId])) map[key].count++
     })
     return seenKeys.map(k => map[k])
   })()
   const acctKey = selectedChar ? (selectedChar.expeditionId || 'unknown') : null
   const acctGoldCharCount = acctGoldMap.find(a => a.key === acctKey)?.count ?? 0
-  const charHasGold       = charRaidList.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+  const charHasGold       = charRaidList.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId])
 
   const handleConfirm = () => {
     const exceeded = chars
       .map(char => ({
         name:  char.name,
-        count: (raids[char.id] || []).filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)).length,
+        count: (raids[char.id] || []).filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId]).length,
       }))
       .filter(c => c.count > GOLD_RAID_LIMIT)
     if (exceeded.length > 0) { setGoldError(exceeded); return }
@@ -145,7 +145,7 @@ export default function RaidSettingsModal({
     chars.forEach(char => {
       const key = char.expeditionId || 'unknown'
       if (!accountMap[key]) accountMap[key] = { label: expPages?.find(p => p.id === key)?.name || '원정대', goldCount: 0 }
-      if ((raids[char.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
+      if ((raids[char.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId]))
         accountMap[key].goldCount++
     })
     const acctExceeded = Object.values(accountMap).filter(a => a.goldCount > GOLD_CHAR_LIMIT)
@@ -229,7 +229,7 @@ export default function RaidSettingsModal({
                   : <span className="w-3.5 h-3.5 flex-shrink-0 text-gray-300"><IconClass /></span>
                 }
                 <span className="max-w-[7rem] truncate">{char.name}</span>
-                {(raids[char.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)) && (
+                {(raids[char.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId]) && (
                   <Image src="/icons/coin.png" alt="골드 획득 캐릭터" width={12} height={12} className="w-3 h-3 object-contain flex-shrink-0" />
                 )}
                 {count > 0 && (

@@ -682,14 +682,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         const diff = raid?.difficulties.find(d => d.key === diffKey)
         if (diff) {
           // EX 레이드는 항상 골드, 일반 레이드는 캐릭터/계정 한도 기준으로 결정
-          const currentGoldCount  = list.filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)).length
+          const currentGoldCount  = list.filter(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId]).length
           const charAlreadyHasGold = currentGoldCount > 0
           const curChar  = chars.find(c => c.id === charId)
           const curAcctKey = curChar?.expeditionId || 'unknown'
           const acctGoldChars = chars.filter(c =>
             c.id !== charId &&
             (c.expeditionId || 'unknown') === curAcctKey &&
-            (prev[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+            (prev[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId])
           ).length
           const isGoldCheck = EX_RAID_IDS.has(raidId) ? true
             : currentGoldCount < GOLD_RAID_LIMIT && (charAlreadyHasGold || acctGoldChars < GOLD_CHAR_LIMIT)
@@ -713,17 +713,17 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       const turningOn = !list[idx].isGoldCheck
       if (turningOn) {
         // 캐릭터당 한도 검사
-        const currentGoldCount = list.filter((e, i) => i !== idx && e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)).length
+        const currentGoldCount = list.filter((e, i) => i !== idx && e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId]).length
         if (currentGoldCount >= GOLD_RAID_LIMIT) return prev
         // 계정당 한도 검사 (이 캐릭터에 다른 골드 레이드가 없는 경우에만)
-        const charHasOtherGold = list.some((e, i) => i !== idx && e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+        const charHasOtherGold = list.some((e, i) => i !== idx && e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId])
         if (!charHasOtherGold) {
           const curChar = chars.find(c => c.id === charId)
           const curAcctKey = curChar?.expeditionId || 'unknown'
           const acctGoldChars = chars.filter(c =>
             c.id !== charId &&
             (c.expeditionId || 'unknown') === curAcctKey &&
-            (prev[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+            (prev[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId])
           ).length
           if (acctGoldChars >= GOLD_CHAR_LIMIT) return prev
         }
@@ -978,11 +978,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       demoExpIds.forEach(expId => {
         const goldWanters = []
         chars.filter(c => (c.expeditionId || 'default') === expId && !demoUserOverriddenIds.has(c.id)).forEach(c => {
-          if ((raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
+          if ((raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId]))
             goldWanters.push({ id: c.id, itemLevel: c.itemLevel, isNew: false })
         })
         demoChars.filter(dc => (dc.expeditionId || 'default') === expId && demoRaids[dc.id]).forEach(dc => {
-          if (demoRaids[dc.id].some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
+          if (demoRaids[dc.id].some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId]))
             goldWanters.push({ id: dc.id, itemLevel: dc.itemLevel, isNew: true })
         })
         goldWanters.sort((a, b) => b.itemLevel - a.itemLevel)
@@ -1094,11 +1094,11 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       expIds.forEach(expId => {
         const goldWanters = []
         chars.filter(c => (c.expeditionId || 'default') === expId && !userOverriddenIds.has(c.id)).forEach(c => {
-          if ((raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
+          if ((raids[c.id] || []).some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId]))
             goldWanters.push({ id: c.id, itemLevel: c.itemLevel, isNew: false })
         })
         addedChars.filter(c => (c.expeditionId || 'default') === expId && newRaids[c.id]).forEach(c => {
-          if (newRaids[c.id].some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId)))
+          if (newRaids[c.id].some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId]))
             goldWanters.push({ id: c.id, itemLevel: c.itemLevel, isNew: true })
         })
         goldWanters.sort((a, b) => b.itemLevel - a.itemLevel)
@@ -1199,7 +1199,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     chars.forEach(char => {
       let bound = 0, trade = 0, boundTotal = 0, tradeTotal = 0
       const charRaids = raids[char.id] || []
-      const isGoldChar = charRaids.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId))
+      const isGoldChar = charRaids.some(e => e.isGoldCheck && !EX_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId])
       let moreDoneCount = 0
       charRaids.forEach(entry => {
         const isEX = EX_RAID_IDS.has(entry.raidId)
@@ -1799,7 +1799,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           const charRaidsMap = new Map()
           sortedActiveChars.forEach(char => {
             const cr = [...(raids[char.id] || [])]
-              .filter(e => !HIDDEN_RAID_IDS.has(e.raidId))
+              .filter(e => !HIDDEN_RAID_IDS.has(e.raidId) && RAID_MAP[e.raidId])
               .filter(e => !selectedRaid || (e.raidId === selectedRaid.raidId && e.difficulty === selectedRaid.diffKey))
               .filter(e => {
                 if (!remainFilter) return true
