@@ -544,6 +544,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     for (const char of activeChars) {
       for (const r of (raids[char.id] || [])) {
         if (HIDDEN_RAID_IDS.has(r.raidId)) continue
+        if (!RAID_MAP[r.raidId]) continue
         const key = `${r.raidId}:${r.difficulty}`
         if (!seen.has(key)) {
           const raidDef = RAID_MAP[r.raidId]
