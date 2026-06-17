@@ -67,13 +67,8 @@ export default async function RootLayout({ children }) {
         <SessionProvider session={session}>
           <ThemeProvider>
             <Navbar />
-            {/* 전체 레이아웃: 2xl(1536px+)에서 좌우 사이드바 포함 데스크탑 레이아웃 */}
             <div className="xl:flex xl:items-start xl:gap-4 xl:px-4">
-              {/* 좌측 사이드바 — xl only (160×600 sticky) */}
-              <aside className="hidden xl:flex w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden items-center justify-center" style={{ minHeight: '600px' }}>
-                <SidebarAdLeft />
-              </aside>
-              {/* 본문 */}
+              <SidebarAdLeft />
               <main className="flex-1 min-w-0 px-4 py-6 min-h-[calc(100dvh-82px)]">
                 {children}
                 <footer className="mt-12 pt-8 pb-2 border-t border-gray-200 dark:border-white/[0.06] text-center space-y-3">
@@ -94,10 +89,7 @@ export default async function RootLayout({ children }) {
                   </div>
                 </footer>
               </main>
-              {/* 우측 사이드바 — xl only (160×600 sticky) */}
-              <aside className="hidden xl:flex w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden items-center justify-center" style={{ minHeight: '600px' }}>
-                <SidebarAdRight />
-              </aside>
+              <SidebarAdRight />
             </div>
           </ThemeProvider>
         </SessionProvider>

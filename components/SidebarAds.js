@@ -13,14 +13,24 @@ function shouldShowAds(pathname) {
   return AD_ALLOWED_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
 }
 
+const asideClass = "hidden xl:flex w-[160px] flex-shrink-0 sticky top-[66px] max-h-[calc(100vh-82px)] overflow-hidden items-center justify-center"
+
 export function SidebarAdLeft() {
   const pathname = usePathname()
   if (!shouldShowAds(pathname)) return null
-  return <KakaoAdFit unit={ADFIT_UNIT_SIDEBAR_L} width={160} height={600} />
+  return (
+    <aside className={asideClass} style={{ minHeight: '600px' }}>
+      <KakaoAdFit unit={ADFIT_UNIT_SIDEBAR_L} width={160} height={600} />
+    </aside>
+  )
 }
 
 export function SidebarAdRight() {
   const pathname = usePathname()
   if (!shouldShowAds(pathname)) return null
-  return <KakaoAdFit unit={ADFIT_UNIT_SIDEBAR_R} width={160} height={600} />
+  return (
+    <aside className={asideClass} style={{ minHeight: '600px' }}>
+      <KakaoAdFit unit={ADFIT_UNIT_SIDEBAR_R} width={160} height={600} />
+    </aside>
+  )
 }
