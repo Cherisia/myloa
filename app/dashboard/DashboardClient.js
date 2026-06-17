@@ -4,7 +4,6 @@ import Image from 'next/image'
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import DiscordIcon from '@/components/DiscordIcon'
-import AdSense from '@/components/AdSense'
 import KakaoAdFit from '@/components/KakaoAdFit'
 
 // 카카오 애드핏 단위 ID — https://adfit.kakao.com 에서 발급 후 교체
