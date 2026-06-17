@@ -223,10 +223,12 @@ model WeeklyRaidHistory {
   id         String   @id @default(cuid())
   userId     String
   weekStart  DateTime // 해당 주 스냅샷 시각 (수요일 06:00 KST)
-  totalRaids Int      // 모든 관문 클리어된 레이드 수
-  goldRaids  Int      // 골드 체크 + 모든 관문 클리어된 레이드 수
-  totalGold  Int      // 골드 레이드 합산 골드 (귀속+거래)
-  goldMore   Int      @default(0) // 더보기 추가 골드 합계
+  totalRaids          Int      // 완료한 전체 레이드 수
+  goldRaids           Int      // 완료한 골드 레이드 수
+  configuredTotalRaids Int     @default(0) // 설정된 전체 레이드 수 (완료 여부 무관)
+  configuredGoldRaids Int      @default(0) // 설정된 골드 레이드 수 (완료 여부 무관)
+  totalGold           Int      // 골드 레이드 합산 골드 (귀속+거래)
+  goldMore            Int      @default(0) // 더보기 추가 골드 합계
   createdAt  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

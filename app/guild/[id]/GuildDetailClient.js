@@ -7,7 +7,6 @@ import { RAID_MAP } from '@/lib/raidData'
 import { getGroupRaidList, raidStatusOf, adaptMember } from '@/lib/groupRaidShare'
 import { CLASS_ICON } from '@/app/dashboard/_constants'
 import { saveRaidCompletion } from '@/app/dashboard/_raidHelpers'
-import { formatGold } from '@/lib/formatting'
 import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
 import { IconCrown, IconTrophy, IconX, IconBack, IconCopy, IconStar, IconPower, IconCheck, IconRegen } from '@/app/dashboard/_icons'
 
@@ -222,7 +221,6 @@ export default function GuildDetailClient({ expedition: init, userId, isDemo = f
     if (!rankingData) return []
     const sorted = [...rankingData]
     if (rankingSort === 'raids') sorted.sort((a, b) => b.avgRaids - a.avgRaids)
-    else if (rankingSort === 'rate') sorted.sort((a, b) => b.completionRate - a.completionRate)
     else sorted.sort((a, b) => b.avgGold - a.avgGold)
     return sorted
   }, [rankingData, rankingSort])
@@ -409,12 +407,13 @@ export default function GuildDetailClient({ expedition: init, userId, isDemo = f
     return (
       <div className="space-y-3">
         {/* 필터 바 */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <RankToggle
-            options={[{ v: 'gold', l: '획득 골드' }, { v: 'raids', l: '완료 레이드' }, { v: 'rate', l: '레이드 완료율' }]}
+            options={[{ v: 'gold', l: '획득 골드' }, { v: 'raids', l: '완료 레이드' }]}
             value={rankingSort}
             onChange={v => setRankingSort(v)}
           />
+          <span className="text-[11px] text-gray-400 dark:text-gray-500">📈 주차별 평균으로 집계돼요</span>
         </div>
 
         {/* 데모 안내 */}
@@ -483,24 +482,16 @@ export default function GuildDetailClient({ expedition: init, userId, isDemo = f
                   <div className="text-right flex-shrink-0">
                     {rankingSort === 'gold' ? (
                       <div className="text-sm ns-bold text-[var(--accent-500)] dark:text-[var(--accent-400)]">
-                        {formatGold(member.avgGold)}
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 ns-light ml-0.5">주평균</span>
-                      </div>
-                    ) : rankingSort === 'raids' ? (
-                      <div className="text-sm ns-bold text-gray-800 dark:text-gray-100">
-                        {member.avgRaids}
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 ns-light ml-0.5">개 주평균</span>
+                        <span className="inline-flex items-center gap-0.5">
+                          {member.avgGold.toLocaleString('ko-KR')}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src="/icons/gold.png" alt="골드" className="w-3 h-3 object-contain flex-shrink-0" />
+                        </span>
                       </div>
                     ) : (
-                      <>
-                        <div className="text-sm ns-bold text-gray-800 dark:text-gray-100">
-                          {member.completionRate}
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500 ns-light ml-0.5">%</span>
-                        </div>
-                        <div className="text-[10px] text-gray-400 dark:text-gray-500">
-                          {member.totalRaids} / {member.allRaids}개
-                        </div>
-                      </>
+                      <div className="text-sm ns-bold text-gray-800 dark:text-gray-100">
+                        {member.avgRaids}<span className="text-[10px] text-gray-400 dark:text-gray-500 ns-light ml-0.5">개</span>
+                      </div>
                     )}
                   </div>
                 </div>

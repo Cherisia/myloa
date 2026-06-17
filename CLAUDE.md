@@ -213,13 +213,15 @@ const persistDelete = (charId, raidId, diffKey) => { if (isLoggedIn) deleteRaid(
 
 **마이그레이션 절차:**
 1. `prisma/migrations/<timestamp>_<name>/migration.sql` 파일 수동 생성
-2. Neon MCP로 SQL 직접 실행 (적용 전 컬럼/인덱스 존재 여부 확인)
+2. Neon MCP로 SQL 직접 실행 (적용 전 컬럼/인덱스 존재 여부 확인) — **`dev` 브랜치와 `main`(production) 브랜치 모두에 실행**
 3. `npx prisma migrate resolve --applied <migration-name>` 으로 적용 완료 표시
 4. git push
 
 **Neon MCP:**
 - 프로젝트 ID: `empty-thunder-73282882`
+- `dev` 브랜치 ID: `br-lively-fire-aj5nykbw` / `main`(production) 브랜치: 기본 브랜치(branchId 생략)
 - `mcp__Neon__run_sql` 로 확인, `mcp__Neon__run_sql_transaction` 으로 트랜잭션 실행
+- DB 컬럼·인덱스 추가 시 반드시 두 브랜치 모두 적용할 것
 
 **인덱스(성능):** 핫 쿼리 대비 다음 인덱스를 둔다 — `LoaExpedition([userId])`, `Session([userId])`, `ExpeditionMember([userId])`·`([expeditionId, status])`, `FriendRequest([receiverId, status])`, `CharacterCustomItem([type, resetAt])`, `CharacterRaid([resetAt])`·`([characterId, resetAt])`, `Character([expeditionId])`.
 인덱스 추가 마이그레이션은 `CREATE INDEX IF NOT EXISTS`(비파괴적)이며, 컬럼 변화가 없어 Prisma Client 재생성 없이도 앱 동작에 영향을 주지 않는다(미적용 상태에서도 쿼리는 정상 동작, 적용 시 속도만 개선).

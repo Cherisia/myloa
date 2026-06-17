@@ -38,11 +38,17 @@ export async function GET(request) {
   const userStats = {}
   for (const raid of allRaids) {
     const userId = raid.character.expedition.userId
-    if (!userStats[userId]) userStats[userId] = { totalRaids: 0, goldRaids: 0, totalGold: 0, goldMore: 0 }
+    if (!userStats[userId]) userStats[userId] = { totalRaids: 0, goldRaids: 0, configuredTotalRaids: 0, configuredGoldRaids: 0, totalGold: 0, goldMore: 0 }
 
     const raidDef = RAID_MAP[raid.raidId]
     const diff = getDifficulty(raidDef, raid.difficulty)
     if (!diff) continue
+
+    // 설정된 레이드 수 집계 (완료 여부 무관)
+    userStats[userId].configuredTotalRaids++
+    if (raid.isGoldCheck) {
+      userStats[userId].configuredGoldRaids++
+    }
 
     // 모든 관문 클리어 여부
     const allCleared =
@@ -63,9 +69,9 @@ export async function GET(request) {
 
   // WeeklyRaidHistory 저장 — 이미 같은 weekStart 기록이 있으면 건드리지 않음
   // (크론 중복 실행, weekStart 오계산 등으로 이전 주 기록이 덮어써지는 것을 방지)
-  const entries = Object.entries(userStats).map(([userId, stats]) => ({
-    userId, weekStart, ...stats,
-  }))
+  const entries = Object.entries(userStats)
+    .filter(([, stats]) => stats.totalRaids > 0)
+    .map(([userId, stats]) => ({ userId, weekStart, ...stats }))
   const { count: historySaved } = await prisma.weeklyRaidHistory.createMany({
     data:           entries,
     skipDuplicates: true,

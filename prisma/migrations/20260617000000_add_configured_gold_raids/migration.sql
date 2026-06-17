@@ -1,0 +1,1 @@
+ALTER TABLE "WeeklyRaidHistory" ADD COLUMN IF NOT EXISTS "configuredGoldRaids" INTEGER NOT NULL DEFAULT 0;

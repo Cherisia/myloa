@@ -22,9 +22,9 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: '권한 없음' }, { status: 403 })
   }
 
-  // 랭킹 집계 시작 주차: 2026-06-18 06:00 KST (= 2026-06-17T21:00:00Z)
+  // 랭킹 집계 시작 주차: 2026-06-17 06:00 KST (= 2026-06-16T21:00:00Z)
   // 이전의 0 데이터 주차는 집계에서 제외
-  const RANKING_START_WEEK = new Date('2026-06-17T21:00:00.000Z')
+  const RANKING_START_WEEK = new Date('2026-06-16T21:00:00.000Z')
 
   // 멤버 + 히스토리 일괄 조회
   const members = await prisma.expeditionMember.findMany({
@@ -40,7 +40,7 @@ export async function GET(request, { params }) {
           image:    true,
           weeklyRaidHistories: {
             where:   { weekStart: { gte: RANKING_START_WEEK } },
-            select:  { weekStart: true, totalRaids: true, goldRaids: true, totalGold: true },
+            select:  { weekStart: true, totalRaids: true, goldRaids: true, configuredTotalRaids: true, configuredGoldRaids: true, totalGold: true },
             orderBy: { weekStart: 'desc' },
           },
         },
@@ -51,29 +51,29 @@ export async function GET(request, { params }) {
   // 집계
   const ranking = members.map(m => {
     const hs        = m.user.weeklyRaidHistories
-    const sumGold      = hs.reduce((s, h) => s + h.totalGold, 0)
-    const sumGoldRaids = hs.reduce((s, h) => s + h.goldRaids, 0)
-    const sumAllRaids  = hs.reduce((s, h) => s + h.totalRaids, 0)
-    const weekCount    = hs.length
-    const bestWeek     = hs.reduce((b, h) =>
+    const sumGold                = hs.reduce((s, h) => s + h.totalGold, 0)
+    const sumAllRaids            = hs.reduce((s, h) => s + h.totalRaids, 0)
+    const sumGoldRaids           = hs.reduce((s, h) => s + h.goldRaids, 0)
+    const sumConfiguredTotal     = hs.reduce((s, h) => s + (h.configuredTotalRaids ?? 0), 0)
+    const sumConfiguredGoldRaids = hs.reduce((s, h) => s + (h.configuredGoldRaids ?? 0), 0)
+    const weekCount = hs.length
+    const bestWeek  = hs.reduce((b, h) =>
       h.totalGold > (b?.gold ?? -1) ? { gold: h.totalGold, weekStart: h.weekStart } : b
     , null)
 
     return {
-      userId:       m.userId,
-      role:         m.role,
-      name:         m.user.nickname || m.user.name || '알 수 없음',
-      image:        m.user.image,
-      totalGold:      sumGold,
-      totalRaids:     sumGoldRaids,
-      allRaids:       sumAllRaids,
-      weeks:          weekCount,
-      avgGold:        weekCount > 0 ? Math.round(sumGold / weekCount) : 0,
-      avgRaids:       weekCount > 0 ? Math.round((sumGoldRaids / weekCount) * 10) / 10 : 0,
-      completionRate: sumAllRaids > 0 ? Math.round((sumGoldRaids / sumAllRaids) * 100) : 0,
+      userId:     m.userId,
+      role:       m.role,
+      name:       m.user.nickname || m.user.name || '알 수 없음',
+      image:      m.user.image,
+      totalGold:  sumGold,
+      totalRaids: sumAllRaids,
+      weeks:      weekCount,
+      avgGold:    weekCount > 0 ? Math.round(sumGold / weekCount) : 0,
+      avgRaids:   weekCount > 0 ? Math.round((sumAllRaids / weekCount) * 10) / 10 : 0,
       bestWeek,
     }
   })
 
-  return NextResponse.json(ranking.filter(m => m.weeks > 0))
+  return NextResponse.json(ranking.filter(m => m.totalRaids > 0))
 }
