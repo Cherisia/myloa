@@ -248,3 +248,76 @@ model ExpeditionMemberFavorite {
 
   @@unique([expeditionId, viewerUserId, targetUserId])
 }
+
+// ─── 길드 일정 ────────────────────────────────────────────────────────────────
+
+model GuildSchedulePost {
+  id              String    @id @default(cuid())
+  expeditionId    String
+  creatorId       String
+  raidId          String
+  difficulty      String
+  scheduledAt     DateTime
+  durationMinutes Int       @default(120)
+  totalSlots      Int
+  minItemLevel    Float?
+  allowedClasses  String[]
+  memo            String?   @db.VarChar(140)
+  closedAt        DateTime
+  /// recruiting | closed | done | disbanded
+  status          String    @default("recruiting")
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  participants GuildScheduleParticipant[]
+  partySlots   GuildSchedulePartySlot[]
+
+  @@index([expeditionId])
+  @@index([scheduledAt])
+}
+
+model GuildScheduleParticipant {
+  id               String   @id @default(cuid())
+  postId           String
+  userId           String
+  characterId      String
+  /// support | dealer
+  role             String   @default("dealer")
+  /// pending | accepted | rejected
+  status           String   @default("pending")
+  excludedFromDone Boolean  @default(false)
+  appliedAt        DateTime @default(now())
+
+  post GuildSchedulePost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([userId])
+}
+
+model GuildSchedulePartySlot {
+  id          String  @id @default(cuid())
+  postId      String
+  partyNumber Int
+  slotNumber  Int
+  userId      String?
+  characterId String?
+
+  post GuildSchedulePost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, partyNumber, slotNumber])
+  @@index([postId])
+}
+
+model MemberAvailability {
+  id           String   @id @default(cuid())
+  userId       String
+  expeditionId String
+  /// JSON: ["MON:2100","MON:2115",...] — 내부 해상도 15분 고정
+  slots        String   @default("[]")
+  /// 표시 단위: 15 | 30 | 60
+  displayUnit  Int      @default(30)
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, expeditionId])
+  @@index([expeditionId])
+}

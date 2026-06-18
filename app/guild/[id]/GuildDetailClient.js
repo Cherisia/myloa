@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react'
+const GuildScheduleTab = lazy(() => import('./schedule/GuildScheduleTab'))
 import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { RAID_MAP } from '@/lib/raidData'
@@ -162,6 +163,7 @@ const TABS = [
   { id: 'raids',    label: '레이드현황', leaderOnly: false },
   { id: 'members',  label: '멤버',       leaderOnly: false },
   { id: 'ranking',  label: '랭킹',       leaderOnly: false },
+  ...(process.env.NODE_ENV === 'development' ? [{ id: 'schedule', label: '일정', leaderOnly: false }] : []),
   { id: 'manage',   label: '멤버관리',   leaderOnly: true  },
   { id: 'pending',  label: '대기중',     leaderOnly: true  },
   { id: 'settings', label: '설정',       leaderOnly: true  },
@@ -1172,6 +1174,17 @@ export default function GuildDetailClient({ expedition: init, userId, isDemo = f
           {tab === 'raids'    && renderRaids()}
           {tab === 'members'  && renderMembers()}
           {tab === 'ranking'  && renderRanking()}
+          {tab === 'schedule' && (
+            <Suspense fallback={<div className="py-12 text-center text-sm text-gray-400">불러오는 중...</div>}>
+              <GuildScheduleTab
+                expeditionId={expedition.id}
+                userId={userId}
+                isLeader={expedition.leaderId === userId}
+                members={expedition.members?.filter(m => m.status === 'active') || []}
+                isDemo={isDemo}
+              />
+            </Suspense>
+          )}
           {tab === 'manage'   && renderManageMembers()}
           {tab === 'pending'  && renderPending()}
           {tab === 'settings' && renderSettings()}

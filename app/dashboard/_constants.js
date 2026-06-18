@@ -84,6 +84,9 @@ export const CLASS_ICON = {
 }
 export const getClassIcon = (cls) => CLASS_ICON[cls] ? `/class/${CLASS_ICON[cls]}.svg` : null
 
+export const SUPPORT_CLASSES = new Set(['바드', '도화가', '발키리', '홀리나이트'])
+export const defaultRole = (className) => SUPPORT_CLASSES.has(className) ? 'support' : 'dealer'
+
 /** 쿠르잔 전선 계열 항목 이름 집합 */
 export const KURZAN_NAMES = new Set(['혼돈의 균열', '쿠르잔 전선', '카오스 던전'])
 
