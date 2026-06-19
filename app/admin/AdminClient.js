@@ -170,7 +170,7 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
   const [tab, setTab] = useState('users')
   const [userSearch, setUserSearch] = useState('')
   const [guildSearch, setGuildSearch] = useState('')
-  const [userSort, setUserSort] = useState('lastRaidAt_desc')
+  const [userSort, setUserSort] = useState('lastActivityAt_desc')
 
   // 레이드 모달
   const [raidModal, setRaidModal] = useState(null)   // 로딩된 user 객체
@@ -220,6 +220,7 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
       else if (field === 'charCount') { av = a.charCount; bv = b.charCount }
       else if (field === 'lastRaidAt') { av = a.lastRaidAt ? new Date(a.lastRaidAt) : new Date(0); bv = b.lastRaidAt ? new Date(b.lastRaidAt) : new Date(0) }
       else if (field === 'lastHomeworkAt') { av = a.lastHomeworkAt ? new Date(a.lastHomeworkAt) : new Date(0); bv = b.lastHomeworkAt ? new Date(b.lastHomeworkAt) : new Date(0) }
+      else if (field === 'lastActivityAt') { av = a.lastActivityAt ? new Date(a.lastActivityAt) : new Date(0); bv = b.lastActivityAt ? new Date(b.lastActivityAt) : new Date(0) }
       else { av = a.createdAt; bv = b.createdAt }
       return dir === 'desc' ? (bv > av ? 1 : -1) : (av > bv ? 1 : -1)
     })
@@ -292,8 +293,8 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
                 onChange={e => setUserSort(e.target.value)}
                 className="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-400)]"
               >
+                <option value="lastActivityAt_desc">최근 숙제순</option>
                 <option value="lastRaidAt_desc">최근 레이드순</option>
-                <option value="lastHomeworkAt_desc">최근 숙제순</option>
                 <option value="createdAt_desc">가입일 최신순</option>
                 <option value="createdAt_asc">가입일 오래된순</option>
                 <option value="charCount_desc">캐릭터 많은순</option>

@@ -111,6 +111,10 @@ export default async function AdminPage() {
     const lastHomeworkAt = homeworkTimes.length === 0 ? null :
       homeworkTimes.reduce((max, t) => new Date(t) > new Date(max) ? t : max)
 
+    const activityTimes = [lastDailyAt, lastWeeklyAt, lastRaidAt].filter(Boolean)
+    const lastActivityAt = activityTimes.length === 0 ? null :
+      activityTimes.reduce((max, t) => new Date(t) > new Date(max) ? t : max)
+
     return {
       id: u.id,
       name: u.name,
@@ -125,6 +129,7 @@ export default async function AdminPage() {
       lastDailyAt,
       lastWeeklyAt,
       lastHomeworkAt,
+      lastActivityAt,
     }
   })
 
