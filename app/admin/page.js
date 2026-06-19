@@ -81,7 +81,7 @@ export default async function AdminPage() {
                 take: 1,
               },
               customItems: {
-                select: { type: true, updatedAt: true },
+                select: { type: true, lastDoneAt: true },
               },
             },
           },
@@ -102,9 +102,10 @@ export default async function AdminPage() {
     let lastDailyAt = null
     let lastWeeklyAt = null
     for (const item of allChars.flatMap(c => c.customItems || [])) {
-      const t = new Date(item.updatedAt)
-      if (item.type === 'daily' && (!lastDailyAt || t > new Date(lastDailyAt))) lastDailyAt = item.updatedAt
-      if (item.type === 'weekly' && (!lastWeeklyAt || t > new Date(lastWeeklyAt))) lastWeeklyAt = item.updatedAt
+      if (!item.lastDoneAt) continue
+      const t = new Date(item.lastDoneAt)
+      if (item.type === 'daily' && (!lastDailyAt || t > new Date(lastDailyAt))) lastDailyAt = item.lastDoneAt
+      if (item.type === 'weekly' && (!lastWeeklyAt || t > new Date(lastWeeklyAt))) lastWeeklyAt = item.lastDoneAt
     }
     const homeworkTimes = [lastDailyAt, lastWeeklyAt].filter(Boolean)
     const lastHomeworkAt = homeworkTimes.length === 0 ? null :

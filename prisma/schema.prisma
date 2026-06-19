@@ -140,6 +140,7 @@ model CharacterCustomItem {
   image       String?
   sortOrder   Int       @default(0)
   done        Boolean   @default(false)
+  lastDoneAt  DateTime?
   restGauge   Int       @default(0)
   deducted    Boolean   @default(false)
   resetAt     DateTime?

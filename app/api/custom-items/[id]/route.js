@@ -31,6 +31,7 @@ export async function PATCH(request, { params }) {
     where: { id },
     data: {
       ...(typeof done      === 'boolean' && { done }),
+      ...(done === true    && { lastDoneAt: new Date() }),
       ...(restGauge !== undefined && { restGauge: clampGauge(restGauge) }),
       ...(typeof deducted  === 'boolean' && { deducted }),
       ...(Number.isInteger(sortOrder) && { sortOrder }),
