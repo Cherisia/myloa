@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { signIn } from 'next-auth/react'
 import Image from 'next/image'
 import { RAIDS, RAID_MAP, RAID_ORDER_MAP } from '@/lib/raidData'
-import { HIDDEN_RAID_IDS, DIFF_LABEL, DIFF_COLOR, getClassIcon } from '@/app/dashboard/_constants'
+import { HIDDEN_RAID_IDS, EX_RAID_IDS, DIFF_LABEL, DIFF_COLOR, getClassIcon } from '@/app/dashboard/_constants'
 import { raidStatusOf } from '@/lib/groupRaidShare'
 import { saveRaidCompletion } from '@/app/dashboard/_raidHelpers'
 import RaidDetailModal, { CharChip } from '@/app/components/RaidDetailModal'
@@ -135,7 +135,7 @@ function FriendRaidModal({ friend, me, persistedToggles = {}, onCharToggle, onCl
     for (const exp of friend.loaExpeditions || []) {
       for (const char of exp.characters || []) {
         for (const raid of char.characterRaids || []) {
-          if (!HIDDEN_RAID_IDS.has(raid.raidId)) raidKeys.add(`${raid.raidId}__${raid.difficulty}`)
+          if (!HIDDEN_RAID_IDS.has(raid.raidId) && !EX_RAID_IDS.has(raid.raidId) && RAID_MAP[raid.raidId]) raidKeys.add(`${raid.raidId}__${raid.difficulty}`)
         }
       }
     }
