@@ -302,6 +302,8 @@ model GuildSchedulePartySlot {
   slotNumber  Int
   userId      String?
   characterId String?
+  customName  String?
+  customClass String?
 
   post GuildSchedulePost @relation(fields: [postId], references: [id], onDelete: Cascade)
 

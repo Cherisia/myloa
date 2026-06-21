@@ -56,7 +56,24 @@ export async function GET(request, { params }) {
     orderBy: { scheduledAt: 'asc' },
   })
 
-  return NextResponse.json(posts)
+  const allUserIds = [...new Set(posts.flatMap(p => p.participants.map(pt => pt.userId)))]
+  const users = allUserIds.length > 0
+    ? await prisma.user.findMany({
+        where: { id: { in: allUserIds } },
+        select: { id: true, image: true, name: true, nickname: true },
+      })
+    : []
+  const userMap = new Map(users.map(u => [u.id, u]))
+
+  const enriched = posts.map(post => ({
+    ...post,
+    participants: post.participants.map(pt => ({
+      ...pt,
+      user: userMap.get(pt.userId) ?? null,
+    })),
+  }))
+
+  return NextResponse.json(enriched)
 }
 
 export async function POST(request, { params }) {

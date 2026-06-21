@@ -120,6 +120,7 @@ export default function DayView({
                       post={post}
                       userId={myUserId}
                       onClick={() => onPostClick(post)}
+                      onQuickJoin={() => onPostClick(post)}
                     />
                   ))}
                 </div>

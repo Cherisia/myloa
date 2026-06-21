@@ -337,6 +337,7 @@ export default function GuildScheduleTab({ expeditionId, userId, isLeader, membe
           year={viewYear}
           month={viewMonth}
           onDayClick={handleDayClick}
+          onPostClick={handlePostClick}
         />
       )}
 

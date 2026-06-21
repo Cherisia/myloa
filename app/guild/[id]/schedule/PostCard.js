@@ -4,6 +4,34 @@ import { useMemo } from 'react'
 import { RAID_MAP } from '@/lib/raidData'
 import { DIFF_LABEL, DIFF_COLOR, SUPPORT_CLASSES, defaultRole, getClassIcon } from '@/app/dashboard/_constants'
 
+const MAX_AVATARS = 8
+
+function AvatarStack({ participants }) {
+  const visible = participants.slice(0, MAX_AVATARS)
+  const extra = participants.length - visible.length
+  return (
+    <div className="flex items-center">
+      {visible.map((p, i) => (
+        <div
+          key={p.id}
+          title={p.user?.nickname || p.user?.name || ''}
+          className={`w-5 h-5 rounded-full border-2 border-white dark:border-[#1a1a1a] overflow-hidden bg-gray-200 dark:bg-[#333] flex-shrink-0 ${i > 0 ? '-ml-1.5' : ''}`}
+        >
+          {p.user?.image
+            ? <img src={p.user.image} alt="" className="w-full h-full object-cover" />
+            : <div className="w-full h-full flex items-center justify-center text-[7px] text-gray-400">?</div>
+          }
+        </div>
+      ))}
+      {extra > 0 && (
+        <div className="-ml-1.5 w-5 h-5 rounded-full border-2 border-white dark:border-[#1a1a1a] bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center text-[8px] text-gray-500 dark:text-gray-400 ns-bold flex-shrink-0">
+          +{extra}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const STATUS_LABEL = {
   recruiting: '모집중',
   closed:     '모집완료',
@@ -25,7 +53,8 @@ export default function PostCard({ post, userId, compact = false, draggable, onD
   const diffLabel = DIFF_LABEL[post.difficulty] || post.difficulty
   const diffColor = DIFF_COLOR[post.difficulty] || 'bg-gray-100 text-gray-600 dark:bg-[#333] dark:text-gray-300'
 
-  const acceptedCount = post.participants?.filter(p => p.status === 'accepted').length || 0
+  const acceptedParticipants = post.participants?.filter(p => p.status === 'accepted') || []
+  const acceptedCount = acceptedParticipants.length
   const myParticipant = post.participants?.find(p => p.userId === userId)
   const isStarted = new Date() >= new Date(post.scheduledAt)
 
@@ -80,7 +109,10 @@ export default function PostCard({ post, userId, compact = false, draggable, onD
 
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>{kstTime} ({post.durationMinutes}분)</span>
-            <span className="ns-bold">{acceptedCount} / {post.totalSlots + 1}명</span>
+            <div className="flex items-center gap-1.5">
+              <AvatarStack participants={acceptedParticipants} />
+              <span className="ns-bold">{acceptedCount} / {post.totalSlots + 1}명</span>
+            </div>
           </div>
 
           {post.memo && (

@@ -40,6 +40,8 @@ export async function POST(request, { params }) {
         slotNumber: slot.slotNumber,
         userId: slot.userId || null,
         characterId: slot.characterId || null,
+        customName: slot.customName || null,
+        customClass: slot.customClass || null,
       },
     })),
   ])
