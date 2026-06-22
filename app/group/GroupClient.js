@@ -561,7 +561,7 @@ function RaidLookupPanel({ me, friends, isDemo = false }) {
     for (const exp of me?.loaExpeditions || []) {
       for (const char of exp.characters || []) {
         for (const raid of char.characterRaids || []) {
-          if (HIDDEN_RAID_IDS.has(raid.raidId)) continue
+          if (HIDDEN_RAID_IDS.has(raid.raidId) || EX_RAID_IDS.has(raid.raidId) || !RAID_MAP[raid.raidId]) continue
           const key = `${raid.raidId}__${raid.difficulty}`
           if (!seen.has(key)) {
             seen.add(key)
