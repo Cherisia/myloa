@@ -38,6 +38,7 @@ model User {
   favoritedFriends       UserFavorite[]   @relation("FavoriteOwner")
   favoritedBy            UserFavorite[]   @relation("FavoriteTarget")
   weeklyRaidHistories    WeeklyRaidHistory[]
+  feedbacks              Feedback[]
 }
 
 model Account {
@@ -323,4 +324,20 @@ model MemberAvailability {
 
   @@unique([userId, expeditionId])
   @@index([expeditionId])
+}
+
+// ─── 문의/피드백 ──────────────────────────────────────────────────────────────
+
+model Feedback {
+  id       String  @id @default(cuid())
+  userId   String?
+  category String  // 'bug' | 'suggestion' | 'other'
+  content  String  @db.Text
+  contact  String? // 선택적 연락처 (이메일 or Discord ID)
+  status   String  @default("new") // 'new' | 'read' | 'resolved'
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
 }

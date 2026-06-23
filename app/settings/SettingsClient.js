@@ -4,6 +4,9 @@ import Image from 'next/image'
 import { signOut, useSession } from 'next-auth/react'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { IconEye, IconEyeOff, IconCheck, IconLogout, IconSpinner } from '@/app/dashboard/_icons'
+import dynamic from 'next/dynamic'
+
+const FeedbackModal = dynamic(() => import('@/components/FeedbackModal'), { ssr: false })
 
 function Toggle({ checked, onChange, disabled }) {
   return (
@@ -47,6 +50,7 @@ export default function SettingsClient({ user, session }) {
   const [nickname, setNickname] = useState(user?.nickname || '')
   const [avatarSrc, setAvatarSrc] = useState(session?.user?.image || null)
   const avatarRefreshedRef = useRef(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   useEffect(() => {
     setAvatarSrc(session?.user?.image || null)
@@ -279,6 +283,21 @@ export default function SettingsClient({ user, session }) {
           </div>
         </Section>
 
+        {/* 문의 */}
+        <Section title="지원">
+          <div className="px-5 py-3">
+            <button
+              type="button"
+              onClick={() => setFeedbackOpen(true)}
+              className="flex items-center gap-2 text-sm text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 transition-colors py-1"
+            >
+              <span className="text-base">💬</span>
+              문의하기 / 건의사항
+            </button>
+            <p className="text-xs text-gray-400 dark:text-zinc-600 mt-1 ml-7">버그 신고, 기능 건의를 보내주세요</p>
+          </div>
+        </Section>
+
         {/* 계정 */}
         <Section title="계정">
           <div className="px-5 py-3">
@@ -294,6 +313,8 @@ export default function SettingsClient({ user, session }) {
         </Section>
 
       </div>
+
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
     </div>
   )
 }

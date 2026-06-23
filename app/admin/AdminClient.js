@@ -166,11 +166,43 @@ function Avatar({ src, name }) {
 
 // ── AdminClient ───────────────────────────────────────────────────────────────
 
-export default function AdminClient({ userStats, guildStats, totalUsers, totalGuilds, adminUser }) {
+const CATEGORY_LABEL = { bug: '🐛 버그', suggestion: '💡 건의', other: '📝 기타' }
+const STATUS_LABEL = { new: '신규', read: '확인', resolved: '완료' }
+const STATUS_CLS = {
+  new: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+  read: 'bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-gray-300',
+  resolved: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+}
+
+export default function AdminClient({ userStats, guildStats, totalUsers, totalGuilds, adminUser, feedbacks }) {
   const [tab, setTab] = useState('users')
   const [userSearch, setUserSearch] = useState('')
   const [guildSearch, setGuildSearch] = useState('')
   const [userSort, setUserSort] = useState('lastActivityAt_desc')
+  const [feedbackList, setFeedbackList] = useState(feedbacks ?? [])
+  const [feedbackFilter, setFeedbackFilter] = useState('all')
+  const [updatingId, setUpdatingId] = useState(null)
+
+  const filteredFeedbacks = useMemo(() => {
+    if (feedbackFilter === 'all') return feedbackList
+    return feedbackList.filter(f => f.status === feedbackFilter)
+  }, [feedbackList, feedbackFilter])
+
+  const updateFeedbackStatus = useCallback(async (id, status) => {
+    setUpdatingId(id)
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      })
+      if (res.ok) {
+        setFeedbackList(prev => prev.map(f => f.id === id ? { ...f, status } : f))
+      }
+    } finally {
+      setUpdatingId(null)
+    }
+  }, [])
 
   // 레이드 모달
   const [raidModal, setRaidModal] = useState(null)   // 로딩된 user 객체
@@ -261,6 +293,7 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
           {[
             { key: 'users', label: `사용자 (${totalUsers})` },
             { key: 'guilds', label: `공격대 (${totalGuilds})` },
+            { key: 'feedbacks', label: `문의 (${feedbackList.filter(f => f.status === 'new').length})` },
           ].map(t => (
             <button
               key={t.key}
@@ -535,6 +568,81 @@ export default function AdminClient({ userStats, guildStats, totalUsers, totalGu
               ))}
               {filteredGuilds.length === 0 && (
                 <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">검색 결과가 없습니다</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── 문의 탭 ── */}
+        {tab === 'feedbacks' && (
+          <div className="space-y-3">
+            {/* 필터 */}
+            <div className="flex gap-1 w-fit">
+              {[
+                { key: 'all', label: `전체 (${feedbackList.length})` },
+                { key: 'new', label: `신규 (${feedbackList.filter(f => f.status === 'new').length})` },
+                { key: 'read', label: '확인' },
+                { key: 'resolved', label: '완료' },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setFeedbackFilter(f.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                    feedbackFilter === f.key
+                      ? 'bg-[var(--accent-400)] text-[var(--accent-900)]'
+                      : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-zinc-700'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              {filteredFeedbacks.map(f => {
+                const sender = f.user
+                  ? (f.user.nickname || f.user.name || f.user.discordUsername || '알 수 없음')
+                  : '비로그인'
+                return (
+                  <div
+                    key={f.id}
+                    className="bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 p-4 space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs ns-bold text-gray-700 dark:text-gray-300">{CATEGORY_LABEL[f.category] ?? f.category}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full ns-bold ${STATUS_CLS[f.status] ?? STATUS_CLS.read}`}>
+                          {STATUS_LABEL[f.status] ?? f.status}
+                        </span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">{sender}</span>
+                        {f.user?.email && <span className="text-[10px] text-gray-300 dark:text-zinc-600">{f.user.email}</span>}
+                      </div>
+                      <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">{formatDateTime(f.createdAt)}</span>
+                    </div>
+
+                    <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">{f.content}</p>
+
+                    <div className="flex gap-1.5 pt-1">
+                      {(['new', 'read', 'resolved']).map(s => (
+                        <button
+                          key={s}
+                          disabled={f.status === s || updatingId === f.id}
+                          onClick={() => updateFeedbackStatus(f.id, s)}
+                          className={`text-[10px] px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                            f.status === s
+                              ? `${STATUS_CLS[s]} cursor-default`
+                              : 'bg-gray-100 dark:bg-zinc-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-zinc-600'
+                          }`}
+                        >
+                          {STATUS_LABEL[s]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+              {filteredFeedbacks.length === 0 && (
+                <div className="text-center py-12 text-gray-400 dark:text-gray-500 text-sm">문의가 없습니다</div>
               )}
             </div>
           </div>

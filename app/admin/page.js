@@ -176,6 +176,15 @@ export default async function AdminPage() {
     totalMembers: exp.members.length,
   }))
 
+  // ── 문의/피드백 ──────────────────────────────────────────────────────────
+  const feedbacks = await prisma.feedback.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+    include: {
+      user: { select: { name: true, nickname: true, discordUsername: true, email: true } },
+    },
+  })
+
   return (
     <AdminClient
       userStats={userStats}
@@ -183,6 +192,7 @@ export default async function AdminPage() {
       totalUsers={users.length}
       totalGuilds={expeditions.length}
       adminUser={adminUser}
+      feedbacks={feedbacks}
     />
   )
 }

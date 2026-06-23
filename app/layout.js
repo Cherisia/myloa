@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/ThemeProvider'
 import SessionProvider from '@/components/SessionProvider'
 import Navbar from '@/components/Navbar'
 import { SidebarAdLeft, SidebarAdRight } from '@/components/SidebarAds'
+import FeedbackButton from '@/components/FeedbackButton'
 import { auth } from '@/lib/auth'
 
 export const metadata = {
@@ -80,6 +81,12 @@ export default async function RootLayout({ children }) {
                     <Link href="/guide" className="text-gray-400 dark:text-zinc-600 hover:text-gray-600 dark:hover:text-zinc-400 transition-colors">
                       사용 가이드
                     </Link>
+                    {session?.user?.id && (
+                      <>
+                        <span className="text-gray-300 dark:text-zinc-700">|</span>
+                        <FeedbackButton />
+                      </>
+                    )}
                     <span className="text-gray-300 dark:text-zinc-700">|</span>
                     <Link href="/privacy" className="text-gray-400 dark:text-zinc-600 hover:text-gray-600 dark:hover:text-zinc-400 transition-colors">
                       개인정보처리방침
