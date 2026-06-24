@@ -144,12 +144,14 @@ const GATE_MATERIALS = {
         { name: '운명의 파괴석', count: 880 }, { name: '운명의 수호석', count: 1760 },
         { name: '운명의 파편', count: 6200 }, { name: '운명의 돌파석', count: 12 },
         { name: '고귀한 구원자의 팔찌', count: 3 }, { name: '위대한 비상의 돌', count: 8 },
+        { name: '고통의 가시', count: 4 },
       ],
       [
         { name: '운명의 파괴석', count: 1100 }, { name: '운명의 수호석', count: 2200 },
         { name: '운명의 파편', count: 7900 }, { name: '운명의 돌파석', count: 15 },
         { name: '고귀한 구원자의 팔찌', count: 5 }, { name: '위대한 비상의 돌', count: 9 },
         { name: '순환 돌파석', count: 17 }, { name: '운명의 돌', count: 8 },
+        { name: '고통의 가시', count: 6 },
       ],
     ],
     hard: [
@@ -411,12 +413,13 @@ const GATE_MORE_MATERIALS = {
         { name: '운명의 파괴석', count: 1610 }, { name: '운명의 수호석', count: 3220 },
         { name: '운명의 파편', count: 13650 }, { name: '운명의 돌파석', count: 50 },
         { name: '고귀한 구원자의 팔찌', count: 3 }, { name: '위대한 비상의 돌', count: 8 },
+        { name: '고통의 가시', count: 4 },
       ],
       [
         { name: '운명의 파괴석', count: 2480 }, { name: '운명의 수호석', count: 4960 },
         { name: '운명의 파편', count: 20880 }, { name: '운명의 돌파석', count: 82 },
         { name: '고귀한 구원자의 팔찌', count: 5 }, { name: '위대한 비상의 돌', count: 9 },
-        { name: '순환 돌파석', count: 12 },
+        { name: '순환 돌파석', count: 12 }, { name: '고통의 가시', count: 6 },
       ],
     ],
     hard: [
