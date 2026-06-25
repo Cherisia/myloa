@@ -58,10 +58,57 @@ function SectionBadge({ label, color }) {
   )
 }
 
+function CopyBidButton({ bidKey, value, isCopied, onCopy, children }) {
+  return (
+    <div className="relative group">
+      {/* 커스텀 툴팁 */}
+      <div
+        aria-hidden
+        className="absolute -top-10 left-1/2 -translate-x-1/2 z-10 pointer-events-none
+          opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100
+          transition-all duration-200 ease-out"
+      >
+        <div className="relative bg-[var(--accent-200)] dark:bg-[var(--accent-800)]
+          text-[var(--accent-800)] dark:text-[var(--accent-100)]
+          text-[11px] ns-bold px-3 py-1.5 rounded-full
+          whitespace-nowrap shadow-lg shadow-[var(--accent-400)]/30">
+          누르면 복사됩니다!
+          {/* 화살표 */}
+          <span className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent
+            border-t-[var(--accent-200)] dark:border-t-[var(--accent-800)]" />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onCopy(bidKey, value)}
+        className={`relative w-full flex items-center justify-end gap-1.5 cursor-pointer
+          rounded-xl px-2 py-1.5 -mx-2 transition-all duration-200
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70
+          ${isCopied
+            ? 'scale-[0.94] bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 ring-2 ring-[var(--accent-400)]/40'
+            : 'hover:bg-[var(--accent-50)] dark:hover:bg-[var(--accent-900)]/20 active:scale-[0.94]'
+          }`}
+      >
+        {children}
+      </button>
+    </div>
+  )
+}
+
 export default function AuctionClient() {
   const [rawPrice, setRawPrice] = useState('')
   const [partySize, setPartySize] = useState(4)
+  const [copied, setCopied] = useState(null)
   const priceInputRef = useRef(null)
+
+  function copyBid(key, value) {
+    if (!isFinite(value) || value <= 0) return
+    navigator.clipboard.writeText(String(Math.floor(value))).then(() => {
+      setCopied(key)
+      setTimeout(() => setCopied(null), 1200)
+    })
+  }
 
   useEffect(() => {
     priceInputRef.current?.focus()
@@ -162,13 +209,13 @@ export default function AuctionClient() {
             </div>
 
             <div>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">추천 입찰가</p>
-              <div className="flex items-center justify-end gap-1.5">
-                <span className="ns-extrabold text-2xl text-amber-500 dark:text-amber-400 tabular-nums leading-none">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-1">추천 입찰가</p>
+              <CopyBidButton bidKey="sell" value={sellOptimalBid} isCopied={copied === 'sell'} onCopy={copyBid}>
+                <span className="ns-extrabold text-2xl text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums leading-none">
                   {g(sellOptimalBid)}
                 </span>
                 <Gold size={16} />
-              </div>
+              </CopyBidButton>
             </div>
 
             <div className="grid grid-cols-2 gap-1.5">
@@ -201,15 +248,15 @@ export default function AuctionClient() {
             </div>
 
             <div>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-1">
                 추천 입찰가 <span className="text-gray-300 dark:text-gray-600">· 손익분기와 동일</span>
               </p>
-              <div className="flex items-center justify-end gap-1.5">
-                <span className="ns-extrabold text-2xl text-amber-500 dark:text-amber-400 tabular-nums leading-none">
+              <CopyBidButton bidKey="use" value={useBid} isCopied={copied === 'use'} onCopy={copyBid}>
+                <span className="ns-extrabold text-2xl text-[var(--accent-500)] dark:text-[var(--accent-400)] tabular-nums leading-none">
                   {g(useBid)}
                 </span>
                 <Gold size={16} />
-              </div>
+              </CopyBidButton>
             </div>
 
             <div className="grid grid-cols-2 gap-1.5">
