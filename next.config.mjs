@@ -14,7 +14,7 @@ const securityHeaders = [
 ]
 
 const nextConfig = {
-  allowedDevOrigins: ['172.30.1.3'],
+  ...(process.env.NODE_ENV === 'development' && { allowedDevOrigins: ['172.30.1.3'] }),
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.discordapp.com' },

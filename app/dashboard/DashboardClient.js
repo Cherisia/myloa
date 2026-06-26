@@ -6,10 +6,7 @@ import { signIn } from 'next-auth/react'
 import DiscordIcon from '@/components/DiscordIcon'
 import AdSense from '@/components/AdSense'
 import KakaoAdFit from '@/components/KakaoAdFit'
-
-// 카카오 애드핏 단위 ID — https://adfit.kakao.com 에서 발급 후 교체
-const ADFIT_UNIT_INLINE = 'DAN-elHXJUANBFHvU8kh'
-import { RAIDS, RAID_MAP, RAID_ORDER_MAP, CLASS_COLOR, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
+import { RAIDS, RAID_MAP, RAID_ORDER_MAP, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
 import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, KURZAN_NAMES, DAILY_PRESET_ORDER, FIXED_WEEKLY_ORDER, orderedDailyCustomItems, isWeeklyCustomItem, orderedWeeklyCustomItems, getClassIcon, getKurzanPreset, CUSTOM_MAX } from './_constants'
 import { IconCrown, IconPlus, IconCheck, IconRefresh, IconInfo, IconClass, IconItemLevel, IconPower, IconGrip } from './_icons'
 import { saveRaid, deleteRaid, computeAutoRaids } from './_raidHelpers'
@@ -21,6 +18,7 @@ import CharGoldBadges from './components/CharGoldBadges'
 import RaidCell from './components/RaidCell'
 import Confetti, { GoldConfetti } from './components/Confetti'
 
+const ADFIT_UNIT_INLINE = 'DAN-elHXJUANBFHvU8kh'
 
 /** 카드 레이어보다 나중에 깜박이는 img 아이콘을 줄이기 위해 브라우저 캐시에 선적재한다. */
 function collectDashboardImageUrls(chars, raidsByCharId, customByCharId = {}) {
@@ -1735,7 +1733,14 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           // 캐릭터 헤더
           const hdr = document.createElement('div')
           hdr.style.cssText = `background:${col.hdr};padding:8px 6px 6px;text-align:center;border-bottom:2px solid ${_accentBar};`
-          hdr.innerHTML = `<div style="font-size:11px;font-weight:bold;color:${col.txt};line-height:1.4;">${char?.name || ''}</div><div style="font-size:10px;color:${col.sub};margin-top:1px;">${char?.itemLevel?.toFixed(2) || ''}</div>`
+          const hdrName = document.createElement('div')
+          hdrName.style.cssText = `font-size:11px;font-weight:bold;color:${col.txt};line-height:1.4;`
+          hdrName.textContent = char?.name || ''
+          const hdrLevel = document.createElement('div')
+          hdrLevel.style.cssText = `font-size:10px;color:${col.sub};margin-top:1px;`
+          hdrLevel.textContent = char?.itemLevel?.toFixed(2) || ''
+          hdr.appendChild(hdrName)
+          hdr.appendChild(hdrLevel)
           ghost.appendChild(hdr)
 
           // 레이드 행
