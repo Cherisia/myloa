@@ -1459,7 +1459,7 @@ export default function GroupClient({ initialFriends, initialRequests, me, isDem
                   </button>
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                   {groups.map((group, idx) => {
                     const groupFriends = group.memberIds
                       .map(id => friends.find(f => f.id === id))
