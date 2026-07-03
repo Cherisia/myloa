@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import RaidDetailModal from '@/app/components/RaidDetailModal'
 import { RAID_MAP, RAID_ORDER_MAP } from '@/lib/raidData'
-import { HIDDEN_RAID_IDS, EX_RAID_IDS } from '@/app/dashboard/_constants'
+import { HIDDEN_RAID_IDS } from '@/app/dashboard/_constants'
 
 const DIFF_SORT = { nightmare: 0, hard: 1, stage3: 0, stage2: 1, stage1: 2, normal: 2 }
 
@@ -37,7 +37,7 @@ function AdminUserRaidModal({ user, me, onClose }) {
     for (const exp of user.loaExpeditions || []) {
       for (const char of exp.characters || []) {
         for (const raid of char.characterRaids || []) {
-          if (!HIDDEN_RAID_IDS.has(raid.raidId) && !EX_RAID_IDS.has(raid.raidId) && RAID_MAP[raid.raidId]) {
+          if (!HIDDEN_RAID_IDS.has(raid.raidId) && RAID_MAP[raid.raidId]) {
             raidKeys.add(`${raid.raidId}__${raid.difficulty}`)
           }
         }
