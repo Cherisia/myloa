@@ -2895,7 +2895,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               {activePageId === null && expPages.length > 1 && (
                 <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200/80 dark:border-[#282828] p-0.5">
                   <button
-                    onClick={() => { setAllTabSort('itemLevel'); localStorage.setItem('dashboard_allTabSort', 'itemLevel') }}
+                    onClick={() => { frozenOrderRef.current = null; frozenBadgeOrderRef.current = null; setAllTabSort('itemLevel'); localStorage.setItem('dashboard_allTabSort', 'itemLevel') }}
                     className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                       allTabSort === 'itemLevel'
                         ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
@@ -2907,7 +2907,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     레벨순
                   </button>
                   <button
-                    onClick={() => { setAllTabSort('expedition'); localStorage.setItem('dashboard_allTabSort', 'expedition') }}
+                    onClick={() => { frozenOrderRef.current = null; frozenBadgeOrderRef.current = null; setAllTabSort('expedition'); localStorage.setItem('dashboard_allTabSort', 'expedition') }}
                     className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
                       allTabSort === 'expedition'
                         ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
