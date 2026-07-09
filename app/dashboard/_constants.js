@@ -70,6 +70,7 @@ export const CLASS_ICON = {
   '서머너':      'summoner',
   '아르카나':    'arcanist',
   '소서리스':    'sorceress',
+  '차원술사':    'dimensionmaster',
   // 암살자
   '블레이드':    'deathblade',
   '데모닉':      'shadowhunter',

@@ -121,10 +121,9 @@ const SYNERGY_DATA = [
   },
   {
     class: '기공사', icon: 'soulfist', group: '무도가(여)',
-    skills: ['세맥타통', '역천지체'],
+    skills: ['무상신공', '역천지체'],
     synergies: [
-      { type: 'atk',        value: '+6%',  condition: '공통' },
-      { type: 'mitigation', value: '+25%', condition: '내공 방출 스킬 채용 시' },
+      { type: 'atk', value: '+6%', condition: '공통' },
     ],
   },
   {
@@ -179,6 +178,13 @@ const SYNERGY_DATA = [
     synergies: [
       { type: 'defdown', value: '-12%', condition: '공통' },
       { type: 'mana',    value: '+40%', condition: '트포 선택 시' },
+    ],
+  },
+  {
+    class: '차원술사', icon: 'dimensionmaster', group: '스페셜리스트',
+    skills: ['시간 관리자', '공간 검사'],
+    synergies: [
+      { type: 'defdown', value: '-12%', condition: '공통' },
     ],
   },
   {
