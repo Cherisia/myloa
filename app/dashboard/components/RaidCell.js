@@ -96,7 +96,9 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
             {diff.label}
           </span>
           <span className={`text-[11px] min-[1920px]:text-[11px] ns-bold leading-none tabular-nums tracking-tight
-            ${moreDone ? 'text-[var(--accent-700)] dark:text-[var(--accent-500)]' : allDone ? 'text-[var(--accent-600)] dark:text-[var(--accent-400)]' : 'text-gray-500 dark:text-gray-500'}`}>
+            ${entry.isGoldCheck
+              ? moreDone ? 'text-[var(--accent-700)] dark:text-[var(--accent-500)]' : allDone ? 'text-[var(--accent-600)] dark:text-[var(--accent-400)]' : 'text-gray-500 dark:text-gray-500'
+              : 'text-gray-200 dark:text-gray-700'}`}>
             {totalGold.toLocaleString()}G
           </span>
           {entry.isGoldCheck && (
