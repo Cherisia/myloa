@@ -7,8 +7,8 @@ import DiscordIcon from '@/components/DiscordIcon'
 import AdSense from '@/components/AdSense'
 import KakaoAdFit from '@/components/KakaoAdFit'
 import { RAIDS, RAID_MAP, RAID_ORDER_MAP, calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
-import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, KURZAN_NAMES, DAILY_PRESET_ORDER, FIXED_WEEKLY_ORDER, orderedDailyCustomItems, isWeeklyCustomItem, orderedWeeklyCustomItems, getClassIcon, getKurzanPreset, CUSTOM_MAX } from './_constants'
-import { IconCrown, IconPlus, IconCheck, IconRefresh, IconInfo, IconClass, IconItemLevel, IconPower, IconGrip } from './_icons'
+import { EX_RAID_IDS, HIDDEN_RAID_IDS, GOLD_RAID_LIMIT, GOLD_CHAR_LIMIT, AUTO_PRESETS, REST_GAUGE_NAMES, KURZAN_NAMES, orderedDailyCustomItems, isWeeklyCustomItem, orderedWeeklyCustomItems, getClassIcon, getKurzanPreset, CUSTOM_MAX } from './_constants'
+import { IconCrown, IconPlus, IconCheck, IconRefresh, IconInfo, IconClass, IconItemLevel, IconPower } from './_icons'
 import { saveRaid, deleteRaid, computeAutoRaids } from './_raidHelpers'
 import RaidSettingsModal from './modals/RaidSettingsModal'
 import CharacterEditModal from './modals/CharacterEditModal'
@@ -57,14 +57,14 @@ function buildCustomHomeworkRowMap(filteredChars, customItems, includeItem) {
   const byName = new Map()
   filteredChars.forEach((char) => {
     (customItems[char.id] || []).filter(includeItem).forEach((it) => {
-      if (!byName.has(it.name)) byName.set(it.name, { charMap: new Map(), meta: { image: it.image, type: it.type } })
+      if (!byName.has(it.name)) byName.set(it.name, { charMap: new Map(), meta: { image: it.image, type: it.type, sortOrder: it.sortOrder ?? 0 } })
       byName.get(it.name).charMap.set(char.id, it.id)
     })
   })
   return byName
 }
 
-export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialHasApiKey = false, initialCustomItems = {}, initialCustomChecks = {}, initialRestGauge = {}, initialRestGaugeDeducted = {}, initialExpNames = {}, initialRepCharId = null }) {
+export default function DashboardClient({ initialChars = [], initialRaids = {}, isLoggedIn = false, initialHasApiKey = false, initialCustomItems = {}, initialCustomChecks = {}, initialRestGauge = {}, initialRestGaugeDeducted = {}, initialExpNames = {}, initialRepCharId = null, initialRaidOrder = {} }) {
   const isDemo = !isLoggedIn
   const [chars, setChars] = useState(initialChars)
   const [raids, setRaids] = useState(initialRaids)
@@ -100,10 +100,15 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     return localStorage.getItem('dashboard_cardAlignMode') || 'aligned'
   }) // 'aligned' | 'compact'
 
+  const [raidOrder, setRaidOrder]               = useState(initialRaidOrder) // { [expeditionId]: { [raidId]: sortOrder } }
   const [dragCharId, setDragCharId]             = useState(null) // 드래그 중인 캐릭터 id
   const [dropCharId, setDropCharId]             = useState(null) // 드롭 대상 캐릭터 id
   const [dragExpId,  setDragExpId]              = useState(null) // 드래그 중인 원정대 id
   const [dropExpId,  setDropExpId]              = useState(null) // 드롭 대상 원정대 id
+  const [dragRaidId,     setDragRaidId]         = useState(null) // 레이드 행 드래그 중인 raidId
+  const [dropRaidId,     setDropRaidId]         = useState(null) // 레이드 행 드롭 대상 raidId
+  const [dragCustomName, setDragCustomName]     = useState(null) // 커스텀 항목 드래그 중인 name
+  const [dropCustomName, setDropCustomName]     = useState(null) // 커스텀 항목 드롭 대상 name
   const [selectedRaid, setSelectedRaid]         = useState(null) // { raidId, diffKey } — 레이드 필터
   const [remainFilter, setRemainFilter]         = useState(null) // null | 'gold' | 'all' — 남은 레이드 필터
   const frozenRemainRaidsRef = useRef(null) // 필터 활성 시점 스냅샷: Set<'charId:raidId:difficulty'>
@@ -479,9 +484,37 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     })
     if (isLoggedIn) itemIds.forEach(id => fetch(`/api/custom-items/${id}`, { method: 'DELETE' }).catch(e => console.error('[deleteCustomItemAll]', e)))
   }
-  const reorderCustomItems = (charId, newItems) => {
-    setCustomItems(prev => ({ ...prev, [charId]: newItems }))
-    if (isLoggedIn) newItems.forEach((it, i) => fetch(`/api/custom-items/${it.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sortOrder: i }) }).catch(e => console.error('[reorderCustomItems]', e)))
+  // 커스텀 항목 순서 변경 — 같은 이름을 가진 모든 캐릭터에 동일 순서 적용
+  const reorderCustomItems = (newOrderNames, type) => {
+    const orderMap = new Map(newOrderNames.map((name, i) => [name, i]))
+    setCustomItems(prev => {
+      const next = { ...prev }
+      Object.keys(next).forEach(cid => {
+        const items = next[cid]
+        if (!items) return
+        const hasType = items.some(it => it.type === type)
+        if (!hasType) return
+        const sameType = items.filter(it => it.type === type).sort((a, b) => (orderMap.get(a.name) ?? 9999) - (orderMap.get(b.name) ?? 9999))
+        const other = items.filter(it => it.type !== type)
+        next[cid] = [...other, ...sameType].map((it, i) => ({ ...it, sortOrder: it.type === type ? (orderMap.get(it.name) ?? i) : it.sortOrder }))
+      })
+      if (isLoggedIn) {
+        Object.values(next).flat().filter(it => it.type === type && orderMap.has(it.name)).forEach(it =>
+          fetch(`/api/custom-items/${it.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sortOrder: orderMap.get(it.name) }) }).catch(e => console.error('[reorderCustomItems]', e))
+        )
+      }
+      return next
+    })
+  }
+
+  // 레이드 순서 변경
+  const reorderRaids = (expeditionId, newRaidIds) => {
+    const orderMap = Object.fromEntries(newRaidIds.map((id, i) => [id, i]))
+    setRaidOrder(prev => ({ ...prev, [expeditionId]: { ...(prev[expeditionId] || {}), ...orderMap } }))
+    if (isLoggedIn) fetch('/api/raid-order', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expeditionId, order: newRaidIds.map((raidId, sortOrder) => ({ raidId, sortOrder })) }),
+    }).catch(e => console.error('[reorderRaids]', e))
   }
   const toggleCustomCheck = (charId, itemId) => {
     const item = (customItems[charId] || []).find(it => it.id === itemId)
@@ -540,6 +573,16 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     return chars.reduce((a, b) => a.itemLevel > b.itemLevel ? a : b).id
   }, [chars, initialRepCharId, activePageId, expPages])
 
+  // 캐릭터의 expeditionId를 빠르게 조회하기 위한 Map
+  const charExpMap = useMemo(() => new Map(chars.map(c => [c.id, c.expeditionId])), [chars])
+
+  // 레이드 정렬 키: 사용자 지정 순서 우선, 없으면 기본 RAID_ORDER_MAP
+  const getRaidSortKey = (expeditionId, raidId) => {
+    const expOrder = raidOrder[expeditionId]
+    if (expOrder && raidId in expOrder) return expOrder[raidId]
+    return RAID_ORDER_MAP[raidId] ?? 9999
+  }
+
   // ── 레이드 필터 — 활성 계정 캐릭터에 등록된 고유 레이드 목록 ──────────────
   const allRegisteredRaids = useMemo(() => {
     const seen = new Map()
@@ -564,10 +607,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         if (!Array.isArray(clears) || clears.length === 0 || !clears.every(Boolean)) seen.get(key).incomplete++
       }
     }
-    return [...seen.values()].sort((a, b) =>
-      (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1)
-    )
-  }, [activeChars, raids])
+    const expId = activeChars[0] ? charExpMap.get(activeChars[0].id) : null
+    return [...seen.values()].sort((a, b) => getRaidSortKey(expId, a.raidId) - getRaidSortKey(expId, b.raidId))
+  }, [activeChars, raids, raidOrder, charExpMap])
 
   // 선택된 레이드에서 미완료 캐릭터 목록
   const raidIncompleteChars = useMemo(() => {
@@ -1237,7 +1279,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     return map
   }, [chars, raids])
 
-  // 테이블 행 — 레이드 단위로 합산, RAIDS 순서 유지 (캐릭터마다 난이도가 다를 수 있음)
+  // 테이블 행 — 레이드 단위로 합산 (기본 순서; 청크 렌더링 시 expedition 순서로 재정렬)
   const raidRows = useMemo(() => {
     const activeRaidIds = new Set()
     Object.values(raids).forEach(list =>
@@ -1803,6 +1845,64 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
           setDropCharId(null)
         }
 
+        // ── 레이드 행 드래그앤드랍 ──────────────────────────────────────────
+        const handleRaidDragStart = (e, raidId) => {
+          setDragRaidId(raidId)
+          e.dataTransfer.effectAllowed = 'move'
+          e.dataTransfer.setData('text/plain', raidId)
+          e.stopPropagation()
+        }
+        const handleRaidDragOver = (e, raidId) => {
+          e.preventDefault()
+          e.stopPropagation()
+          e.dataTransfer.dropEffect = 'move'
+          if (raidId !== dropRaidId) setDropRaidId(raidId)
+        }
+        const handleRaidDrop = (e, raidId, expeditionId, currentRaidIds) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!dragRaidId || dragRaidId === raidId) return
+          const from = currentRaidIds.indexOf(dragRaidId)
+          const to   = currentRaidIds.indexOf(raidId)
+          if (from < 0 || to < 0) return
+          const next = [...currentRaidIds]
+          const [moved] = next.splice(from, 1)
+          next.splice(to, 0, moved)
+          reorderRaids(expeditionId, next)
+          setDragRaidId(null)
+          setDropRaidId(null)
+        }
+        const handleRaidDragEnd = () => { setDragRaidId(null); setDropRaidId(null) }
+
+        // ── 커스텀 항목 드래그앤드랍 ────────────────────────────────────────
+        const handleCustomDragStart = (e, name) => {
+          setDragCustomName(name)
+          e.dataTransfer.effectAllowed = 'move'
+          e.dataTransfer.setData('text/plain', name)
+          e.stopPropagation()
+        }
+        const handleCustomDragOver = (e, name) => {
+          e.preventDefault()
+          e.stopPropagation()
+          e.dataTransfer.dropEffect = 'move'
+          if (name !== dropCustomName) setDropCustomName(name)
+        }
+        const handleCustomDrop = (e, name, type, orderedNames) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!dragCustomName || dragCustomName === name) return
+          const from = orderedNames.indexOf(dragCustomName)
+          const to   = orderedNames.indexOf(name)
+          if (from < 0 || to < 0) return
+          const next = [...orderedNames]
+          const [moved] = next.splice(from, 1)
+          next.splice(to, 0, moved)
+          reorderCustomItems(next, type)
+          setDragCustomName(null)
+          setDropCustomName(null)
+        }
+        const handleCustomDragEnd = () => { setDragCustomName(null); setDropCustomName(null) }
+
         // ── 카드 뷰 ────────────────────────────────────────────────────────
         const renderCardView = () => {
           // 캐릭터별 charRaids를 미리 계산하고, 원정대별 raidId 합집합을 정렬하여 구성
@@ -1820,7 +1920,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 if (remainFilter === 'gold') return e.isGoldCheck
                 return true
               })
-              .sort((a, b) => (RAID_ORDER_MAP[a.raidId] ?? -1) - (RAID_ORDER_MAP[b.raidId] ?? -1))
+              .sort((a, b) => getRaidSortKey(char.expeditionId, a.raidId) - getRaidSortKey(char.expeditionId, b.raidId))
             charRaidsMap.set(char.id, cr)
           })
           const isCompact = cardAlignMode === 'compact'
@@ -1834,7 +1934,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               rowChars.forEach(char => {
                 ;(charRaidsMap.get(char.id) || []).forEach(e => rowRaidIdSet.add(e.raidId))
               })
-              const rowRaidKeys = [...rowRaidIdSet].sort((a, b) => (RAID_ORDER_MAP[a] ?? -1) - (RAID_ORDER_MAP[b] ?? -1))
+              const refExpId = rowChars[0]?.expeditionId
+              const rowRaidKeys = [...rowRaidIdSet].sort((a, b) => getRaidSortKey(refExpId, a) - getRaidSortKey(refExpId, b))
               rowChars.forEach(char => charRaidKeysMap.set(char.id, rowRaidKeys))
             }
           }
@@ -1895,8 +1996,6 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               return (
                 <div
                   key={char.id}
-                  draggable={!isMobile}
-                  onDragStart={!isMobile ? (e) => handleCharDragStart(e, char.id) : undefined}
                   onDragOver={!isMobile ? (e) => handleCharDragOver(e, char.id) : undefined}
                   onDrop={!isMobile ? (e) => handleCharDrop(e, char.id) : undefined}
                   onDragEnd={!isMobile ? handleCharDragEnd : undefined}
@@ -1906,8 +2005,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                   'border-gray-200 dark:border-[#2d2d2d] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.45)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.1),0_2px_6px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_6px_24px_rgba(0,0,0,0.58)] hover:-translate-y-px'
                   }`}
                 >
-                  {/* ── 캐릭터 헤더 ── */}
-                  <div className="flex items-center gap-1.5 pl-2.5 pr-1 bg-gradient-to-b from-gray-50 to-gray-50/60 dark:from-[#1e1e1e] dark:to-[#1a1a1a] border-b border-gray-200 dark:border-[#2d2d2d] h-[47px] 2xl:h-[56px] overflow-hidden">
+                  {/* ── 캐릭터 헤더 (드래그 핸들: 캐릭터 순서 변경) ── */}
+                  <div
+                    draggable={!isMobile}
+                    onDragStart={!isMobile ? (e) => handleCharDragStart(e, char.id) : undefined}
+                    className={`flex items-center gap-1.5 pl-2.5 pr-1 bg-gradient-to-b from-gray-50 to-gray-50/60 dark:from-[#1e1e1e] dark:to-[#1a1a1a] border-b border-gray-200 dark:border-[#2d2d2d] h-[47px] 2xl:h-[56px] overflow-hidden ${!isMobile ? 'cursor-default' : ''}`}
+                  >
                     {getClassIcon(char.class)
                       ? <Image src={getClassIcon(char.class)} alt={char.class} width={28} height={28} unoptimized className="class-icon w-7 h-7 2xl:w-9 2xl:h-9 object-contain flex-shrink-0" />
                       : <span className="w-7 h-7 2xl:w-9 2xl:h-9 flex items-center justify-center text-gray-400 flex-shrink-0"><IconClass /></span>
@@ -2014,21 +2117,30 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({dailyDoneCount}/{orderedDaily.length})</span>
                       </div>
                       <div className="divide-y divide-gray-100 dark:divide-[#272727]">
-                        {orderedDaily.map(item => {
+                        {(() => {
+                          const orderedDailyNames = orderedDaily.map(it => it.name)
+                          return orderedDaily.map(item => {
                           const checked = !!(customChecks[char.id]?.[item.id])
                           const gauge   = restGauge[char.id]?.[item.id] ?? 0
                           const showRestGauge = REST_GAUGE_NAMES.has(item.name)
+                          const isItemDragging = dragCustomName === item.name
+                          const isItemDragOver = dropCustomName === item.name && dragCustomName !== item.name
+                          const dragItemProps = !isMobile ? {
+                            onDragOver: (e) => handleCustomDragOver(e, item.name),
+                            onDrop:     (e) => handleCustomDrop(e, item.name, 'daily', orderedDailyNames),
+                            onDragEnd:  handleCustomDragEnd,
+                          } : {}
                           if (showRestGauge) {
                             return (
-                              <div key={item.id} className={`transition-colors ${checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10' : 'bg-white dark:bg-[#222222]'}`}>
+                              <div key={item.id} {...dragItemProps} draggable={!isMobile} onDragStart={!isMobile ? (e) => handleCustomDragStart(e, item.name) : undefined} className={`transition-colors ${isItemDragging ? 'opacity-40' : isItemDragOver ? 'ring-1 ring-inset ring-[var(--accent-400)]' : ''} ${checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10' : 'bg-white dark:bg-[#222222]'}`}>
                                 <div
                                   onClick={() => toggleCustomCheck(char.id, item.id)}
-                                  className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer ${
+                                  className={`flex items-center gap-1 pl-1.5 pr-2.5 py-1.5 cursor-pointer ${
                                     checked ? 'hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                                   }`}
                                 >
                                   {item.image
-                                    ? <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />
+                                    ? <Image draggable={false} src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />
                                     : <span className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] flex-shrink-0" />}
                                   <div className="flex-1 min-w-0">
                                     <p className={`text-[10px] md:text-[12px] ns-bold truncate ${checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'}`}>{item.name}</p>
@@ -2061,13 +2173,18 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           return (
                             <div
                               key={item.id}
+                              {...dragItemProps}
+                              draggable={!isMobile}
+                              onDragStart={!isMobile ? (e) => handleCustomDragStart(e, item.name) : undefined}
                               onClick={() => toggleCustomCheck(char.id, item.id)}
-                              className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
+                              className={`flex items-center gap-1 pl-1.5 pr-2.5 py-1.5 cursor-pointer transition-colors ${
+                                isItemDragging ? 'opacity-40' :
+                                isItemDragOver ? 'ring-1 ring-inset ring-[var(--accent-400)]' :
                                 checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'bg-white dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
                               {item.image
-                                ? <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />
+                                ? <Image draggable={false} src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />
                                 : <span className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
                                 checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
@@ -2079,7 +2196,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               </div>
                             </div>
                           )
-                        })}
+                        })})()}
                         {!isCompact && dailyTemplate.slice(orderedDaily.length).map(item => {
                           const isRest = REST_GAUGE_NAMES.has(item.name)
                           return isRest ? (
@@ -2174,17 +2291,26 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                             entry.difficulty === 'nightmare' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-500 dark:text-purple-400' :
                             entry.difficulty === 'hard'      ? 'bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400' :
                                                                'bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400'
+                          const isRaidDragging = dragRaidId === entry.raidId
+                          const isRaidDragOver = dropRaidId === entry.raidId && dragRaidId !== entry.raidId
                           return (
                             <div
                               key={`${entry.raidId}:${entry.difficulty}`}
+                              draggable={!isMobile}
+                              onDragStart={!isMobile ? (e) => handleRaidDragStart(e, entry.raidId) : undefined}
+                              onDragOver={!isMobile ? (e) => handleRaidDragOver(e, entry.raidId) : undefined}
+                              onDrop={!isMobile ? (e) => handleRaidDrop(e, entry.raidId, char.expeditionId, charRaids.map(r => r.raidId)) : undefined}
+                              onDragEnd={!isMobile ? handleRaidDragEnd : undefined}
                               onClick={() => toggleRaid(char.id, entry.raidId, entry.difficulty)}
-                              className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
+                              className={`flex items-center gap-1 pl-1.5 pr-2.5 py-1.5 cursor-pointer transition-colors ${
+                                isRaidDragging ? 'opacity-40' :
+                                isRaidDragOver ? 'ring-1 ring-inset ring-[var(--accent-400)] bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/15' :
                                 moreDone ? 'bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20'
                                 : allDone ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20'
                                 : 'bg-white dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
-                              {raid.image && <Image src={raid.image} alt={raid.name} width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
+                              {raid.image && <Image draggable={false} src={raid.image} alt={raid.name} width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-0.5">
                                   <p className={`text-[10px] md:text-[12px] ns-bold truncate ${allDone ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)]' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
@@ -2270,18 +2396,29 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                         <span className="text-[10px] md:text-[12px] text-[var(--accent-500)]">({weeklyDoneCount}/{weeklyItems.length})</span>
                       </div>
                       <div className="divide-y divide-gray-100 dark:divide-[#272727]">
-                        {weeklyItems.map(item => {
+                        {(() => {
+                          const orderedWeeklyNames = weeklyItems.map(it => it.name)
+                          return weeklyItems.map(item => {
                           const checked = !!(customChecks[char.id]?.[item.id])
+                          const isItemDragging = dragCustomName === item.name
+                          const isItemDragOver = dropCustomName === item.name && dragCustomName !== item.name
                           return (
                             <div
                               key={item.id}
+                              draggable={!isMobile}
+                              onDragStart={!isMobile ? (e) => handleCustomDragStart(e, item.name) : undefined}
+                              onDragOver={!isMobile ? (e) => handleCustomDragOver(e, item.name) : undefined}
+                              onDrop={!isMobile ? (e) => handleCustomDrop(e, item.name, 'weekly', orderedWeeklyNames) : undefined}
+                              onDragEnd={!isMobile ? handleCustomDragEnd : undefined}
                               onClick={() => toggleCustomCheck(char.id, item.id)}
-                              className={`flex items-center gap-1.5 px-2.5 py-1.5 cursor-pointer transition-colors ${
+                              className={`flex items-center gap-1 pl-1.5 pr-2.5 py-1.5 cursor-pointer transition-colors ${
+                                isItemDragging ? 'opacity-40' :
+                                isItemDragOver ? 'ring-1 ring-inset ring-[var(--accent-400)]' :
                                 checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'bg-white dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
                               {item.image
-                                ? <Image src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />
+                                ? <Image draggable={false} src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />
                                 : <span className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
                                 checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
@@ -2293,7 +2430,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               </div>
                             </div>
                           )
-                        })}
+                        })})()}
                       </div>
                     </div>
                   )}
@@ -2372,7 +2509,9 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
         }
 
         // ── 테이블 뷰 ────────────────────────────────────────────────────────
-        const renderCustomRow = (name, charMap, meta, chars, compact = false, colW = null, isDaily = false) => {
+        const renderCustomRow = (name, charMap, meta, chars, compact = false, colW = null, isDaily = false, orderedNames = null) => {
+          const isCustomDragging = dragCustomName === name
+          const isCustomDragOver = dropCustomName === name && dragCustomName !== name
           const rw = colW?.raid ?? COL_RAID
           const cw = colW?.char ?? COL_CHAR
           const stretch = colW?.stretch ?? false
@@ -2380,16 +2519,26 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             ? { width: cw, minWidth: 0, overflow: 'hidden' }
             : { width: cw, maxWidth: cw, overflow: 'hidden' }
           return (
-          <tr key={name} className={compact
-            ? 'group border-b border-gray-100 dark:border-[#2a2a2a]'
-            : 'group/row transition-colors border-b border-gray-200/70 dark:border-white/[0.09] hover:bg-gray-50/90 dark:hover:bg-white/[0.03]'
-          }>
-            <td style={{ width: rw, minWidth: stretch ? 0 : COL_RAID }} className={compact
-              ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-2'
-              : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/90 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.03] border-r border-gray-200/70 dark:border-white/[0.10] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
-            }>
+          <tr key={name}
+            className={`${compact
+              ? 'group border-b border-gray-100 dark:border-[#2a2a2a]'
+              : 'group/row transition-colors border-b border-gray-200/70 dark:border-white/[0.09] hover:bg-gray-50/90 dark:hover:bg-white/[0.03]'
+            } ${isCustomDragging ? 'opacity-40' : ''}`}
+          >
+            <td
+              draggable={!isMobile && !!orderedNames}
+              onDragStart={!isMobile && orderedNames ? (e) => handleCustomDragStart(e, name) : undefined}
+              onDragOver={!isMobile && orderedNames ? (e) => handleCustomDragOver(e, name) : undefined}
+              onDrop={!isMobile && orderedNames ? (e) => handleCustomDrop(e, name, meta.type, orderedNames) : undefined}
+              onDragEnd={!isMobile && orderedNames ? handleCustomDragEnd : undefined}
+              style={{ width: rw, minWidth: stretch ? 0 : COL_RAID }}
+              className={`select-none transition-colors ${compact
+                ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-100 dark:border-[#2a2a2a] px-2 py-2'
+                : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/90 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.03] border-r border-gray-200/70 dark:border-white/[0.10] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
+              } ${isCustomDragOver ? 'bg-[var(--accent-100)]! dark:bg-[var(--accent-900)]/30! shadow-[inset_0_0_0_2px_var(--accent-400)]' : ''}`}
+            >
               <div className="flex items-center gap-1.5">
-                {meta.image && <Image src={meta.image} alt="" width={18} height={18} className="w-[22px] h-[22px] object-contain flex-shrink-0" />}
+                {meta.image && <Image draggable={false} src={meta.image} alt="" width={18} height={18} className="w-[22px] h-[22px] object-contain flex-shrink-0" />}
                 <span className={compact ? 'text-[14px] min-[1920px]:text-[14px] ns-bold text-gray-600 dark:text-gray-300 truncate' : 'text-[13px] min-[1920px]:text-[13px] ns-bold text-gray-700 dark:text-gray-200 truncate'}>{name}</span>
               </div>
             </td>
@@ -2459,10 +2608,12 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
 
           if (filteredChars.length === 0) return null
 
-          // 이 청크에 속한 캐릭터들이 가진 레이드 행만 표시 (remainFilter 적용)
-          const chunkRaidRows = filteredRaidRows.filter(row =>
-            filteredChars.some(char => (raids[char.id] || []).some(e => e.raidId === row.raidId))
-          )
+          // 이 청크에 속한 캐릭터들이 가진 레이드 행만 표시 (remainFilter 적용, expedition 순서로 재정렬)
+          const chunkExpId = filteredChars[0]?.expeditionId
+          const chunkRaidRows = filteredRaidRows
+            .filter(row => filteredChars.some(char => (raids[char.id] || []).some(e => e.raidId === row.raidId)))
+            .sort((a, b) => getRaidSortKey(chunkExpId, a.raidId) - getRaidSortKey(chunkExpId, b.raidId))
+          const chunkRaidIds = chunkRaidRows.map(r => r.raidId)
 
           // 레이드도 커스텀 항목도 없으면 빈 뼈대를 남기지 않음
           const hasCustom = filteredChars.some(c => (customItems[c.id] || []).length > 0)
@@ -2478,34 +2629,31 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               : filteredChars.length <= 8
 
           const colSpan = filteredChars.length + 1
-          const restDailyMap = buildCustomHomeworkRowMap(filteredChars, resolvedCustomItems, (it) => REST_GAUGE_NAMES.has(it.name))
+          const dailyMap = buildCustomHomeworkRowMap(filteredChars, resolvedCustomItems, (it) => it.type === 'daily')
           // 쿠르잔 계열(혼돈의 균열·쿠르잔 전선·카오스 던전)을 한 행으로 병합 — 맨 앞 캐릭터의 이름·아이콘 대표 사용
           {
             let primaryKey = null
             const toDelete = []
-            for (const [key] of restDailyMap) {
+            for (const [key] of dailyMap) {
               if (KURZAN_NAMES.has(key)) {
                 if (!primaryKey) primaryKey = key
                 else toDelete.push(key)
               }
             }
             if (primaryKey) {
-              const primary = restDailyMap.get(primaryKey)
+              const primary = dailyMap.get(primaryKey)
               for (const key of toDelete) {
-                restDailyMap.get(key).charMap.forEach((id, cid) => primary.charMap.set(cid, id))
-                restDailyMap.delete(key)
+                dailyMap.get(key).charMap.forEach((id, cid) => primary.charMap.set(cid, id))
+                dailyMap.delete(key)
               }
             }
           }
-          const otherDailyMap = buildCustomHomeworkRowMap(
-            filteredChars,
-            resolvedCustomItems,
-            (it) => it.type === 'daily' && !DAILY_PRESET_ORDER.includes(it.name)
-          )
+          const orderedDailyNamesTable = [...dailyMap.keys()]
+            .sort((a, b) => (dailyMap.get(a).meta.sortOrder ?? 0) - (dailyMap.get(b).meta.sortOrder ?? 0))
           const weeklyMap = buildCustomHomeworkRowMap(filteredChars, resolvedCustomItems, isWeeklyCustomItem)
-          const showDailyHeader = !selectedRaid && !remainFilter && (
-            DAILY_PRESET_ORDER.some((n) => restDailyMap.has(n)) || otherDailyMap.size > 0
-          )
+          const orderedWeeklyNamesTable = [...weeklyMap.keys()]
+            .sort((a, b) => (weeklyMap.get(a).meta.sortOrder ?? 0) - (weeklyMap.get(b).meta.sortOrder ?? 0))
+          const showDailyHeader = !selectedRaid && !remainFilter && dailyMap.size > 0
           const raidsToRender = selectedRaid
             ? chunkRaidRows.filter((row) => row.raidId === selectedRaid.raidId)
             : chunkRaidRows
@@ -2636,29 +2784,38 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                 </thead>
                 <tbody>
                   {showDailyHeader && renderSectionHeader('daily', '일일 숙제')}
-                  {!selectedRaid && !remainFilter && DAILY_PRESET_ORDER.flatMap((name) => {
-                    const row = restDailyMap.get(name)
-                    if (!row) return []
-                    return [renderCustomRow(name, row.charMap, row.meta, filteredChars, glanceTable, colW, true)]
+                  {!selectedRaid && !remainFilter && orderedDailyNamesTable.map((name) => {
+                    const { charMap, meta } = dailyMap.get(name)
+                    return renderCustomRow(name, charMap, meta, filteredChars, glanceTable, colW, true, orderedDailyNamesTable)
                   })}
-                  {!selectedRaid && !remainFilter && [...otherDailyMap.keys()]
-                    .sort((a, b) => a.localeCompare(b, 'ko'))
-                    .map((name) => {
-                      const { charMap, meta } = otherDailyMap.get(name)
-                      return renderCustomRow(name, charMap, meta, filteredChars, glanceTable, colW, true)
-                    })}
                   {showRaidHeader && renderSectionHeader('raid', raidSectionTitle)}
                   {raidsToRender.map(row => {
                     const raidData = RAID_MAP[row.raidId]
+                    const isRaidDragging = dragRaidId === row.raidId
+                    const isRaidDragOver = dropRaidId === row.raidId && dragRaidId !== row.raidId
                     return (
-                      <tr key={row.key} className={glanceTable ? 'group border-b border-gray-200 dark:border-[#2d2d2d]' : 'group/row transition-colors border-b border-gray-200 dark:border-[#2d2d2d] hover:bg-gray-50/70 dark:hover:bg-white/[0.04]'}>
-                        <td style={{ width: colW.raid, minWidth: colW.stretch ? 0 : COL_RAID }} className={glanceTable
-                          ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-200 dark:border-[#2d2d2d] px-2 py-1.5'
-                          : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/70 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.04] border-r border-gray-200 dark:border-[#2d2d2d] px-2.5 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
-                        }>
-                          <div className="flex items-center gap-1.5">
+                      <tr
+                        key={row.key}
+                        className={`group/row transition-colors border-b border-gray-200 dark:border-[#2d2d2d] ${
+                          isRaidDragging ? 'opacity-40' :
+                          glanceTable ? 'group' : 'hover:bg-gray-50/70 dark:hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        <td
+                          draggable={!isMobile}
+                          onDragStart={!isMobile ? (e) => handleRaidDragStart(e, row.raidId) : undefined}
+                          onDragOver={!isMobile ? (e) => handleRaidDragOver(e, row.raidId) : undefined}
+                          onDrop={!isMobile ? (e) => handleRaidDrop(e, row.raidId, chunkExpId, chunkRaidIds) : undefined}
+                          onDragEnd={!isMobile ? handleRaidDragEnd : undefined}
+                          style={{ width: colW.raid, minWidth: colW.stretch ? 0 : COL_RAID }}
+                          className={`select-none transition-colors ${glanceTable
+                            ? 'sticky left-0 z-10 bg-white dark:bg-[#222222] border-r border-gray-200 dark:border-[#2d2d2d] px-2 py-1.5'
+                            : 'sticky left-0 z-10 bg-white group-hover/row:bg-gray-50/70 dark:bg-[#222222] dark:group-hover/row:bg-white/[0.04] border-r border-gray-200 dark:border-[#2d2d2d] px-1 py-2 shadow-[3px_0_12px_-6px_rgba(0,0,0,0.08)] dark:shadow-[3px_0_12px_-6px_rgba(0,0,0,0.45)]'
+                          } ${isRaidDragOver ? 'bg-[var(--accent-100)]! dark:bg-[var(--accent-900)]/30! shadow-[inset_0_0_0_2px_var(--accent-400)]' : ''}`}
+                        >
+                          <div className="flex items-center gap-1">
                             {raidData?.image && (
-                              <Image src={raidData.image} alt={row.raidName} width={18} height={18} className="w-[22px] h-[22px] object-contain flex-shrink-0" />
+                              <Image draggable={false} src={raidData.image} alt={row.raidName} width={18} height={18} className="w-[22px] h-[22px] object-contain flex-shrink-0" />
                             )}
                             <span className={`ns-bold text-gray-900 dark:text-white truncate ${glanceTable ? 'text-[14px] min-[1920px]:text-[14px]' : 'text-[13px] min-[1920px]:text-[13px]'}`}>{row.raidName}</span>
                           </div>
@@ -2700,15 +2857,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                     </tr>
                   )}
                   {showWeeklyHeader && renderSectionHeader('weekly', '주간 숙제')}
-                  {!selectedRaid && !remainFilter && (() => {
-                    const allWeeklyNames = [...weeklyMap.keys()]
-                    const fixedNames = FIXED_WEEKLY_ORDER.filter(n => weeklyMap.has(n))
-                    const customNames = allWeeklyNames.filter(n => !FIXED_WEEKLY_ORDER.includes(n)).sort((a, b) => a.localeCompare(b, 'ko'))
-                    return [...fixedNames, ...customNames].map((name) => {
-                      const { charMap, meta } = weeklyMap.get(name)
-                      return renderCustomRow(name, charMap, meta, filteredChars, glanceTable, colW)
-                    })
-                  })()}
+                  {!selectedRaid && !remainFilter && orderedWeeklyNamesTable.map((name) => {
+                    const { charMap, meta } = weeklyMap.get(name)
+                    return renderCustomRow(name, charMap, meta, filteredChars, glanceTable, colW, false, orderedWeeklyNamesTable)
+                  })}
                 </tbody>
               </table>
             </div>

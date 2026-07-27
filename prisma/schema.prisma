@@ -81,10 +81,23 @@ model LoaExpedition {
   customName  String? // 사용자 지정 탭 이름
   createdAt   DateTime @default(now())
 
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   characters Character[]
+  raidOrders ExpeditionRaidOrder[]
 
   @@index([userId])
+}
+
+model ExpeditionRaidOrder {
+  id           String        @id @default(cuid())
+  expeditionId String
+  raidId       String
+  sortOrder    Int           @default(0)
+
+  expedition LoaExpedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+
+  @@unique([expeditionId, raidId])
+  @@index([expeditionId])
 }
 
 // ─── 캐릭터 ──────────────────────────────────────────────────────────────────

@@ -103,20 +103,12 @@ export const FIXED_WEEKLY_ORDER = ['낙원', '큐브', '할의 모래시계']
 /** 순서 변경 불가 고정 프리셋 이름 집합 */
 export const FIXED_PRESET_NAMES = new Set([...KURZAN_NAMES, '가디언 토벌', '낙원', '큐브', '할의 모래시계'])
 
-/** 캐릭터 커스텀 목록을 일일 섹션 표시 순으로 정렬 */
+/** 캐릭터 커스텀 목록을 일일 섹션 표시 순으로 정렬 (sortOrder 기반) */
 export function orderedDailyCustomItems(list) {
   if (!list?.length) return []
-  const byName = new Map(list.map((it) => [it.name, it]))
-  const out = []
-  for (const name of DAILY_PRESET_ORDER) {
-    const it = byName.get(name)
-    if (it) out.push(it)
-  }
-  for (const it of list) {
-    if (DAILY_PRESET_ORDER.includes(it.name)) continue
-    if (it.type === 'daily') out.push(it)
-  }
-  return out
+  return list
+    .filter(it => it.type === 'daily')
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
 }
 
 /** 주간 숙제 섹션(및 표 하단)에 넣을 커스텀 여부 — 휴식·일일 타입 제외 */
@@ -127,21 +119,12 @@ export function isWeeklyCustomItem(it) {
   return true
 }
 
-/** 캐릭터 커스텀 목록을 주간 섹션 표시 순으로 정렬 (고정 프리셋 먼저, 이후 사용자 추가 순) */
+/** 캐릭터 커스텀 목록을 주간 섹션 표시 순으로 정렬 (sortOrder 기반) */
 export function orderedWeeklyCustomItems(list) {
   if (!list?.length) return []
-  const weeklyItems = list.filter(isWeeklyCustomItem)
-  const byName = new Map(weeklyItems.map((it) => [it.name, it]))
-  const out = []
-  for (const name of FIXED_WEEKLY_ORDER) {
-    const it = byName.get(name)
-    if (it) out.push(it)
-  }
-  for (const it of weeklyItems) {
-    if (FIXED_WEEKLY_ORDER.includes(it.name)) continue
-    out.push(it)
-  }
-  return out
+  return list
+    .filter(isWeeklyCustomItem)
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
 }
 
 export const CUSTOM_MAX = 10

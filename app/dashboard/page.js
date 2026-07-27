@@ -28,12 +28,16 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id
-  const [expeditionsRaw, userRow, customItemsRaw] = await Promise.all([
+  const [expeditionsRaw, userRow, customItemsRaw, raidOrdersRaw] = await Promise.all([
     prisma.loaExpedition.findMany({ where: { userId }, orderBy: { createdAt: 'asc' }, include: EXPEDITION_INCLUDE }),
     prisma.user.findUnique({ where: { id: userId }, select: { apiKey: true } }),
     prisma.characterCustomItem.findMany({
       where: { character: { expedition: { userId } } },
       orderBy: [{ characterId: 'asc' }, { sortOrder: 'asc' }],
+    }),
+    prisma.expeditionRaidOrder.findMany({
+      where: { expedition: { userId } },
+      orderBy: { sortOrder: 'asc' },
     }),
   ])
   const hasApiKey = !!userRow?.apiKey
@@ -150,10 +154,17 @@ export default async function DashboardPage() {
     if (!initialRestGauge[it.characterId])         initialRestGauge[it.characterId]         = {}
     if (!initialRestGaugeDeducted[it.characterId]) initialRestGaugeDeducted[it.characterId] = {}
 
-    initialCustomItems[it.characterId].push({ id: it.id, name: it.name, type: it.type, image: it.image })
+    initialCustomItems[it.characterId].push({ id: it.id, name: it.name, type: it.type, image: it.image, sortOrder: it.sortOrder })
     if (it.done)      initialCustomChecks[it.characterId][it.id]      = true
     if (it.restGauge) initialRestGauge[it.characterId][it.id]         = it.restGauge
     if (it.deducted)  initialRestGaugeDeducted[it.characterId][it.id] = true
+  })
+
+  // raidOrder: { [expeditionId]: { [raidId]: sortOrder } }
+  const initialRaidOrder = {}
+  raidOrdersRaw.forEach(r => {
+    if (!initialRaidOrder[r.expeditionId]) initialRaidOrder[r.expeditionId] = {}
+    initialRaidOrder[r.expeditionId][r.raidId] = r.sortOrder
   })
 
   return <DashboardClient
@@ -166,5 +177,6 @@ export default async function DashboardPage() {
     initialCustomChecks={initialCustomChecks}
     initialRestGauge={initialRestGauge}
     initialRestGaugeDeducted={initialRestGaugeDeducted}
+    initialRaidOrder={initialRaidOrder}
   />
 }
