@@ -120,9 +120,7 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom, spli
               {totalGold.toLocaleString()}G
             </span>
           )}
-          {entry.isGoldCheck && (
-            <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-3 h-3 object-contain flex-shrink-0" />
-          )}
+          <Image src="/icons/gold.png" alt="" width={10} height={10} className={`w-3 h-3 object-contain flex-shrink-0 ${entry.isGoldCheck ? '' : 'invisible'}`} />
         </div>
       </div>
 
