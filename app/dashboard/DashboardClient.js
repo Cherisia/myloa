@@ -1625,7 +1625,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               </div>
               {totalBound > 0 && (
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-orange-400 to-orange-200 dark:from-orange-500 dark:to-orange-400/50 transition-all duration-700" style={{ width: `${Math.min((earnedBound / totalBound) * 100, 100)}%` }} />
+                  <div className="h-full rounded-full transition-all duration-700" style={{ backgroundImage: 'var(--bound-progress)', width: `${Math.min((earnedBound / totalBound) * 100, 100)}%` }} />
                 </div>
               )}
             </div>
@@ -1640,7 +1640,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
               </div>
               {totalTrade > 0 && (
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-200 dark:from-blue-500 dark:to-blue-400/50 transition-all duration-700" style={{ width: `${Math.min((earnedTrade / totalTrade) * 100, 100)}%` }} />
+                  <div className="h-full rounded-full transition-all duration-700" style={{ backgroundImage: 'var(--trade-progress)', width: `${Math.min((earnedTrade / totalTrade) * 100, 100)}%` }} />
                 </div>
               )}
             </div>
