@@ -91,6 +91,10 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
     const saved = localStorage.getItem('dashboard_cardView')
     return saved === null ? true : saved === 'true'
   })
+  const [splitGold, setSplitGold]               = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('dashboard_splitGold') === 'true'
+  })
   const [cardAlignMode, setCardAlignMode]       = useState(() => {
     if (typeof window === 'undefined') return 'aligned'
     return localStorage.getItem('dashboard_cardAlignMode') || 'aligned'
@@ -1571,30 +1575,30 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
             {/* 귀속 행 */}
             <div>
               <div className="flex items-center gap-1.5 mb-1 min-w-0">
-                <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md bg-[var(--accent-100)] dark:bg-zinc-700/50 text-[var(--accent-600)] dark:text-zinc-300 whitespace-nowrap shrink-0">귀속</span>
+                <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 whitespace-nowrap shrink-0">귀속</span>
                 <div className="flex flex-wrap items-baseline gap-x-1 ml-auto justify-end">
-                  <AnimatedGold value={earnedBound} className="ns-bold text-xs min-[1920px]:text-sm text-[var(--accent-600)] dark:text-zinc-200 tabular-nums whitespace-nowrap shrink-0" />
+                  <AnimatedGold value={earnedBound} className="ns-bold text-xs min-[1920px]:text-sm text-orange-600 dark:text-orange-400 tabular-nums whitespace-nowrap shrink-0" />
                   <span className="text-[10px] min-[1920px]:text-xs text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap shrink-0">/ {totalBound.toLocaleString()}G</span>
                 </div>
               </div>
               {totalBound > 0 && (
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[var(--accent-400)] to-[var(--accent-200)] dark:from-zinc-500 dark:to-zinc-400 transition-all duration-700" style={{ width: `${Math.min((earnedBound / totalBound) * 100, 100)}%` }} />
+                  <div className="h-full rounded-full bg-gradient-to-r from-orange-400 to-orange-200 dark:from-orange-500 dark:to-orange-400/50 transition-all duration-700" style={{ width: `${Math.min((earnedBound / totalBound) * 100, 100)}%` }} />
                 </div>
               )}
             </div>
             {/* 거래 행 */}
             <div>
               <div className="flex items-center gap-1.5 mb-1 min-w-0">
-                <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md bg-purple-50 dark:bg-zinc-700/50 text-purple-400 dark:text-zinc-300 whitespace-nowrap shrink-0">거래</span>
+                <span className="text-[10px] ns-bold px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 whitespace-nowrap shrink-0">거래</span>
                 <div className="flex flex-wrap items-baseline gap-x-1 ml-auto justify-end">
-                  <AnimatedGold value={earnedTrade} className="ns-bold text-xs min-[1920px]:text-sm text-purple-400 dark:text-zinc-200 tabular-nums whitespace-nowrap shrink-0" />
+                  <AnimatedGold value={earnedTrade} className="ns-bold text-xs min-[1920px]:text-sm text-blue-500 dark:text-blue-400 tabular-nums whitespace-nowrap shrink-0" />
                   <span className="text-[10px] min-[1920px]:text-xs text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap shrink-0">/ {totalTrade.toLocaleString()}G</span>
                 </div>
               </div>
               {totalTrade > 0 && (
                 <div className="h-1.5 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-purple-300 to-violet-200 dark:from-zinc-500 dark:to-zinc-400 transition-all duration-700" style={{ width: `${Math.min((earnedTrade / totalTrade) * 100, 100)}%` }} />
+                  <div className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-200 dark:from-blue-500 dark:to-blue-400/50 transition-all duration-700" style={{ width: `${Math.min((earnedTrade / totalTrade) * 100, 100)}%` }} />
                 </div>
               )}
             </div>
@@ -2163,6 +2167,8 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           const moreDone  = entry.moreDone || false
                           const moreFrom  = entry.moreFrom || 'bound'
                           const totalGold = calcGold(diff, allGates)
+                          const boundGold = calcGoldBound(diff, allGates)
+                          const tradeGold = calcGoldTrade(diff, allGates)
                           const moreGold  = calcGoldMore(diff, allGates)
                           const diffBadge =
                             entry.difficulty === 'nightmare' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-500 dark:text-purple-400' :
@@ -2186,12 +2192,22 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 </div>
                                 <div className="flex items-center gap-1 min-h-[17px]">
                                   <span className={`text-[8px] md:text-[10px] ns-bold px-1 py-px rounded leading-tight ${diffBadge}`}>{diff.label}</span>
-                                  {entry.isGoldCheck && (
-                                    <span className={`text-[9px] md:text-[11px] ns-bold tabular-nums ${
-                                      moreDone ? 'text-[var(--accent-600)] dark:text-[var(--accent-500)]'
-                                      : allDone ? 'text-[var(--accent-500)] dark:text-[var(--accent-400)]'
-                                      : 'text-gray-500 dark:text-gray-400'
-                                    }`}>{totalGold.toLocaleString()}G</span>
+                                  {splitGold ? (
+                                    <span className="flex items-center gap-0.5">
+                                      {boundGold > 0 && <span className={`text-[9px] md:text-[11px] ns-bold tabular-nums ${entry.isGoldCheck ? 'text-orange-500 dark:text-orange-400' : 'text-[#b8bcc8] dark:text-gray-700'}`}>{boundGold.toLocaleString()}G</span>}
+                                      {boundGold > 0 && tradeGold > 0 && <span className={`text-[9px] md:text-[11px] ns-bold ${entry.isGoldCheck ? 'text-gray-800 dark:text-gray-300' : 'text-[#b8bcc8] dark:text-gray-700'}`}>/</span>}
+                                      {tradeGold > 0 && <span className={`text-[9px] md:text-[11px] ns-bold tabular-nums ${entry.isGoldCheck ? 'text-blue-500 dark:text-blue-400' : 'text-[#b8bcc8] dark:text-gray-700'}`}>{tradeGold.toLocaleString()}G</span>}
+                                    </span>
+                                  ) : (
+                                    entry.isGoldCheck ? (
+                                      <span className={`text-[9px] md:text-[11px] ns-bold tabular-nums ${
+                                        moreDone ? 'text-[var(--accent-600)] dark:text-[var(--accent-500)]'
+                                        : allDone ? 'text-[var(--accent-500)] dark:text-[var(--accent-400)]'
+                                        : 'text-gray-500 dark:text-gray-400'
+                                      }`}>{totalGold.toLocaleString()}G</span>
+                                    ) : (
+                                      <span className="text-[9px] md:text-[11px] ns-bold tabular-nums text-[#b8bcc8] dark:text-gray-700">{totalGold.toLocaleString()}G</span>
+                                    )
                                   )}
                                   {/* 더보기 토글 */}
                                   {moreDone && (
@@ -2203,26 +2219,26 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                       >
                                         <div className={`flex items-center rounded-full border transition-colors duration-300 ${
                                           moreFrom === 'bound'
-                                            ? 'bg-[var(--accent-100)] dark:bg-zinc-700/50 border-[var(--accent-200)] dark:border-zinc-600/40'
-                                            : 'bg-purple-50 dark:bg-zinc-700/50 border-purple-200 dark:border-zinc-600/40'
+                                            ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800/40'
+                                            : 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800/40'
                                         }`} style={{ height: 17, padding: 2, gap: 2 }}>
                                           {moreFrom === 'bound' ? (
                                             <>
-                                              <span className="text-[9px] ns-bold select-none leading-none pl-1.5 text-[var(--accent-600)] dark:text-zinc-300 whitespace-nowrap">귀속</span>
-                                              <div className="flex-shrink-0 rounded-full bg-[var(--accent-400)] dark:bg-zinc-500 shadow" style={{ width: 13, height: 13 }} />
+                                              <span className="text-[9px] ns-bold select-none leading-none pl-1.5 text-orange-500 dark:text-orange-400 whitespace-nowrap">귀속</span>
+                                              <div className="flex-shrink-0 rounded-full bg-orange-400 dark:bg-orange-500 shadow" style={{ width: 13, height: 13 }} />
                                             </>
                                           ) : (
                                             <>
-                                              <div className="flex-shrink-0 rounded-full bg-purple-200 dark:bg-zinc-500 shadow" style={{ width: 13, height: 13 }} />
-                                              <span className="text-[9px] ns-bold select-none leading-none pr-1.5 text-purple-400 dark:text-zinc-300 whitespace-nowrap">거래</span>
+                                              <div className="flex-shrink-0 rounded-full bg-blue-400 dark:bg-blue-500 shadow" style={{ width: 13, height: 13 }} />
+                                              <span className="text-[9px] ns-bold select-none leading-none pr-1.5 text-blue-500 dark:text-blue-400 whitespace-nowrap">거래</span>
                                             </>
                                           )}
                                         </div>
                                       </button>
                                       <div className={`pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-[8px] ns-bold shadow-md opacity-0 group-hover/moretip:opacity-100 transition-opacity z-10 ${
                                         moreFrom === 'bound'
-                                          ? 'bg-[var(--accent-50)] dark:bg-zinc-800 border-[var(--accent-200)] dark:border-zinc-600/50 text-[var(--accent-600)] dark:text-zinc-300'
-                                          : 'bg-purple-50 dark:bg-zinc-800 border-purple-200 dark:border-zinc-600/50 text-purple-500 dark:text-zinc-300'
+                                          ? 'bg-orange-50 dark:bg-orange-950/60 border-orange-200 dark:border-orange-800/50 text-orange-600 dark:text-orange-300'
+                                          : 'bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-300'
                                       }`}>
                                         더보기 -{moreGold.toLocaleString()}G
                                       </div>
@@ -2667,6 +2683,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                                 diff={diff}
                                 onToggle={() => entry && toggleRaid(char.id, row.raidId, entry.difficulty)}
                                 onToggleMoreFrom={() => entry && toggleMoreFrom(char.id, row.raidId, entry.difficulty)}
+                                splitGold={splitGold}
                               />
                             </td>
                           )
@@ -2973,6 +2990,55 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   </div>
                 </div>
               )}
+
+              <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200/80 dark:border-[#282828] p-0.5">
+                <div className="relative group/goldsplit-sum">
+                  <button
+                    onClick={() => { setSplitGold(false); localStorage.setItem('dashboard_splitGold', 'false') }}
+                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
+                      !splitGold
+                        ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
+                    }`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/>
+                    </svg>
+                    합계
+                  </button>
+                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 opacity-0 group-hover/goldsplit-sum:opacity-100 transition-opacity duration-200 z-50">
+                    <div className="relative bg-gray-800/90 dark:bg-[#1a1a1a]/95 backdrop-blur-sm text-white rounded-xl px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.22)] border border-white/10 dark:border-white/5 min-w-[130px]">
+                      <p className="text-[11px] ns-bold text-white/95 whitespace-nowrap text-center">골드 합계 표시</p>
+                      <p className="text-[10px] text-white/55 whitespace-nowrap text-center mt-0.5 leading-relaxed">귀속/거래 골드를 합산하여</p>
+                      <p className="text-[10px] text-white/55 whitespace-nowrap text-center leading-relaxed">골드 합계로 표시해요.</p>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-gray-800/90 dark:border-t-[#1a1a1a]/95" />
+                    </div>
+                  </div>
+                </div>
+                <div className="relative group/goldsplit-detail">
+                  <button
+                    onClick={() => { setSplitGold(true); localStorage.setItem('dashboard_splitGold', 'true') }}
+                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs ns-bold transition-all duration-150 ${
+                      splitGold
+                        ? 'bg-[var(--accent-200)] text-[var(--accent-900)] dark:text-white shadow-sm'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-white/70 dark:hover:bg-[#222222]/70'
+                    }`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="4" width="9" height="16" rx="2"/><rect x="13" y="4" width="9" height="16" rx="2"/>
+                    </svg>
+                    귀속/거래
+                  </button>
+                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 opacity-0 group-hover/goldsplit-detail:opacity-100 transition-opacity duration-200 z-50">
+                    <div className="relative bg-gray-800/90 dark:bg-[#1a1a1a]/95 backdrop-blur-sm text-white rounded-xl px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.22)] border border-white/10 dark:border-white/5 min-w-[130px]">
+                      <p className="text-[11px] ns-bold text-white/95 whitespace-nowrap text-center">귀속/거래 분리 표시</p>
+                      <p className="text-[10px] text-white/55 whitespace-nowrap text-center mt-0.5 leading-relaxed">귀속 골드와 거래 골드를</p>
+                      <p className="text-[10px] text-white/55 whitespace-nowrap text-center leading-relaxed">각각 나누어 표시해요.</p>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-gray-800/90 dark:border-t-[#1a1a1a]/95" />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200/80 dark:border-[#282828] p-0.5">
                 <button

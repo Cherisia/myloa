@@ -2,11 +2,11 @@
 
 import { useState, useRef } from 'react'
 import Image from 'next/image'
-import { calcGold, calcGoldMore } from '@/lib/raidData'
+import { calcGold, calcGoldBound, calcGoldTrade, calcGoldMore } from '@/lib/raidData'
 import { IconCheck } from '../_icons'
 
 // ── 레이드 셀 ─────────────────────────────────────────────────────────────────
-export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
+export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom, splitGold }) {
   const [tipPos, setTipPos]   = useState(null)
   const toggleRef             = useRef(null)
 
@@ -15,6 +15,8 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
   const moreDone  = entry ? (entry.moreDone || false) : false
   const moreFrom  = entry ? (entry.moreFrom || 'bound') : 'bound'
   const totalGold = entry && diff ? calcGold(diff, allGates) : 0
+  const boundGold = entry && diff ? calcGoldBound(diff, allGates) : 0
+  const tradeGold = entry && diff ? calcGoldTrade(diff, allGates) : 0
   const moreGold  = entry && diff ? calcGoldMore(diff, allGates) : 0
 
   const showTip = () => {
@@ -83,7 +85,7 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
               className={`whitespace-nowrap rounded-lg border px-2 py-0.5 text-[8px] ns-bold shadow-md ${
                 moreFrom === 'bound'
                   ? 'bg-orange-50 dark:bg-orange-950/60 border-orange-200 dark:border-orange-800/50 text-orange-600 dark:text-orange-300'
-                  : 'bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800/50 text-sky-600 dark:text-sky-300'
+                  : 'bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-300'
               }`}>
               더보기 -{moreGold.toLocaleString()}G
             </div>
@@ -95,12 +97,29 @@ export default function RaidCell({ entry, diff, onToggle, onToggleMoreFrom }) {
           <span className={`text-[10px] min-[1920px]:text-[10px] ns-bold px-1 py-0.5 rounded-full leading-none tracking-tight flex-shrink-0 ${diffBadge}`}>
             {diff.label}
           </span>
-          <span className={`text-[11px] min-[1920px]:text-[11px] ns-bold leading-none tabular-nums tracking-tight
-            ${entry.isGoldCheck
-              ? moreDone ? 'text-[var(--accent-700)] dark:text-[var(--accent-500)]' : allDone ? 'text-[var(--accent-600)] dark:text-[var(--accent-400)]' : 'text-gray-500 dark:text-gray-500'
-              : 'text-gray-200 dark:text-gray-700'}`}>
-            {totalGold.toLocaleString()}G
-          </span>
+          {splitGold && (boundGold > 0 || tradeGold > 0) ? (
+            <div className="flex flex-col items-start" style={{ gap: 2 }}>
+              {boundGold > 0 && (
+                <span className={`text-[11px] min-[1920px]:text-[11px] ns-bold leading-none tabular-nums tracking-tight
+                  ${entry.isGoldCheck ? 'text-orange-500 dark:text-orange-400' : 'text-[#b8bcc8] dark:text-gray-700'}`}>
+                  {boundGold.toLocaleString()}G
+                </span>
+              )}
+              {tradeGold > 0 && (
+                <span className={`text-[11px] min-[1920px]:text-[11px] ns-bold leading-none tabular-nums tracking-tight
+                  ${entry.isGoldCheck ? 'text-blue-500 dark:text-blue-400' : 'text-[#b8bcc8] dark:text-gray-700'}`}>
+                  {tradeGold.toLocaleString()}G
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className={`text-[11px] min-[1920px]:text-[11px] ns-bold leading-none tabular-nums tracking-tight
+              ${entry.isGoldCheck
+                ? moreDone ? 'text-[var(--accent-700)] dark:text-[var(--accent-500)]' : allDone ? 'text-[var(--accent-600)] dark:text-[var(--accent-400)]' : 'text-gray-500 dark:text-gray-500'
+                : 'text-[#b8bcc8] dark:text-gray-700'}`}>
+              {totalGold.toLocaleString()}G
+            </span>
+          )}
           {entry.isGoldCheck && (
             <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-3 h-3 object-contain flex-shrink-0" />
           )}
