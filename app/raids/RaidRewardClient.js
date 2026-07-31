@@ -66,6 +66,7 @@ const MATERIAL_DISPLAY_NAME = {
 
 // ── 레이드 이미지 매핑 ────────────────────────────────────────────────────────
 const RAID_IMAGE = {
+  'belgardin':     '/raids/belgardin.webp',
   'serca':         '/raids/serca.webp',
   'cathedral':     '/raids/cathedral.webp',
   'kazeros-final': '/raids/kazeros.webp',
@@ -83,6 +84,7 @@ const RAID_IMAGE = {
 
 // object-position: 인물 얼굴이 상단에 위치한 이미지를 가로 배너로 크롭할 때 조정
 const RAID_IMAGE_POSITION = {
+  'belgardin':     '50% 20%',
   'serca':         '50% 30%',
   'cathedral':     '50% 12%',
   'kazeros-final': '50% 10%',
