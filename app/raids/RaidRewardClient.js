@@ -31,6 +31,8 @@ const MATERIAL_ICON = {
   '위대한 운명의 돌파석':         '/materials/위대한돌파석.png',
   '전이 돌파석':                  '/materials/전이돌파석.png',
   '고통의 가시':                  '/materials/고통의가시.png',
+  '사령의 잔영':                  '/materials/사령의잔영.png',
+  '죽음의 손':                    '/materials/죽음의손.png',
   '담금질 : 우레의 뇌옥':         '/materials/우레의뇌옥.png',
   '손길-담금질 : 우레의 뇌옥':    '/materials/우레의뇌옥.png',
 }
@@ -60,6 +62,8 @@ const MATERIAL_DISPLAY_NAME = {
   '위대한 운명의 돌파석':         '위대한 돌파석',
   '전이 돌파석':                  '전이 돌파석',
   '고통의 가시':                  '고통의 가시',
+  '사령의 잔영':                  '사령의 잔영',
+  '죽음의 손':                    '죽음의 손',
   '담금질 : 우레의 뇌옥':         '우레의 뇌옥',
   '손길-담금질 : 우레의 뇌옥':    '우레의 뇌옥',
 }
@@ -140,6 +144,53 @@ function getRaidCategory(raid) {
 
 // ── 재료 보상 데이터 (lobal.kr 크롤링) ───────────────────────────────────────
 const GATE_MATERIALS = {
+  'belgardin': {
+    normal: [
+      [
+        { name: '운명의 파괴석 결정', count: 405 }, { name: '운명의 수호석 결정', count: 810 },
+        { name: '운명의 파편', count: 9100 }, { name: '위대한 운명의 돌파석', count: 8 },
+        { name: '찬란한 구원자의 팔찌', count: 3 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '사령의 잔영', count: 12 },
+      ],
+      [
+        { name: '운명의 파괴석 결정', count: 500 }, { name: '운명의 수호석 결정', count: 1000 },
+        { name: '운명의 파편', count: 11000 }, { name: '위대한 운명의 돌파석', count: 12 },
+        { name: '찬란한 구원자의 팔찌', count: 4 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '전이 돌파석', count: 6 }, { name: '운명의 돌', count: 10 },
+        { name: '사령의 잔영', count: 18 },
+      ],
+    ],
+    hard: [
+      [
+        { name: '운명의 파괴석 결정', count: 490 }, { name: '운명의 수호석 결정', count: 980 },
+        { name: '운명의 파편', count: 10920 }, { name: '위대한 운명의 돌파석', count: 10 },
+        { name: '찬란한 구원자의 팔찌', count: 4 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '죽음의 손', count: 12 },
+      ],
+      [
+        { name: '운명의 파괴석 결정', count: 600 }, { name: '운명의 수호석 결정', count: 1200 },
+        { name: '운명의 파편', count: 13200 }, { name: '위대한 운명의 돌파석', count: 15 },
+        { name: '찬란한 구원자의 팔찌', count: 5 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '전이 돌파석', count: 9 }, { name: '운명의 돌', count: 10 },
+        { name: '죽음의 손', count: 18 },
+      ],
+    ],
+    nightmare: [
+      [
+        { name: '운명의 파괴석 결정', count: 565 }, { name: '운명의 수호석 결정', count: 1130 },
+        { name: '운명의 파편', count: 12550 }, { name: '위대한 운명의 돌파석', count: 12 },
+        { name: '찬란한 구원자의 팔찌', count: 5 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '죽음의 손', count: 12 },
+      ],
+      [
+        { name: '운명의 파괴석 결정', count: 690 }, { name: '운명의 수호석 결정', count: 1380 },
+        { name: '운명의 파편', count: 15180 }, { name: '위대한 운명의 돌파석', count: 18 },
+        { name: '찬란한 구원자의 팔찌', count: 6 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '전이 돌파석', count: 10 }, { name: '운명의 돌', count: 10 },
+        { name: '죽음의 손', count: 18 },
+      ],
+    ],
+  },
   'serca': {
     normal: [
       [
@@ -409,6 +460,50 @@ const GATE_MATERIALS = {
 
 // ── 더보기 추가 재료 데이터 (lobal.kr 크롤링) ──────────────────────────────────
 const GATE_MORE_MATERIALS = {
+  'belgardin': {
+    normal: [
+      [
+        { name: '운명의 파괴석 결정', count: 860 }, { name: '운명의 수호석 결정', count: 1720 },
+        { name: '운명의 파편', count: 19000 }, { name: '위대한 운명의 돌파석', count: 36 },
+        { name: '찬란한 구원자의 팔찌', count: 3 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '사령의 잔영', count: 12 },
+      ],
+      [
+        { name: '운명의 파괴석 결정', count: 1430 }, { name: '운명의 수호석 결정', count: 2860 },
+        { name: '운명의 파편', count: 32200 }, { name: '위대한 운명의 돌파석', count: 60 },
+        { name: '찬란한 구원자의 팔찌', count: 4 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '전이 돌파석', count: 5 }, { name: '사령의 잔영', count: 18 },
+      ],
+    ],
+    hard: [
+      [
+        { name: '운명의 파괴석 결정', count: 1130 }, { name: '운명의 수호석 결정', count: 2260 },
+        { name: '운명의 파편', count: 22800 }, { name: '위대한 운명의 돌파석', count: 43 },
+        { name: '찬란한 구원자의 팔찌', count: 4 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '죽음의 손', count: 12 },
+      ],
+      [
+        { name: '운명의 파괴석 결정', count: 1720 }, { name: '운명의 수호석 결정', count: 3440 },
+        { name: '운명의 파편', count: 38640 }, { name: '위대한 운명의 돌파석', count: 72 },
+        { name: '찬란한 구원자의 팔찌', count: 5 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '전이 돌파석', count: 6 }, { name: '죽음의 손', count: 18 },
+      ],
+    ],
+    nightmare: [
+      [
+        { name: '운명의 파괴석 결정', count: 1300 }, { name: '운명의 수호석 결정', count: 2600 },
+        { name: '운명의 파편', count: 26220 }, { name: '위대한 운명의 돌파석', count: 49 },
+        { name: '찬란한 구원자의 팔찌', count: 5 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '죽음의 손', count: 12 },
+      ],
+      [
+        { name: '운명의 파괴석 결정', count: 1980 }, { name: '운명의 수호석 결정', count: 3960 },
+        { name: '운명의 파편', count: 44440 }, { name: '위대한 운명의 돌파석', count: 83 },
+        { name: '찬란한 구원자의 팔찌', count: 6 }, { name: '위대한 비상의 돌', count: 10 },
+        { name: '전이 돌파석', count: 7 }, { name: '죽음의 손', count: 18 },
+      ],
+    ],
+  },
   'serca': {
     normal: [
       [
