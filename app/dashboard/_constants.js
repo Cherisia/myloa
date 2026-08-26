@@ -100,7 +100,7 @@ export const REST_GAUGE_NAMES = new Set(['혼돈의 균열', '쿠르잔 전선',
 export const DAILY_PRESET_ORDER = ['혼돈의 균열', '쿠르잔 전선', '카오스 던전', '가디언 토벌']
 
 /** 주간 고정 프리셋 표시 순서 */
-export const FIXED_WEEKLY_ORDER = ['낙원', '큐브', '종언의 잔영', '할의 모래시계']
+export const FIXED_WEEKLY_ORDER = ['낙원', '큐브', '할의 모래시계', '종언의 잔영']
 
 /** 순서 변경 불가 고정 프리셋 이름 집합 */
 export const FIXED_PRESET_NAMES = new Set([...KURZAN_NAMES, '가디언 토벌', '낙원', '큐브', '할의 모래시계', '종언의 잔영'])
