@@ -1046,7 +1046,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
       demoChars.forEach(dc => {
         const existing    = customItems[dc.id] || []
         const existingSet = new Set(existing.map(it => it.name))
-        const toAdd       = [getKurzanPreset(dc.itemLevel), ...AUTO_PRESETS].filter(p => !existingSet.has(p.name) && (p.name !== '할의 모래시계' || dc.itemLevel >= 1730))
+        const toAdd       = [getKurzanPreset(dc.itemLevel), ...AUTO_PRESETS].filter(p => !existingSet.has(p.name) && (p.name !== '할의 모래시계' || dc.itemLevel >= 1730) && (p.name !== '종언의 잔영' || dc.itemLevel >= 1730))
         if (toAdd.length > 0)
           demoCustom[dc.id] = [
             ...toAdd.map(p => ({ id: `preset-${p.name.replace(/\s/g, '')}-${dc.id}`, ...p })),

@@ -18,8 +18,9 @@ export const DIFF_COLOR  = {
   stage1:    'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
 }
 
-// 할의 모래시계 아이템 레벨 제한
+// 할의 모래시계 / 종언의 잔영 아이템 레벨 제한
 export const HAL_MIN_LEVEL = 1730
+export const JONEON_MIN_LEVEL = 1730
 
 // 쿠르잔 전선 계열 아이템 레벨 기준
 export const CHAOS_RIFT_MIN  = 1730  // 혼돈의 균열
@@ -35,9 +36,10 @@ export function getKurzanPreset(itemLevel) {
 
 // 캐릭터 추가 시 자동으로 붙는 프리셋 (쿠르잔 계열은 getKurzanPreset으로 별도 처리)
 export const AUTO_PRESETS = [
-  { name: '가디언 토벌',  type: 'daily',  image: '/schedule/guardian.png' },
-  { name: '낙원',         type: 'weekly', image: '/schedule/paradise.png'  },
-  { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
+  { name: '가디언 토벌',   type: 'daily',  image: '/schedule/guardian.png' },
+  { name: '낙원',          type: 'weekly', image: '/schedule/paradise.png'  },
+  { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'       },
+  { name: '종언의 잔영',   type: 'weekly', image: '/schedule/joneon.png'    },
 ]
 
 // ── 직업 아이콘 (로컬 /public/class/) ────────────────────────────────────────
@@ -98,10 +100,10 @@ export const REST_GAUGE_NAMES = new Set(['혼돈의 균열', '쿠르잔 전선',
 export const DAILY_PRESET_ORDER = ['혼돈의 균열', '쿠르잔 전선', '카오스 던전', '가디언 토벌']
 
 /** 주간 고정 프리셋 표시 순서 */
-export const FIXED_WEEKLY_ORDER = ['낙원', '큐브', '할의 모래시계']
+export const FIXED_WEEKLY_ORDER = ['낙원', '큐브', '종언의 잔영', '할의 모래시계']
 
 /** 순서 변경 불가 고정 프리셋 이름 집합 */
-export const FIXED_PRESET_NAMES = new Set([...KURZAN_NAMES, '가디언 토벌', '낙원', '큐브', '할의 모래시계'])
+export const FIXED_PRESET_NAMES = new Set([...KURZAN_NAMES, '가디언 토벌', '낙원', '큐브', '할의 모래시계', '종언의 잔영'])
 
 /** 캐릭터 커스텀 목록을 일일 섹션 표시 순으로 정렬 (sortOrder 기반) */
 export function orderedDailyCustomItems(list) {

@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { CUSTOM_MAX, HAL_MIN_LEVEL, KURZAN_NAMES, FIXED_PRESET_NAMES, DAILY_PRESET_ORDER, FIXED_WEEKLY_ORDER, getKurzanPreset } from '../_constants'
+import { CUSTOM_MAX, HAL_MIN_LEVEL, JONEON_MIN_LEVEL, KURZAN_NAMES, FIXED_PRESET_NAMES, DAILY_PRESET_ORDER, FIXED_WEEKLY_ORDER, getKurzanPreset } from '../_constants'
 import { BYNN_ARK_ICONS } from '../_bynnArkIcons'
 import { IconPlus, IconGrip } from '../_icons'
 import BynnArkIconPicker from './BynnArkIconPicker'
@@ -14,6 +14,7 @@ const NON_KURZAN_PRESETS = [
   { name: '할의 모래시계', type: 'weekly', image: '/schedule/hal.png'      },
   { name: '낙원',          type: 'weekly', image: '/schedule/paradise.png'  },
   { name: '큐브',          type: 'weekly', image: '/schedule/cube.webp'     },
+  { name: '종언의 잔영',   type: 'weekly', image: '/schedule/joneon.png'    },
 ]
 
 /**
@@ -95,6 +96,7 @@ export default function CustomItemsEditor({
   const handlePreset = (preset) => {
     if (!selectedChar || isFull || charItemNames.has(preset.name)) return
     if (preset.name === '할의 모래시계' && (selectedChar.itemLevel || 0) < HAL_MIN_LEVEL) return
+    if (preset.name === '종언의 잔영' && (selectedChar.itemLevel || 0) < JONEON_MIN_LEVEL) return
     onAdd(selectedChar.id, preset.name, preset.type, preset.image)
     inputRef.current?.focus()
   }
@@ -103,6 +105,8 @@ export default function CustomItemsEditor({
     const isKurzan = KURZAN_NAMES.has(preset.name)
     const eligible = preset.name === '할의 모래시계'
       ? chars.filter(char => (char.itemLevel || 0) >= HAL_MIN_LEVEL)
+      : preset.name === '종언의 잔영'
+      ? chars.filter(char => (char.itemLevel || 0) >= JONEON_MIN_LEVEL)
       : chars
     eligible.forEach(char => {
       if (isKurzan) {
@@ -222,14 +226,16 @@ export default function CustomItemsEditor({
         <div className="flex items-center gap-1.5 flex-wrap">
           {presetItems.map(preset => {
             const already = charItemNames.has(preset.name)
-            const levelLocked = preset.name === '할의 모래시계' && (selectedChar?.itemLevel || 0) < HAL_MIN_LEVEL
+            const levelLocked = (preset.name === '할의 모래시계' && (selectedChar?.itemLevel || 0) < HAL_MIN_LEVEL)
+              || (preset.name === '종언의 잔영' && (selectedChar?.itemLevel || 0) < JONEON_MIN_LEVEL)
+            const lockedLevel = preset.name === '종언의 잔영' ? JONEON_MIN_LEVEL : HAL_MIN_LEVEL
             return (
               <div key={preset.name} className="flex items-center rounded-full shadow-border-md overflow-hidden">
                 <button
                   type="button"
                   onClick={() => handlePreset(preset)}
                   disabled={already || isFull || levelLocked}
-                  title={levelLocked ? `아이템 레벨 ${HAL_MIN_LEVEL} 이상 캐릭터만 추가 가능` : undefined}
+                  title={levelLocked ? `아이템 레벨 ${lockedLevel} 이상 캐릭터만 추가 가능` : undefined}
                       className={`flex items-center gap-1 pl-2 pr-1.5 py-0.5 text-[10px] transition-colors ${
                     already || isFull || levelLocked
                       ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
