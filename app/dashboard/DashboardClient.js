@@ -2313,7 +2313,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                               {raid.image && <Image draggable={false} src={raid.image} alt={raid.name} width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-0.5">
-                                  <p className={`text-[10px] md:text-[12px] ns-bold truncate ${allDone ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)]' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
+                                  <p className={`text-[10px] md:text-[12px] ns-bold truncate ${allDone ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'}`}>{raid.name}</p>
                                   {entry.isGoldCheck && <Image src="/icons/gold.png" alt="골드" width={10} height={10} className="w-2.5 h-2.5 md:w-[13px] md:h-[13px] object-contain flex-shrink-0" />}
                                 </div>
                                 <div className="flex items-center gap-1 min-h-[17px]">
