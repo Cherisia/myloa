@@ -14,6 +14,20 @@ export async function GET(request) {
   }
 
   const nextResetAt = getNextResetAt()
+
+  // 중복/조기 실행 방지: DB의 resetAt이 아직 10분 이상 미래이면 스킵
+  // (Vercel 크론 at-least-once 중복 실행 대응)
+  const earliest = await prisma.characterRaid.findFirst({
+    select: { resetAt: true },
+    orderBy: { resetAt: 'asc' },
+  })
+  if (earliest) {
+    const msUntilReset = earliest.resetAt.getTime() - Date.now()
+    if (msUntilReset > 10 * 60 * 1000) {
+      return NextResponse.json({ skipped: true, nextReset: earliest.resetAt }, { status: 200 })
+    }
+  }
+
   // 이번 주 스냅샷 기준 시각 = 다음 리셋 - 7일 (현재 리셋 시각)
   const weekStart = new Date(nextResetAt.getTime() - 7 * 24 * 60 * 60 * 1000)
 
