@@ -2402,39 +2402,32 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                           const checked = !!(customChecks[char.id]?.[item.id])
                           const isItemDragging = dragCustomName === item.name
                           const isItemDragOver = dropCustomName === item.name && dragCustomName !== item.name
-                          const isSeasonEnd = item.name === '낙원'
                           return (
                             <div
                               key={item.id}
-                              draggable={!isMobile && !isSeasonEnd}
-                              onDragStart={!isMobile && !isSeasonEnd ? (e) => handleCustomDragStart(e, item.name) : undefined}
-                              onDragOver={!isMobile && !isSeasonEnd ? (e) => handleCustomDragOver(e, item.name) : undefined}
-                              onDrop={!isMobile && !isSeasonEnd ? (e) => handleCustomDrop(e, item.name, 'weekly', orderedWeeklyNames) : undefined}
-                              onDragEnd={!isMobile && !isSeasonEnd ? handleCustomDragEnd : undefined}
-                              onClick={!isSeasonEnd ? () => toggleCustomCheck(char.id, item.id) : undefined}
-                              className={`flex items-center gap-1 pl-1.5 pr-2.5 py-1.5 transition-colors ${
-                                isSeasonEnd ? 'cursor-default bg-white dark:bg-[#222222]' :
-                                isItemDragging ? 'opacity-40 cursor-pointer' :
-                                isItemDragOver ? 'ring-1 ring-inset ring-[var(--accent-400)] cursor-pointer' :
-                                checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20 cursor-pointer' : 'bg-white dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer'
+                              draggable={!isMobile}
+                              onDragStart={!isMobile ? (e) => handleCustomDragStart(e, item.name) : undefined}
+                              onDragOver={!isMobile ? (e) => handleCustomDragOver(e, item.name) : undefined}
+                              onDrop={!isMobile ? (e) => handleCustomDrop(e, item.name, 'weekly', orderedWeeklyNames) : undefined}
+                              onDragEnd={!isMobile ? handleCustomDragEnd : undefined}
+                              onClick={() => toggleCustomCheck(char.id, item.id)}
+                              className={`flex items-center gap-1 pl-1.5 pr-2.5 py-1.5 cursor-pointer transition-colors ${
+                                isItemDragging ? 'opacity-40' :
+                                isItemDragOver ? 'ring-1 ring-inset ring-[var(--accent-400)]' :
+                                checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'bg-white dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
                               }`}
                             >
                               {item.image
                                 ? <Image draggable={false} src={item.image} alt="" width={16} height={16} className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] object-contain flex-shrink-0" />
                                 : <span className="w-[16px] h-[16px] md:w-[21px] md:h-[21px] flex-shrink-0" />}
                               <p className={`flex-1 min-w-0 text-[10px] md:text-[12px] ns-bold truncate ${
-                                checked && !isSeasonEnd ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
+                                checked ? 'text-[var(--accent-700)] dark:text-[var(--accent-400)] line-through' : 'text-gray-700 dark:text-gray-200'
                               }`}>{item.name}</p>
-                              {isSeasonEnd ? (
-
-                                <span className="text-[9px] md:text-[10px] ns-bold text-red-400 dark:text-red-400 px-1 py-0.5 bg-red-50 dark:bg-red-950/40 rounded whitespace-nowrap">시즌종료</span>
-                              ) : (
-                                <div className={`h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
-                                  checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
-                                }`}>
-                                  {checked && <IconCheck />}
-                                </div>
-                              )}
+                              <div className={`h-[15.5px] w-[15.5px] md:h-[17.5px] md:w-[17.5px] flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                                checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'
+                              }`}>
+                                {checked && <IconCheck />}
+                              </div>
                             </div>
                           )
                         })})()}
@@ -2560,11 +2553,7 @@ export default function DashboardClient({ initialChars = [], initialRaids = {}, 
                   : 'border-r border-gray-200/70 dark:border-white/[0.10] last:border-r-0 p-1.5 align-middle transition-colors group-hover/row:bg-gray-50/50 dark:group-hover/row:bg-white/[0.02]'
                 }>
                   {itemId ? (
-                    name === '낙원' ? (
-                      <div className="w-full h-[47px] flex items-center justify-center rounded">
-                        <span className="text-[11px] ns-bold text-red-400 dark:text-red-400 px-1.5 py-0.5 bg-red-50 dark:bg-red-950/40 rounded whitespace-nowrap">시즌종료</span>
-                      </div>
-                    ) : isRest ? (
+                    isRest ? (
                       <div className="flex flex-col gap-0.5 min-h-[47px] justify-center">
                         <div onClick={() => toggleCustomCheck(char.id, itemId)} className={`flex items-center justify-center h-7 rounded cursor-pointer transition-colors ${checked ? 'bg-[var(--accent-50)] dark:bg-[var(--accent-900)]/10 hover:bg-[var(--accent-100)] dark:hover:bg-[var(--accent-900)]/20' : 'hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'}`}>
                           <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${checked ? 'bg-[var(--accent-400)] border-[var(--accent-400)] text-[var(--accent-900)]' : 'border-gray-300 dark:border-[#555]'}`}>{checked && <IconCheck />}</div>
