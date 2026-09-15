@@ -48,14 +48,37 @@ export default async function RootLayout({ children }) {
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: 'myloa',
-    url: 'https://myloa.app',
-    description: '로스트아크 레이드 숙제를 캐릭터별로 관리하고 골드를 계산하세요. 길드·그룹원과 레이드 진행 현황을 실시간으로 공유할 수 있습니다.',
-    applicationCategory: 'GameApplication',
-    operatingSystem: 'Web',
-    inLanguage: 'ko',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': 'https://myloa.app/#organization',
+        name: 'myloa',
+        url: 'https://myloa.app',
+        logo: 'https://myloa.app/icon.svg',
+      },
+      {
+        '@type': 'WebSite',
+        '@id': 'https://myloa.app/#website',
+        name: 'myloa',
+        url: 'https://myloa.app',
+        description: '로스트아크 레이드 숙제를 캐릭터별로 관리하고 골드를 계산하세요. 길드·그룹원과 레이드 진행 현황을 실시간으로 공유할 수 있습니다.',
+        inLanguage: 'ko',
+        publisher: { '@id': 'https://myloa.app/#organization' },
+      },
+      {
+        '@type': 'WebApplication',
+        '@id': 'https://myloa.app/#webapp',
+        name: 'myloa',
+        url: 'https://myloa.app',
+        description: '로스트아크 레이드 숙제를 캐릭터별로 관리하고 골드를 계산하세요. 길드·그룹원과 레이드 진행 현황을 실시간으로 공유할 수 있습니다.',
+        applicationCategory: 'GameApplication',
+        operatingSystem: 'Web',
+        inLanguage: 'ko',
+        isPartOf: { '@id': 'https://myloa.app/#website' },
+        publisher: { '@id': 'https://myloa.app/#organization' },
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+      },
+    ],
   }
 
   return (
