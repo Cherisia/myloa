@@ -9,6 +9,7 @@ export const metadata = {
     title: '로스트아크 경매 입찰 계산기 - myloa',
     description: '파티 경매 추천 입찰가·손익분기·분배금을 자동으로 계산해 드립니다.',
     url: 'https://myloa.app/tools/auction',
+    siteName: 'myloa',
     type: 'website',
   },
 }

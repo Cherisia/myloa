@@ -195,6 +195,7 @@ function EventsPanel({ events, loading }) {
                     ? <img
                         src={e.Thumbnail}
                         alt={e.Title}
+                        loading="lazy"
                         className="w-16 h-10 rounded-lg object-cover shrink-0 bg-gray-100 dark:bg-zinc-700"
                       />
                     : <div className="w-16 h-10 rounded-lg shrink-0 bg-[var(--accent-100)] dark:bg-[var(--accent-900)]/20 flex items-center justify-center text-lg">🎉</div>
@@ -323,7 +324,7 @@ function ContentCard({ item }) {
       {/* 콘텐츠 아이콘 */}
       <div className="shrink-0">
         {item.ContentsIcon
-          ? <img src={item.ContentsIcon} alt={item.ContentsName} className="w-14 h-14 rounded-xl object-cover" />
+          ? <img src={item.ContentsIcon} alt={item.ContentsName} loading="lazy" className="w-14 h-14 rounded-xl object-cover" />
           : <div className="w-14 h-14 rounded-xl bg-zinc-300 dark:bg-zinc-600" />
         }
       </div>
@@ -346,7 +347,7 @@ function ContentCard({ item }) {
             {rewards.slice(0, 8).map((r, i) => (
               <div key={i} className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${gradeBg(r.Grade)}`} title={r.Name}>
                 {r.Icon
-                  ? <img src={r.Icon} alt={r.Name} className="w-6 h-6 object-contain" />
+                  ? <img src={r.Icon} alt={r.Name} loading="lazy" className="w-6 h-6 object-contain" />
                   : <span className="text-[10px] text-white">{r.Name?.[0]}</span>
                 }
               </div>
@@ -364,7 +365,7 @@ function ContentCard({ item }) {
               <div key={i} className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${gradeBg(r.Grade)}`}>
                   {r.Icon
-                    ? <img src={r.Icon} alt={r.Name} className="w-6 h-6 object-contain" />
+                    ? <img src={r.Icon} alt={r.Name} loading="lazy" className="w-6 h-6 object-contain" />
                     : <span className="text-xs text-white">{r.Name?.[0]}</span>
                   }
                 </div>

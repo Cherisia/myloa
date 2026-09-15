@@ -36,6 +36,7 @@ export const metadata = {
     description:
       '로스트아크 숙제를 캐릭터별로 관리하고 길드·그룹원과 레이드 현황을 실시간으로 공유하세요.',
     url: 'https://myloa.app/',
+    siteName: 'myloa',
     type: 'website',
   },
   twitter: {

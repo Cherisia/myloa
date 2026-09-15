@@ -14,6 +14,8 @@ const securityHeaders = [
 ]
 
 const nextConfig = {
+  // 프레임워크 정보(X-Powered-By) 노출 방지
+  poweredByHeader: false,
   ...(process.env.NODE_ENV === 'development' && { allowedDevOrigins: ['172.30.1.3'] }),
   images: {
     remotePatterns: [

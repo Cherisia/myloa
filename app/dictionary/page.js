@@ -41,6 +41,7 @@ export async function generateMetadata({ searchParams }) {
       title: meta.ogTitle,
       description: meta.description,
       url: 'https://myloa.app/dictionary',
+      siteName: 'myloa',
       type: 'website',
     },
     twitter: {
